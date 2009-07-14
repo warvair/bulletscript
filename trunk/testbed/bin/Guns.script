@@ -4,7 +4,7 @@ gun SideSpray
 
 	state Main
 	{	
-		repeat 80
+		repeat 160
 		{
 			fireA(225, 296, 10);
 			wait(0.05);
@@ -16,7 +16,7 @@ gun SideSpray
 
 	state Stage2
 	{
-		repeat 40
+		repeat 80
 		{
 			fireA(135, 296, 10);
 			wait(0.1);
@@ -33,7 +33,7 @@ gun Swarm
 
 	state Main
 	{
-		repeat 20
+		repeat 40
 		{
 			angle = 170;
 			repeat 11
@@ -53,7 +53,7 @@ gun Homer
 
 	state Main
 	{
-		repeat 80
+		repeat 160
 		{
 			fireA(135, 296, 10);
 			wait(0.05);
@@ -68,7 +68,7 @@ gun ClusterBomb
 
 	state Main
 	{
-		repeat 200
+		repeat 400
 		{
 			fireA(180, 100, 10);
 		}
@@ -80,7 +80,7 @@ gun Tracker
 {
 	state Steady
 	{
-		repeat 100
+		repeat 200
 		{
 			fireT(Player_X, Player_Y, 0, 396, 10);
 			wait(0.04);
@@ -91,7 +91,7 @@ gun Tracker
 
 	state Erratic
 	{
-		repeat 100
+		repeat 200
 		{
 			offset = rand(10) - 5;
 			fireT(Player_X, Player_Y, offset, 396, 10);
