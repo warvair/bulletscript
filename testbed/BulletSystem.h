@@ -34,7 +34,7 @@ class BulletBattery
 		}
 	};
 
-	static const int BATTERY_SIZE = 512;
+	static const int BATTERY_SIZE = 2048;
 
 	static std::vector<Bullet> mBullets;
 	static std::vector<unsigned int> mFreeList[2];

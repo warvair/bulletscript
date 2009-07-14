@@ -89,18 +89,11 @@ int main (int argc, char **argv)
 
 	// Create a test ship
 	gShip = new Ship("ship1.tga", 400, 550, &sm, &bm);
-	gShip->addGun("Tracker", 0, -28);
+	gShip->addGun("Swarm", 0, -28);
 	gShip->addGun("Homer", 20, 5);
-	gShip->addGun("Swarm", -20, 5);
+	gShip->addGun("Tracker", -20, 5);
 	gShip->addGun("SideSpray", 12, -16);
 	gShip->addGun("ClusterBomb", -12, -16);
-
-	Ship ship2("ship1.tga", 600, 450, &sm, &bm);
-	ship2.addGun("Tracker", 0, -28);
-	ship2.addGun("Homer", 20, 5);
-	ship2.addGun("Swarm", -20, 5);
-	ship2.addGun("SideSpray", 12, -16);
-	ship2.addGun("ClusterBomb", -12, -16);
 
 	Ship player("player.tga", 400, 32, &sm, &bm);
 
@@ -157,7 +150,6 @@ int main (int argc, char **argv)
 		player.move (mouseRelX, 0);
 
 		gShip->updateGuns(frameTime);
-		ship2.updateGuns(frameTime);
 		
 		// Update bullets
 		numBullets = BulletBattery::update(frameTime, &bm);
@@ -167,7 +159,6 @@ int main (int argc, char **argv)
 
 		player.render(&renderer);
 		gShip->render(&renderer);
-		ship2.render(&renderer);
 		BulletBattery::render(&renderer);
 
 		renderer.finishRendering();
