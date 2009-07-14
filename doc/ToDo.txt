@@ -1,0 +1,6 @@
+Optimisation:
+	Get rid of static_cast in BulletBattery::update
+	Other than that, Gun::applyBulletAffectors is run a lot, but hard to
+	speed this up.
+
+Per-state BulletAffectors.

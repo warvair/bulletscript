@@ -1,0 +1,103 @@
+gun SideSpray
+{
+	affectors Force(Player_X - ScreenSize_X / 2, 0);
+
+	state Main
+	{	
+		repeat 80
+		{
+			fireA(225, 296, 10);
+			wait(0.05);
+		}
+		wait(1);
+
+		goto Stage2;
+	}
+
+	state Stage2
+	{
+		repeat 40
+		{
+			fireA(135, 296, 10);
+			wait(0.1);
+		}
+		wait(1);
+		
+		goto Main;
+	}
+}
+
+gun Swarm
+{
+	affectors DelayAccel(300, 1, 1.5);
+
+	state Main
+	{
+		repeat 20
+		{
+			angle = 170;
+			repeat 11
+			{
+				fireA(angle, 60, 10);
+				angle = angle + 2;	
+			}
+			wait(0.1);
+		}
+		wait(1);
+	}
+}
+
+gun Homer
+{
+	affectors Home(Player_X, Player_Y, 0.5);
+
+	state Main
+	{
+		repeat 80
+		{
+			fireA(135, 296, 10);
+			wait(0.05);
+		}
+		wait(1);
+	}
+}
+
+gun ClusterBomb
+{
+	affectors Explode(2, 400);
+
+	state Main
+	{
+		repeat 200
+		{
+			fireA(180, 100, 10);
+		}
+		wait(7);
+	}
+}
+
+gun Tracker
+{
+	state Steady
+	{
+		repeat 100
+		{
+			fireT(Player_X, Player_Y, 0, 396, 10);
+			wait(0.04);
+		}
+		wait(1);
+		goto Erratic;
+	}
+
+	state Erratic
+	{
+		repeat 100
+		{
+			offset = rand(10) - 5;
+			fireT(Player_X, Player_Y, offset, 396, 10);
+			wait(rand(0.1));
+		}
+		wait(1);
+		goto Steady;
+	}
+}
