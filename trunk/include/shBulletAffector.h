@@ -71,7 +71,7 @@ namespace Shmuppet
 
 		Argument &getArgument(int index)
 		{
-			assert(index >= 0 && index < (int) mArguments.size () &&
+			assert(index >= 0 && index < (int) mArguments.size() &&
 				"BulletAffector::getArgument: out of bounds.");
 			return mArguments[index];
 		}
@@ -95,8 +95,8 @@ namespace Shmuppet
 
 		void updateInstanceArguments(float* arguments, const GunScriptRecord& gunRecord)
 		{
-			ArgumentList::iterator it = mArguments.begin();
 			int index = 0;
+			ArgumentList::iterator it = mArguments.begin();
 			while (it != mArguments.end())
 			{
 				Argument& arg = *it;

@@ -12,7 +12,8 @@ namespace Shmuppet
 	{
 		ASTN_Root,
 		ASTN_GunDefinitionList,
-		ASTN_GunDefinition,
+		ASTN_BulletGunDefinition,
+		ASTN_AreaGunDefinition,
 		ASTN_StateList,
 		ASTN_State,
 		ASTN_StatementList,
@@ -144,7 +145,9 @@ namespace Shmuppet
 		
 		void destroy();
 
-		GunDefinition* AbstractSyntaxTree::createGunDefinition(AbstractSyntaxTreeNode* node);
+		GunDefinition* AbstractSyntaxTree::createBulletGunDefinition(AbstractSyntaxTreeNode* node);
+
+		GunDefinition* AbstractSyntaxTree::createAreaGunDefinition(AbstractSyntaxTreeNode* node);
 
 	protected:
 

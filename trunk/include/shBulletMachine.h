@@ -22,7 +22,7 @@ namespace Shmuppet
 
 		virtual GunDefinition* getGunDefinition(const String &name) = 0;
 		
-		virtual void createBulletAffector(const String& function) = 0;
+		virtual bool createBulletAffector(const String& function) = 0;
 
 		virtual int getNumBulletAffectors() const = 0;
 
@@ -87,7 +87,6 @@ namespace Shmuppet
 
 		bool addGunDefinition(const String& name, GunDefinition* def)
 		{
-			// Todo: check to make sure it already doesn't exist
 			GunDefinitionMap::iterator it = mDefinitions.find(name);
 			if (it != mDefinitions.end())
 				return false;
@@ -109,13 +108,15 @@ namespace Shmuppet
 			}
 		}
 
-		void createBulletAffector(const String& function)
+		bool createBulletAffector(const String& function)
 		{
-			// Todo: make sure that mFunctions[function] exists
-			// ...
+			if (mFunctions.find(function) == mFunctions.end())
+				return false;
+
 			BulletAffector<BulletType>::Function func = mFunctions[function];
 			BulletAffector<BulletType>* aff = new BulletAffector<BulletType>(func);
 			mBulletAffectors.push_back(aff);
+			return true;
 		}
 
 		BulletAffector<BulletType>* getBulletAffector(int index)
@@ -158,11 +159,11 @@ namespace Shmuppet
 
 		const uint32 *getBulletAffectorBytecode(int affector, int argument, size_t& codeSize) const
 		{
-			assert(affector >= 0 && affector < (int) mBulletAffectors.size () &&
+			assert(affector >= 0 && affector < (int) mBulletAffectors.size() &&
 				"BulletMachine::setBulletAffectorBytecode: out of bounds.");
 
 			const BulletAffector<BulletType>::Argument& arg = 
-				mBulletAffectors[affector]->getArgument (argument);
+				mBulletAffectors[affector]->getArgument(argument);
 			
 			codeSize = arg.record->byteCodeSize;
 			return arg.record->byteCode;
@@ -207,7 +208,7 @@ namespace Shmuppet
 				"BulletMachine::getBulletAffectorValue: out of bounds.");
 
 			const BulletAffector<BulletType>::Argument& arg = 
-				mBulletAffectors[affector]->getArgument (argument);
+				mBulletAffectors[affector]->getArgument(argument);
 			
 			return arg.value;
 		}
@@ -218,17 +219,17 @@ namespace Shmuppet
 				"BulletMachine::registerAffectorListener: out of bounds.");
 
 			BulletAffector<BulletType>::Argument& arg = 
-				mBulletAffectors[affector]->getArgument (argument);
+				mBulletAffectors[affector]->getArgument(argument);
 
 			var->registerAffectorArgument(&arg);
 		}
 
 		void updateAffectorInstances(int affector, float* arguments)
 		{
-			assert(affector >= 0 && affector < (int) mBulletAffectors.size () &&
+			assert(affector >= 0 && affector < (int) mBulletAffectors.size() &&
 				"BulletMachine::updateAffectorInstances: out of bounds.");
 
-			mBulletAffectors[affector]->updateInstanceArguments (arguments);
+			mBulletAffectors[affector]->updateInstanceArguments(arguments);
 		}
 
 		void updateBulletAffectors()

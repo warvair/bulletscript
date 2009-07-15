@@ -24,6 +24,7 @@ void yyerror (char *a_msg)
 %}
 
 %token KEYWORD_GUN
+%token KEYWORD_AREA
 %token KEYWORD_STATE 
 %token KEYWORD_REPEAT
 %token KEYWORD_IF
@@ -66,17 +67,23 @@ gun_definition_list
 gun_definition
 	: KEYWORD_GUN identifier '{' KEYWORD_AFFECTORS affector_list ';' state_definition_list '}'
 		{
-			$$ = AST->createNode(ASTN_GunDefinition, yylineno);
+			$$ = AST->createNode(ASTN_BulletGunDefinition, yylineno);
 			$$->setChild(0, $2);
 			$$->setChild(1, $7);
 			$$->setChild(2, $5);
 		}		
 	| KEYWORD_GUN identifier '{' state_definition_list '}'
 		{
-			$$ = AST->createNode(ASTN_GunDefinition, yylineno);
+			$$ = AST->createNode(ASTN_BulletGunDefinition, yylineno);
 			$$->setChild(0, $2);
 			$$->setChild(1, $4);
-		}		
+		}
+	| KEYWORD_AREA identifier '{' state_definition_list '}'
+		{
+			$$ = AST->createNode(ASTN_AreaGunDefinition, yylineno);
+			$$->setChild(0, $2);
+			$$->setChild(1, $4);
+		}	
 	;
 	
 affector_list
