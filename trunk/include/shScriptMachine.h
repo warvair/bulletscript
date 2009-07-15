@@ -6,8 +6,7 @@
 #include <list>
 #include "shPrerequisites.h"
 #include "shScriptVariables.h"
-#include "shScriptDefinition.h"
-#include "shCodeRecord.h"
+#include "shScriptStructs.h"
 #include "shBulletMachine.h"
 
 namespace Shmuppet

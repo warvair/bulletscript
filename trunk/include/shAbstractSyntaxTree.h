@@ -2,7 +2,7 @@
 #define __SH_ABSTRACTSYNTAXTREE_H__
 
 #include "shPrerequisites.h"
-#include "shScriptDefinition.h"
+#include "shScriptStructs.h"
 #include "shBulletMachine.h"
 
 namespace Shmuppet

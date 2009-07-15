@@ -1,19 +1,8 @@
-#include <iostream>
-#include "shScriptDefinition.h"
-#include "shScriptMachine.h"
+#include "shGunDefinitions.h"
 
 namespace Shmuppet
 {
 
-// --------------------------------------------------------------------------------
-GunScriptRecord::GunScriptRecord() :
-	curState(0),
-	curInstruction(0),
-	stackHead(0),
-	suspendTime(0.0f)
-{
-}
-// --------------------------------------------------------------------------------
 // --------------------------------------------------------------------------------
 GunDefinition::GunDefinition(const String& name) :
 	mName(name)

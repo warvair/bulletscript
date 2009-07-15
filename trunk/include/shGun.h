@@ -2,7 +2,7 @@
 #define __SH_GUN_H__
 
 #include "shPrerequisites.h"
-#include "shScriptDefinition.h"
+#include "shScriptStructs.h"
 #include "shScriptMachine.h"
 #include "shScriptVariables.h"
 
