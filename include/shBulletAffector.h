@@ -2,8 +2,7 @@
 #define __SH_BULLETAFFECTOR_H__
 
 #include "shPrerequisites.h"
-#include "shCodeRecord.h"
-#include "shScriptDefinition.h"
+#include "shScriptStructs.h"
 #include "shScriptVariables.h"
 
 namespace Shmuppet

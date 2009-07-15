@@ -206,11 +206,15 @@
 				>
 			</File>
 			<File
-				RelativePath="..\Src\shScriptDefinition.cpp"
+				RelativePath="..\Src\shGunDefinitions.cpp"
 				>
 			</File>
 			<File
 				RelativePath="..\Src\shScriptMachine.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\Src\shScriptStructs.cpp"
 				>
 			</File>
 			<File
@@ -244,11 +248,11 @@
 				>
 			</File>
 			<File
-				RelativePath="..\Include\shCodeRecord.h"
+				RelativePath="..\Include\shGun.h"
 				>
 			</File>
 			<File
-				RelativePath="..\Include\shGun.h"
+				RelativePath="..\Include\shGunDefinitions.h"
 				>
 			</File>
 			<File
@@ -256,11 +260,11 @@
 				>
 			</File>
 			<File
-				RelativePath="..\Include\shScriptDefinition.h"
+				RelativePath="..\Include\shScriptMachine.h"
 				>
 			</File>
 			<File
-				RelativePath="..\Include\shScriptMachine.h"
+				RelativePath="..\Include\shScriptStructs.h"
 				>
 			</File>
 			<File

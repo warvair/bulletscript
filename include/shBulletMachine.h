@@ -5,7 +5,7 @@
 #include <assert.h>
 #include "shPrerequisites.h"
 #include "shBulletAffector.h"
-#include "shScriptDefinition.h"
+#include "shGunDefinitions.h"
 
 namespace Shmuppet
 {
