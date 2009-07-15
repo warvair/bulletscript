@@ -37,6 +37,7 @@ BINARY    	[0-1]
 "//"[^\n]*                      { /* process comments */ }
 
 "gun"							{ return (KEYWORD_GUN); }
+"area"							{ return (KEYWORD_AREA); }
 "state"							{ return (KEYWORD_STATE); }
 "repeat"						{ return (KEYWORD_REPEAT); }
 "if"							{ return (KEYWORD_IF); }

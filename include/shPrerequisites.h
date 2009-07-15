@@ -77,7 +77,7 @@
 #endif
 
 // Common typedefs, etc
-#define FLOAT_TO_UINT32(x) (*((unsigned int*) ((void*) (&x))))
+#define FLOAT_TO_UINT32(x) (*((Shmuppet::uint32*) ((void*) (&x))))
 #define UINT32_TO_FLOAT(x) (*((float*) ((void*) (&x))))
 
 #include <string>

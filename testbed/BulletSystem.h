@@ -24,6 +24,10 @@ struct Bullet
 	Shmuppet::GunBase *__gun;
 };
 
+/* This class is based off code from motorherp, posted on the SHMUP-DEV forums
+	at http://www.shmup-dev.com/forum
+*/
+
 class BulletBattery
 {
 	struct BulletSorter

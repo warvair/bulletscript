@@ -304,7 +304,7 @@ void ScriptMachine::interpretCode(const uint32* code,
 					{
 						// Global
 						float value = getGlobalVariableValue(index - VAR_GLOBAL_OFFSET);
-						state.curStack[state.stackHead] =FLOAT_TO_UINT32 (value);
+						state.curStack[state.stackHead] = FLOAT_TO_UINT32(value);
 					}
 					else
 					{
@@ -329,7 +329,7 @@ void ScriptMachine::interpretCode(const uint32* code,
 		case BC_OP_NEG:
 			{
 				float val = - (UINT32_TO_FLOAT(state.curStack[state.stackHead - 1]));
-				state.curStack[state.stackHead] = FLOAT_TO_UINT32 (val);
+				state.curStack[state.stackHead] = FLOAT_TO_UINT32(val);
 				state.stackHead++;
 				state.curInstruction++;
 			}
@@ -377,7 +377,7 @@ void ScriptMachine::interpretCode(const uint32* code,
 				float val2 = UINT32_TO_FLOAT(state.curStack[state.stackHead - 1]);
 				float result = val1 / val2;
 
-				state.curStack[state.stackHead - 2] = FLOAT_TO_UINT32 (result);
+				state.curStack[state.stackHead - 2] = FLOAT_TO_UINT32(result);
 				state.stackHead--;
 				state.curInstruction++;
 			}
@@ -399,7 +399,7 @@ void ScriptMachine::interpretCode(const uint32* code,
 			{
 				float val1 = UINT32_TO_FLOAT(state.curStack[state.stackHead - 2]);
 				float val2 = UINT32_TO_FLOAT(state.curStack[state.stackHead - 1]);
-				unsigned int result = (val1 == val2) ? 1 : 0;
+				uint32 result = (val1 == val2) ? 1 : 0;
 
 				state.curStack[state.stackHead - 2] = result;
 				state.stackHead--;
@@ -411,7 +411,7 @@ void ScriptMachine::interpretCode(const uint32* code,
 			{
 				float val1 = UINT32_TO_FLOAT(state.curStack[state.stackHead - 2]);
 				float val2 = UINT32_TO_FLOAT(state.curStack[state.stackHead - 1]);
-				unsigned int result = (val1 != val2) ? 1 : 0;
+				uint32 result = (val1 != val2) ? 1 : 0;
 
 				state.curStack[state.stackHead - 2] = result;
 				state.stackHead--;
@@ -423,7 +423,7 @@ void ScriptMachine::interpretCode(const uint32* code,
 			{
 				float val1 = UINT32_TO_FLOAT(state.curStack[state.stackHead - 2]);
 				float val2 = UINT32_TO_FLOAT(state.curStack[state.stackHead - 1]);
-				unsigned int result = (val1 < val2) ? 1 : 0;
+				uint32 result = (val1 < val2) ? 1 : 0;
 
 				state.curStack[state.stackHead - 2] = result;
 				state.stackHead--;
@@ -435,7 +435,7 @@ void ScriptMachine::interpretCode(const uint32* code,
 			{
 				float val1 = UINT32_TO_FLOAT(state.curStack[state.stackHead - 2]);
 				float val2 = UINT32_TO_FLOAT(state.curStack[state.stackHead - 1]);
-				unsigned int result = (val1 <= val2) ? 1 : 0;
+				uint32 result = (val1 <= val2) ? 1 : 0;
 
 				state.curStack[state.stackHead - 2] = result;
 				state.stackHead--;
@@ -447,7 +447,7 @@ void ScriptMachine::interpretCode(const uint32* code,
 			{
 				float val1 = UINT32_TO_FLOAT(state.curStack[state.stackHead - 2]);
 				float val2 = UINT32_TO_FLOAT(state.curStack[state.stackHead - 1]);
-				unsigned int result = (val1 > val2) ? 1 : 0;
+				uint32 result = (val1 > val2) ? 1 : 0;
 
 				state.curStack[state.stackHead - 2] = result;
 				state.stackHead--;
@@ -459,7 +459,7 @@ void ScriptMachine::interpretCode(const uint32* code,
 			{
 				float val1 = UINT32_TO_FLOAT(state.curStack[state.stackHead - 2]);
 				float val2 = UINT32_TO_FLOAT(state.curStack[state.stackHead - 1]);
-				unsigned int result = (val1 >= val2) ? 1 : 0;
+				uint32 result = (val1 >= val2) ? 1 : 0;
 
 				state.curStack[state.stackHead - 2] = result;
 				state.stackHead--;
@@ -471,7 +471,7 @@ void ScriptMachine::interpretCode(const uint32* code,
 			{
 				float val1 = UINT32_TO_FLOAT(state.curStack[state.stackHead - 2]);
 				float val2 = UINT32_TO_FLOAT(state.curStack[state.stackHead - 1]);
-				unsigned int result = (val1 && val2) ? 1 : 0;
+				uint32 result = (val1 && val2) ? 1 : 0;
 
 				state.curStack[state.stackHead - 2] = result;
 				state.stackHead--;
@@ -483,7 +483,7 @@ void ScriptMachine::interpretCode(const uint32* code,
 			{
 				float val1 = UINT32_TO_FLOAT(state.curStack[state.stackHead - 2]);
 				float val2 = UINT32_TO_FLOAT(state.curStack[state.stackHead - 1]);
-				unsigned int result = (val1 || val2) ? 1 : 0;
+				uint32 result = (val1 || val2) ? 1 : 0;
 
 				state.curStack[state.stackHead - 2] = result;
 				state.stackHead --;

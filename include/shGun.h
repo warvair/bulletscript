@@ -71,8 +71,9 @@ namespace Shmuppet
 
 		void setInstanceVariable(int index, float value)
 		{
-			// Todo: bounds check index
-			// ...
+			assert(index >= 0 && index < NUM_INSTANCE_VARS &&
+				"Gun::setInstanceVariable: out of bounds.");
+
 			mRecord.instanceVars[index] = value;
 		}
 

@@ -864,7 +864,7 @@ int AbstractSyntaxTree::getNumErrors() const
 	return mNumErrors;
 }
 // --------------------------------------------------------------------------------
-GunDefinition* AbstractSyntaxTree::createGunDefinition(AbstractSyntaxTreeNode* node)
+GunDefinition* AbstractSyntaxTree::createBulletGunDefinition(AbstractSyntaxTreeNode* node)
 {
 	String name = node->getChild(0)->getStringData();
 	GunDefinition* def = new GunDefinition(name);
@@ -889,11 +889,46 @@ GunDefinition* AbstractSyntaxTree::createGunDefinition(AbstractSyntaxTreeNode* n
 	}
 }
 // --------------------------------------------------------------------------------
+GunDefinition* AbstractSyntaxTree::createAreaGunDefinition(AbstractSyntaxTreeNode* node)
+{
+	assert(false && "AbstractSyntaxTree::createAreaGunDefinition not implemented yet!");
+	String name = node->getChild(0)->getStringData();
+	GunDefinition* def = new GunDefinition(name);
+
+	node->createGunMembers(def);
+
+	// Create state bytecode
+	node->getChild(1)->createGunBytecode(def, true, 0);
+
+	// Create affector bytecode
+	if (node->getChild(2))
+		node->getChild(2)->createGunBytecode(def, true, 0);
+
+	if (mNumErrors > 0)
+	{
+		delete def;
+		return 0;
+	}
+	else
+	{
+		return def;
+	}
+
+}
+// --------------------------------------------------------------------------------
 void AbstractSyntaxTree::createGunDefinitions(AbstractSyntaxTreeNode* node)
 {
-	if (node->getType() == ASTN_GunDefinition)
+	if (node->getType() == ASTN_BulletGunDefinition)
 	{
-		GunDefinition* def = createGunDefinition(node);
+		GunDefinition* def = createBulletGunDefinition(node);
+		if (def)
+		{
+			mBulletMachine->addGunDefinition(def->getName(), def);
+		}
+	}
+	else if (node->getType() == ASTN_AreaGunDefinition)
+	{
+		GunDefinition* def = createAreaGunDefinition(node);
 		if (def)
 		{
 			mBulletMachine->addGunDefinition(def->getName(), def);
