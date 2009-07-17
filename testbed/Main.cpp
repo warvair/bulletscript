@@ -41,7 +41,7 @@ void script_err(const char* msg)
 	std::cerr << msg << std::endl;
 }
 
-static Ship *gShip = 0;
+static BulletShip *gShip = 0;
 
 // Cycle gun on ship
 void toggleGun(int index)
@@ -88,14 +88,17 @@ int main (int argc, char **argv)
 	SDL_ShowCursor(SDL_DISABLE);
 
 	// Create a test ship
-	gShip = new Ship("ship1.tga", 400, 550, &sm, &bm);
-	gShip->addGun("Swarm", 0, -28);
-	gShip->addGun("Homer", 20, 5);
+	gShip = new BulletShip("ship1.tga", 400, 550, &sm, &bm);
+	gShip->addGun("Homer", 0, -28);
+	gShip->addGun("Swarm", 20, 5);
 	gShip->addGun("Tracker", -20, 5);
 	gShip->addGun("SideSpray", 12, -16);
 	gShip->addGun("ClusterBomb", -12, -16);
 
-	Ship player("player.tga", 400, 32, &sm, &bm);
+	AreaShip areaShip("turret.tga", 736, 536, &sm, &bm);
+	areaShip.addGun("Beam", 0, -28);
+
+	BulletShip player("player.tga", 400, 32, &sm, &bm);
 
 	// Print interface commands
 	std::cout << "Shmuppet BulletScript" << std::endl;
@@ -144,12 +147,13 @@ int main (int argc, char **argv)
 		sm.setGlobalVariableValue("Player_Y", player.getY());
 	
 		// Update BulletAffector function arguments
-		bm.updateBulletAffectors();
+		bm.update();
 
 		// Update ships
 		player.move (mouseRelX, 0);
 
-		gShip->updateGuns(frameTime);
+		gShip->update(frameTime);
+		areaShip.update(frameTime);
 		
 		// Update bullets
 		numBullets = BulletBattery::update(frameTime, &bm);
@@ -159,6 +163,7 @@ int main (int argc, char **argv)
 
 		player.render(&renderer);
 		gShip->render(&renderer);
+		areaShip.render(&renderer);
 		BulletBattery::render(&renderer);
 
 		renderer.finishRendering();

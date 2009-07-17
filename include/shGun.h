@@ -9,83 +9,72 @@
 namespace Shmuppet
 {
 
-	class _ShmuppetAPI GunBase 
+	class GunController;
+
+	class _ShmuppetAPI Gun 
 	{
-	public:
-		
-		static const int MAX_AFFECTOR_ARGS = 8;
+	protected:
 
-		struct Affector
-		{
-			int index;
-			float arguments[MAX_AFFECTOR_ARGS];
-		};
-
-		typedef std::list<Affector> AffectorList;
-		AffectorList mAffectors;
-	};
-
-	template <typename BulletType>
-	class _ShmuppetAPI Gun : public GunBase
-	{
 		ScriptMachine* mScriptMachine;
-
-		BulletMachine<BulletType>* mBulletMachine;
 
 		GunScriptRecord mRecord;
 
 	public:
 
-		Gun(ScriptMachine* scriptMachine, BulletMachine<BulletType>* bulletMachine) :
-			GunBase(),
-			mScriptMachine(scriptMachine),
-			mBulletMachine(bulletMachine)
+		Gun(ScriptMachine* scriptMachine);
+
+		virtual void setDefinition(const GunDefinition* def, 
+			GunController* controller) = 0;
+
+		virtual void update(float frameTime) 
 		{
 		}
+		
+		void setInstanceVariable(int index, float value);
 
-		void setDefinition(GunDefinition* def)
+		void runScript(float frameTime);
+
+		void setState(const String& state);
+	};
+
+
+	enum GunProperty
+	{
+		GunProperty_Strength,
+		GunProperty_Width,
+		GunProperty_Length,
+		GunProperty_Angle
+	};
+
+	// GunController is the class that the user interfaces with.  It is essentially a
+	// facade class for Gun with extra functionality.
+	class _ShmuppetAPI GunController
+	{
+	protected:
+
+		Gun* mGun;
+		ScriptMachine *mScriptMachine;
+
+	public:
+
+		GunController(ScriptMachine *scriptMachine);
+
+		virtual ~GunController()
 		{
-			mRecord = def->createGunScriptRecord();
-
-			mRecord.gun = this;
-
-			// Create affectors
-			std::list<int>::iterator it = mRecord.affectors.begin();
-			while (it != mRecord.affectors.end())
-			{
-				Affector aff;
-				aff.index = *it;
-
-				mAffectors.push_back(aff);
-				++it;
-			}
+			if (mGun)
+				delete mGun;
 		}
 
-		void runScript(float frameTime)
-		{
-			mScriptMachine->processGunState(mRecord);
+		bool setDefinition(const String& def);
 
-			if (mRecord.suspendTime > 0.0f)
-					mRecord.suspendTime -= frameTime;
-		}
+		void setInstanceVariable(int index, float value);
 
-		void setInstanceVariable(int index, float value)
-		{
-			assert(index >= 0 && index < NUM_INSTANCE_VARS &&
-				"Gun::setInstanceVariable: out of bounds.");
+		void runScript(float frameTime);
 
-			mRecord.instanceVars[index] = value;
-		}
+		// This needs to call a user-implemented member function
+		virtual void setProperty(int prop, float value, float time) = 0;
 
-		void updateBulletAffectors()
-		{
-			AffectorList::iterator it = mAffectors.begin();
-			while (it != mAffectors.end())
-			{
-				mBulletMachine->updateInstanceArguments((*it).index, (*it).arguments, mRecord);
-				++it;
-			}
-		}
+		virtual void update(float frameTime);
 
 	};
 

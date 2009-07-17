@@ -1,4 +1,29 @@
-gun SideSpray
+area[4, 180.0] Beam
+{
+	state Setup
+	{
+		set strength(0);
+		set width(20);
+		set length(300);
+		set angle(Gun_Angle);
+
+		goto Main;
+	}
+
+	state Main
+	{
+//		set angle(Gun_Angle, 2);
+		wait(2);
+		goto Loop;
+	}
+
+	state Loop
+	{
+		wait(10);
+	}
+}
+
+bullet SideSpray
 {
 	affectors Force(Player_X - ScreenSize_X / 2, 0);
 
@@ -27,12 +52,13 @@ gun SideSpray
 	}
 }
 
-gun Swarm
+bullet Swarm
 {
 	affectors DelayAccel(300, 1, 1.5);
 
 	state Main
 	{
+		set yes(14, 11);
 		repeat 40
 		{
 			angle = 170;
@@ -47,22 +73,22 @@ gun Swarm
 	}
 }
 
-gun Homer
+bullet Homer
 {
-	affectors Home(Player_X, Player_Y, 0.5);
+	affectors Home(Player_X, Player_Y, 0.4);
 
 	state Main
 	{
 		repeat 160
 		{
-			fireA(135, 296, 10);
+			fireA(180, 296, 10);
 			wait(0.05);
 		}
 		wait(1);
 	}
 }
 
-gun ClusterBomb
+bullet ClusterBomb
 {
 	affectors Explode(2, 400);
 
@@ -76,7 +102,7 @@ gun ClusterBomb
 	}
 }
 
-gun Tracker
+bullet Tracker
 {
 	state Steady
 	{
@@ -99,5 +125,21 @@ gun Tracker
 		}
 		wait(1);
 		goto Steady;
+	}
+}
+
+bullet Circular
+{
+	affectors DelayAccel(300, 1, 1.1);
+
+	state One
+	{
+		i = 0;
+		repeat 36
+		{
+			fireA(i * 10, 0, 10);
+			i = i + 1;
+		}
+		wait(2);
 	}
 }

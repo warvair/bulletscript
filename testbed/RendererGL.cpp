@@ -38,8 +38,8 @@ GLuint TGALoader::loadToVRAM(int& width, int& height)
 	glGenTextures (1, &texId);
 	glBindTexture (GL_TEXTURE_2D, texId);
 
-	glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-	glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+	glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
 	if (mBPP == 24)
 	{
@@ -182,6 +182,40 @@ void RendererGL::renderQuickQuad(float x0, float y0, float x1, float y1, GLuint 
 		glVertex2f(x1, y1);
 		glTexCoord2i(0, 1);
 		glVertex2f(x0, y1);
+	}
+	glEnd();
+}
+// --------------------------------------------------------------------------------
+void RendererGL::renderQuickUVQuad(float x0, float y0, float x1, float y1, 
+								   float u0, float v0, float u1, float v1, GLuint texture)
+{
+	glBindTexture(GL_TEXTURE_2D, texture);
+	glBegin(GL_QUADS);
+	{
+		glTexCoord2f(u0, v0);
+		glVertex2f(x0, y0);
+		glTexCoord2f(u1, v0);
+		glVertex2f(x1, y0);
+		glTexCoord2f(u1, v1);
+		glVertex2f(x1, y1);
+		glTexCoord2f(u0, v1);
+		glVertex2f(x0, y1);
+	}
+	glEnd();
+}
+// --------------------------------------------------------------------------------
+void RendererGL::renderQuickTriangle(float x0, float y0, float x1, float y1, float x2, 
+									 float y2, GLuint texture)
+{
+	glBindTexture(GL_TEXTURE_2D, texture);
+	glBegin(GL_TRIANGLES);
+	{
+		glTexCoord2i(0, 0);
+		glVertex2f(x0, y0);
+		glTexCoord2i(1, 0);
+		glVertex2f(x1, y1);
+		glTexCoord2i(1, 1);
+		glVertex2f(x2, y2);
 	}
 	glEnd();
 }

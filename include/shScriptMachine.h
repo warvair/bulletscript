@@ -7,13 +7,13 @@
 #include "shPrerequisites.h"
 #include "shScriptVariables.h"
 #include "shScriptStructs.h"
-#include "shBulletMachine.h"
+#include "shGunDefinitions.h"
 
 namespace Shmuppet
 {
-	static const int VAR_LOCAL_OFFSET		= 0;
-	static const int VAR_GLOBAL_OFFSET		= 32768;
-	static const int VAR_INSTANCE_OFFSET	= 65536;
+	const int VAR_LOCAL_OFFSET		= 0;
+	const int VAR_GLOBAL_OFFSET		= 32768;
+	const int VAR_INSTANCE_OFFSET	= 65536;
 
 	enum
 	{
@@ -41,20 +41,22 @@ namespace Shmuppet
 		BC_JUMP,
 		BC_JZ,
 		BC_FIRE,
-		BC_WAIT
+		BC_WAIT,
+		BC_SETPROPERTY
 	};
 
 	typedef void (*NativeFunction)(GunScriptRecord&);
 
 	typedef void (*ErrorFunction)(const char*);
 
-	typedef int (*FireFunction)(GunBase*, float, float, uint32*);
+	class BulletGunBase;
+	typedef int (*FireFunction)(BulletGunBase*, float, float, uint32*);
+
+	class BulletMachineBase;
 
 	class _ShmuppetAPI ScriptMachine
 	{
 		friend class AbstractSyntaxTree;
-		
-		BulletMachineBase* mBulletMachine;
 		
 		// Native functions callable by script
 		struct NativeFunctionRecord
@@ -80,7 +82,14 @@ namespace Shmuppet
 		// Instance variables
 		std::vector<String> mInstances;
 
+		// Gun properties
+		std::vector<String> mGunProperties;
+
 		ErrorFunction mErrorFunction;
+
+		// Gun Definitions
+		typedef std::map<String, GunDefinition*> GunDefinitionMap;
+		GunDefinitionMap mDefinitions;
 
 		// Functions
 		bool checkInstructionPosition (GunScriptRecord& state, size_t length);
@@ -125,9 +134,15 @@ namespace Shmuppet
 		GlobalVariable *getGlobalVariable(int index);
 
 		// Instance variables
-		void registerInstanceVariable(const String& name);
-
 		int getInstanceVariableIndex(const String &name) const;
+
+		// Gun Properties
+		int getGunProperty(const String& name) const;
+
+		// Gun Definitions
+		bool addGunDefinition(const String &name, GunDefinition* def);
+
+		const GunDefinition* getGunDefinition(const String &name) const;
 
 		// Script state processing
 		void processGunState(GunScriptRecord& gsr);

@@ -56,6 +56,11 @@ public:
 
 	void renderQuickQuad(float x0, float y0, float x1, float y1, GLuint texture);
 
+	void renderQuickUVQuad(float x0, float y0, float x1, float y1, float u0, float v0, 
+		float u1, float v1, GLuint texture);
+
+	void renderQuickTriangle(float x0, float y0, float x1, float y1, float x2, float y2, GLuint texture);
+
 };
 
 #endif

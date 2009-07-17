@@ -1,7 +1,7 @@
 #ifndef __BULLETSYSTEM_H__
 #define __BULLETSYSTEM_H__
 
-#include "shGun.h"
+#include "shBulletGun.h"
 #include "RendererGL.h"
 
 struct Bullet
@@ -21,7 +21,7 @@ struct Bullet
 	Bullet () : __active (false) {}
 
 	// This must be added to the Bullet type in order to use BulletAffectors
-	Shmuppet::GunBase *__gun;
+	Shmuppet::BulletGunBase *__gun;
 };
 
 /* This class is based off code from motorherp, posted on the SHMUP-DEV forums
@@ -51,9 +51,9 @@ public:
 
 	static void initialise ();
 
-	static int emitAngle (Shmuppet::GunBase *gun, float x, float y, Shmuppet::uint32 *args);
+	static int emitAngle (Shmuppet::BulletGunBase *gun, float x, float y, Shmuppet::uint32 *args);
 
-	static int emitTarget (Shmuppet::GunBase *gun, float x, float y, Shmuppet::uint32 *args);
+	static int emitTarget (Shmuppet::BulletGunBase *gun, float x, float y, Shmuppet::uint32 *args);
 
 	static int update (float frameTime, Shmuppet::BulletMachine<Bullet>* bulletMachine);
 

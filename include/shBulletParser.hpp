@@ -29,45 +29,51 @@
    /* Put the tokens into the symbol table, so that GDB and other debuggers
       know about them.  */
    enum yytokentype {
-     KEYWORD_GUN = 258,
+     KEYWORD_BULLET = 258,
      KEYWORD_AREA = 259,
-     KEYWORD_STATE = 260,
-     KEYWORD_REPEAT = 261,
-     KEYWORD_IF = 262,
-     KEYWORD_ELSE = 263,
-     KEYWORD_GOTO = 264,
-     KEYWORD_WAIT = 265,
-     KEYWORD_AFFECTORS = 266,
-     CONSTANT = 267,
-     IDENTIFIER = 268,
-     SYMBOL_LTE = 269,
-     SYMBOL_GTE = 270,
-     SYMBOL_EQ = 271,
-     SYMBOL_NEQ = 272,
-     SYMBOL_LOG_AND = 273,
-     SYMBOL_LOG_OR = 274,
-     TOKEN_ERROR = 275
+     KEYWORD_SPLINE = 260,
+     KEYWORD_STATE = 261,
+     KEYWORD_REPEAT = 262,
+     KEYWORD_IF = 263,
+     KEYWORD_ELSE = 264,
+     KEYWORD_GOTO = 265,
+     KEYWORD_WAIT = 266,
+     KEYWORD_SET = 267,
+     KEYWORD_AFFECTORS = 268,
+     INTEGER = 269,
+     REAL = 270,
+     IDENTIFIER = 271,
+     SYMBOL_LTE = 272,
+     SYMBOL_GTE = 273,
+     SYMBOL_EQ = 274,
+     SYMBOL_NEQ = 275,
+     SYMBOL_LOG_AND = 276,
+     SYMBOL_LOG_OR = 277,
+     TOKEN_ERROR = 278
    };
 #endif
 /* Tokens.  */
-#define KEYWORD_GUN 258
+#define KEYWORD_BULLET 258
 #define KEYWORD_AREA 259
-#define KEYWORD_STATE 260
-#define KEYWORD_REPEAT 261
-#define KEYWORD_IF 262
-#define KEYWORD_ELSE 263
-#define KEYWORD_GOTO 264
-#define KEYWORD_WAIT 265
-#define KEYWORD_AFFECTORS 266
-#define CONSTANT 267
-#define IDENTIFIER 268
-#define SYMBOL_LTE 269
-#define SYMBOL_GTE 270
-#define SYMBOL_EQ 271
-#define SYMBOL_NEQ 272
-#define SYMBOL_LOG_AND 273
-#define SYMBOL_LOG_OR 274
-#define TOKEN_ERROR 275
+#define KEYWORD_SPLINE 260
+#define KEYWORD_STATE 261
+#define KEYWORD_REPEAT 262
+#define KEYWORD_IF 263
+#define KEYWORD_ELSE 264
+#define KEYWORD_GOTO 265
+#define KEYWORD_WAIT 266
+#define KEYWORD_SET 267
+#define KEYWORD_AFFECTORS 268
+#define INTEGER 269
+#define REAL 270
+#define IDENTIFIER 271
+#define SYMBOL_LTE 272
+#define SYMBOL_GTE 273
+#define SYMBOL_EQ 274
+#define SYMBOL_NEQ 275
+#define SYMBOL_LOG_AND 276
+#define SYMBOL_LOG_OR 277
+#define TOKEN_ERROR 278
 
 
 
