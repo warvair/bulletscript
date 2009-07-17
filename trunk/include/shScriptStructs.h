@@ -8,7 +8,8 @@
 namespace Shmuppet
 {
 
-	class GunBase;
+	class Gun;
+	class GunController;
 
 	// Class for bytecode storage/access
 	struct _ShmuppetAPI CodeRecord
@@ -67,11 +68,14 @@ namespace Shmuppet
 		// Instance variables
 		float instanceVars[NUM_INSTANCE_VARS];
 
-		// Affectors
+		// Affectors - only used by BulletGuns
 		std::list<int> affectors;
 
 		// Owning gun
-		GunBase* gun;
+		Gun* gun;
+
+		// Owning GunController
+		GunController* controller;
 
 		// Functions
 		GunScriptRecord();

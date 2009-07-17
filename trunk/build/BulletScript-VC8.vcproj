@@ -91,7 +91,7 @@
 			/>
 			<Tool
 				Name="VCPostBuildEventTool"
-				CommandLine=""
+				CommandLine="copy $(SolutionDir)\..\bin\BulletScriptd.dll $(SolutionDir)\..\testbed\bin"
 			/>
 		</Configuration>
 		<Configuration
@@ -170,6 +170,7 @@
 			/>
 			<Tool
 				Name="VCPostBuildEventTool"
+				CommandLine="copy $(SolutionDir)\..\bin\BulletScript.dll $(SolutionDir)\..\testbed\bin"
 			/>
 		</Configuration>
 	</Configurations>
@@ -194,7 +195,11 @@
 				>
 			</File>
 			<File
-				RelativePath="..\Src\shAreaWeapon.cpp"
+				RelativePath="..\src\shAreaGun.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\src\shBulletGun.cpp"
 				>
 			</File>
 			<File
@@ -203,6 +208,10 @@
 			</File>
 			<File
 				RelativePath="..\Src\shBulletParser.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\src\shGun.cpp"
 				>
 			</File>
 			<File
@@ -232,11 +241,15 @@
 				>
 			</File>
 			<File
-				RelativePath="..\Include\shAreaWeapon.h"
+				RelativePath="..\include\shAreaGun.h"
 				>
 			</File>
 			<File
 				RelativePath="..\Include\shBulletAffector.h"
+				>
+			</File>
+			<File
+				RelativePath="..\include\shBulletGun.h"
 				>
 			</File>
 			<File

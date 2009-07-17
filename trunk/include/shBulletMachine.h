@@ -1,9 +1,8 @@
 #ifndef __SH_BULLETMACHINE_H__
 #define __SH_BULLETMACHINE_H__
 
-#include <map>
 #include <assert.h>
-#include "shPrerequisites.h"
+#include <map>
 #include "shBulletAffector.h"
 #include "shGunDefinitions.h"
 
@@ -12,16 +11,13 @@ namespace Shmuppet
 
 	typedef std::vector<uint32> BytecodeBlock;
 
+	class BulletGunBase;
+
 	// Abstract class to provide a untemplated interface for AbstractSyntaxTree to use
 	class _ShmuppetAPI BulletMachineBase
 	{
 	public:
 
-		virtual bool addGunDefinition(const String &name, 
-			GunDefinition* def) = 0;
-
-		virtual GunDefinition* getGunDefinition(const String &name) = 0;
-		
 		virtual bool createBulletAffector(const String& function) = 0;
 
 		virtual int getNumBulletAffectors() const = 0;
@@ -51,9 +47,6 @@ namespace Shmuppet
 	template <typename BulletType>
 	class _ShmuppetAPI BulletMachine : public BulletMachineBase
 	{
-		typedef std::map<String, GunDefinition*> GunDefinitionMap;
-		GunDefinitionMap mDefinitions;
-
 		typedef std::vector<BulletAffector<BulletType>*> BulletAffectorList;
 		BulletAffectorList mBulletAffectors;
 
@@ -64,16 +57,6 @@ namespace Shmuppet
 
 		~BulletMachine()
 		{
-			// Delete GunDefinitions
-			{
-				GunDefinitionMap::iterator it = mDefinitions.begin();
-				while (it != mDefinitions.end())
-				{
-					delete it->second;
-					++it;
-				}
-			}
-
 			// Delete BulletAffectors
 			{
 				BulletAffectorList::iterator it = mBulletAffectors.begin();
@@ -82,29 +65,6 @@ namespace Shmuppet
 					delete (*it);
 					++it;
 				}
-			}
-		}
-
-		bool addGunDefinition(const String& name, GunDefinition* def)
-		{
-			GunDefinitionMap::iterator it = mDefinitions.find(name);
-			if (it != mDefinitions.end())
-				return false;
-
-			mDefinitions[name] = def;
-			return true;
-		}
-
-		GunDefinition *getGunDefinition(const String& name)
-		{
-			GunDefinitionMap::iterator it = mDefinitions.find(name);
-			if (it == mDefinitions.end())
-			{
-				return 0;
-			}
-			else
-			{
-				return it->second;
 			}
 		}
 
@@ -232,7 +192,7 @@ namespace Shmuppet
 			mBulletAffectors[affector]->updateInstanceArguments(arguments);
 		}
 
-		void updateBulletAffectors()
+		void update()
 		{
 			// Only update if it has function calls
 			BulletAffectorList::iterator it = mBulletAffectors.begin();
@@ -248,12 +208,12 @@ namespace Shmuppet
 			mBulletAffectors[index]->updateInstanceArguments(arguments, gunRecord);
 		}
 
-		void applyBulletAffectors(GunBase* gun, BulletType& bullet, float frameTime)
+		void applyBulletAffectors(BulletGunBase* gun, BulletType& bullet, float frameTime)
 		{
-			GunBase::AffectorList::iterator it = gun->mAffectors.begin();
+			BulletGunBase::AffectorList::iterator it = gun->mAffectors.begin();
 			while (it != gun->mAffectors.end())
 			{
-				GunBase::Affector& aff = *it;
+				BulletGunBase::Affector& aff = *it;
 				mBulletAffectors[aff.index]->runFunction(bullet, aff.arguments, frameTime);
 				++it;
 			}			

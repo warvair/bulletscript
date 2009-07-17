@@ -24,7 +24,10 @@ void BulletAffector_Home (Bullet &b, float *args, float frameTime)
 
 	// rotate
 	float angle = acos (desired_vx * b.vx + desired_vy * b.vy);
-	angle = -(angle * frameTime) / args[2];
+	if (desired_vx > 0)
+		angle = (angle * frameTime) / args[2];
+	else
+		angle = -(angle * frameTime) / args[2];
 
 	float vx = b.vx;
 	float vy = b.vy;
@@ -51,7 +54,7 @@ void BulletAffector_Explode (Bullet &b, float *args, float frameTime)
 	{
 		// random angle
 		b.stage = 1;
-		float newAngle = 110 + rand() % 140;
+		float newAngle = (float) 110 + (rand() % 140);
 		b.vx = (float) sin (newAngle * 0.017453);
 		b.vy = (float) cos (newAngle * 0.017453);
 		b.speed = args[1];
@@ -113,7 +116,7 @@ unsigned int BulletBattery::getFreeBulletSlot()
 	return id;
 }
 // --------------------------------------------------------------------------------
-int BulletBattery::emitAngle (Shmuppet::GunBase *gun, float x, float y, Shmuppet::uint32 *args)
+int BulletBattery::emitAngle (Shmuppet::BulletGunBase *gun, float x, float y, Shmuppet::uint32 *args)
 {
 	int slot = getFreeBulletSlot();
 
@@ -133,7 +136,7 @@ int BulletBattery::emitAngle (Shmuppet::GunBase *gun, float x, float y, Shmuppet
 	return 3;
 }
 // --------------------------------------------------------------------------------
-int BulletBattery::emitTarget (Shmuppet::GunBase *gun, float x, float y, Shmuppet::uint32 *args)
+int BulletBattery::emitTarget (Shmuppet::BulletGunBase *gun, float x, float y, Shmuppet::uint32 *args)
 {
 	int slot = getFreeBulletSlot();
 

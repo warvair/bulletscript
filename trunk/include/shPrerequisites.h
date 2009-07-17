@@ -84,6 +84,8 @@
 
 namespace Shmuppet
 {
+	const float DEG_TO_RAD = 0.01745328f;
+	const float RAD_TO_DEG = 57.29582791f;
 
 	typedef std::string String;
 

@@ -1,72 +1,7 @@
-Per-state BulletAffectors.
-
-Beam/Area weapon scripting
---------------------------
-
-Area weapons will have to have their own structures, can't let user use their own.  Structure would essentially
-be a set of points.
-
-Area weapons are defined as convex, regular polygons.  However, will probably also want support for
-spline-beams.  We will want to manipulate spline beams via their control points.  One way of implementing
-splines in a generic fashion would be to have a 'path affector' which the area conforms to: this would mean that
-internally the area would be split into many segments.  A circle with a spline affector would be tricky
-
-Need to tie it all together in a flexible way.
-
-
-Areas can be manipulated in the following ways:
-
-	Scale
-		Can be scaled non-uniformly in X and Y axes.
-	Rotation
-		Can be rotated around any point, not necessarily in the area.  We will want to allow users to
-		rotate around an external axis, for instance when a long gun rotates.  This needs to be exposed to
-		the script, rather than relying on users knowing where the rotation point is.  Maybe use a
-		'Rotation_Origin_X/Y' instance variable?
-	Toggling
-		Area can be turned on and off instantly, or gradually.  Hence area can have a 'field strength' parameter
-		to modify.
-		
-	These can apply to spline-areas as well - just scale along the spline, or rotate as normal.
-		
-Collision
-
-	Will need to supply collision functions, because although they are not within the remit of the scripting
-	language, they are sufficiently complex as to be a deterrent to using the system if the user has to
-	implement them themself.
+AreaGun:
 	
-	Also need different overall control structure, eg not states, because area is continuous not dicrete.
+	Changing angle needs to specify direction, and handle warping from 0 to 360 properly.
 	
-Sample script
-
-area SplineBeam sides 4
-{
-	// beams are considered active as soon as the unit is active
-	state Setup
-	{
-		set_strength(0.0); // turn off
-		set_width(20);
-		set_length(100);
-		
-		goto Active;
-	}
-	
-	state Active
-	{
-		wait(3.0);
-		str = 0.0;
-		
-		repeat 10 // turn to full over course of 1 second
-		{
-			set_strength(str);
-			str = str + 0.1;
-			wait(0.1);
-		}
-
-		wait(2.0);
-		set_strength(0.0);				
-	}
-}
-
-
-}
+	Look into better ways of representing a pure circle.  Adaptive points?  To do this, use a std::list of
+	points, and then insert/remove points inbetween existing ones?
+	Circles also do not need to be rotated if they are not scaled.

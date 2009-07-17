@@ -36,19 +36,21 @@ BINARY    	[0-1]
 
 "//"[^\n]*                      { /* process comments */ }
 
-"gun"							{ return (KEYWORD_GUN); }
+"bullet"						{ return (KEYWORD_BULLET); }
 "area"							{ return (KEYWORD_AREA); }
+"spline"						{ return (KEYWORD_SPLINE); }
 "state"							{ return (KEYWORD_STATE); }
 "repeat"						{ return (KEYWORD_REPEAT); }
 "if"							{ return (KEYWORD_IF); }
 "else"							{ return (KEYWORD_ELSE); }
 "goto"							{ return (KEYWORD_GOTO); }
 "wait"							{ return (KEYWORD_WAIT); }
+"set"							{ return (KEYWORD_SET); }
 "affectors"						{ return (KEYWORD_AFFECTORS); }
 
-{DIGIT}+						{ return (CONSTANT); }
-{DIGIT}*"."{DIGIT}+				{ return (CONSTANT); }
-{DIGIT}+"."{DIGIT}*				{ return (CONSTANT); }
+{DIGIT}+						{ return (INTEGER); }
+{DIGIT}*"."{DIGIT}+				{ return (REAL); }
+{DIGIT}+"."{DIGIT}*				{ return (REAL); }
 
 {LETTER}({LETTER}|{DIGIT})*     { return (IDENTIFIER); }
 
@@ -61,6 +63,8 @@ BINARY    	[0-1]
 ";"								{ return (';'); }
 ","								{ return (','); }
 "="								{ return ('='); }
+"["								{ return ('['); }
+"]"								{ return (']'); }
 "("								{ return ('('); }
 ")"								{ return (')'); }
 "{"								{ return ('{'); }

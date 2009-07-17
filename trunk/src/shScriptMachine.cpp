@@ -3,7 +3,10 @@
 #include <iostream>
 #include <assert.h>
 #include "shScriptMachine.h"
+#include "shBulletMachine.h"
 #include "shAbstractSyntaxTree.h"
+#include "shBulletGun.h"
+
 
 // Import lexing/parsing functionality
 extern int yylineno;
@@ -16,10 +19,10 @@ void yy_delete_buffer(yy_buffer_state*);
 namespace Shmuppet
 {
 
-void bm_rand(GunScriptRecord &state)
+void bm_rand(GunScriptRecord& state)
 {
-	int rv = rand ();
-	float scale = UINT32_TO_FLOAT (state.curStack[state.stackHead - 1]);
+	int rv = rand();
+	float scale = UINT32_TO_FLOAT(state.curStack[state.stackHead - 1]);
 	float r = scale * (rv / (float) RAND_MAX);
 
 	// Push rand onto stack
@@ -28,7 +31,6 @@ void bm_rand(GunScriptRecord &state)
 
 // --------------------------------------------------------------------------------
 ScriptMachine::ScriptMachine(ErrorFunction err, BulletMachineBase* bulletMachine) :
-	mBulletMachine(bulletMachine),
 	mErrorFunction(err)
 {
 	// Register functions
@@ -36,11 +38,19 @@ ScriptMachine::ScriptMachine(ErrorFunction err, BulletMachineBase* bulletMachine
 
 	// Register instance variables.  These MUST be registered in order to match enum 
 	// ScriptMachine::InstanceVariables. A more generic mechanism would just be too slow.
-	registerInstanceVariable("Gun_X");
-	registerInstanceVariable("Gun_Y");
+	mInstances.push_back("Gun_X");
+	mInstances.push_back("Gun_Y");
+	mInstances.push_back("Gun_Angle");
+
+	// Register gun properties.  These MUST be registered in order to match enum
+	// GunProperty in shGun.h.
+	mGunProperties.push_back("strength");
+	mGunProperties.push_back("width");
+	mGunProperties.push_back("length");
+	mGunProperties.push_back("angle");
 
 	// Set up AST
-	AbstractSyntaxTree::setMachines(this, mBulletMachine);
+	AbstractSyntaxTree::setMachines(this, bulletMachine);
 }
 // --------------------------------------------------------------------------------
 ScriptMachine::~ScriptMachine()
@@ -54,6 +64,16 @@ ScriptMachine::~ScriptMachine()
 		delete (*it);
 		++it;
 	}
+
+	// Delete GunDefinitions
+	{
+		GunDefinitionMap::iterator it = mDefinitions.begin();
+		while (it != mDefinitions.end())
+		{
+			delete it->second;
+			++it;
+		}
+	}
 }
 // --------------------------------------------------------------------------------
 void ScriptMachine::registerNativeFunction(const String& name, NativeFunction func)
@@ -65,7 +85,7 @@ void ScriptMachine::registerNativeFunction(const String& name, NativeFunction fu
 	mNativeFunctions.push_back(rec);
 }
 // --------------------------------------------------------------------------------
-int ScriptMachine::getNativeFunctionIndex (const String &name) const
+int ScriptMachine::getNativeFunctionIndex(const String &name) const
 {
 	for (size_t i = 0; i < mNativeFunctions.size(); ++i)
 	{
@@ -78,7 +98,7 @@ int ScriptMachine::getNativeFunctionIndex (const String &name) const
 // --------------------------------------------------------------------------------
 NativeFunction ScriptMachine::getNativeFunction(int index) const
 {
-	assert (index >= 0 && index < (int) mNativeFunctions.size () && "getNativeFunction: out of bounds");
+	assert(index >= 0 && index < (int) mNativeFunctions.size() && "getNativeFunction: out of bounds");
 	return mNativeFunctions[index].function;
 }
 // --------------------------------------------------------------------------------
@@ -104,7 +124,7 @@ int ScriptMachine::getFireFunctionIndex(const String &name) const
 // --------------------------------------------------------------------------------
 FireFunction ScriptMachine::getFireFunction(int index) const
 {
-	assert (index >= 0 && index < (int) mFireFunctions.size () && 
+	assert(index >= 0 && index < (int) mFireFunctions.size() && 
 		"ScriptMachine::getFireFunction: out of bounds");
 
 	return mFireFunctions[index].function;
@@ -127,12 +147,12 @@ int ScriptMachine::getGlobalVariableIndex(const String& name) const
 	return -1;
 }
 // --------------------------------------------------------------------------------
-float ScriptMachine::getGlobalVariableValue (int index) const
+float ScriptMachine::getGlobalVariableValue(int index) const
 {
-	assert (index >= 0 && index < (int) mGlobals.size () && 
+	assert(index >= 0 && index < (int) mGlobals.size() && 
 		"ScriptMachine::getGlobalVariableValue: out of bounds");
 
-	return mGlobals[index]->getValue ();
+	return mGlobals[index]->getValue();
 }
 // --------------------------------------------------------------------------------
 void ScriptMachine::setGlobalVariableValue(const String& name, float value)
@@ -146,7 +166,7 @@ void ScriptMachine::setGlobalVariableValue(const String& name, float value)
 		}
 	}
 
-	assert (false && "ScriptMachine::setGlobalVariableValue: variable not found");
+	assert(false && "ScriptMachine::setGlobalVariableValue: variable not found");
 }
 // --------------------------------------------------------------------------------
 GlobalVariable* ScriptMachine::getGlobalVariable(const String& name)
@@ -162,15 +182,10 @@ GlobalVariable* ScriptMachine::getGlobalVariable(const String& name)
 // --------------------------------------------------------------------------------
 GlobalVariable* ScriptMachine::getGlobalVariable(int index)
 {
-	assert (index >= 0 && index < (int) mGlobals.size () && 
+	assert(index >= 0 && index < (int) mGlobals.size() && 
 		"ScriptMachine::getGlobalVariableValue: out of bounds");
 
 	return mGlobals[index];
-}
-// --------------------------------------------------------------------------------
-void ScriptMachine::registerInstanceVariable(const String& name)
-{
-	mInstances.push_back(name);
 }
 // --------------------------------------------------------------------------------
 int ScriptMachine::getInstanceVariableIndex(const String &name) const
@@ -182,6 +197,40 @@ int ScriptMachine::getInstanceVariableIndex(const String &name) const
 	}
 
 	return -1;
+}
+// --------------------------------------------------------------------------------
+int ScriptMachine::getGunProperty(const String& name) const
+{
+	for (size_t i = 0; i < mGunProperties.size(); ++i)
+	{
+		if (mGunProperties[i] == name)
+			return (int) i;
+	}
+
+	return -1;
+}
+// --------------------------------------------------------------------------------
+bool ScriptMachine::addGunDefinition(const String &name, GunDefinition* def)
+{
+	GunDefinitionMap::iterator it = mDefinitions.find(name);
+	if (it != mDefinitions.end())
+		return false;
+
+	mDefinitions[name] = def;
+	return true;
+}
+// --------------------------------------------------------------------------------
+const GunDefinition* ScriptMachine::getGunDefinition(const String &name) const
+{
+	GunDefinitionMap::const_iterator it = mDefinitions.find(name);
+	if (it == mDefinitions.end())
+	{
+		return 0;
+	}
+	else
+	{
+		return it->second;
+	}
 }
 // --------------------------------------------------------------------------------
 int ScriptMachine::compileScript(uint8 *buffer, size_t bufferSize)
@@ -246,7 +295,7 @@ bool ScriptMachine::checkInstructionPosition(GunScriptRecord& state, size_t leng
 					state.curInstruction = state.repeats[repeatDepth].start;
 					state.repeats[repeatDepth].count--;
 					if (state.repeats[repeatDepth].count == 0)
-						state.repeats.pop_back ();
+						state.repeats.pop_back();
 				}
 			}
 		}
@@ -282,7 +331,7 @@ void ScriptMachine::interpretCode(const uint32* code,
 
 		case BC_SET:
 			{
-				float value = UINT32_TO_FLOAT (state.curStack[state.stackHead - 1]);
+				float value = UINT32_TO_FLOAT(state.curStack[state.stackHead - 1]);
 				int index = code[state.curInstruction + 1];
 				state.variables[index] = value;
 				state.stackHead--;
@@ -328,7 +377,7 @@ void ScriptMachine::interpretCode(const uint32* code,
 
 		case BC_OP_NEG:
 			{
-				float val = - (UINT32_TO_FLOAT(state.curStack[state.stackHead - 1]));
+				float val = -(UINT32_TO_FLOAT(state.curStack[state.stackHead - 1]));
 				state.curStack[state.stackHead] = FLOAT_TO_UINT32(val);
 				state.stackHead++;
 				state.curInstruction++;
@@ -341,7 +390,7 @@ void ScriptMachine::interpretCode(const uint32* code,
 				float val2 = UINT32_TO_FLOAT(state.curStack[state.stackHead - 1]);
 				float result = val1 + val2;
 
-				state.curStack[state.stackHead - 2] = FLOAT_TO_UINT32 (result);
+				state.curStack[state.stackHead - 2] = FLOAT_TO_UINT32(result);
 				state.stackHead--;
 				state.curInstruction++;
 			}
@@ -353,7 +402,7 @@ void ScriptMachine::interpretCode(const uint32* code,
 				float val2 = UINT32_TO_FLOAT(state.curStack[state.stackHead - 1]);
 				float result = val1 - val2;
 
-				state.curStack[state.stackHead - 2] = FLOAT_TO_UINT32 (result);
+				state.curStack[state.stackHead - 2] = FLOAT_TO_UINT32(result);
 				state.stackHead--;
 				state.curInstruction++;
 			}
@@ -365,7 +414,7 @@ void ScriptMachine::interpretCode(const uint32* code,
 				float val2 = UINT32_TO_FLOAT(state.curStack[state.stackHead - 1]);
 				float result = val1 * val2;
 
-				state.curStack[state.stackHead - 2] = FLOAT_TO_UINT32 (result);
+				state.curStack[state.stackHead - 2] = FLOAT_TO_UINT32(result);
 				state.stackHead--;
 				state.curInstruction++;
 			}
@@ -389,7 +438,7 @@ void ScriptMachine::interpretCode(const uint32* code,
 				int val2 = (int) UINT32_TO_FLOAT(state.curStack[state.stackHead - 1]);
 				float result = val1 % val2;
 
-				state.curStack[state.stackHead - 2] = FLOAT_TO_UINT32 (result);
+				state.curStack[state.stackHead - 2] = FLOAT_TO_UINT32(result);
 				state.stackHead--;
 				state.curInstruction++;
 			}
@@ -494,9 +543,12 @@ void ScriptMachine::interpretCode(const uint32* code,
 		case BC_FIRE:
 			{
 				int funcIndex = code[state.curInstruction + 1];
-				FireFunction func = getFireFunction (funcIndex);
+				FireFunction func = getFireFunction(funcIndex);
 
-				state.stackHead -= func(state.gun,
+				// Would be nice to get rid of this static_cast because it could be
+				// called a lot at one time.  the gun param is only needed for this,
+				// anyway.
+				state.stackHead -= func(static_cast<BulletGunBase*>(state.gun),
 										state.instanceVars[Instance_Gun_X],
 										state.instanceVars[Instance_Gun_Y],
 										&state.curStack[state.stackHead]);
@@ -512,6 +564,18 @@ void ScriptMachine::interpretCode(const uint32* code,
 				state.curInstruction++;
 				checkInstructionPosition(state, length);
 				return;
+			}
+			break;
+
+		case BC_SETPROPERTY:
+			{
+				int gunProp = code[state.curInstruction + 1];
+				float target = UINT32_TO_FLOAT(state.curStack[state.stackHead - 2]);
+				float time = UINT32_TO_FLOAT(state.curStack[state.stackHead - 1]);
+				state.controller->setProperty(gunProp, target, time);
+
+				state.stackHead -= 2;
+				state.curInstruction += 2;
 			}
 			break;
 
@@ -547,7 +611,7 @@ void ScriptMachine::interpretCode(const uint32* code,
 					rpt.count = -1;
 					rpt.start = state.curInstruction + 2;
 					rpt.end = code[state.curInstruction + 1];
-					state.repeats.push_back (rpt);
+					state.repeats.push_back(rpt);
 
 					state.curInstruction = rpt.start;
 					state.stackHead--;
@@ -602,7 +666,7 @@ void ScriptMachine::interpretCode(const uint32* code,
 
 		}
 
-		if (!checkInstructionPosition (state, length))
+		if (!checkInstructionPosition(state, length))
 		{
 			if (!loop)
 				return;

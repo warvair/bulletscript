@@ -23,16 +23,19 @@ void yyerror (char *a_msg)
 
 %}
 
-%token KEYWORD_GUN
+%token KEYWORD_BULLET
 %token KEYWORD_AREA
+%token KEYWORD_SPLINE
 %token KEYWORD_STATE 
 %token KEYWORD_REPEAT
 %token KEYWORD_IF
 %token KEYWORD_ELSE
 %token KEYWORD_GOTO
 %token KEYWORD_WAIT
+%token KEYWORD_SET
 %token KEYWORD_AFFECTORS
-%token CONSTANT
+%token INTEGER
+%token REAL
 %token IDENTIFIER
 %token SYMBOL_LTE
 %token SYMBOL_GTE
@@ -65,25 +68,34 @@ gun_definition_list
 	;
 
 gun_definition
-	: KEYWORD_GUN identifier '{' KEYWORD_AFFECTORS affector_list ';' state_definition_list '}'
+	: KEYWORD_BULLET identifier '{' KEYWORD_AFFECTORS affector_list ';' state_definition_list '}'
 		{
 			$$ = AST->createNode(ASTN_BulletGunDefinition, yylineno);
 			$$->setChild(0, $2);
 			$$->setChild(1, $7);
 			$$->setChild(2, $5);
 		}		
-	| KEYWORD_GUN identifier '{' state_definition_list '}'
+	| KEYWORD_BULLET identifier '{' state_definition_list '}'
 		{
 			$$ = AST->createNode(ASTN_BulletGunDefinition, yylineno);
 			$$->setChild(0, $2);
 			$$->setChild(1, $4);
 		}
-	| KEYWORD_AREA identifier '{' state_definition_list '}'
+	| KEYWORD_AREA '[' constant_integer ',' constant_real ']' identifier '{' state_definition_list '}'
 		{
 			$$ = AST->createNode(ASTN_AreaGunDefinition, yylineno);
-			$$->setChild(0, $2);
-			$$->setChild(1, $4);
-		}	
+			$$->setChild(0, $7);
+			$$->setChild(1, $9);
+			$$->setChild(2, $3);
+			$$->setChild(3, $5);
+		}
+	| KEYWORD_SPLINE '[' constant_integer ']' identifier '{' state_definition_list '}'
+		{	
+			$$ = AST->createNode(ASTN_SplineGunDefinition, yylineno);
+			$$->setChild(0, $5);
+			$$->setChild(1, $7);
+			$$->setChild(2, $3);
+		}
 	;
 	
 affector_list
@@ -179,6 +191,10 @@ statement
 		{
 			$$ = $1;
 		}
+	| set_statement
+		{
+			$$ = $1;
+		}
 	;
 	
 expression_statement
@@ -248,6 +264,28 @@ wait_statement
 			$$->setChild(0, $2);
 		}
 	;
+	
+set_statement
+	: KEYWORD_SET identifier '(' constant_expression ',' constant_expression ')' ';'
+		{
+			$$ = AST->createNode(ASTN_SetStatement, yylineno);
+			$$->setChild(0, $2);
+			$$->setChild(1, $4);
+			$$->setChild(2, $6);
+		}
+	| KEYWORD_SET identifier '('constant_expression ')' ';'
+		{
+			$$ = AST->createNode(ASTN_SetStatement, yylineno);
+			$$->setChild(0, $2);
+			$$->setChild(1, $4);
+			
+			YYSTYPE timeNode = AST->createNode(ASTN_Constant, yylineno);
+			timeNode->setFloat(-1.0f);
+			$$->setChild(2, timeNode);
+		}
+
+	;
+	
 				
 constant_expression
 	: logical_or_expression
@@ -459,7 +497,26 @@ identifier
 	;
 
 constant
-	: CONSTANT
+	: constant_integer
+		{
+			$$ = $1;
+		}
+	| constant_real
+		{
+			$$ = $1;
+		}
+	;
+	
+constant_integer
+	: INTEGER
+		{
+			$$ = AST->createNode(ASTN_Constant, yylineno);
+			$$->setFloat(atof (yytext));
+		}
+	;
+
+constant_real
+	: REAL
 		{
 			$$ = AST->createNode(ASTN_Constant, yylineno);
 			$$->setFloat(atof (yytext));

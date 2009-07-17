@@ -37,6 +37,7 @@ namespace Shmuppet
 	{
 		Instance_Gun_X,
 		Instance_Gun_Y,
+		Instance_Gun_Angle,
 		NUM_INSTANCE_VARS
 	};
 

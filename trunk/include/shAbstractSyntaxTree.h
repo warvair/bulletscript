@@ -3,7 +3,7 @@
 
 #include "shPrerequisites.h"
 #include "shScriptStructs.h"
-#include "shBulletMachine.h"
+#include "shGunDefinitions.h"
 
 namespace Shmuppet
 {
@@ -14,6 +14,7 @@ namespace Shmuppet
 		ASTN_GunDefinitionList,
 		ASTN_BulletGunDefinition,
 		ASTN_AreaGunDefinition,
+		ASTN_SplineGunDefinition,
 		ASTN_StateList,
 		ASTN_State,
 		ASTN_StatementList,
@@ -23,6 +24,7 @@ namespace Shmuppet
 		ASTN_RepeatStatement,
 		ASTN_GotoStatement,
 		ASTN_WaitStatement,
+		ASTN_SetStatement,
 		ASTN_AffectorStatement,
 		ASTN_AffectorCall,
 		ASTN_ConstantExpression,
@@ -49,6 +51,7 @@ namespace Shmuppet
 	};
 
 	class ScriptMachine;
+	class BulletMachineBase;
 
 	typedef std::vector<uint32> BytecodeBlock;
 
@@ -145,9 +148,11 @@ namespace Shmuppet
 		
 		void destroy();
 
-		GunDefinition* AbstractSyntaxTree::createBulletGunDefinition(AbstractSyntaxTreeNode* node);
+		BulletGunDefinition* createBulletGunDefinition(AbstractSyntaxTreeNode* node);
 
-		GunDefinition* AbstractSyntaxTree::createAreaGunDefinition(AbstractSyntaxTreeNode* node);
+		AreaGunDefinition* createAreaGunDefinition(AbstractSyntaxTreeNode* node);
+
+		SplineGunDefinition* createSplineGunDefinition(AbstractSyntaxTreeNode* node);
 
 	protected:
 

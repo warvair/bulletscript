@@ -2,6 +2,7 @@
 #include <iostream>
 #include "shAbstractSyntaxTree.h"
 #include "shScriptMachine.h"
+#include "shBulletMachine.h"
 
 Shmuppet::ScriptMachine* Shmuppet::AbstractSyntaxTree::mScriptMachine = 0;
 
@@ -89,7 +90,7 @@ void AbstractSyntaxTreeNode::foldBinaryNode()
 		break;
 
 	case ASTN_RemainderStatement:
-		setFloat ((int) val1 % (int) val2);
+		setFloat ((float) ((int) val1 % (int) val2));
 		break;
 
 	case ASTN_EqualsStatement:
@@ -285,7 +286,7 @@ void AbstractSyntaxTreeNode::createGunMembers(GunDefinition* def)
 			String stateName = mChildren[0]->getStringData();
 			if (def->stateExists(stateName))
 			{
-				AbstractSyntaxTree::instancePtr ()->addError
+				AbstractSyntaxTree::instancePtr()->addError
 					(mLine, "State '" + stateName + "' has already been declared.");
 				return;
 			}
@@ -298,12 +299,21 @@ void AbstractSyntaxTreeNode::createGunMembers(GunDefinition* def)
 
 	case ASTN_AffectorCall:
 		{
+			// Only bullet guns can have affectors - this should be disabled by
+			// the grammar, but check anyway.
+			if (def->getType() != GT_Bullet)
+			{
+				AbstractSyntaxTree::instancePtr()->addError
+					(mLine, "Only bullet definitions can have affectors.");
+				return;
+			}
+
 			String funcName = mChildren[0]->getStringData();
 
 			// Make sure it exists
 			if (!mBulletMachine->affectorFunctionExists(funcName))
 			{
-				AbstractSyntaxTree::instancePtr ()->addError
+				AbstractSyntaxTree::instancePtr()->addError
 					(mLine, "Affector function '" + funcName + "' is not registered.");
 				return;
 			}
@@ -319,7 +329,9 @@ void AbstractSyntaxTreeNode::createGunMembers(GunDefinition* def)
 			}
 
 			int index = mBulletMachine->getNumBulletAffectors() - 1;
-			def->addBulletAffector(index);
+
+			// We can be certain that this is a BulletGun
+			static_cast<BulletGunDefinition*>(def)->addBulletAffector(index);
 		}
 		return;
 
@@ -397,7 +409,7 @@ void AbstractSyntaxTreeNode::createAffectorArgumentsBytecode(int index,
 			}
 			else
 			{
-				AbstractSyntaxTree::instancePtr ()->addError
+				AbstractSyntaxTree::instancePtr()->addError
 					(mLine, "Variable '" + varName + "' is not declared.");
 				return;
 			}
@@ -466,14 +478,33 @@ void AbstractSyntaxTreeNode::createGunBytecode (GunDefinition* def,
 	switch (mType)
 	{
 	case ASTN_AffectorStatement:
+		{
+			// Only bullet guns can have affectors
+			if (def->getType() != GT_Bullet)
+			{
+				AbstractSyntaxTree::instancePtr()->addError
+					(mLine, "Only bullet definitions can have affectors.");
+				return;
+			}
+		}
+
 		break;
 
 	case ASTN_AffectorCall:
 		{
-
+			// Only bullet guns can have affectors
+			if (def->getType() != GT_Bullet)
+			{
+				AbstractSyntaxTree::instancePtr()->addError
+					(mLine, "Only bullet definitions can have affectors.");
+				return;
+			}
 			// Affector index is num_total_affectors - num_this_affectors + s_curAffector
 			int numAffectors = mBulletMachine->getNumBulletAffectors();
-			int affIndex = (numAffectors - def->getNumBulletAffectors()) + s_curAffector;
+
+			// We can be certain that this is a BulletGun
+			int defAffectors = static_cast<BulletGunDefinition*>(def)->getNumBulletAffectors();
+			int affIndex = (numAffectors - defAffectors) + s_curAffector;
 		
 			if (mChildren[1])
 				mChildren[1]->createAffectorArgumentsBytecode(affIndex, true);
@@ -489,7 +520,7 @@ void AbstractSyntaxTreeNode::createGunBytecode (GunDefinition* def,
 			{
 				if (def->getState(i).name == stateName)
 				{
-					s_curState = &(def->getState(i)); // Dodgy, but state list will not change
+					s_curState = &(def->getState(i)); // Highly dodgy, but state list will not change
 					break;
 				}
 			}
@@ -518,7 +549,7 @@ void AbstractSyntaxTreeNode::createGunBytecode (GunDefinition* def,
 				mScriptMachine->getInstanceVariableIndex(varName) >= 0)
 			{
 				// Error, globals are read-only
-				AbstractSyntaxTree::instancePtr ()->addError(mLine, varName + " is read-only.");
+				AbstractSyntaxTree::instancePtr()->addError(mLine, varName + " is read-only.");
 			}
 
 			// Generate value
@@ -616,7 +647,32 @@ void AbstractSyntaxTreeNode::createGunBytecode (GunDefinition* def,
 			}
 			
 			mChildren[0]->createGunBytecode(def, false, bytecode);
-			bytecode->push_back (BC_WAIT);
+			bytecode->push_back(BC_WAIT);
+		}
+		return;
+
+	case ASTN_SetStatement:
+		{
+			String propName = mChildren[0]->getStringData();
+			int propId = mScriptMachine->getGunProperty(propName);
+			if (propId < 0)
+			{
+				// Todo
+				// ...
+				// At the moment, just ignore.  If the property is not found, then it
+				// will ignore it.  Checking properties would mean registering each
+				// property with its Gun type, and it's just not worth it at the moment.
+/*
+				AbstractSyntaxTree::instancePtr()->addError 
+					(mLine, "Property '" + propName + "' not found.");
+				return;
+*/
+			}
+			// Generate bytecode for value and time
+			mChildren[1]->createGunBytecode(def, false, bytecode);
+			mChildren[2]->createGunBytecode(def, false, bytecode);
+			bytecode->push_back(BC_SETPROPERTY);
+			bytecode->push_back((uint32) propId);
 		}
 		return;
 
@@ -642,7 +698,7 @@ void AbstractSyntaxTreeNode::createGunBytecode (GunDefinition* def,
 
 				if (index < 0)
 				{
-					AbstractSyntaxTree::instancePtr ()->addError 
+					AbstractSyntaxTree::instancePtr()->addError 
 						(mLine, "Function '" + funcName + "' not found.");
 
 					return;
@@ -694,7 +750,7 @@ void AbstractSyntaxTreeNode::createGunBytecode (GunDefinition* def,
 					int instIndex = mScriptMachine->getInstanceVariableIndex(varName);
 					if (instIndex < 0)
 					{
-						AbstractSyntaxTree::instancePtr ()->addError 
+						AbstractSyntaxTree::instancePtr()->addError 
 							(mLine, "Variable '" + varName + "' is not declared.");
 
 						return;
@@ -838,8 +894,7 @@ AbstractSyntaxTreeNode* AbstractSyntaxTree::getRootNode()
 	return mRoot;
 }
 // --------------------------------------------------------------------------------
-AbstractSyntaxTreeNode* AbstractSyntaxTree::createNode(int type, 
-													   int line)
+AbstractSyntaxTreeNode* AbstractSyntaxTree::createNode(int type, int line)
 {
 	return new AbstractSyntaxTreeNode(type, line, mScriptMachine, mBulletMachine);
 }
@@ -849,8 +904,7 @@ void AbstractSyntaxTree::foldConstants()
 	mRoot->foldConstants();
 }
 // --------------------------------------------------------------------------------
-void AbstractSyntaxTree::addError(int line, 
-								  const String& msg)
+void AbstractSyntaxTree::addError(int line, const String& msg)
 {
 	std::stringstream ss;
 	ss << "[" << line << "] " << msg;
@@ -864,10 +918,10 @@ int AbstractSyntaxTree::getNumErrors() const
 	return mNumErrors;
 }
 // --------------------------------------------------------------------------------
-GunDefinition* AbstractSyntaxTree::createBulletGunDefinition(AbstractSyntaxTreeNode* node)
+BulletGunDefinition* AbstractSyntaxTree::createBulletGunDefinition(AbstractSyntaxTreeNode* node)
 {
 	String name = node->getChild(0)->getStringData();
-	GunDefinition* def = new GunDefinition(name);
+	BulletGunDefinition* def = new BulletGunDefinition(name);
 
 	node->createGunMembers(def);
 
@@ -889,20 +943,51 @@ GunDefinition* AbstractSyntaxTree::createBulletGunDefinition(AbstractSyntaxTreeN
 	}
 }
 // --------------------------------------------------------------------------------
-GunDefinition* AbstractSyntaxTree::createAreaGunDefinition(AbstractSyntaxTreeNode* node)
+AreaGunDefinition* AbstractSyntaxTree::createAreaGunDefinition(AbstractSyntaxTreeNode* node)
 {
-	assert(false && "AbstractSyntaxTree::createAreaGunDefinition not implemented yet!");
 	String name = node->getChild(0)->getStringData();
-	GunDefinition* def = new GunDefinition(name);
+
+	// Get number of points
+	int numPoints = (int) node->getChild(2)->getFloatData();
+	if (numPoints < 3)
+	{
+		addError (node->getLine(), "Area '" + name + "' has too few points.");
+		return 0;
+	}
+
+	// Get orientation
+	float orientation = node->getChild(3)->getFloatData();
+
+	AreaGunDefinition* def = new AreaGunDefinition(name);
+	def->setNumPoints(numPoints);
+	def->setOrientation(orientation);
 
 	node->createGunMembers(def);
 
 	// Create state bytecode
 	node->getChild(1)->createGunBytecode(def, true, 0);
 
-	// Create affector bytecode
-	if (node->getChild(2))
-		node->getChild(2)->createGunBytecode(def, true, 0);
+	if (mNumErrors > 0)
+	{
+		delete def;
+		return 0;
+	}
+	else
+	{
+		return def;
+	}
+
+}
+// --------------------------------------------------------------------------------
+SplineGunDefinition* AbstractSyntaxTree::createSplineGunDefinition(AbstractSyntaxTreeNode* node)
+{
+	String name = node->getChild(0)->getStringData();
+	SplineGunDefinition* def = new SplineGunDefinition(name);
+
+	node->createGunMembers(def);
+
+	// Create state bytecode
+	node->getChild(1)->createGunBytecode(def, true, 0);
 
 	if (mNumErrors > 0)
 	{
@@ -920,18 +1005,26 @@ void AbstractSyntaxTree::createGunDefinitions(AbstractSyntaxTreeNode* node)
 {
 	if (node->getType() == ASTN_BulletGunDefinition)
 	{
-		GunDefinition* def = createBulletGunDefinition(node);
+		BulletGunDefinition* def = createBulletGunDefinition(node);
 		if (def)
 		{
-			mBulletMachine->addGunDefinition(def->getName(), def);
+			mScriptMachine->addGunDefinition(def->getName(), def);
 		}
 	}
 	else if (node->getType() == ASTN_AreaGunDefinition)
 	{
-		GunDefinition* def = createAreaGunDefinition(node);
+		AreaGunDefinition* def = createAreaGunDefinition(node);
 		if (def)
 		{
-			mBulletMachine->addGunDefinition(def->getName(), def);
+			mScriptMachine->addGunDefinition(def->getName(), def);
+		}
+	}
+	else if (node->getType() == ASTN_SplineGunDefinition)
+	{
+		SplineGunDefinition* def = createSplineGunDefinition(node);
+		if (def)
+		{
+			mScriptMachine->addGunDefinition(def->getName(), def);
 		}
 	}
 	else
