@@ -39,7 +39,6 @@ BINARY    	[0-1]
 "bullet"						{ return (KEYWORD_BULLET); }
 "area"							{ return (KEYWORD_AREA); }
 "spline"						{ return (KEYWORD_SPLINE); }
-"state"							{ return (KEYWORD_STATE); }
 "repeat"						{ return (KEYWORD_REPEAT); }
 "if"							{ return (KEYWORD_IF); }
 "else"							{ return (KEYWORD_ELSE); }
@@ -47,6 +46,8 @@ BINARY    	[0-1]
 "wait"							{ return (KEYWORD_WAIT); }
 "set"							{ return (KEYWORD_SET); }
 "affectors"						{ return (KEYWORD_AFFECTORS); }
+"BASE"							{ return (KEYWORD_BASE); }
+"CENTRE"						{ return (KEYWORD_CENTRE); }
 
 {DIGIT}+						{ return (INTEGER); }
 {DIGIT}*"."{DIGIT}+				{ return (REAL); }

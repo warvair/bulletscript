@@ -191,6 +191,10 @@
 				>
 			</File>
 			<File
+				RelativePath="..\src\mmgr.cpp"
+				>
+			</File>
+			<File
 				RelativePath="..\Src\shAbstractSyntaxTree.cpp"
 				>
 			</File>

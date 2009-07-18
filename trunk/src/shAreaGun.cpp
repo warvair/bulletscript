@@ -9,8 +9,6 @@ namespace Shmuppet
 // --------------------------------------------------------------------------------
 AreaGun::AreaGun(ScriptMachine* scriptMachine) :
 	Gun(scriptMachine),
-	mX(0.0f),
-	mY(0.0f),
 	mOrientation(0.0f),
 	mStates(ACS_None),
 	mStrength(0.0f),
@@ -24,7 +22,13 @@ AreaGun::AreaGun(ScriptMachine* scriptMachine) :
 	mLengthTime(0.0f),
 	mAngle(0.0f),
 	mAngleSpeed(0.0f),
-	mAngleTime(0.0f)
+	mAngleTime(0.0f),
+	mOriginType(AO_Base),
+	mbAdaptivePoints(false),
+	mNumActivePoints(0),
+	mbWidthChanged(true),
+	mbLengthChanged(true),
+	mbAngleChanged(true)
 {
 }
 // --------------------------------------------------------------------------------
@@ -37,18 +41,63 @@ void AreaGun::setDefinition(const GunDefinition* def, GunController* controller)
 	mRecord.gun = this;
 	mRecord.controller = controller;
 
-	for (int i = 0; i < bDef->getNumPoints(); ++i)
+	int numPoints = bDef->getNumPoints();
+	if (numPoints <= 0)
 	{
-		mPoints.push_back(0.0f); // X
-		mPoints.push_back(0.0f); // Y
+		mbAdaptivePoints = true;
+		mNumActivePoints = 4;
+
+		// Start with 4 points
+		for (int i = 0; i < 4; ++i)
+		{
+			mPoints.push_back(0.0f); // X
+			mPoints.push_back(0.0f); // Y
+		}
+	}
+	else
+	{
+		mbAdaptivePoints = false;
+		mNumActivePoints = numPoints;
+		for (int i = 0; i < numPoints; ++i)
+		{
+			mPoints.push_back(0.0f); // X
+			mPoints.push_back(0.0f); // Y
+		}
 	}
 
 	mOrientation = bDef->getOrientation();
+	mOriginType = bDef->getOriginType();
+}
+// --------------------------------------------------------------------------------
+void AreaGun::updateAdaptivePoints()
+{
+	// check length/width
+	float size = mWidth + mLength;
+	if (size <= 8)
+		mNumActivePoints = 4;
+	else if (size <= 20)
+		mNumActivePoints = 12;
+	else
+		mNumActivePoints = 4 + size / 6;
+
+	if (mPoints.size() < (mNumActivePoints * 2))
+		mPoints.resize(mNumActivePoints * 2);
+}
+// --------------------------------------------------------------------------------
+float AreaGun::getX() const
+{
+	return mRecord.instanceVars[Instance_Gun_X];
+}
+// --------------------------------------------------------------------------------
+float AreaGun::getY() const
+{
+	return mRecord.instanceVars[Instance_Gun_Y];
 }
 // --------------------------------------------------------------------------------
 int AreaGun::getNumPoints() const
 {
-	return (int) mPoints.size() / 2;
+	// If the area is adaptive, then mPoints may be bigger than mNumActivePoints
+	return mNumActivePoints;
 }
 // --------------------------------------------------------------------------------
 void AreaGun::setStrength(float value)
@@ -59,18 +108,27 @@ void AreaGun::setStrength(float value)
 // --------------------------------------------------------------------------------
 void AreaGun::setWidth(float value)
 {
+	mbWidthChanged = true;
 	mWidth = value;
 	mStates &= ~ACS_Width;
+
+	if (mbAdaptivePoints)
+		updateAdaptivePoints();
 }
 // --------------------------------------------------------------------------------
 void AreaGun::setLength(float value)
 {
+	mbLengthChanged = true;
 	mLength = value;
 	mStates &= ~ACS_Length;
+
+	if (mbAdaptivePoints)
+		updateAdaptivePoints();
 }
 // --------------------------------------------------------------------------------
 void AreaGun::setAngle(float value)
 {
+	mbAngleChanged = true;
 	mAngle = value;
 	mStates &= ~ACS_Angle;
 }
@@ -124,7 +182,7 @@ float AreaGun::getAngle() const
 	return mAngle;
 }
 // --------------------------------------------------------------------------------
-const std::vector<float>& AreaGun::getPoints() const
+const AreaGun::PointDataList& AreaGun::getPoints() const
 {
 	return mPoints;
 }
@@ -141,106 +199,162 @@ void AreaGun::update(float frameTime)
 	}
 	if (mStates & ACS_Width)
 	{
+		mbWidthChanged = true;
 		mWidth += mWidthSpeed * frameTime;
 		mWidthTime -= frameTime;
 		if (mWidthTime <= 0.0f)
 			mStates &= ~ACS_Width;
+
+		if (mbAdaptivePoints)
+			updateAdaptivePoints();
 	}
 	if (mStates & ACS_Length)
 	{
+		mbLengthChanged = true;
 		mLength += mLengthSpeed * frameTime;
 		mLengthTime -= frameTime;
 		if (mLengthTime <= 0.0f)
 			mStates &= ~ACS_Length;
+
+		if (mbAdaptivePoints)
+			updateAdaptivePoints();
 	}
 	if (mStates & ACS_Angle)
 	{
+		mbAngleChanged = true;
 		mAngle += mAngleSpeed * frameTime;
 		mAngleTime -= frameTime;
 		if (mAngleTime <= 0.0f)
 			mStates &= ~ACS_Angle;
 	}
 
-	// Now calculate position of points.  
-	// Todo: these probably won't change much so should we cache them somehow?
-	// ...
-
 	// Points form a regular polygon: calculate local coords
-	int numPoints = getNumPoints();
-	switch (numPoints)
+	if (mbWidthChanged || mbLengthChanged || mbAngleChanged)
 	{
-	case 3:
-		mPoints[0] = -mWidth / 2;
-		mPoints[1] = 0.0f;
-		mPoints[2] = mWidth / 2;
-		mPoints[3] = 0;
-		mPoints[4] = 0;
-		mPoints[5] = mLength;
-		break;
-
-	case 4:
-		mPoints[0] = -mWidth / 2;
-		mPoints[1] = 0.0f;
-		mPoints[2] = mWidth / 2;
-		mPoints[3] = 0;
-		mPoints[4] = mWidth / 2;
-		mPoints[5] = mLength;
-		mPoints[6] = -mWidth / 2;
-		mPoints[7] = mLength;
-		break;
-
-	default:
+		int numPoints = getNumPoints();
+		switch (numPoints)
 		{
-			float rAngle = mOrientation * DEG_TO_RAD;
-			float mins[2] = {1e10f, 1e10f};
-			float maxs[2] = {-1e10f, -1e10f};
-			for (int i = 0; i < numPoints * 2; i += 2)
+		case 3:
+			switch (mOriginType)
 			{
-				// Rotate point (0, 1)
-				mPoints[i + 0] = -sin(rAngle);
-				mPoints[i + 1] = cos(rAngle);
+			case AO_Base:
+				mPoints[0] = -mWidth / 2;
+				mPoints[1] = 0.0f;
+				mPoints[2] = mWidth / 2;
+				mPoints[3] = 0.0f;
+				mPoints[4] = 0.0f;
+				mPoints[5] = mLength;
+				break;
 
-				if (mPoints[i + 0] > maxs[0])
-					maxs[0] = mPoints[i + 0];
-				if (mPoints[i + 1] > maxs[1])
-					maxs[1] = mPoints[i + 1];
-
-				if (mPoints[i + 0] < mins[0])
-					mins[0] = mPoints[i + 0];
-				if (mPoints[i + 1] < mins[1])
-					mins[1] = mPoints[i + 1];
-
-				rAngle += (2 * 3.14159f / numPoints);
+			case AO_Centre:
+				mPoints[0] = -mWidth / 2;
+				mPoints[1] = -mLength / 2;
+				mPoints[2] = mWidth / 2;
+				mPoints[3] = -mLength / 2;
+				mPoints[4] = 0.0f;
+				mPoints[5] = mLength / 2;
+				break;
 			}
+			break;
 
-			float ratioX = (mWidth / 2) / maxs[0];
-			float ratioY = mLength / (maxs[1] - mins[1]);
-
-			// Scale and translate
-			for (int i = 0; i < numPoints * 2; i += 2)
+		case 4:
+			switch (mOriginType)
 			{
-				mPoints[i + 0] = mPoints[i + 0] * ratioX;
-				mPoints[i + 1] = (mPoints[i + 1] - mins[1]) * ratioY;
+			case AO_Base:
+				mPoints[0] = -mWidth / 2;
+				mPoints[1] = 0.0f;
+				mPoints[2] = mWidth / 2;
+				mPoints[3] = 0.0f;
+				mPoints[4] = mWidth / 2;
+				mPoints[5] = mLength;
+				mPoints[6] = -mWidth / 2;
+				mPoints[7] = mLength;
+				break;
+			
+			case AO_Centre:
+				mPoints[0] = -mWidth / 2;
+				mPoints[1] = -mLength / 2;
+				mPoints[2] = mWidth / 2;
+				mPoints[3] = -mLength / 2;
+				mPoints[4] = mWidth / 2;
+				mPoints[5] = mLength / 2;
+				mPoints[6] = -mWidth / 2;
+				mPoints[7] = mLength / 2;
+				break;
 			}
+			break;
+
+		default:
+			{
+				float rAngle = mOrientation * DEG_TO_RAD;
+				float mins[2] = {1e10f, 1e10f};
+				float maxs[2] = {-1e10f, -1e10f};
+				for (int i = 0; i < numPoints * 2; i += 2)
+				{
+					// Rotate point (0, 1)
+					mPoints[i + 0] = -sin(rAngle);
+					mPoints[i + 1] = cos(rAngle);
+
+					if (mPoints[i + 0] > maxs[0])
+						maxs[0] = mPoints[i + 0];
+					if (mPoints[i + 1] > maxs[1])
+						maxs[1] = mPoints[i + 1];
+
+					if (mPoints[i + 0] < mins[0])
+						mins[0] = mPoints[i + 0];
+					if (mPoints[i + 1] < mins[1])
+						mins[1] = mPoints[i + 1];
+
+					rAngle += (2 * 3.14159f / numPoints);
+				}
+
+				float ratioX = (mWidth / 2) / maxs[0];
+				float ratioY = mLength / (maxs[1] - mins[1]);
+
+				// Scale and translate
+				for (int i = 0; i < numPoints * 2; i += 2)
+				{
+					mPoints[i + 0] = mPoints[i + 0] * ratioX;
+
+					switch (mOriginType)
+					{
+					case AO_Base:
+						mPoints[i + 1] = (mPoints[i + 1] - mins[1]) * ratioY;
+						break;
+
+					case AO_Centre:
+						mPoints[i + 1] = mPoints[i + 1] * ratioY;
+						break;
+					}
+				}
+			}
+			break;
+
 		}
-		break;
 
+		float angle = mRecord.instanceVars[Instance_Gun_Angle];
+		float cosAngle = cos(angle * DEG_TO_RAD);
+		float sinAngle = sin(angle * DEG_TO_RAD);
+		for (int i = 0; i < numPoints * 2; i += 2)
+		{
+			if (!mbAdaptivePoints)
+			{
+				float px = mPoints[i + 0];
+				float py = mPoints[i + 1];
+
+				mPoints[i + 0] = cosAngle * px - sinAngle * py;
+				mPoints[i + 1] = sinAngle * px + cosAngle * py;
+			}
+
+			mPoints[i + 0] += mRecord.instanceVars[Instance_Gun_X];
+			mPoints[i + 1] += mRecord.instanceVars[Instance_Gun_Y];
+		}
 	}
 
-	float angle = mRecord.instanceVars[Instance_Gun_Angle];
-	float cosAngle = cos(angle * DEG_TO_RAD);
-	float sinAngle = sin(angle * DEG_TO_RAD);
-	for (int i = 0; i < numPoints * 2; i += 2)
-	{
-		float px = mPoints[i + 0];
-		float py = mPoints[i + 1];
-
-		mPoints[i + 0] = cosAngle * px - sinAngle * py;
-		mPoints[i + 1] = sinAngle * px + cosAngle * py;
-
-		mPoints[i + 0] += mRecord.instanceVars[Instance_Gun_X];
-		mPoints[i + 1] += mRecord.instanceVars[Instance_Gun_Y];
-	}
+	// Update cached values
+	mbWidthChanged = false;
+	mbLengthChanged = false;
+	mbAngleChanged = false;
 }
 // --------------------------------------------------------------------------------
 // --------------------------------------------------------------------------------
@@ -301,6 +415,16 @@ void AreaGunController::update(float frameTime)
 const std::vector<float>& AreaGunController::getPoints() const
 {
 	return mAreaGun->getPoints();
+}
+// --------------------------------------------------------------------------------
+float AreaGunController::getX() const
+{
+	return mAreaGun->getX();
+}
+// --------------------------------------------------------------------------------
+float AreaGunController::getY() const
+{
+	return mAreaGun->getY();
 }
 // --------------------------------------------------------------------------------
 int AreaGunController::getNumPoints() const

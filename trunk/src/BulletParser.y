@@ -26,7 +26,6 @@ void yyerror (char *a_msg)
 %token KEYWORD_BULLET
 %token KEYWORD_AREA
 %token KEYWORD_SPLINE
-%token KEYWORD_STATE 
 %token KEYWORD_REPEAT
 %token KEYWORD_IF
 %token KEYWORD_ELSE
@@ -34,6 +33,8 @@ void yyerror (char *a_msg)
 %token KEYWORD_WAIT
 %token KEYWORD_SET
 %token KEYWORD_AFFECTORS
+%token KEYWORD_BASE
+%token KEYWORD_CENTRE
 %token INTEGER
 %token REAL
 %token IDENTIFIER
@@ -81,20 +82,53 @@ gun_definition
 			$$->setChild(0, $2);
 			$$->setChild(1, $4);
 		}
-	| KEYWORD_AREA '[' constant_integer ',' constant_real ']' identifier '{' state_definition_list '}'
+	| KEYWORD_AREA '[' constant_integer ',' constant ',' KEYWORD_BASE ']' identifier '{' state_definition_list '}'
 		{
 			$$ = AST->createNode(ASTN_AreaGunDefinition, yylineno);
-			$$->setChild(0, $7);
-			$$->setChild(1, $9);
+			$$->setChild(0, $9);
+			$$->setChild(1, $11);
 			$$->setChild(2, $3);
 			$$->setChild(3, $5);
+			YYSTYPE originNode = AST->createNode(ASTN_Constant, yylineno);
+			originNode->setFloat(AO_Base);
+			$$->setChild(4, originNode);
 		}
-	| KEYWORD_SPLINE '[' constant_integer ']' identifier '{' state_definition_list '}'
-		{	
-			$$ = AST->createNode(ASTN_SplineGunDefinition, yylineno);
-			$$->setChild(0, $5);
-			$$->setChild(1, $7);
+	| KEYWORD_AREA '[' ',' constant ',' KEYWORD_BASE ']' identifier '{' state_definition_list '}'
+		{
+			$$ = AST->createNode(ASTN_AreaGunDefinition, yylineno);
+			$$->setChild(0, $8);
+			$$->setChild(1, $10);
+			YYSTYPE sideNode = AST->createNode(ASTN_Constant, yylineno);
+			sideNode->setFloat(-1.0f); // negative number means adaptive circle
+			$$->setChild(2, sideNode);
+			$$->setChild(3, $4);
+			YYSTYPE originNode = AST->createNode(ASTN_Constant, yylineno);
+			originNode->setFloat(AO_Base);
+			$$->setChild(4, originNode);
+		}
+	| KEYWORD_AREA '[' constant_integer ',' constant ',' KEYWORD_CENTRE ']' identifier '{' state_definition_list '}'
+		{
+			$$ = AST->createNode(ASTN_AreaGunDefinition, yylineno);
+			$$->setChild(0, $9);
+			$$->setChild(1, $11);
 			$$->setChild(2, $3);
+			$$->setChild(3, $5);
+			YYSTYPE originNode = AST->createNode(ASTN_Constant, yylineno);
+			originNode->setFloat(AO_Centre);
+			$$->setChild(4, originNode);
+		}
+	| KEYWORD_AREA '[' ',' constant ',' KEYWORD_CENTRE ']' identifier '{' state_definition_list '}'
+		{
+			$$ = AST->createNode(ASTN_AreaGunDefinition, yylineno);
+			$$->setChild(0, $8);
+			$$->setChild(1, $10);
+			YYSTYPE sideNode = AST->createNode(ASTN_Constant, yylineno);
+			sideNode->setFloat(-1.0f); // negative number means adaptive circle
+			$$->setChild(2, sideNode);
+			$$->setChild(3, $4);
+			YYSTYPE originNode = AST->createNode(ASTN_Constant, yylineno);
+			originNode->setFloat(AO_Centre);
+			$$->setChild(4, originNode);
 		}
 	;
 	
@@ -134,11 +168,11 @@ state_definition_list
 	;
 	
 state_definition
-	: KEYWORD_STATE identifier compound_statement
+	: identifier compound_statement
 		{
 			$$ = AST->createNode(ASTN_State, yylineno);
-			$$->setChild(0, $2);
-			$$->setChild(1, $3);
+			$$->setChild(0, $1);
+			$$->setChild(1, $2);
 		}
 	;
 	
@@ -511,7 +545,7 @@ constant_integer
 	: INTEGER
 		{
 			$$ = AST->createNode(ASTN_Constant, yylineno);
-			$$->setFloat(atof (yytext));
+			$$->setFloat(atof(yytext));
 		}
 	;
 
@@ -519,7 +553,7 @@ constant_real
 	: REAL
 		{
 			$$ = AST->createNode(ASTN_Constant, yylineno);
-			$$->setFloat(atof (yytext));
+			$$->setFloat(atof(yytext));
 		}
 	;
 

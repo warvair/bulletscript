@@ -59,7 +59,7 @@ namespace Shmuppet
 	{
 	public:
 
-		static const int MAX_CHILDREN = 4;
+		static const int MAX_CHILDREN = 5;
 
 	private:
 

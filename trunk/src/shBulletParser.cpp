@@ -59,48 +59,50 @@
      KEYWORD_BULLET = 258,
      KEYWORD_AREA = 259,
      KEYWORD_SPLINE = 260,
-     KEYWORD_STATE = 261,
-     KEYWORD_REPEAT = 262,
-     KEYWORD_IF = 263,
-     KEYWORD_ELSE = 264,
-     KEYWORD_GOTO = 265,
-     KEYWORD_WAIT = 266,
-     KEYWORD_SET = 267,
-     KEYWORD_AFFECTORS = 268,
-     INTEGER = 269,
-     REAL = 270,
-     IDENTIFIER = 271,
-     SYMBOL_LTE = 272,
-     SYMBOL_GTE = 273,
-     SYMBOL_EQ = 274,
-     SYMBOL_NEQ = 275,
-     SYMBOL_LOG_AND = 276,
-     SYMBOL_LOG_OR = 277,
-     TOKEN_ERROR = 278
+     KEYWORD_REPEAT = 261,
+     KEYWORD_IF = 262,
+     KEYWORD_ELSE = 263,
+     KEYWORD_GOTO = 264,
+     KEYWORD_WAIT = 265,
+     KEYWORD_SET = 266,
+     KEYWORD_AFFECTORS = 267,
+     KEYWORD_BASE = 268,
+     KEYWORD_CENTRE = 269,
+     INTEGER = 270,
+     REAL = 271,
+     IDENTIFIER = 272,
+     SYMBOL_LTE = 273,
+     SYMBOL_GTE = 274,
+     SYMBOL_EQ = 275,
+     SYMBOL_NEQ = 276,
+     SYMBOL_LOG_AND = 277,
+     SYMBOL_LOG_OR = 278,
+     TOKEN_ERROR = 279
    };
 #endif
 /* Tokens.  */
 #define KEYWORD_BULLET 258
 #define KEYWORD_AREA 259
 #define KEYWORD_SPLINE 260
-#define KEYWORD_STATE 261
-#define KEYWORD_REPEAT 262
-#define KEYWORD_IF 263
-#define KEYWORD_ELSE 264
-#define KEYWORD_GOTO 265
-#define KEYWORD_WAIT 266
-#define KEYWORD_SET 267
-#define KEYWORD_AFFECTORS 268
-#define INTEGER 269
-#define REAL 270
-#define IDENTIFIER 271
-#define SYMBOL_LTE 272
-#define SYMBOL_GTE 273
-#define SYMBOL_EQ 274
-#define SYMBOL_NEQ 275
-#define SYMBOL_LOG_AND 276
-#define SYMBOL_LOG_OR 277
-#define TOKEN_ERROR 278
+#define KEYWORD_REPEAT 261
+#define KEYWORD_IF 262
+#define KEYWORD_ELSE 263
+#define KEYWORD_GOTO 264
+#define KEYWORD_WAIT 265
+#define KEYWORD_SET 266
+#define KEYWORD_AFFECTORS 267
+#define KEYWORD_BASE 268
+#define KEYWORD_CENTRE 269
+#define INTEGER 270
+#define REAL 271
+#define IDENTIFIER 272
+#define SYMBOL_LTE 273
+#define SYMBOL_GTE 274
+#define SYMBOL_EQ 275
+#define SYMBOL_NEQ 276
+#define SYMBOL_LOG_AND 277
+#define SYMBOL_LOG_OR 278
+#define TOKEN_ERROR 279
 
 
 
@@ -163,7 +165,7 @@ typedef int YYSTYPE;
 
 
 /* Line 219 of yacc.c.  */
-#line 167 "shBulletParser.cpp"
+#line 169 "shBulletParser.cpp"
 
 #if ! defined (YYSIZE_T) && defined (__SIZE_TYPE__)
 # define YYSIZE_T __SIZE_TYPE__
@@ -312,22 +314,22 @@ union yyalloc
 #endif
 
 /* YYFINAL -- State number of the termination state. */
-#define YYFINAL  11
+#define YYFINAL  9
 /* YYLAST -- Last index in YYTABLE.  */
-#define YYLAST   156
+#define YYLAST   186
 
 /* YYNTOKENS -- Number of terminals. */
-#define YYNTOKENS  40
+#define YYNTOKENS  41
 /* YYNNTS -- Number of nonterminals. */
 #define YYNNTS  34
 /* YYNRULES -- Number of rules. */
-#define YYNRULES  73
+#define YYNRULES  75
 /* YYNRULES -- Number of states. */
-#define YYNSTATES  146
+#define YYNSTATES  160
 
 /* YYTRANSLATE(YYLEX) -- Bison symbol number corresponding to YYLEX.  */
 #define YYUNDEFTOK  2
-#define YYMAXUTOK   278
+#define YYMAXUTOK   279
 
 #define YYTRANSLATE(YYX)						\
   ((unsigned int) (YYX) <= YYMAXUTOK ? yytranslate[YYX] : YYUNDEFTOK)
@@ -338,16 +340,16 @@ static const unsigned char yytranslate[] =
        0,     2,     2,     2,     2,     2,     2,     2,     2,     2,
        2,     2,     2,     2,     2,     2,     2,     2,     2,     2,
        2,     2,     2,     2,     2,     2,     2,     2,     2,     2,
-       2,     2,     2,     2,     2,     2,     2,    39,     2,     2,
-      31,    32,    37,    35,    28,    36,     2,    38,     2,     2,
-       2,     2,     2,     2,     2,     2,     2,     2,     2,    25,
-      33,    30,    34,     2,     2,     2,     2,     2,     2,     2,
+       2,     2,     2,     2,     2,     2,     2,    40,     2,     2,
+      32,    33,    38,    36,    29,    37,     2,    39,     2,     2,
+       2,     2,     2,     2,     2,     2,     2,     2,     2,    26,
+      34,    31,    35,     2,     2,     2,     2,     2,     2,     2,
        2,     2,     2,     2,     2,     2,     2,     2,     2,     2,
        2,     2,     2,     2,     2,     2,     2,     2,     2,     2,
-       2,    27,     2,    29,     2,     2,     2,     2,     2,     2,
+       2,    28,     2,    30,     2,     2,     2,     2,     2,     2,
        2,     2,     2,     2,     2,     2,     2,     2,     2,     2,
        2,     2,     2,     2,     2,     2,     2,     2,     2,     2,
-       2,     2,     2,    24,     2,    26,     2,     2,     2,     2,
+       2,     2,     2,    25,     2,    27,     2,     2,     2,     2,
        2,     2,     2,     2,     2,     2,     2,     2,     2,     2,
        2,     2,     2,     2,     2,     2,     2,     2,     2,     2,
        2,     2,     2,     2,     2,     2,     2,     2,     2,     2,
@@ -362,66 +364,69 @@ static const unsigned char yytranslate[] =
        2,     2,     2,     2,     2,     2,     2,     2,     2,     2,
        2,     2,     2,     2,     2,     2,     1,     2,     3,     4,
        5,     6,     7,     8,     9,    10,    11,    12,    13,    14,
-      15,    16,    17,    18,    19,    20,    21,    22,    23
+      15,    16,    17,    18,    19,    20,    21,    22,    23,    24
 };
 
 #if YYDEBUG
 /* YYPRHS[YYN] -- Index of the first RHS symbol of rule number YYN in
    YYRHS.  */
-static const unsigned char yyprhs[] =
+static const unsigned short int yyprhs[] =
 {
-       0,     0,     3,     5,     7,    10,    19,    25,    36,    45,
-      47,    51,    54,    56,    59,    63,    66,    70,    72,    75,
-      77,    79,    81,    83,    85,    87,    89,    91,    94,    98,
-     104,   110,   115,   119,   123,   127,   136,   143,   145,   147,
-     151,   153,   157,   159,   163,   167,   169,   173,   177,   181,
-     185,   187,   191,   195,   197,   201,   205,   209,   211,   214,
-     217,   219,   221,   223,   227,   230,   233,   237,   239,   243,
-     245,   247,   249,   251
+       0,     0,     3,     5,     7,    10,    19,    25,    38,    50,
+      63,    75,    77,    81,    84,    86,    89,    92,    95,    99,
+     101,   104,   106,   108,   110,   112,   114,   116,   118,   120,
+     123,   127,   133,   139,   144,   148,   152,   156,   165,   172,
+     174,   176,   180,   182,   186,   188,   192,   196,   198,   202,
+     206,   210,   214,   216,   220,   224,   226,   230,   234,   238,
+     240,   243,   246,   248,   250,   252,   256,   259,   262,   266,
+     268,   272,   274,   276,   278,   280
 };
 
 /* YYRHS -- A `-1'-separated list of the rules' RHS. */
 static const yysigned_char yyrhs[] =
 {
-      41,     0,    -1,    42,    -1,    43,    -1,    42,    43,    -1,
-       3,    70,    24,    13,    44,    25,    46,    26,    -1,     3,
-      70,    24,    46,    26,    -1,     4,    27,    72,    28,    73,
-      29,    70,    24,    46,    26,    -1,     5,    27,    72,    29,
-      70,    24,    46,    26,    -1,    45,    -1,    44,    28,    45,
-      -1,    70,    68,    -1,    47,    -1,    46,    47,    -1,     6,
-      70,    48,    -1,    24,    26,    -1,    24,    49,    26,    -1,
-      50,    -1,    49,    50,    -1,    51,    -1,    52,    -1,    53,
-      -1,    54,    -1,    55,    -1,    56,    -1,    57,    -1,    25,
-      -1,    58,    25,    -1,     8,    58,    48,    -1,     8,    58,
-      48,     9,    48,    -1,     8,    58,    48,     9,    52,    -1,
-      70,    30,    58,    25,    -1,     7,    58,    48,    -1,    10,
-      70,    25,    -1,    11,    68,    25,    -1,    12,    70,    31,
-      58,    28,    58,    32,    25,    -1,    12,    70,    31,    58,
-      32,    25,    -1,    59,    -1,    60,    -1,    59,    22,    60,
-      -1,    61,    -1,    60,    21,    61,    -1,    62,    -1,    61,
-      19,    62,    -1,    61,    20,    62,    -1,    63,    -1,    62,
-      33,    63,    -1,    62,    34,    63,    -1,    62,    17,    63,
-      -1,    62,    18,    63,    -1,    64,    -1,    63,    35,    64,
-      -1,    63,    36,    64,    -1,    65,    -1,    64,    37,    65,
-      -1,    64,    38,    65,    -1,    64,    39,    65,    -1,    66,
-      -1,    35,    65,    -1,    36,    65,    -1,    70,    -1,    67,
-      -1,    71,    -1,    31,    58,    32,    -1,    70,    68,    -1,
-      31,    32,    -1,    31,    69,    32,    -1,    58,    -1,    69,
-      28,    58,    -1,    16,    -1,    72,    -1,    73,    -1,    14,
-      -1,    15,    -1
+      42,     0,    -1,    43,    -1,    44,    -1,    43,    44,    -1,
+       3,    71,    25,    12,    45,    26,    47,    27,    -1,     3,
+      71,    25,    47,    27,    -1,     4,    28,    73,    29,    72,
+      29,    13,    30,    71,    25,    47,    27,    -1,     4,    28,
+      29,    72,    29,    13,    30,    71,    25,    47,    27,    -1,
+       4,    28,    73,    29,    72,    29,    14,    30,    71,    25,
+      47,    27,    -1,     4,    28,    29,    72,    29,    14,    30,
+      71,    25,    47,    27,    -1,    46,    -1,    45,    29,    46,
+      -1,    71,    69,    -1,    48,    -1,    47,    48,    -1,    71,
+      49,    -1,    25,    27,    -1,    25,    50,    27,    -1,    51,
+      -1,    50,    51,    -1,    52,    -1,    53,    -1,    54,    -1,
+      55,    -1,    56,    -1,    57,    -1,    58,    -1,    26,    -1,
+      59,    26,    -1,     7,    59,    49,    -1,     7,    59,    49,
+       8,    49,    -1,     7,    59,    49,     8,    53,    -1,    71,
+      31,    59,    26,    -1,     6,    59,    49,    -1,     9,    71,
+      26,    -1,    10,    69,    26,    -1,    11,    71,    32,    59,
+      29,    59,    33,    26,    -1,    11,    71,    32,    59,    33,
+      26,    -1,    60,    -1,    61,    -1,    60,    23,    61,    -1,
+      62,    -1,    61,    22,    62,    -1,    63,    -1,    62,    20,
+      63,    -1,    62,    21,    63,    -1,    64,    -1,    63,    34,
+      64,    -1,    63,    35,    64,    -1,    63,    18,    64,    -1,
+      63,    19,    64,    -1,    65,    -1,    64,    36,    65,    -1,
+      64,    37,    65,    -1,    66,    -1,    65,    38,    66,    -1,
+      65,    39,    66,    -1,    65,    40,    66,    -1,    67,    -1,
+      36,    66,    -1,    37,    66,    -1,    71,    -1,    68,    -1,
+      72,    -1,    32,    59,    33,    -1,    71,    69,    -1,    32,
+      33,    -1,    32,    70,    33,    -1,    59,    -1,    70,    29,
+      59,    -1,    17,    -1,    73,    -1,    74,    -1,    15,    -1,
+      16,    -1
 };
 
 /* YYRLINE[YYN] -- source line where rule number YYN was defined.  */
 static const unsigned short int yyrline[] =
 {
-       0,    51,    51,    58,    62,    71,    78,    84,    92,   102,
-     106,   115,   124,   128,   137,   146,   150,   157,   161,   170,
-     174,   178,   182,   186,   190,   194,   201,   205,   212,   218,
-     225,   235,   244,   253,   261,   269,   276,   291,   299,   303,
-     312,   316,   325,   329,   335,   344,   348,   354,   360,   366,
-     375,   379,   385,   394,   398,   404,   410,   419,   423,   428,
-     436,   440,   444,   448,   455,   464,   468,   475,   480,   492,
-     500,   504,   511,   519
+       0,    52,    52,    59,    63,    72,    79,    85,    96,   109,
+     120,   136,   140,   149,   158,   162,   171,   180,   184,   191,
+     195,   204,   208,   212,   216,   220,   224,   228,   235,   239,
+     246,   252,   259,   269,   278,   287,   295,   303,   310,   325,
+     333,   337,   346,   350,   359,   363,   369,   378,   382,   388,
+     394,   400,   409,   413,   419,   428,   432,   438,   444,   453,
+     457,   462,   470,   474,   478,   482,   489,   498,   502,   509,
+     514,   526,   534,   538,   545,   553
 };
 #endif
 
@@ -431,10 +436,10 @@ static const unsigned short int yyrline[] =
 static const char *const yytname[] =
 {
   "$end", "error", "$undefined", "KEYWORD_BULLET", "KEYWORD_AREA",
-  "KEYWORD_SPLINE", "KEYWORD_STATE", "KEYWORD_REPEAT", "KEYWORD_IF",
-  "KEYWORD_ELSE", "KEYWORD_GOTO", "KEYWORD_WAIT", "KEYWORD_SET",
-  "KEYWORD_AFFECTORS", "INTEGER", "REAL", "IDENTIFIER", "SYMBOL_LTE",
-  "SYMBOL_GTE", "SYMBOL_EQ", "SYMBOL_NEQ", "SYMBOL_LOG_AND",
+  "KEYWORD_SPLINE", "KEYWORD_REPEAT", "KEYWORD_IF", "KEYWORD_ELSE",
+  "KEYWORD_GOTO", "KEYWORD_WAIT", "KEYWORD_SET", "KEYWORD_AFFECTORS",
+  "KEYWORD_BASE", "KEYWORD_CENTRE", "INTEGER", "REAL", "IDENTIFIER",
+  "SYMBOL_LTE", "SYMBOL_GTE", "SYMBOL_EQ", "SYMBOL_NEQ", "SYMBOL_LOG_AND",
   "SYMBOL_LOG_OR", "TOKEN_ERROR", "'{'", "';'", "'}'", "'['", "','", "']'",
   "'='", "'('", "')'", "'<'", "'>'", "'+'", "'-'", "'*'", "'/'", "'%'",
   "$accept", "script_file", "gun_definition_list", "gun_definition",
@@ -458,35 +463,36 @@ static const unsigned short int yytoknum[] =
 {
        0,   256,   257,   258,   259,   260,   261,   262,   263,   264,
      265,   266,   267,   268,   269,   270,   271,   272,   273,   274,
-     275,   276,   277,   278,   123,    59,   125,    91,    44,    93,
-      61,    40,    41,    60,    62,    43,    45,    42,    47,    37
+     275,   276,   277,   278,   279,   123,    59,   125,    91,    44,
+      93,    61,    40,    41,    60,    62,    43,    45,    42,    47,
+      37
 };
 # endif
 
 /* YYR1[YYN] -- Symbol number of symbol that rule YYN derives.  */
 static const unsigned char yyr1[] =
 {
-       0,    40,    41,    42,    42,    43,    43,    43,    43,    44,
-      44,    45,    46,    46,    47,    48,    48,    49,    49,    50,
-      50,    50,    50,    50,    50,    50,    51,    51,    52,    52,
-      52,    53,    54,    55,    56,    57,    57,    58,    59,    59,
-      60,    60,    61,    61,    61,    62,    62,    62,    62,    62,
-      63,    63,    63,    64,    64,    64,    64,    65,    65,    65,
-      66,    66,    66,    66,    67,    68,    68,    69,    69,    70,
-      71,    71,    72,    73
+       0,    41,    42,    43,    43,    44,    44,    44,    44,    44,
+      44,    45,    45,    46,    47,    47,    48,    49,    49,    50,
+      50,    51,    51,    51,    51,    51,    51,    51,    52,    52,
+      53,    53,    53,    54,    55,    56,    57,    58,    58,    59,
+      60,    60,    61,    61,    62,    62,    62,    63,    63,    63,
+      63,    63,    64,    64,    64,    65,    65,    65,    65,    66,
+      66,    66,    67,    67,    67,    67,    68,    69,    69,    70,
+      70,    71,    72,    72,    73,    74
 };
 
 /* YYR2[YYN] -- Number of symbols composing right hand side of rule YYN.  */
 static const unsigned char yyr2[] =
 {
-       0,     2,     1,     1,     2,     8,     5,    10,     8,     1,
-       3,     2,     1,     2,     3,     2,     3,     1,     2,     1,
-       1,     1,     1,     1,     1,     1,     1,     2,     3,     5,
-       5,     4,     3,     3,     3,     8,     6,     1,     1,     3,
-       1,     3,     1,     3,     3,     1,     3,     3,     3,     3,
-       1,     3,     3,     1,     3,     3,     3,     1,     2,     2,
-       1,     1,     1,     3,     2,     2,     3,     1,     3,     1,
-       1,     1,     1,     1
+       0,     2,     1,     1,     2,     8,     5,    12,    11,    12,
+      11,     1,     3,     2,     1,     2,     2,     2,     3,     1,
+       2,     1,     1,     1,     1,     1,     1,     1,     1,     2,
+       3,     5,     5,     4,     3,     3,     3,     8,     6,     1,
+       1,     3,     1,     3,     1,     3,     3,     1,     3,     3,
+       3,     3,     1,     3,     3,     1,     3,     3,     3,     1,
+       2,     2,     1,     1,     1,     3,     2,     2,     3,     1,
+       3,     1,     1,     1,     1,     1
 };
 
 /* YYDEFACT[STATE-NAME] -- Default rule to reduce with in state
@@ -494,61 +500,63 @@ static const unsigned char yyr2[] =
    means the default is an error.  */
 static const unsigned char yydefact[] =
 {
-       0,     0,     0,     0,     0,     2,     3,    69,     0,     0,
-       0,     1,     4,     0,    72,     0,     0,     0,     0,     0,
-      12,     0,     0,     0,     0,     9,     0,     6,    13,    73,
-       0,     0,     0,    14,     0,     0,     0,    11,     0,     0,
-       0,     0,     0,     0,     0,    26,    15,     0,     0,     0,
-       0,    17,    19,    20,    21,    22,    23,    24,    25,     0,
-      37,    38,    40,    42,    45,    50,    53,    57,    61,    60,
-      62,    70,    71,     0,    10,    65,    67,     0,    60,     0,
-       0,     0,     0,     0,     0,     0,     0,    58,    59,    16,
-      18,    27,     0,     0,     0,     0,     0,     0,     0,     0,
-       0,     0,     0,     0,     0,     0,    64,     5,     0,    66,
-       0,     8,    32,    28,    33,    34,     0,    63,    39,    41,
-      43,    44,    48,    49,    46,    47,    51,    52,    54,    55,
-      56,     0,    68,     0,     0,     0,    31,     7,    29,    30,
-       0,     0,     0,    36,     0,    35
+       0,     0,     0,     0,     2,     3,    71,     0,     0,     1,
+       4,     0,    74,     0,     0,     0,     0,    14,     0,    75,
+       0,    72,    73,     0,     0,    11,     0,     6,    15,     0,
+      16,     0,     0,     0,     0,     0,    13,     0,     0,     0,
+       0,     0,    28,    17,     0,     0,     0,     0,    19,    21,
+      22,    23,    24,    25,    26,    27,     0,    39,    40,    42,
+      44,    47,    52,    55,    59,    63,    62,    64,     0,     0,
+       0,     0,    12,    67,    69,     0,    62,     0,     0,     0,
+       0,     0,     0,    60,    61,    18,    20,    29,     0,     0,
+       0,     0,     0,     0,     0,     0,     0,     0,     0,     0,
+       0,     0,    66,     0,     0,     0,     0,     5,     0,    68,
+      34,    30,    35,    36,     0,    65,    41,    43,    45,    46,
+      50,    51,    48,    49,    53,    54,    56,    57,    58,     0,
+       0,     0,     0,     0,    70,     0,     0,    33,     0,     0,
+       0,     0,    31,    32,     0,     0,     0,     0,     0,     0,
+       0,    38,     8,    10,     0,     0,     0,     7,     9,    37
 };
 
 /* YYDEFGOTO[NTERM-NUM]. */
 static const yysigned_char yydefgoto[] =
 {
-      -1,     4,     5,     6,    24,    25,    19,    20,    33,    50,
-      51,    52,    53,    54,    55,    56,    57,    58,    59,    60,
-      61,    62,    63,    64,    65,    66,    67,    68,   106,    77,
-      78,    70,    71,    72
+      -1,     3,     4,     5,    24,    25,    16,    17,    30,    47,
+      48,    49,    50,    51,    52,    53,    54,    55,    56,    57,
+      58,    59,    60,    61,    62,    63,    64,    65,   102,    75,
+      76,    67,    21,    22
 };
 
 /* YYPACT[STATE-NUM] -- Index in YYTABLE of the portion describing
    STATE-NUM.  */
-#define YYPACT_NINF -73
+#define YYPACT_NINF -72
 static const short int yypact[] =
 {
-     114,    -5,    11,    42,    36,   114,   -73,   -73,    50,    68,
-      68,   -73,   -73,    40,   -73,    32,    57,    -5,    -5,     9,
-     -73,    75,    -5,   105,     5,   -73,    70,   -73,   -73,   -73,
-     101,   107,     6,   -73,    98,    -5,    12,   -73,    -5,    98,
-      80,    80,    -5,    70,    -5,   -73,   -73,    80,    80,    80,
-      77,   -73,   -73,   -73,   -73,   -73,   -73,   -73,   -73,   108,
-     110,   113,    47,    46,    71,    83,   -73,   -73,   -73,    79,
-     -73,   -73,   -73,    13,   -73,   -73,   -73,    24,    70,   111,
-      19,   105,   105,   112,   115,   116,   104,   -73,   -73,   -73,
-     -73,   -73,    80,    80,    80,    80,    80,    80,    80,    80,
-      80,    80,    80,    80,    80,    80,   -73,   -73,    80,   -73,
-      98,   -73,   -73,   129,   -73,   -73,    80,   -73,   113,    47,
-      46,    46,    71,    71,    71,    71,    83,    83,   -73,   -73,
-     -73,   117,   -73,    23,     0,    44,   -73,   -73,   -73,   -73,
-      80,   119,   109,   -73,   120,   -73
+      68,     1,    70,    48,    68,   -72,   -72,    76,    -3,   -72,
+     -72,    33,   -72,    38,    44,     1,     0,   -72,    83,   -72,
+      75,   -72,   -72,    38,    65,   -72,    94,   -72,   -72,    73,
+     -72,    79,    98,     1,     1,    19,   -72,     5,     5,     1,
+      94,     1,   -72,   -72,     5,     5,     5,   149,   -72,   -72,
+     -72,   -72,   -72,   -72,   -72,   -72,   102,   106,   108,    66,
+      25,    60,   -15,   -72,   -72,   -72,    87,   -72,   105,   109,
+     107,     2,   -72,   -72,   -72,    36,    94,    83,    83,   110,
+     114,   111,   116,   -72,   -72,   -72,   -72,   -72,     5,     5,
+       5,     5,     5,     5,     5,     5,     5,     5,     5,     5,
+       5,     5,   -72,     1,     1,   120,   121,   -72,     5,   -72,
+     -72,   136,   -72,   -72,     5,   -72,   108,    66,    25,    25,
+      60,    60,    60,    60,   -15,   -15,   -72,   -72,   -72,   126,
+     132,   137,     1,     1,   -72,     6,    45,   -72,     1,     1,
+     138,   142,   -72,   -72,     5,   135,    22,    30,     1,     1,
+     139,   -72,   -72,   -72,    49,    50,   143,   -72,   -72,   -72
 };
 
 /* YYPGOTO[NTERM-NUM].  */
 static const short int yypgoto[] =
 {
-     -73,   -73,   -73,   134,   -73,   121,   -32,   -19,   -72,   -73,
-      93,   -73,    14,   -73,   -73,   -73,   -73,   -73,   -35,   -73,
-      54,    56,    29,     1,    25,   -45,   -73,   -73,    -3,   -73,
-      33,   -73,   118,   130
+     -72,   -72,   -72,   164,   -72,   140,   -32,   -13,   -71,   -72,
+     123,   -72,    42,   -72,   -72,   -72,   -72,   -72,   -33,   -72,
+      85,    82,    32,    20,    28,   -37,   -72,   -72,   -10,   -72,
+      -1,    72,   170,   -72
 };
 
 /* YYTABLE[YYPACT[STATE-NUM]].  What to do in state STATE-NUM.  If
@@ -558,63 +566,70 @@ static const short int yypgoto[] =
 #define YYTABLE_NINF -1
 static const unsigned char yytable[] =
 {
-      28,    76,    73,    87,    88,    81,    82,    80,    41,   112,
-     113,     7,    86,    40,    41,    17,    42,    43,    44,    17,
-      14,    29,     7,    37,    32,    17,    14,    29,     7,    17,
-      34,    45,    46,    35,     8,    27,    11,    47,     9,   107,
-      84,    48,    49,    47,    75,   111,    17,    48,    49,   137,
-      23,    26,   108,    18,    28,    31,   109,   128,   129,   130,
-      21,    28,   138,    96,    97,    69,    94,    95,    26,    10,
-     131,    79,   140,   132,    13,    83,   141,    85,   133,    98,
-      99,   135,    14,    69,    40,    41,    22,    42,    43,    44,
-      29,    14,    29,     7,    14,    29,     7,   122,   123,   124,
-     125,    36,    45,    89,    17,   142,   100,   101,    47,   105,
-      36,    47,    48,    49,    28,    48,    49,     1,     2,     3,
-     102,   103,   104,   120,   121,   126,   127,    15,    16,    32,
-      38,    39,    92,    91,    93,   110,   117,   114,   134,    12,
-     115,   144,   136,    90,   143,   145,   118,   116,   139,   119,
-       0,    30,     0,     0,     0,     0,    74
+       7,    71,    74,    28,    77,    78,   110,   111,    83,    84,
+      18,    82,    12,    38,    26,    18,    36,     6,     6,     6,
+      12,    19,     6,    98,    99,   100,    13,    27,    66,   107,
+      80,    29,    18,    26,    12,    19,     6,    44,    79,     6,
+      81,    45,    46,    92,    93,    15,    66,     6,     9,   152,
+       6,    44,    73,    12,    19,    45,    46,   153,    28,    94,
+      95,   126,   127,   128,   142,   108,     6,     6,   129,   109,
+      18,     1,     2,    23,   144,   134,   157,   158,   145,    37,
+      38,   136,    39,    40,    41,    20,    90,    91,    12,    19,
+       6,    33,    68,    69,    34,    32,    96,    97,     8,    42,
+      43,    11,   130,   131,    31,    44,   146,   147,    29,    45,
+      46,   150,   120,   121,   122,   123,   154,   155,   101,    35,
+     105,   106,   118,   119,   124,   125,    35,    70,    87,    88,
+      89,   140,   141,    28,    28,   103,   112,    18,    18,   104,
+     113,    28,    28,   114,   135,    18,    18,    18,    18,   115,
+     132,   133,   137,    18,    18,    37,    38,   138,    39,    40,
+      41,   151,   139,   148,    12,    19,     6,   149,    10,   159,
+      86,   117,   156,   116,    72,    42,    85,   143,    14,     0,
+       0,    44,     0,     0,     0,    45,    46
 };
 
 static const short int yycheck[] =
 {
-      19,    36,    34,    48,    49,    40,    41,    39,     8,    81,
-      82,    16,    47,     7,     8,     6,    10,    11,    12,     6,
-      14,    15,    16,    26,    24,     6,    14,    15,    16,     6,
-      25,    25,    26,    28,     1,    26,     0,    31,    27,    26,
-      43,    35,    36,    31,    32,    26,     6,    35,    36,    26,
-      17,    18,    28,    13,    73,    22,    32,   102,   103,   104,
-      28,    80,   134,    17,    18,    32,    19,    20,    35,    27,
-     105,    38,    28,   108,    24,    42,    32,    44,   110,    33,
-      34,   116,    14,    50,     7,     8,    29,    10,    11,    12,
-      15,    14,    15,    16,    14,    15,    16,    96,    97,    98,
-      99,    31,    25,    26,     6,   140,    35,    36,    31,    30,
-      31,    31,    35,    36,   133,    35,    36,     3,     4,     5,
-      37,    38,    39,    94,    95,   100,   101,     9,    10,    24,
-      29,    24,    22,    25,    21,    24,    32,    25,     9,     5,
-      25,    32,    25,    50,    25,    25,    92,    31,   134,    93,
-      -1,    21,    -1,    -1,    -1,    -1,    35
+       1,    33,    35,    16,    37,    38,    77,    78,    45,    46,
+      11,    44,    15,     7,    15,    16,    26,    17,    17,    17,
+      15,    16,    17,    38,    39,    40,    29,    27,    29,    27,
+      40,    25,    33,    34,    15,    16,    17,    32,    39,    17,
+      41,    36,    37,    18,    19,    12,    47,    17,     0,    27,
+      17,    32,    33,    15,    16,    36,    37,    27,    71,    34,
+      35,    98,    99,   100,   135,    29,    17,    17,   101,    33,
+      71,     3,     4,    29,    29,   108,    27,    27,    33,     6,
+       7,   114,     9,    10,    11,    13,    20,    21,    15,    16,
+      17,    26,    13,    14,    29,    23,    36,    37,    28,    26,
+      27,    25,   103,   104,    29,    32,   138,   139,    25,    36,
+      37,   144,    92,    93,    94,    95,   148,   149,    31,    32,
+      13,    14,    90,    91,    96,    97,    32,    29,    26,    23,
+      22,   132,   133,   146,   147,    30,    26,   138,   139,    30,
+      26,   154,   155,    32,     8,   146,   147,   148,   149,    33,
+      30,    30,    26,   154,   155,     6,     7,    25,     9,    10,
+      11,    26,    25,    25,    15,    16,    17,    25,     4,    26,
+      47,    89,    33,    88,    34,    26,    27,   135,     8,    -1,
+      -1,    32,    -1,    -1,    -1,    36,    37
 };
 
 /* YYSTOS[STATE-NUM] -- The (internal number of the) accessing
    symbol of state STATE-NUM.  */
 static const unsigned char yystos[] =
 {
-       0,     3,     4,     5,    41,    42,    43,    16,    70,    27,
-      27,     0,    43,    24,    14,    72,    72,     6,    13,    46,
-      47,    28,    29,    70,    44,    45,    70,    26,    47,    15,
-      73,    70,    24,    48,    25,    28,    31,    68,    29,    24,
-       7,     8,    10,    11,    12,    25,    26,    31,    35,    36,
-      49,    50,    51,    52,    53,    54,    55,    56,    57,    58,
-      59,    60,    61,    62,    63,    64,    65,    66,    67,    70,
-      71,    72,    73,    46,    45,    32,    58,    69,    70,    70,
-      46,    58,    58,    70,    68,    70,    58,    65,    65,    26,
-      50,    25,    22,    21,    19,    20,    17,    18,    33,    34,
-      35,    36,    37,    38,    39,    30,    68,    26,    28,    32,
-      24,    26,    48,    48,    25,    25,    31,    32,    60,    61,
-      62,    62,    63,    63,    63,    63,    64,    64,    65,    65,
-      65,    58,    58,    46,     9,    58,    25,    26,    48,    52,
-      28,    32,    58,    25,    32,    25
+       0,     3,     4,    42,    43,    44,    17,    71,    28,     0,
+      44,    25,    15,    29,    73,    12,    47,    48,    71,    16,
+      72,    73,    74,    29,    45,    46,    71,    27,    48,    25,
+      49,    29,    72,    26,    29,    32,    69,     6,     7,     9,
+      10,    11,    26,    27,    32,    36,    37,    50,    51,    52,
+      53,    54,    55,    56,    57,    58,    59,    60,    61,    62,
+      63,    64,    65,    66,    67,    68,    71,    72,    13,    14,
+      29,    47,    46,    33,    59,    70,    71,    59,    59,    71,
+      69,    71,    59,    66,    66,    27,    51,    26,    23,    22,
+      20,    21,    18,    19,    34,    35,    36,    37,    38,    39,
+      40,    31,    69,    30,    30,    13,    14,    27,    29,    33,
+      49,    49,    26,    26,    32,    33,    61,    62,    63,    63,
+      64,    64,    64,    64,    65,    65,    66,    66,    66,    59,
+      71,    71,    30,    30,    59,     8,    59,    26,    25,    25,
+      71,    71,    49,    53,    29,    33,    47,    47,    25,    25,
+      59,    26,    27,    27,    47,    47,    33,    27,    27,    26
 };
 
 #define yyerrok		(yyerrstatus = 0)
@@ -1284,21 +1299,21 @@ yyreduce:
   switch (yyn)
     {
         case 2:
-#line 52 "BulletParser.y"
+#line 53 "BulletParser.y"
     {
 			AST->getRootNode()->setChild(0, (yyvsp[0]));
 		;}
     break;
 
   case 3:
-#line 59 "BulletParser.y"
+#line 60 "BulletParser.y"
     {
 			(yyval) = (yyvsp[0]);
 		;}
     break;
 
   case 4:
-#line 63 "BulletParser.y"
+#line 64 "BulletParser.y"
     {
 			(yyval) = AST->createNode(ASTN_GunDefinitionList, yylineno);
 			(yyval)->setChild(0, (yyvsp[-1]));
@@ -1307,7 +1322,7 @@ yyreduce:
     break;
 
   case 5:
-#line 72 "BulletParser.y"
+#line 73 "BulletParser.y"
     {
 			(yyval) = AST->createNode(ASTN_BulletGunDefinition, yylineno);
 			(yyval)->setChild(0, (yyvsp[-6]));
@@ -1317,7 +1332,7 @@ yyreduce:
     break;
 
   case 6:
-#line 79 "BulletParser.y"
+#line 80 "BulletParser.y"
     {
 			(yyval) = AST->createNode(ASTN_BulletGunDefinition, yylineno);
 			(yyval)->setChild(0, (yyvsp[-3]));
@@ -1326,35 +1341,74 @@ yyreduce:
     break;
 
   case 7:
-#line 85 "BulletParser.y"
+#line 86 "BulletParser.y"
     {
 			(yyval) = AST->createNode(ASTN_AreaGunDefinition, yylineno);
 			(yyval)->setChild(0, (yyvsp[-3]));
 			(yyval)->setChild(1, (yyvsp[-1]));
-			(yyval)->setChild(2, (yyvsp[-7]));
-			(yyval)->setChild(3, (yyvsp[-5]));
+			(yyval)->setChild(2, (yyvsp[-9]));
+			(yyval)->setChild(3, (yyvsp[-7]));
+			YYSTYPE originNode = AST->createNode(ASTN_Constant, yylineno);
+			originNode->setFloat(AO_Base);
+			(yyval)->setChild(4, originNode);
 		;}
     break;
 
   case 8:
-#line 93 "BulletParser.y"
-    {	
-			(yyval) = AST->createNode(ASTN_SplineGunDefinition, yylineno);
+#line 97 "BulletParser.y"
+    {
+			(yyval) = AST->createNode(ASTN_AreaGunDefinition, yylineno);
 			(yyval)->setChild(0, (yyvsp[-3]));
 			(yyval)->setChild(1, (yyvsp[-1]));
-			(yyval)->setChild(2, (yyvsp[-5]));
+			YYSTYPE sideNode = AST->createNode(ASTN_Constant, yylineno);
+			sideNode->setFloat(-1.0f); // negative number means adaptive circle
+			(yyval)->setChild(2, sideNode);
+			(yyval)->setChild(3, (yyvsp[-7]));
+			YYSTYPE originNode = AST->createNode(ASTN_Constant, yylineno);
+			originNode->setFloat(AO_Base);
+			(yyval)->setChild(4, originNode);
 		;}
     break;
 
   case 9:
-#line 103 "BulletParser.y"
+#line 110 "BulletParser.y"
+    {
+			(yyval) = AST->createNode(ASTN_AreaGunDefinition, yylineno);
+			(yyval)->setChild(0, (yyvsp[-3]));
+			(yyval)->setChild(1, (yyvsp[-1]));
+			(yyval)->setChild(2, (yyvsp[-9]));
+			(yyval)->setChild(3, (yyvsp[-7]));
+			YYSTYPE originNode = AST->createNode(ASTN_Constant, yylineno);
+			originNode->setFloat(AO_Centre);
+			(yyval)->setChild(4, originNode);
+		;}
+    break;
+
+  case 10:
+#line 121 "BulletParser.y"
+    {
+			(yyval) = AST->createNode(ASTN_AreaGunDefinition, yylineno);
+			(yyval)->setChild(0, (yyvsp[-3]));
+			(yyval)->setChild(1, (yyvsp[-1]));
+			YYSTYPE sideNode = AST->createNode(ASTN_Constant, yylineno);
+			sideNode->setFloat(-1.0f); // negative number means adaptive circle
+			(yyval)->setChild(2, sideNode);
+			(yyval)->setChild(3, (yyvsp[-7]));
+			YYSTYPE originNode = AST->createNode(ASTN_Constant, yylineno);
+			originNode->setFloat(AO_Centre);
+			(yyval)->setChild(4, originNode);
+		;}
+    break;
+
+  case 11:
+#line 137 "BulletParser.y"
     {
 			(yyval) = (yyvsp[0]);
 		;}
     break;
 
-  case 10:
-#line 107 "BulletParser.y"
+  case 12:
+#line 141 "BulletParser.y"
     {
 			(yyval) = AST->createNode(ASTN_AffectorStatement, yylineno);
 			(yyval)->setChild(0, (yyvsp[-2]));
@@ -1362,8 +1416,8 @@ yyreduce:
 		;}
     break;
 
-  case 11:
-#line 116 "BulletParser.y"
+  case 13:
+#line 150 "BulletParser.y"
     {
 			(yyval) = AST->createNode(ASTN_AffectorCall, yylineno);
 			(yyval)->setChild(0, (yyvsp[-1]));
@@ -1371,15 +1425,15 @@ yyreduce:
 		;}
     break;
 
-  case 12:
-#line 125 "BulletParser.y"
+  case 14:
+#line 159 "BulletParser.y"
     {
 			(yyval) = (yyvsp[0]);
 		;}
     break;
 
-  case 13:
-#line 129 "BulletParser.y"
+  case 15:
+#line 163 "BulletParser.y"
     {
 			(yyval) = AST->createNode(ASTN_StateList, yylineno);
 			(yyval)->setChild(0, (yyvsp[-1]));
@@ -1387,8 +1441,8 @@ yyreduce:
 		;}
     break;
 
-  case 14:
-#line 138 "BulletParser.y"
+  case 16:
+#line 172 "BulletParser.y"
     {
 			(yyval) = AST->createNode(ASTN_State, yylineno);
 			(yyval)->setChild(0, (yyvsp[-1]));
@@ -1396,29 +1450,29 @@ yyreduce:
 		;}
     break;
 
-  case 15:
-#line 147 "BulletParser.y"
+  case 17:
+#line 181 "BulletParser.y"
     {
 			(yyval) = 0;
 		;}
     break;
 
-  case 16:
-#line 151 "BulletParser.y"
+  case 18:
+#line 185 "BulletParser.y"
     {
 			(yyval) = (yyvsp[-1]);
 		;}
     break;
 
-  case 17:
-#line 158 "BulletParser.y"
+  case 19:
+#line 192 "BulletParser.y"
     {
 			(yyval) = (yyvsp[0]);
 		;}
     break;
 
-  case 18:
-#line 162 "BulletParser.y"
+  case 20:
+#line 196 "BulletParser.y"
     {
 			(yyval) = AST->createNode(ASTN_StatementList, yylineno);
 			(yyval)->setChild(0, (yyvsp[-1]));
@@ -1426,71 +1480,71 @@ yyreduce:
 		;}
     break;
 
-  case 19:
-#line 171 "BulletParser.y"
-    {
-			(yyval) = (yyvsp[0]);
-		;}
-    break;
-
-  case 20:
-#line 175 "BulletParser.y"
-    {
-			(yyval) = (yyvsp[0]);
-		;}
-    break;
-
   case 21:
-#line 179 "BulletParser.y"
+#line 205 "BulletParser.y"
     {
 			(yyval) = (yyvsp[0]);
 		;}
     break;
 
   case 22:
-#line 183 "BulletParser.y"
+#line 209 "BulletParser.y"
     {
 			(yyval) = (yyvsp[0]);
 		;}
     break;
 
   case 23:
-#line 187 "BulletParser.y"
+#line 213 "BulletParser.y"
     {
 			(yyval) = (yyvsp[0]);
 		;}
     break;
 
   case 24:
-#line 191 "BulletParser.y"
+#line 217 "BulletParser.y"
     {
 			(yyval) = (yyvsp[0]);
 		;}
     break;
 
   case 25:
-#line 195 "BulletParser.y"
+#line 221 "BulletParser.y"
     {
 			(yyval) = (yyvsp[0]);
 		;}
     break;
 
   case 26:
-#line 202 "BulletParser.y"
+#line 225 "BulletParser.y"
+    {
+			(yyval) = (yyvsp[0]);
+		;}
+    break;
+
+  case 27:
+#line 229 "BulletParser.y"
+    {
+			(yyval) = (yyvsp[0]);
+		;}
+    break;
+
+  case 28:
+#line 236 "BulletParser.y"
     {
 			(yyval) = 0;
 		;}
     break;
 
-  case 27:
-#line 206 "BulletParser.y"
+  case 29:
+#line 240 "BulletParser.y"
     {
 			(yyval) = (yyvsp[-1]);
 		;}
     break;
 
-  case 28:
-#line 213 "BulletParser.y"
+  case 30:
+#line 247 "BulletParser.y"
     {
 			(yyval) = AST->createNode(ASTN_IfStatement, yylineno);
 			(yyval)->setChild(0, (yyvsp[-1]));
@@ -1498,28 +1552,28 @@ yyreduce:
 		;}
     break;
 
-  case 29:
-#line 219 "BulletParser.y"
-    {
-			(yyval) = AST->createNode(ASTN_IfStatement, yylineno);
-			(yyval)->setChild(0, (yyvsp[-3]));
-			(yyval)->setChild(1, (yyvsp[-2]));
-			(yyval)->setChild(2, (yyvsp[0]));
-		;}
-    break;
-
-  case 30:
-#line 226 "BulletParser.y"
-    {
-			(yyval) = AST->createNode(ASTN_IfStatement, yylineno);
-			(yyval)->setChild(0, (yyvsp[-3]));
-			(yyval)->setChild(1, (yyvsp[-2]));
-			(yyval)->setChild(2, (yyvsp[0]));
-		;}
-    break;
-
   case 31:
-#line 236 "BulletParser.y"
+#line 253 "BulletParser.y"
+    {
+			(yyval) = AST->createNode(ASTN_IfStatement, yylineno);
+			(yyval)->setChild(0, (yyvsp[-3]));
+			(yyval)->setChild(1, (yyvsp[-2]));
+			(yyval)->setChild(2, (yyvsp[0]));
+		;}
+    break;
+
+  case 32:
+#line 260 "BulletParser.y"
+    {
+			(yyval) = AST->createNode(ASTN_IfStatement, yylineno);
+			(yyval)->setChild(0, (yyvsp[-3]));
+			(yyval)->setChild(1, (yyvsp[-2]));
+			(yyval)->setChild(2, (yyvsp[0]));
+		;}
+    break;
+
+  case 33:
+#line 270 "BulletParser.y"
     {
 			(yyval) = AST->createNode(ASTN_AssignStatement, yylineno);
 			(yyval)->setChild(0, (yyvsp[-3]));
@@ -1527,8 +1581,8 @@ yyreduce:
 		;}
     break;
 
-  case 32:
-#line 245 "BulletParser.y"
+  case 34:
+#line 279 "BulletParser.y"
     {
 			(yyval) = AST->createNode(ASTN_RepeatStatement, yylineno);
 			(yyval)->setChild(0, (yyvsp[-1]));
@@ -1536,24 +1590,24 @@ yyreduce:
 		;}
     break;
 
-  case 33:
-#line 254 "BulletParser.y"
+  case 35:
+#line 288 "BulletParser.y"
     {
 			(yyval) = AST->createNode(ASTN_GotoStatement, yylineno);
 			(yyval)->setChild(0, (yyvsp[-1]));
 		;}
     break;
 
-  case 34:
-#line 262 "BulletParser.y"
+  case 36:
+#line 296 "BulletParser.y"
     {
 			(yyval) = AST->createNode(ASTN_WaitStatement, yylineno);
 			(yyval)->setChild(0, (yyvsp[-1]));
 		;}
     break;
 
-  case 35:
-#line 270 "BulletParser.y"
+  case 37:
+#line 304 "BulletParser.y"
     {
 			(yyval) = AST->createNode(ASTN_SetStatement, yylineno);
 			(yyval)->setChild(0, (yyvsp[-6]));
@@ -1562,8 +1616,8 @@ yyreduce:
 		;}
     break;
 
-  case 36:
-#line 277 "BulletParser.y"
+  case 38:
+#line 311 "BulletParser.y"
     {
 			(yyval) = AST->createNode(ASTN_SetStatement, yylineno);
 			(yyval)->setChild(0, (yyvsp[-4]));
@@ -1575,23 +1629,23 @@ yyreduce:
 		;}
     break;
 
-  case 37:
-#line 292 "BulletParser.y"
+  case 39:
+#line 326 "BulletParser.y"
     {
 			(yyval) = AST->createNode(ASTN_ConstantExpression, yylineno);
 			(yyval)->setChild(0, (yyvsp[0]));
 		;}
     break;
 
-  case 38:
-#line 300 "BulletParser.y"
+  case 40:
+#line 334 "BulletParser.y"
     {
 			(yyval) = (yyvsp[0]);
 		;}
     break;
 
-  case 39:
-#line 304 "BulletParser.y"
+  case 41:
+#line 338 "BulletParser.y"
     {
 			(yyval) = AST->createNode(ASTN_LogicalOr, yylineno);
 			(yyval)->setChild(0, (yyvsp[-2]));
@@ -1599,15 +1653,15 @@ yyreduce:
 		;}
     break;
 
-  case 40:
-#line 313 "BulletParser.y"
+  case 42:
+#line 347 "BulletParser.y"
     {
 			(yyval) = (yyvsp[0]);
 		;}
     break;
 
-  case 41:
-#line 317 "BulletParser.y"
+  case 43:
+#line 351 "BulletParser.y"
     {
 			(yyval) = AST->createNode(ASTN_LogicalAnd, yylineno);
 			(yyval)->setChild(0, (yyvsp[-2]));
@@ -1615,15 +1669,15 @@ yyreduce:
 		;}
     break;
 
-  case 42:
-#line 326 "BulletParser.y"
+  case 44:
+#line 360 "BulletParser.y"
     {
 			(yyval) = (yyvsp[0]);
 		;}
     break;
 
-  case 43:
-#line 330 "BulletParser.y"
+  case 45:
+#line 364 "BulletParser.y"
     {
 			(yyval) = AST->createNode(ASTN_EqualsStatement, yylineno);
 			(yyval)->setChild(0, (yyvsp[-2]));
@@ -1631,8 +1685,8 @@ yyreduce:
 		;}
     break;
 
-  case 44:
-#line 336 "BulletParser.y"
+  case 46:
+#line 370 "BulletParser.y"
     {
 			(yyval) = AST->createNode(ASTN_NotEqualsStatement, yylineno);
 			(yyval)->setChild(0, (yyvsp[-2]));
@@ -1640,15 +1694,15 @@ yyreduce:
 		;}
     break;
 
-  case 45:
-#line 345 "BulletParser.y"
+  case 47:
+#line 379 "BulletParser.y"
     {
 			(yyval) = (yyvsp[0]);
 		;}
     break;
 
-  case 46:
-#line 349 "BulletParser.y"
+  case 48:
+#line 383 "BulletParser.y"
     {
 			(yyval) = AST->createNode(ASTN_LessThanStatement, yylineno);
 			(yyval)->setChild(0, (yyvsp[-2]));
@@ -1656,8 +1710,8 @@ yyreduce:
 		;}
     break;
 
-  case 47:
-#line 355 "BulletParser.y"
+  case 49:
+#line 389 "BulletParser.y"
     {
 			(yyval) = AST->createNode(ASTN_GreaterThanStatement, yylineno);
 			(yyval)->setChild(0, (yyvsp[-2]));
@@ -1665,8 +1719,8 @@ yyreduce:
 		;}
     break;
 
-  case 48:
-#line 361 "BulletParser.y"
+  case 50:
+#line 395 "BulletParser.y"
     {
 			(yyval) = AST->createNode(ASTN_LessThanEqStatement, yylineno);
 			(yyval)->setChild(0, (yyvsp[-2]));
@@ -1674,8 +1728,8 @@ yyreduce:
 		;}
     break;
 
-  case 49:
-#line 367 "BulletParser.y"
+  case 51:
+#line 401 "BulletParser.y"
     {
 			(yyval) = AST->createNode(ASTN_GreaterThanEqStatement, yylineno);
 			(yyval)->setChild(0, (yyvsp[-2]));
@@ -1683,15 +1737,15 @@ yyreduce:
 		;}
     break;
 
-  case 50:
-#line 376 "BulletParser.y"
+  case 52:
+#line 410 "BulletParser.y"
     {
 			(yyval) = (yyvsp[0]);
 		;}
     break;
 
-  case 51:
-#line 380 "BulletParser.y"
+  case 53:
+#line 414 "BulletParser.y"
     {
 			(yyval) = AST->createNode(ASTN_AddStatement, yylineno);
 			(yyval)->setChild(0, (yyvsp[-2]));
@@ -1699,8 +1753,8 @@ yyreduce:
 		;}
     break;
 
-  case 52:
-#line 386 "BulletParser.y"
+  case 54:
+#line 420 "BulletParser.y"
     {
 			(yyval) = AST->createNode(ASTN_SubtractStatement, yylineno);
 			(yyval)->setChild(0, (yyvsp[-2]));
@@ -1708,15 +1762,15 @@ yyreduce:
 		;}
     break;
 
-  case 53:
-#line 395 "BulletParser.y"
+  case 55:
+#line 429 "BulletParser.y"
     {
 			(yyval) = (yyvsp[0]);
 		;}
     break;
 
-  case 54:
-#line 399 "BulletParser.y"
+  case 56:
+#line 433 "BulletParser.y"
     {
 			(yyval) = AST->createNode(ASTN_MultiplyStatement, yylineno);
 			(yyval)->setChild(0, (yyvsp[-2]));
@@ -1724,8 +1778,8 @@ yyreduce:
 		;}
     break;
 
-  case 55:
-#line 405 "BulletParser.y"
+  case 57:
+#line 439 "BulletParser.y"
     {
 			(yyval) = AST->createNode(ASTN_DivideStatement, yylineno);
 			(yyval)->setChild(0, (yyvsp[-2]));
@@ -1733,8 +1787,8 @@ yyreduce:
 		;}
     break;
 
-  case 56:
-#line 411 "BulletParser.y"
+  case 58:
+#line 445 "BulletParser.y"
     {
 			(yyval) = AST->createNode(ASTN_RemainderStatement, yylineno);
 			(yyval)->setChild(0, (yyvsp[-2]));
@@ -1742,59 +1796,59 @@ yyreduce:
 		;}
     break;
 
-  case 57:
-#line 420 "BulletParser.y"
+  case 59:
+#line 454 "BulletParser.y"
     {
 			(yyval) = (yyvsp[0]);
 		;}
     break;
 
-  case 58:
-#line 424 "BulletParser.y"
+  case 60:
+#line 458 "BulletParser.y"
     {
 			(yyval) = AST->createNode(ASTN_UnaryPosStatement, yylineno);
 			(yyval)->setChild(0, (yyvsp[0]));
 		;}
     break;
 
-  case 59:
-#line 429 "BulletParser.y"
+  case 61:
+#line 463 "BulletParser.y"
     {
 			(yyval) = AST->createNode(ASTN_UnaryNegStatement, yylineno);
 			(yyval)->setChild(0, (yyvsp[0]));
 		;}
     break;
 
-  case 60:
-#line 437 "BulletParser.y"
-    {
-			(yyval) = (yyvsp[0]);
-		;}
-    break;
-
-  case 61:
-#line 441 "BulletParser.y"
-    {
-			(yyval) = (yyvsp[0]);
-		;}
-    break;
-
   case 62:
-#line 445 "BulletParser.y"
+#line 471 "BulletParser.y"
     {
 			(yyval) = (yyvsp[0]);
 		;}
     break;
 
   case 63:
-#line 449 "BulletParser.y"
+#line 475 "BulletParser.y"
+    {
+			(yyval) = (yyvsp[0]);
+		;}
+    break;
+
+  case 64:
+#line 479 "BulletParser.y"
+    {
+			(yyval) = (yyvsp[0]);
+		;}
+    break;
+
+  case 65:
+#line 483 "BulletParser.y"
     {
 			(yyval) = (yyvsp[-1]);
 		;}
     break;
 
-  case 64:
-#line 456 "BulletParser.y"
+  case 66:
+#line 490 "BulletParser.y"
     {
 			(yyval) = AST->createNode(ASTN_FunctionCall, yylineno);
 			(yyval)->setChild(0, (yyvsp[-1]));
@@ -1802,30 +1856,30 @@ yyreduce:
 		;}
     break;
 
-  case 65:
-#line 465 "BulletParser.y"
+  case 67:
+#line 499 "BulletParser.y"
     {
 			(yyval) = 0;
 		;}
     break;
 
-  case 66:
-#line 469 "BulletParser.y"
+  case 68:
+#line 503 "BulletParser.y"
     {
 			(yyval) = (yyvsp[-1]);
 		;}
     break;
 
-  case 67:
-#line 476 "BulletParser.y"
+  case 69:
+#line 510 "BulletParser.y"
     {
 			(yyval) = AST->createNode(ASTN_FunctionCallArg, yylineno);
 			(yyval)->setChild(0, (yyvsp[0]));
 		;}
     break;
 
-  case 68:
-#line 481 "BulletParser.y"
+  case 70:
+#line 515 "BulletParser.y"
     {
 			(yyval) = AST->createNode(ASTN_FunctionCallArgList, yylineno);
 			(yyval)->setChild(0, (yyvsp[-2]));
@@ -1836,41 +1890,41 @@ yyreduce:
 		;}
     break;
 
-  case 69:
-#line 493 "BulletParser.y"
+  case 71:
+#line 527 "BulletParser.y"
     {
 			(yyval) = AST->createNode(ASTN_Identifier, yylineno);
 			(yyval)->setString(yytext);
 		;}
     break;
 
-  case 70:
-#line 501 "BulletParser.y"
-    {
-			(yyval) = (yyvsp[0]);
-		;}
-    break;
-
-  case 71:
-#line 505 "BulletParser.y"
-    {
-			(yyval) = (yyvsp[0]);
-		;}
-    break;
-
   case 72:
-#line 512 "BulletParser.y"
+#line 535 "BulletParser.y"
     {
-			(yyval) = AST->createNode(ASTN_Constant, yylineno);
-			(yyval)->setFloat(atof (yytext));
+			(yyval) = (yyvsp[0]);
 		;}
     break;
 
   case 73:
-#line 520 "BulletParser.y"
+#line 539 "BulletParser.y"
+    {
+			(yyval) = (yyvsp[0]);
+		;}
+    break;
+
+  case 74:
+#line 546 "BulletParser.y"
     {
 			(yyval) = AST->createNode(ASTN_Constant, yylineno);
-			(yyval)->setFloat(atof (yytext));
+			(yyval)->setFloat(atof(yytext));
+		;}
+    break;
+
+  case 75:
+#line 554 "BulletParser.y"
+    {
+			(yyval) = AST->createNode(ASTN_Constant, yylineno);
+			(yyval)->setFloat(atof(yytext));
 		;}
     break;
 
@@ -1879,7 +1933,7 @@ yyreduce:
     }
 
 /* Line 1126 of yacc.c.  */
-#line 1883 "shBulletParser.cpp"
+#line 1937 "shBulletParser.cpp"
 
   yyvsp -= yylen;
   yyssp -= yylen;
@@ -2147,7 +2201,7 @@ yyreturn:
 }
 
 
-#line 526 "BulletParser.y"
+#line 560 "BulletParser.y"
 
 
 	

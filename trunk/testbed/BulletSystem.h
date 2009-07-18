@@ -63,6 +63,8 @@ public:
 
 
 // BulletAffector functions
+void BulletAffector_Accel (Bullet &b, float *args, float frameTime);
+
 void BulletAffector_Force (Bullet &b, float *args, float frameTime);
 
 void BulletAffector_DelayAccel (Bullet &b, float *args, float frameTime);

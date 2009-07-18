@@ -6,13 +6,23 @@
 // --------------------------------------------------------------------------------
 // BulletAffector functions
 // --------------------------------------------------------------------------------
-void BulletAffector_Force (Bullet &b, float *args, float frameTime)
+void BulletAffector_Accel(Bullet &b, float *args, float frameTime)
 {
-	b.x += args[0] * frameTime;
-	b.y += args[1] * frameTime;
+	// Change velocity
+	float newSpeed = sqrt(args[0] * args[0] + args[1] * args[1]);
+	b.speed += newSpeed * frameTime;
+	
+	b.vx += ((args[0] / newSpeed) - b.vx) / (2.0f / frameTime);
+	b.vy += ((args[1] / newSpeed) - b.vy) / (2.0f / frameTime);
 }
 // --------------------------------------------------------------------------------
-void BulletAffector_DelayAccel (Bullet &b, float *args, float frameTime)
+void BulletAffector_Force(Bullet &b, float *args, float frameTime)
+{
+	b.x += args[0];
+	b.y += args[1];
+}
+// --------------------------------------------------------------------------------
+void BulletAffector_DelayAccel(Bullet &b, float *args, float frameTime)
 {
 	// After a set time, change speed
 	if (b.__time > args[1])
@@ -25,7 +35,7 @@ void BulletAffector_DelayAccel (Bullet &b, float *args, float frameTime)
 	}
 }
 // --------------------------------------------------------------------------------
-void BulletAffector_Explode (Bullet &b, float *args, float frameTime)
+void BulletAffector_Explode(Bullet &b, float *args, float frameTime)
 {
 	if (b.stage == 0 && b.__time > args[0])
 	{
@@ -48,7 +58,7 @@ int BulletBattery::mStoreIndex;
 int BulletBattery::mUseIndex;
 
 // --------------------------------------------------------------------------------
-void BulletBattery::initialise ()
+void BulletBattery::initialise()
 {
 	mStoreIndex = 0;
 	mUseIndex = 1;
@@ -93,7 +103,7 @@ unsigned int BulletBattery::getFreeBulletSlot()
 	return id;
 }
 // --------------------------------------------------------------------------------
-int BulletBattery::emitAngle (Shmuppet::BulletGunBase *gun, float x, float y, Shmuppet::uint32 *args)
+int BulletBattery::emitAngle(Shmuppet::BulletGunBase *gun, float x, float y, Shmuppet::uint32 *args)
 {
 	int slot = getFreeBulletSlot();
 
@@ -104,40 +114,41 @@ int BulletBattery::emitAngle (Shmuppet::BulletGunBase *gun, float x, float y, Sh
 	b.stage = 0;
 	b.x = x;
 	b.y = y;
-	b.speed = b.speed0 = UINT32_TO_FLOAT (args[-2]);
-	b.damage = UINT32_TO_FLOAT (args[-1]);
-	b.vx = (float) sin (UINT32_TO_FLOAT (args[-3]) * 0.017453);
-	b.vy = (float) cos (UINT32_TO_FLOAT (args[-3]) * 0.017453);
+	b.speed = b.speed0 = UINT32_TO_FLOAT(args[-2]);
+	b.damage = UINT32_TO_FLOAT(args[-1]);
+	b.vx = (float) sin(UINT32_TO_FLOAT(args[-3]) * 0.017453);
+	b.vy = (float) cos(UINT32_TO_FLOAT(args[-3]) * 0.017453);
 
 	// Return the number of arguments used
 	return 3;
 }
 // --------------------------------------------------------------------------------
-int BulletBattery::emitTarget (Shmuppet::BulletGunBase *gun, float x, float y, Shmuppet::uint32 *args)
+int BulletBattery::emitTarget(Shmuppet::BulletGunBase *gun, float x, float y, Shmuppet::uint32 *args)
 {
 	int slot = getFreeBulletSlot();
 
 	// Calculate angle based on x, y and angle, for targeting a position with an offset of 'angle'
-	float dx = UINT32_TO_FLOAT (args[-5]) - x;
-	float dy = UINT32_TO_FLOAT (args[-4]) - y;
-	float angle = (float) (atan2 (dy, -dx) - 1.57) + (UINT32_TO_FLOAT (args[-3]) * 0.017453f);
+	float dx = UINT32_TO_FLOAT(args[-5]) - x;
+	float dy = UINT32_TO_FLOAT(args[-4]) - y;
+	float angle = (float) (atan2(dy, -dx) - 1.57) + (UINT32_TO_FLOAT(args[-3]) * 0.017453f);
 
 	Bullet &b = mBullets[slot];
 	b.__active = true;
 	b.__time = 0.0f;
 	b.__gun = gun;
+	b.stage = 0;
 	b.x = x;
 	b.y = y;
-	b.speed = UINT32_TO_FLOAT (args[-2]);
-	b.damage = UINT32_TO_FLOAT (args[-1]);
-	b.vx = (float) sin (angle);
-	b.vy = (float) cos (angle);
+	b.speed = b.speed0 = UINT32_TO_FLOAT(args[-2]);
+	b.damage = UINT32_TO_FLOAT(args[-1]);
+	b.vx = (float) sin(angle);
+	b.vy = (float) cos(angle);
 
 	// Return the number of arguments used
 	return 5;
 }
 // --------------------------------------------------------------------------------
-int BulletBattery::update (float frameTime, Shmuppet::BulletMachine<Bullet>* bulletMachine)
+int BulletBattery::update(float frameTime, Shmuppet::BulletMachine<Bullet>* bulletMachine)
 {
 	int index = 0;
 	int count = 0;
@@ -174,7 +185,7 @@ int BulletBattery::update (float frameTime, Shmuppet::BulletMachine<Bullet>* bul
 	return count;
 }
 // --------------------------------------------------------------------------------
-void BulletBattery::render (RendererGL *renderer)
+void BulletBattery::render(RendererGL *renderer)
 {
 	std::vector<Bullet>::iterator it = mBullets.begin ();
 	while (it != mBullets.end ())

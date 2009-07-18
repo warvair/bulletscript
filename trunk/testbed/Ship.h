@@ -112,7 +112,7 @@ class AreaShip : public Ship
 		{
 		}
 
-		void render(Shmuppet::AreaGunController* gun, RendererGL* renderer);
+		void render(Shmuppet::AreaGunController* gun, RendererGL* renderer, bool solid);
 	};
 
 	AreaGunRenderer* mGunRenderer;
@@ -125,9 +125,8 @@ class AreaShip : public Ship
 
 public:
 
-	AreaShip (const Shmuppet::String& image, float x, float y,
-		Shmuppet::ScriptMachine* sm, Shmuppet::BulletMachine<Bullet>* bm) :
-		Ship(image, x, y, sm, bm),
+	AreaShip (const Shmuppet::String& image, float x, float y, Shmuppet::ScriptMachine* sm) :
+		Ship(image, x, y, sm, 0),
 		mAngleTime(0.0f),
 		mAngleSpeed(0.0f)
 	{
@@ -135,6 +134,60 @@ public:
 	}
 
 	~AreaShip()
+	{
+		if (mGunRenderer)
+			delete mGunRenderer;
+	}
+
+	void addGun(const Shmuppet::String& def, float x, float y);
+
+	void render(RendererGL* renderer);
+
+};
+
+class BombShip : public Ship
+{
+	friend class ShipAreaGunController;
+
+	class ShipAreaGunController : public Shmuppet::AreaGunController
+	{
+		BombShip* mShip;
+
+	public:
+
+		ShipAreaGunController(Shmuppet::ScriptMachine *scriptMachine, BombShip* ship) :
+			Shmuppet::AreaGunController(scriptMachine),
+			mShip(ship)
+		{
+		}
+	};
+
+	class AreaGunRenderer
+	{
+	public:
+
+		AreaGunRenderer()
+		{
+		}
+
+		void render(Shmuppet::AreaGunController* gun, RendererGL* renderer, bool solid);
+	};
+
+	AreaGunRenderer* mGunRenderer;
+
+	void updateGuns(float frameTime);
+
+	void updateImpl(float frameTime);
+
+public:
+
+	BombShip (float x, float y, Shmuppet::ScriptMachine* sm) :
+		Ship("", x, y, sm, 0)
+	{
+		mGunRenderer = new AreaGunRenderer;
+	}
+
+	~BombShip()
 	{
 		if (mGunRenderer)
 			delete mGunRenderer;

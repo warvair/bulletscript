@@ -14,8 +14,17 @@ Ship::Ship(const Shmuppet::String& image,
 	mY (y),
 	mAngle(180.0f)
 {
-	TGALoader loader(image);
-	mTexture = loader.loadToVRAM(mWidth, mHeight);
+	if (image != "")
+	{
+		TGALoader loader(image);
+		mTexture = loader.loadToVRAM(mWidth, mHeight);
+	}
+	else
+	{
+		mTexture = 0;
+		mWidth = 0;
+		mHeight = 0;
+	}
 }
 // --------------------------------------------------------------------------------
 Ship::~Ship()
@@ -105,7 +114,9 @@ void BulletShip::updateGuns(float frameTime)
 }
 // --------------------------------------------------------------------------------
 // --------------------------------------------------------------------------------
-void AreaShip::AreaGunRenderer::render(Shmuppet::AreaGunController* gun, RendererGL* renderer)
+void AreaShip::AreaGunRenderer::render(Shmuppet::AreaGunController* gun, 
+									   RendererGL* renderer,
+									   bool solid)
 {
 	std::vector<float> p = gun->getPoints();
 	int numPoints = gun->getNumPoints();
@@ -209,7 +220,7 @@ void AreaShip::render(RendererGL* renderer)
 
 		if (gun.active)
 		{
-			mGunRenderer->render(static_cast<Shmuppet::AreaGunController*>(gun.gun), renderer);
+			mGunRenderer->render(static_cast<Shmuppet::AreaGunController*>(gun.gun), renderer, true);
 		}
 
 		++it;
@@ -226,5 +237,108 @@ void AreaShip::render(RendererGL* renderer)
 	// Render stationary part
 	renderer->renderQuickUVQuad(mX, mY, mX + w2, mY + h2,
 		0.5f, 0.5f, 1.0f, 1.0f, mTexture);
+}
+// --------------------------------------------------------------------------------
+// --------------------------------------------------------------------------------
+void BombShip::AreaGunRenderer::render(Shmuppet::AreaGunController* gun, 
+									   RendererGL* renderer,
+									   bool solid)
+{
+	Shmuppet::AreaGun::PointDataList p = gun->getPoints();
+	int numPoints = gun->getNumPoints();
+	float strength = gun->getStrength();
+
+	if (numPoints == 3)
+	{
+		if (solid)
+		{
+			renderer->renderQuickTriangle(p[0], p[1], p[2], p[3], p[4], p[5], strength, 0);
+		}
+		else
+		{
+
+		}
+	}
+	else if (numPoints == 4)
+	{
+		if (solid)
+		{
+			renderer->renderQuickTriangle(p[0], p[1], p[2], p[3], p[4], p[5], strength, 0);
+			renderer->renderQuickTriangle(p[4], p[5], p[6], p[7], p[0], p[1], strength, 0);
+		}
+		else
+		{
+		}
+	}
+	else
+	{
+		if (solid)
+		{
+			for (int i = 0; i < (numPoints - 2) * 2; i += 2)
+				renderer->renderQuickTriangle(p[0], p[1], p[i + 2], p[i + 3], p[i + 4], p[i + 5], strength, 0);
+		}
+		else
+		{
+			renderer->renderQuickLines(p, numPoints, strength);
+		}
+	}
+}
+// --------------------------------------------------------------------------------
+// --------------------------------------------------------------------------------
+void BombShip::addGun(const Shmuppet::String& def, float x, float y)
+{
+	Shmuppet::AreaGunController* gun = new ShipAreaGunController(mScriptMachine, this);
+	gun->setDefinition(def);
+
+	GunInstance shipGun;
+	shipGun.gun = gun;
+	shipGun.active = true;
+	shipGun.xOffset = x;
+	shipGun.yOffset = y;
+	mGuns.push_back(shipGun);
+
+	gun->setInstanceVariable(Shmuppet::Instance_Gun_X, mX);
+	gun->setInstanceVariable(Shmuppet::Instance_Gun_Y, mY);
+	gun->setInstanceVariable(Shmuppet::Instance_Gun_Angle, mAngle);
+}
+// --------------------------------------------------------------------------------
+void BombShip::updateGuns(float frameTime)
+{
+	GunList::iterator it = mGuns.begin();
+	while (it != mGuns.end())
+	{
+		const GunInstance& gun = *it;
+
+		if (gun.active)
+		{
+			gun.gun->update(frameTime);
+
+			// Run script
+			gun.gun->runScript(frameTime);
+		}
+
+		++it;
+	}
+}
+// --------------------------------------------------------------------------------
+void BombShip::updateImpl(float frameTime)
+{
+}
+// --------------------------------------------------------------------------------
+void BombShip::render(RendererGL* renderer)
+{
+	// Render guns
+	GunList::iterator it = mGuns.begin();
+	while (it != mGuns.end())
+	{
+		const GunInstance& gun = *it;
+
+		if (gun.active)
+		{
+			mGunRenderer->render(static_cast<Shmuppet::AreaGunController*>(gun.gun), renderer, false);
+		}
+
+		++it;
+	}
 }
 // --------------------------------------------------------------------------------
