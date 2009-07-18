@@ -175,7 +175,7 @@ void AreaGun::update(float frameTime)
 		mPoints[2] = mWidth / 2;
 		mPoints[3] = 0;
 		mPoints[4] = 0;
-		mPoints[5] = -mLength;
+		mPoints[5] = mLength;
 		break;
 
 	case 4:
@@ -184,16 +184,15 @@ void AreaGun::update(float frameTime)
 		mPoints[2] = mWidth / 2;
 		mPoints[3] = 0;
 		mPoints[4] = mWidth / 2;
-		mPoints[5] = -mLength;
+		mPoints[5] = mLength;
 		mPoints[6] = -mWidth / 2;
-		mPoints[7] = -mLength;
+		mPoints[7] = mLength;
 		break;
 
 	default:
 		{
 			float rAngle = mOrientation * DEG_TO_RAD;
-			float xOrigin = 0.0f;
-			float yOrigin = -mLength / 2;
+			float mins[2] = {1e10f, 1e10f};
 			float maxs[2] = {-1e10f, -1e10f};
 			for (int i = 0; i < numPoints * 2; i += 2)
 			{
@@ -206,26 +205,29 @@ void AreaGun::update(float frameTime)
 				if (mPoints[i + 1] > maxs[1])
 					maxs[1] = mPoints[i + 1];
 
+				if (mPoints[i + 0] < mins[0])
+					mins[0] = mPoints[i + 0];
+				if (mPoints[i + 1] < mins[1])
+					mins[1] = mPoints[i + 1];
+
 				rAngle += (2 * 3.14159f / numPoints);
 			}
 
 			float ratioX = (mWidth / 2) / maxs[0];
-			float ratioY = (mLength / 2) / maxs[1];
+			float ratioY = mLength / (maxs[1] - mins[1]);
 
+			// Scale and translate
 			for (int i = 0; i < numPoints * 2; i += 2)
 			{
-				// Rotate point (0, 1)
-				mPoints[i + 0] = mPoints[i + 0] * ratioX + xOrigin;
-				mPoints[i + 1] = mPoints[i + 1] * ratioY + yOrigin;
+				mPoints[i + 0] = mPoints[i + 0] * ratioX;
+				mPoints[i + 1] = (mPoints[i + 1] - mins[1]) * ratioY;
 			}
 		}
 		break;
 
 	}
 
-	// Rotate by mAngle+Instance_Gun_Angle and then translate into world
-	// space by Instance_Gun_X, Instance_Gun_Y.
-	float angle = mAngle + mRecord.instanceVars[Instance_Gun_Angle];
+	float angle = mRecord.instanceVars[Instance_Gun_Angle];
 	float cosAngle = cos(angle * DEG_TO_RAD);
 	float sinAngle = sin(angle * DEG_TO_RAD);
 	for (int i = 0; i < numPoints * 2; i += 2)
@@ -304,6 +306,11 @@ const std::vector<float>& AreaGunController::getPoints() const
 int AreaGunController::getNumPoints() const
 {
 	return mAreaGun->getNumPoints();
+}
+// --------------------------------------------------------------------------------
+float AreaGunController::getStrength() const
+{
+	return mAreaGun->getStrength();
 }
 // --------------------------------------------------------------------------------
 

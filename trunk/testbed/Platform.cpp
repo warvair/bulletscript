@@ -1,5 +1,7 @@
 #include "Platform.h"
 
+static float gSideways = 0.0f;
+
 void toggleGun(int index);
 
 bool processMessages()
@@ -17,6 +19,17 @@ bool processMessages()
 				return false;
 			else if(evt.key.keysym.sym >= SDLK_1 && evt.key.keysym.sym <= SDLK_5)
 				toggleGun(evt.key.keysym.sym - SDLK_1);
+			else if(evt.key.keysym.sym == SDLK_LEFT)
+				gSideways = -1.0f;
+			else if(evt.key.keysym.sym == SDLK_RIGHT)
+				gSideways = 1.0f;
+			break;
+
+		case SDL_KEYUP:
+			if(evt.key.keysym.sym == SDLK_LEFT)
+				gSideways = 0.0f;
+			else if(evt.key.keysym.sym == SDLK_RIGHT)
+				gSideways = 0.0f;
 			break;
 
 		default:
@@ -25,5 +38,10 @@ bool processMessages()
 	}
 
 	return true;
+}
+
+float getSidewaysMovement()
+{
+	return gSideways;
 }
 

@@ -1,25 +1,23 @@
-area[4, 180.0] Beam
+area[4, 0.0] Beam
 {
 	state Setup
 	{
-		set strength(0);
 		set width(20);
-		set length(300);
-		set angle(Gun_Angle);
-
+		set length(100);
+		set angle(180);
+		set strength(1, 2);
+		wait(2);
+		set angle(90, 6);
+		wait(6);
 		goto Main;
 	}
 
 	state Main
-	{
-//		set angle(Gun_Angle, 2);
-		wait(2);
-		goto Loop;
-	}
-
-	state Loop
-	{
-		wait(10);
+	{		
+		set angle(180, 6);
+		wait(6);
+		set angle(90, 6);
+		wait(6);
 	}
 }
 
@@ -58,7 +56,6 @@ bullet Swarm
 
 	state Main
 	{
-		set yes(14, 11);
 		repeat 40
 		{
 			angle = 170;
@@ -68,21 +65,6 @@ bullet Swarm
 				angle = angle + 2;	
 			}
 			wait(0.1);
-		}
-		wait(1);
-	}
-}
-
-bullet Homer
-{
-	affectors Home(Player_X, Player_Y, 0.4);
-
-	state Main
-	{
-		repeat 160
-		{
-			fireA(180, 296, 10);
-			wait(0.05);
 		}
 		wait(1);
 	}
@@ -109,9 +91,9 @@ bullet Tracker
 		repeat 200
 		{
 			fireT(Player_X, Player_Y, 0, 396, 10);
-			wait(0.04);
+			wait(0.01);
 		}
-		wait(1);
+		wait(0.3);
 		goto Erratic;
 	}
 
@@ -123,7 +105,7 @@ bullet Tracker
 			fireT(Player_X, Player_Y, offset, 396, 10);
 			wait(rand(0.1));
 		}
-		wait(1);
+		wait(0.3);
 		goto Steady;
 	}
 }
@@ -140,6 +122,6 @@ bullet Circular
 			fireA(i * 10, 0, 10);
 			i = i + 1;
 		}
-		wait(2);
+		wait(0.1);
 	}
 }

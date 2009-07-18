@@ -1,3 +1,4 @@
+#include <cmath>
 #include <iostream>
 #include "shScriptMachine.h"
 #include "shBulletMachine.h"
@@ -53,7 +54,6 @@ int main (int argc, char **argv)
 {
 	BulletMachine<Bullet> bm;
 	bm.registerAffectorFunction("Force", BulletAffector_Force);
-	bm.registerAffectorFunction("Home", BulletAffector_Home);
 	bm.registerAffectorFunction("DelayAccel", BulletAffector_DelayAccel);
 	bm.registerAffectorFunction("Explode", BulletAffector_Explode);
 
@@ -89,11 +89,18 @@ int main (int argc, char **argv)
 
 	// Create a test ship
 	gShip = new BulletShip("ship1.tga", 400, 550, &sm, &bm);
-	gShip->addGun("Homer", 0, -28);
+	gShip->addGun("Circular", 0, -28);
 	gShip->addGun("Swarm", 20, 5);
 	gShip->addGun("Tracker", -20, 5);
 	gShip->addGun("SideSpray", 12, -16);
 	gShip->addGun("ClusterBomb", -12, -16);
+
+	BulletShip ship2("ship1.tga", 260, 550, &sm, &bm);
+	ship2.addGun("Circular", 0, -28);
+	ship2.addGun("Swarm", 20, 5);
+	ship2.addGun("Tracker", -20, 5);
+	ship2.addGun("SideSpray", 12, -16);
+	ship2.addGun("ClusterBomb", -12, -16);
 
 	AreaShip areaShip("turret.tga", 736, 536, &sm, &bm);
 	areaShip.addGun("Beam", 0, -28);
@@ -105,7 +112,7 @@ int main (int argc, char **argv)
 	std::cout << "---------------------" << std::endl;
 	std::cout << "[1-5] Toggle bullet emitters." << std::endl;
 	std::cout << "[Esc] Quit." << std::endl;
-	std::cout << "[Mouse] Move ship." << std::endl;
+	std::cout << "[Mouse, cursors] Move ship." << std::endl;
 
 	// Main loop
 	unsigned int curTime = SDL_GetTicks();
@@ -123,6 +130,8 @@ int main (int argc, char **argv)
 
 		int mouseRelX, mouseRelY;
 		SDL_GetRelativeMouseState(&mouseRelX, &mouseRelY);
+
+		float keysX = getSidewaysMovement();
 
 		// Get update time
 		unsigned int newTime = SDL_GetTicks();
@@ -150,9 +159,10 @@ int main (int argc, char **argv)
 		bm.update();
 
 		// Update ships
-		player.move (mouseRelX, 0);
+		player.move (mouseRelX + keysX * frameTime * 100, -mouseRelY);
 
 		gShip->update(frameTime);
+		ship2.update(frameTime);
 		areaShip.update(frameTime);
 		
 		// Update bullets
@@ -163,6 +173,7 @@ int main (int argc, char **argv)
 
 		player.render(&renderer);
 		gShip->render(&renderer);
+		ship2.render(&renderer);
 		areaShip.render(&renderer);
 		BulletBattery::render(&renderer);
 

@@ -5,4 +5,6 @@
 
 bool processMessages();
 
+float getSidewaysMovement();
+
 #endif
