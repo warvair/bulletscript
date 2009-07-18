@@ -24,6 +24,12 @@ namespace Shmuppet
 		GT_Spline
 	};
 
+	enum AreaOriginType
+	{
+		AO_Base = 1,
+		AO_Centre = 2
+	};
+
 	class _ShmuppetAPI GunDefinition
 	{
 	public:
@@ -89,6 +95,8 @@ namespace Shmuppet
 
 		float mOrientation;
 
+		int mOriginType;
+
 	public:
 
 		AreaGunDefinition(const String& name);
@@ -102,6 +110,10 @@ namespace Shmuppet
 		void setOrientation(float orientation);
 
 		float getOrientation() const;
+
+		void setOriginType(int type);
+
+		int getOriginType() const;
 
 	};
 

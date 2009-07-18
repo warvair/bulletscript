@@ -1,6 +1,9 @@
 #include "Platform.h"
 
-static float gSideways = 0.0f;
+static float gHorz = 0.0f;
+static float gVert = 0.0f;
+
+static float gCount = 1.0f;
 
 void toggleGun(int index);
 
@@ -20,16 +23,32 @@ bool processMessages()
 			else if(evt.key.keysym.sym >= SDLK_1 && evt.key.keysym.sym <= SDLK_5)
 				toggleGun(evt.key.keysym.sym - SDLK_1);
 			else if(evt.key.keysym.sym == SDLK_LEFT)
-				gSideways = -1.0f;
+				gHorz = -1.0f;
 			else if(evt.key.keysym.sym == SDLK_RIGHT)
-				gSideways = 1.0f;
+				gHorz = 1.0f;
+			else if(evt.key.keysym.sym == SDLK_UP)
+				gVert = 1.0f;
+			else if(evt.key.keysym.sym == SDLK_DOWN)
+				gVert = -1.0f;
+			else if(evt.key.keysym.sym == SDLK_w)
+				gCount += 1.0f;
+			else if(evt.key.keysym.sym == SDLK_q)
+			{
+				gCount -= 1.0f;
+				if (gCount < 1.0f)
+					gCount = 1.0f;
+			}
 			break;
 
 		case SDL_KEYUP:
 			if(evt.key.keysym.sym == SDLK_LEFT)
-				gSideways = 0.0f;
+				gHorz = 0.0f;
 			else if(evt.key.keysym.sym == SDLK_RIGHT)
-				gSideways = 0.0f;
+				gHorz = 0.0f;
+			else if(evt.key.keysym.sym == SDLK_UP)
+				gVert = 0.0f;
+			else if(evt.key.keysym.sym == SDLK_DOWN)
+				gVert = 0.0f;
 			break;
 
 		default:
@@ -40,8 +59,17 @@ bool processMessages()
 	return true;
 }
 
-float getSidewaysMovement()
+float getHorzMovement()
 {
-	return gSideways;
+	return gHorz;
 }
 
+float getVertMovement()
+{
+	return gVert;
+}
+
+float getBulletCount()
+{
+	return gCount;
+}

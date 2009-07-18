@@ -5,6 +5,10 @@
 
 bool processMessages();
 
-float getSidewaysMovement();
+float getHorzMovement();
+
+float getVertMovement();
+
+float getBulletCount();
 
 #endif

@@ -53,6 +53,7 @@ void toggleGun(int index)
 int main (int argc, char **argv)
 {
 	BulletMachine<Bullet> bm;
+	bm.registerAffectorFunction("Accel", BulletAffector_Accel);
 	bm.registerAffectorFunction("Force", BulletAffector_Force);
 	bm.registerAffectorFunction("DelayAccel", BulletAffector_DelayAccel);
 	bm.registerAffectorFunction("Explode", BulletAffector_Explode);
@@ -65,6 +66,7 @@ int main (int argc, char **argv)
 	sm.registerGlobalVariable("Level_Time", 0.0f);
 	sm.registerGlobalVariable("ScreenSize_X", 800.0f);
 	sm.registerGlobalVariable("ScreenSize_Y", 600.0f);
+	sm.registerGlobalVariable("Bullet_Count", 1.0f);
 
 	// Load file
 	size_t fileSize;
@@ -89,21 +91,17 @@ int main (int argc, char **argv)
 
 	// Create a test ship
 	gShip = new BulletShip("ship1.tga", 400, 550, &sm, &bm);
-	gShip->addGun("Circular", 0, -28);
+	gShip->addGun("ClusterBomb", 0, -28);
 	gShip->addGun("Swarm", 20, 5);
 	gShip->addGun("Tracker", -20, 5);
-	gShip->addGun("SideSpray", 12, -16);
-	gShip->addGun("ClusterBomb", -12, -16);
+	gShip->addGun("Jitterer", 12, -16);
+	gShip->addGun("Gravity", -12, -16);
 
-	BulletShip ship2("ship1.tga", 260, 550, &sm, &bm);
-	ship2.addGun("Circular", 0, -28);
-	ship2.addGun("Swarm", 20, 5);
-	ship2.addGun("Tracker", -20, 5);
-	ship2.addGun("SideSpray", 12, -16);
-	ship2.addGun("ClusterBomb", -12, -16);
-
-	AreaShip areaShip("turret.tga", 736, 536, &sm, &bm);
+	AreaShip areaShip("turret.tga", 736, 536, &sm);
 	areaShip.addGun("Beam", 0, -28);
+
+	BombShip bomb(300, 300, &sm);
+	bomb.addGun("CircleBomb", 0, 0);
 
 	BulletShip player("player.tga", 400, 32, &sm, &bm);
 
@@ -111,6 +109,7 @@ int main (int argc, char **argv)
 	std::cout << "Shmuppet BulletScript" << std::endl;
 	std::cout << "---------------------" << std::endl;
 	std::cout << "[1-5] Toggle bullet emitters." << std::endl;
+	std::cout << "[Q/W] Change bullet count." << std::endl;
 	std::cout << "[Esc] Quit." << std::endl;
 	std::cout << "[Mouse, cursors] Move ship." << std::endl;
 
@@ -131,7 +130,8 @@ int main (int argc, char **argv)
 		int mouseRelX, mouseRelY;
 		SDL_GetRelativeMouseState(&mouseRelX, &mouseRelY);
 
-		float keysX = getSidewaysMovement();
+		float keysX = getHorzMovement();
+		float keysY = getVertMovement();
 
 		// Get update time
 		unsigned int newTime = SDL_GetTicks();
@@ -154,16 +154,18 @@ int main (int argc, char **argv)
 		sm.setGlobalVariableValue("Level_Time", totalTime / 1000.0f);
 		sm.setGlobalVariableValue("Player_X", player.getX());
 		sm.setGlobalVariableValue("Player_Y", player.getY());
+
+		sm.setGlobalVariableValue("Bullet_Count", getBulletCount());
 	
 		// Update BulletAffector function arguments
 		bm.update();
 
 		// Update ships
-		player.move (mouseRelX + keysX * frameTime * 100, -mouseRelY);
+		player.move (mouseRelX + keysX * frameTime * 100, -mouseRelY + keysY * frameTime * 100);
 
 		gShip->update(frameTime);
-		ship2.update(frameTime);
 		areaShip.update(frameTime);
+		bomb.update(frameTime);
 		
 		// Update bullets
 		numBullets = BulletBattery::update(frameTime, &bm);
@@ -173,8 +175,8 @@ int main (int argc, char **argv)
 
 		player.render(&renderer);
 		gShip->render(&renderer);
-		ship2.render(&renderer);
 		areaShip.render(&renderer);
+		bomb.render(&renderer);
 		BulletBattery::render(&renderer);
 
 		renderer.finishRendering();

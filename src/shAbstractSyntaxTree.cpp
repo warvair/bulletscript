@@ -949,18 +949,22 @@ AreaGunDefinition* AbstractSyntaxTree::createAreaGunDefinition(AbstractSyntaxTre
 
 	// Get number of points
 	int numPoints = (int) node->getChild(2)->getFloatData();
-	if (numPoints < 3)
+	if (numPoints >= 0 && numPoints < 3 )
 	{
 		addError (node->getLine(), "Area '" + name + "' has too few points.");
 		return 0;
 	}
 
-	// Get orientation
-	float orientation = node->getChild(3)->getFloatData();
-
 	AreaGunDefinition* def = new AreaGunDefinition(name);
 	def->setNumPoints(numPoints);
+
+	// Get orientation
+	float orientation = node->getChild(3)->getFloatData();
 	def->setOrientation(orientation);
+
+	// Get origin type
+	int originType = (int) node->getChild(4)->getFloatData();
+	def->setOriginType(originType);
 
 	node->createGunMembers(def);
 

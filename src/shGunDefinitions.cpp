@@ -119,7 +119,8 @@ GunScriptRecord BulletGunDefinition::createGunScriptRecord() const
 AreaGunDefinition::AreaGunDefinition(const String& name) :
 	GunDefinition(name, GT_Area),
 	mNumPoints(0),
-	mOrientation(0.0f)
+	mOrientation(0.0f),
+	mOriginType(AO_Base)
 {
 }
 // --------------------------------------------------------------------------------
@@ -141,6 +142,16 @@ void AreaGunDefinition::setOrientation(float orientation)
 float AreaGunDefinition::getOrientation() const
 {
 	return mOrientation;
+}
+// --------------------------------------------------------------------------------
+void AreaGunDefinition::setOriginType(int type)
+{
+	mOriginType = type;
+}
+// --------------------------------------------------------------------------------
+int AreaGunDefinition::getOriginType() const
+{
+	return mOriginType;
 }
 // --------------------------------------------------------------------------------
 GunScriptRecord AreaGunDefinition::createGunScriptRecord() const

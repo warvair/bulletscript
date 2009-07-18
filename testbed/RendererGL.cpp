@@ -103,7 +103,7 @@ bool RendererGL::initialise (int width, int height)
 
 	SDL_WM_SetCaption ("Shmuppet BulletScript", "");
 	SDL_GL_SetAttribute (SDL_GL_SWAP_CONTROL, 0);  // No vsync
-	SDL_SetVideoMode (width, height, 32, SDL_OPENGL | SDL_HWSURFACE | SDL_DOUBLEBUF);
+	SDL_SetVideoMode (width, height, 32, SDL_OPENGL | SDL_HWSURFACE | SDL_DOUBLEBUF/* | SDL_FULLSCREEN*/);
 	glViewport (0, 0, width, height);
 	glMatrixMode (GL_PROJECTION);
 	glLoadIdentity ();
@@ -134,7 +134,7 @@ void RendererGL::startRendering ()
 // --------------------------------------------------------------------------------
 void RendererGL::finishRendering ()
 {
-	// Draw everything
+	// Draw bullets
 	glBindTexture (GL_TEXTURE_2D, mTextureId);
 	glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
 
@@ -188,6 +188,25 @@ void RendererGL::renderQuickQuad(float x0, float y0, float x1, float y1, GLuint 
 	glEnd();
 }
 // --------------------------------------------------------------------------------
+void RendererGL::renderQuickQuad(float x0, float y0, float x1, float y1, 
+								 float x2, float y2, float x3, float y3, GLuint texture)
+{
+	glBindTexture(GL_TEXTURE_2D, texture);
+	glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
+	glBegin(GL_QUADS);
+	{
+		glTexCoord2i(0, 0);
+		glVertex2f(x0, y0);
+		glTexCoord2i(1, 0);
+		glVertex2f(x1, y1);
+		glTexCoord2i(1, 1);
+		glVertex2f(x2, y2);
+		glTexCoord2i(0, 1);
+		glVertex2f(x3, y3);
+	}
+	glEnd();
+}
+// --------------------------------------------------------------------------------
 void RendererGL::renderQuickUVQuad(float x0, float y0, float x1, float y1, 
 								   float u0, float v0, float u1, float v1, GLuint texture)
 {
@@ -222,5 +241,15 @@ void RendererGL::renderQuickTriangle(float x0, float y0, float x1, float y1, flo
 		glVertex2f(x2, y2);
 	}
 	glEnd();
+}
+// --------------------------------------------------------------------------------
+void RendererGL::renderQuickLines(const std::vector<float>& points, int numPoints, float alpha)
+{
+	glBindTexture(GL_TEXTURE_2D, 0);
+	glColor4f(1.0f, 1.0f, 1.0f, alpha);
+	glBegin(GL_LINE_LOOP);
+	for (int i = 0; i < numPoints * 2; i += 2)
+		glVertex2f(points[i + 0], points[i + 1]);
+	glEnd();	
 }
 // --------------------------------------------------------------------------------

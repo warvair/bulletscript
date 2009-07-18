@@ -8,35 +8,19 @@ namespace Shmuppet
 
 	class _ShmuppetAPI AreaGun : public Gun
 	{
-		// 2 points per vertex
-		std::vector<float> mPoints;
+		void updateAdaptivePoints();
 
-		float mOrientation;
-
-		float mX;
-		float mY;
-
-		enum State
-		{
-			ACS_None		= 0,
-			ACS_Strength	= 1,
-			ACS_Width		= 2,
-			ACS_Length		= 4,
-			ACS_Angle		= 8
-		};
-
-		int mStates;
-
-		float mStrength, mStrengthSpeed, mStrengthTime;
-		float mWidth, mWidthSpeed, mWidthTime;
-		float mLength, mLengthSpeed, mLengthTime;
-		float mAngle, mAngleSpeed, mAngleTime;
-		
 	public:
+
+		typedef std::vector<float> PointDataList;
 
 		AreaGun(ScriptMachine* scriptMachine);
 
 		void setDefinition(const GunDefinition* def, GunController* controller);
+
+		float getX() const;
+
+		float getY() const;
 
 		int getNumPoints() const;
 
@@ -67,10 +51,40 @@ namespace Shmuppet
 		// Look into how safe it is to pass this across the DLL boundary
 		// Should be ok as long as everything is compiled together with
 		// the same CRT.
-		const std::vector<float>& getPoints() const;
+		const PointDataList& getPoints() const;
 
 		void update(float frameTime);
 
+	private:
+
+		// 2 points per vertex
+		PointDataList mPoints;
+
+		float mOrientation;
+
+		enum State
+		{
+			ACS_None		= 0,
+			ACS_Strength	= 1,
+			ACS_Width		= 2,
+			ACS_Length		= 4,
+			ACS_Angle		= 8
+		};
+
+		int mStates;
+
+		float mStrength, mStrengthSpeed, mStrengthTime;
+		float mWidth, mWidthSpeed, mWidthTime;
+		float mLength, mLengthSpeed, mLengthTime;
+		float mAngle, mAngleSpeed, mAngleTime;
+
+		int mOriginType;
+
+		bool mbAdaptivePoints;
+		int mNumActivePoints;
+
+		// For caching
+		bool mbWidthChanged, mbLengthChanged, mbAngleChanged;
 	};
 
 	class _ShmuppetAPI AreaGunController : public GunController
@@ -93,7 +107,11 @@ namespace Shmuppet
 
 		void update(float frameTime);
 
-		const std::vector<float>& getPoints() const;
+		float getX() const;
+
+		float getY() const;
+
+		const AreaGun::PointDataList& getPoints() const;
 
 		int getNumPoints() const;
 
