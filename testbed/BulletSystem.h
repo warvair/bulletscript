@@ -17,6 +17,7 @@ struct Bullet
 	// Internal variables, do not modify in affector function!
 	float __time;
 	bool __active;
+	char padding[7]; // pad to 48 bytes
 
 	Bullet () : __active (false) {}
 
@@ -63,8 +64,6 @@ public:
 
 // BulletAffector functions
 void BulletAffector_Force (Bullet &b, float *args, float frameTime);
-
-void BulletAffector_Home (Bullet &b, float *args, float frameTime);
 
 void BulletAffector_DelayAccel (Bullet &b, float *args, float frameTime);
 

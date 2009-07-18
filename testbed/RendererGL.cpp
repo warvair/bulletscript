@@ -136,6 +136,7 @@ void RendererGL::finishRendering ()
 {
 	// Draw everything
 	glBindTexture (GL_TEXTURE_2D, mTextureId);
+	glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
 
 	glEnableClientState (GL_VERTEX_ARRAY);
 	glEnableClientState (GL_TEXTURE_COORD_ARRAY);
@@ -172,6 +173,7 @@ void RendererGL::addBullet (float x, float y)
 void RendererGL::renderQuickQuad(float x0, float y0, float x1, float y1, GLuint texture)
 {
 	glBindTexture(GL_TEXTURE_2D, texture);
+	glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
 	glBegin(GL_QUADS);
 	{
 		glTexCoord2i(0, 0);
@@ -190,6 +192,7 @@ void RendererGL::renderQuickUVQuad(float x0, float y0, float x1, float y1,
 								   float u0, float v0, float u1, float v1, GLuint texture)
 {
 	glBindTexture(GL_TEXTURE_2D, texture);
+	glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
 	glBegin(GL_QUADS);
 	{
 		glTexCoord2f(u0, v0);
@@ -205,9 +208,10 @@ void RendererGL::renderQuickUVQuad(float x0, float y0, float x1, float y1,
 }
 // --------------------------------------------------------------------------------
 void RendererGL::renderQuickTriangle(float x0, float y0, float x1, float y1, float x2, 
-									 float y2, GLuint texture)
+									 float y2, float alpha, GLuint texture)
 {
 	glBindTexture(GL_TEXTURE_2D, texture);
+	glColor4f(1.0f, 1.0f, 1.0f, alpha);
 	glBegin(GL_TRIANGLES);
 	{
 		glTexCoord2i(0, 0);

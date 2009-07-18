@@ -83,17 +83,23 @@ public:
 
 class AreaShip : public Ship
 {
+	friend class ShipAreaGunController;
+
 	class ShipAreaGunController : public Shmuppet::AreaGunController
 	{
-		void strengthToImpl(float value, float time)
+		AreaShip* mShip;
+
+		void angleToImpl(float value, float time)
 		{
-			// Change visual
+			mShip->mAngleTime = time;
+			mShip->mAngleSpeed = (value - mShip->mAngle) / time;
 		}
 
 	public:
 
-		ShipAreaGunController(Shmuppet::ScriptMachine *scriptMachine) :
-			Shmuppet::AreaGunController(scriptMachine)
+		ShipAreaGunController(Shmuppet::ScriptMachine *scriptMachine, AreaShip* ship) :
+			Shmuppet::AreaGunController(scriptMachine),
+			mShip(ship)
 		{
 		}
 	};
@@ -111,6 +117,8 @@ class AreaShip : public Ship
 
 	AreaGunRenderer* mGunRenderer;
 
+	float mAngleTime, mAngleSpeed;
+
 	void updateGuns(float frameTime);
 
 	void updateImpl(float frameTime);
@@ -119,7 +127,9 @@ public:
 
 	AreaShip (const Shmuppet::String& image, float x, float y,
 		Shmuppet::ScriptMachine* sm, Shmuppet::BulletMachine<Bullet>* bm) :
-		Ship(image, x, y, sm, bm)
+		Ship(image, x, y, sm, bm),
+		mAngleTime(0.0f),
+		mAngleSpeed(0.0f)
 	{
 		mGunRenderer = new AreaGunRenderer;
 	}

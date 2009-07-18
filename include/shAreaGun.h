@@ -97,6 +97,8 @@ namespace Shmuppet
 
 		int getNumPoints() const;
 
+		float getStrength() const;
+
 	};
 
 }

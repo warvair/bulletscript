@@ -12,29 +12,6 @@ void BulletAffector_Force (Bullet &b, float *args, float frameTime)
 	b.y += args[1] * frameTime;
 }
 // --------------------------------------------------------------------------------
-void BulletAffector_Home (Bullet &b, float *args, float frameTime)
-{
-	// Change bullet velocity so that it heading a bit more towards target
-	float desired_vx = args[0] - b.x;
-	float desired_vy = args[1] - b.y;
-
-	float ilen = 1.0f / sqrt(desired_vx * desired_vx + desired_vy * desired_vy);
-	desired_vx *= ilen;
-	desired_vy *= ilen;
-
-	// rotate
-	float angle = acos (desired_vx * b.vx + desired_vy * b.vy);
-	if (desired_vx > 0)
-		angle = (angle * frameTime) / args[2];
-	else
-		angle = -(angle * frameTime) / args[2];
-
-	float vx = b.vx;
-	float vy = b.vy;
-	b.vx = cos(angle) * vx - sin(angle) * vy;
-	b.vy = sin(angle) * vx + cos(angle) * vy;
-}
-// --------------------------------------------------------------------------------
 void BulletAffector_DelayAccel (Bullet &b, float *args, float frameTime)
 {
 	// After a set time, change speed
@@ -50,7 +27,7 @@ void BulletAffector_DelayAccel (Bullet &b, float *args, float frameTime)
 // --------------------------------------------------------------------------------
 void BulletAffector_Explode (Bullet &b, float *args, float frameTime)
 {
-	if (b.__time > args[0] && b.stage == 0)
+	if (b.stage == 0 && b.__time > args[0])
 	{
 		// random angle
 		b.stage = 1;
@@ -179,10 +156,10 @@ int BulletBattery::update (float frameTime, Shmuppet::BulletMachine<Bullet>* bul
 			bulletMachine->applyBulletAffectors(b.__gun, b, frameTime);
 
 			// Check for death
-			if (b.y < 0 || b.x < 0 || b.x > 800)
+			if (b.y < 0 || b.y > 600 || b.x < 0 || b.x > 800)
 			{
 				mBullets[index].__active = false;
-				mFreeList[mStoreIndex].push_back (index);
+				mFreeList[mStoreIndex].push_back(index);
 			}
 			else
 			{
