@@ -22,7 +22,7 @@ struct Bullet
 	Bullet () : __active (false) {}
 
 	// This must be added to the Bullet type in order to use BulletAffectors
-	Shmuppet::BulletGunBase *__gun;
+	BS_NMSP::BulletGunBase *__gun;
 };
 
 /* This class is based off code from motorherp, posted on the SHMUP-DEV forums
@@ -52,11 +52,11 @@ public:
 
 	static void initialise ();
 
-	static int emitAngle (Shmuppet::BulletGunBase *gun, float x, float y, Shmuppet::uint32 *args);
+	static int emitAngle (BS_NMSP::BulletGunBase *gun, float x, float y, BS_NMSP::uint32 *args);
 
-	static int emitTarget (Shmuppet::BulletGunBase *gun, float x, float y, Shmuppet::uint32 *args);
+	static int emitTarget (BS_NMSP::BulletGunBase *gun, float x, float y, BS_NMSP::uint32 *args);
 
-	static int update (float frameTime, Shmuppet::BulletMachine<Bullet>* bulletMachine);
+	static int update (float frameTime, BS_NMSP::BulletMachine<Bullet>* bulletMachine);
 
 	static void render (RendererGL *renderer);
 };

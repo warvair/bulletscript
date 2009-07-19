@@ -9,7 +9,7 @@
 #include "shScriptStructs.h"
 #include "shGunDefinitions.h"
 
-namespace Shmuppet
+namespace BS_NMSP
 {
 	const int VAR_LOCAL_OFFSET		= 0;
 	const int VAR_GLOBAL_OFFSET		= 32768;
@@ -54,7 +54,7 @@ namespace Shmuppet
 
 	class BulletMachineBase;
 
-	class _ShmuppetAPI ScriptMachine
+	class _BSAPI ScriptMachine
 	{
 		friend class AbstractSyntaxTree;
 		

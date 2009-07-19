@@ -1,6 +1,6 @@
 #include "shScriptVariables.h"
 
-namespace Shmuppet
+namespace BS_NMSP
 {
 
 // --------------------------------------------------------------------------------

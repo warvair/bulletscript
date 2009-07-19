@@ -16,7 +16,7 @@ struct yy_buffer_state;
 yy_buffer_state* yy_scan_string(const char*);
 void yy_delete_buffer(yy_buffer_state*);
 
-namespace Shmuppet
+namespace BS_NMSP
 {
 
 void bm_rand(GunScriptRecord& state)

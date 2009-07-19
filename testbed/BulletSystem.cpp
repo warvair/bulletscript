@@ -103,7 +103,7 @@ unsigned int BulletBattery::getFreeBulletSlot()
 	return id;
 }
 // --------------------------------------------------------------------------------
-int BulletBattery::emitAngle(Shmuppet::BulletGunBase *gun, float x, float y, Shmuppet::uint32 *args)
+int BulletBattery::emitAngle(BS_NMSP::BulletGunBase *gun, float x, float y, BS_NMSP::uint32 *args)
 {
 	int slot = getFreeBulletSlot();
 
@@ -123,7 +123,7 @@ int BulletBattery::emitAngle(Shmuppet::BulletGunBase *gun, float x, float y, Shm
 	return 3;
 }
 // --------------------------------------------------------------------------------
-int BulletBattery::emitTarget(Shmuppet::BulletGunBase *gun, float x, float y, Shmuppet::uint32 *args)
+int BulletBattery::emitTarget(BS_NMSP::BulletGunBase *gun, float x, float y, BS_NMSP::uint32 *args)
 {
 	int slot = getFreeBulletSlot();
 
@@ -148,7 +148,7 @@ int BulletBattery::emitTarget(Shmuppet::BulletGunBase *gun, float x, float y, Sh
 	return 5;
 }
 // --------------------------------------------------------------------------------
-int BulletBattery::update(float frameTime, Shmuppet::BulletMachine<Bullet>* bulletMachine)
+int BulletBattery::update(float frameTime, BS_NMSP::BulletMachine<Bullet>* bulletMachine)
 {
 	int index = 0;
 	int count = 0;

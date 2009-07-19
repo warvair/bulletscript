@@ -4,13 +4,13 @@
 #include "shScriptMachine.h"
 #include "shBulletMachine.h"
 
-Shmuppet::ScriptMachine* Shmuppet::AbstractSyntaxTree::mScriptMachine = 0;
+BS_NMSP::ScriptMachine* BS_NMSP::AbstractSyntaxTree::mScriptMachine = 0;
 
-Shmuppet::BulletMachineBase* Shmuppet::AbstractSyntaxTree::mBulletMachine = 0;
+BS_NMSP::BulletMachineBase* BS_NMSP::AbstractSyntaxTree::mBulletMachine = 0;
 
-Shmuppet::AbstractSyntaxTree* Shmuppet::AbstractSyntaxTree::msInstance = 0;
+BS_NMSP::AbstractSyntaxTree* BS_NMSP::AbstractSyntaxTree::msInstance = 0;
 
-namespace Shmuppet
+namespace BS_NMSP
 {
 
 // --------------------------------------------------------------------------------

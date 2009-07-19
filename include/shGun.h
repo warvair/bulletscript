@@ -6,12 +6,12 @@
 #include "shScriptMachine.h"
 #include "shScriptVariables.h"
 
-namespace Shmuppet
+namespace BS_NMSP
 {
 
 	class GunController;
 
-	class _ShmuppetAPI Gun 
+	class _BSAPI Gun 
 	{
 	protected:
 
@@ -48,7 +48,7 @@ namespace Shmuppet
 
 	// GunController is the class that the user interfaces with.  It is essentially a
 	// facade class for Gun with extra functionality.
-	class _ShmuppetAPI GunController
+	class _BSAPI GunController
 	{
 	protected:
 

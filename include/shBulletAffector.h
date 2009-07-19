@@ -5,13 +5,13 @@
 #include "shScriptStructs.h"
 #include "shScriptVariables.h"
 
-namespace Shmuppet
+namespace BS_NMSP
 {
 
 	class ScriptMachine;
 
 	template <class BulletType>
-	class _ShmuppetAPI BulletAffector
+	class _BSAPI BulletAffector
 	{
 	public:
 

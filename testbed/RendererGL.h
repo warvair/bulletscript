@@ -4,7 +4,7 @@
 #include <vector>
 #include "shPrerequisites.h"
 
-#if SHMUPPET_PLATFORM == SHMUPPET_PLATFORM_WIN32
+#if BS_PLATFORM == BS_PLATFORM_WIN32
 #	include <windows.h>
 #endif
 

@@ -6,7 +6,7 @@
 #include "shBulletAffector.h"
 #include "shGunDefinitions.h"
 
-namespace Shmuppet
+namespace BS_NMSP
 {
 
 	typedef std::vector<uint32> BytecodeBlock;
@@ -14,7 +14,7 @@ namespace Shmuppet
 	class BulletGunBase;
 
 	// Abstract class to provide a untemplated interface for AbstractSyntaxTree to use
-	class _ShmuppetAPI BulletMachineBase
+	class _BSAPI BulletMachineBase
 	{
 	public:
 
@@ -45,7 +45,7 @@ namespace Shmuppet
 	};
 
 	template <typename BulletType>
-	class _ShmuppetAPI BulletMachine : public BulletMachineBase
+	class _BSAPI BulletMachine : public BulletMachineBase
 	{
 		typedef std::vector<BulletAffector<BulletType>*> BulletAffectorList;
 		BulletAffectorList mBulletAffectors;

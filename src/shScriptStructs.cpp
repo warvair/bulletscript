@@ -2,7 +2,7 @@
 #include "shScriptStructs.h"
 #include "shScriptMachine.h"
 
-namespace Shmuppet
+namespace BS_NMSP
 {
 
 // --------------------------------------------------------------------------------

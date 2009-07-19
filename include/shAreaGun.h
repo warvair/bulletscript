@@ -3,10 +3,10 @@
 
 #include "shGun.h"
 
-namespace Shmuppet
+namespace BS_NMSP
 {
 
-	class _ShmuppetAPI AreaGun : public Gun
+	class _BSAPI AreaGun : public Gun
 	{
 		void updateAdaptivePoints();
 
@@ -87,7 +87,7 @@ namespace Shmuppet
 		bool mbWidthChanged, mbLengthChanged, mbAngleChanged;
 	};
 
-	class _ShmuppetAPI AreaGunController : public GunController
+	class _BSAPI AreaGunController : public GunController
 	{
 		virtual void strengthToImpl(float value, float time) {}
 

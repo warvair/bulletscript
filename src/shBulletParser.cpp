@@ -115,7 +115,7 @@
 #include <stdlib.h> // for Linux
 #include "shAbstractSyntaxTree.h"
 
-using namespace Shmuppet;
+using namespace BS_NMSP;
 
 #define YYERROR_VERBOSE
 #define YYSTYPE AbstractSyntaxTreeNode*
