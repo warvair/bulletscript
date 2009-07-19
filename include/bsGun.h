@@ -1,10 +1,10 @@
 #ifndef __SH_GUN_H__
 #define __SH_GUN_H__
 
-#include "shPrerequisites.h"
-#include "shScriptStructs.h"
-#include "shScriptMachine.h"
-#include "shScriptVariables.h"
+#include "bsPrerequisites.h"
+#include "bsScriptStructs.h"
+#include "bsScriptMachine.h"
+#include "bsScriptVariables.h"
 
 namespace BS_NMSP
 {

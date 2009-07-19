@@ -1,8 +1,8 @@
 #ifndef __SH_BULLETGUN_H__
 #define __SH_BULLETGUN_H__
 
-#include "shGun.h"
-#include "shBulletMachine.h"
+#include "bsGun.h"
+#include "bsBulletMachine.h"
 
 namespace BS_NMSP
 {

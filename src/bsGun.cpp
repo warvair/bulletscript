@@ -1,7 +1,7 @@
 #include <assert.h>
 #include <iostream>
 #include <cmath>
-#include "shGun.h"
+#include "bsGun.h"
 
 namespace BS_NMSP
 {

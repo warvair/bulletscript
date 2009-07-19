@@ -1,8 +1,8 @@
 #include <sstream>
 #include <iostream>
-#include "shAbstractSyntaxTree.h"
-#include "shScriptMachine.h"
-#include "shBulletMachine.h"
+#include "bsAbstractSyntaxTree.h"
+#include "bsScriptMachine.h"
+#include "bsBulletMachine.h"
 
 BS_NMSP::ScriptMachine* BS_NMSP::AbstractSyntaxTree::mScriptMachine = 0;
 

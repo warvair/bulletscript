@@ -1,8 +1,8 @@
 #include <cmath>
 #include <iostream>
-#include "shScriptMachine.h"
-#include "shBulletMachine.h"
-#include "shGun.h"
+#include "bsScriptMachine.h"
+#include "bsBulletMachine.h"
+#include "bsGun.h"
 #include "Platform.h"
 #include "RendererGL.h"
 #include "BulletSystem.h"

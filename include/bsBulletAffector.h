@@ -1,9 +1,9 @@
 #ifndef __SH_BULLETAFFECTOR_H__
 #define __SH_BULLETAFFECTOR_H__
 
-#include "shPrerequisites.h"
-#include "shScriptStructs.h"
-#include "shScriptVariables.h"
+#include "bsPrerequisites.h"
+#include "bsScriptStructs.h"
+#include "bsScriptVariables.h"
 
 namespace BS_NMSP
 {

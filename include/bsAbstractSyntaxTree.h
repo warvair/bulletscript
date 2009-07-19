@@ -1,9 +1,9 @@
 #ifndef __SH_ABSTRACTSYNTAXTREE_H__
 #define __SH_ABSTRACTSYNTAXTREE_H__
 
-#include "shPrerequisites.h"
-#include "shScriptStructs.h"
-#include "shGunDefinitions.h"
+#include "bsPrerequisites.h"
+#include "bsScriptStructs.h"
+#include "bsGunDefinitions.h"
 
 namespace BS_NMSP
 {

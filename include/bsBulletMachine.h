@@ -3,8 +3,8 @@
 
 #include <assert.h>
 #include <map>
-#include "shBulletAffector.h"
-#include "shGunDefinitions.h"
+#include "bsBulletAffector.h"
+#include "bsGunDefinitions.h"
 
 namespace BS_NMSP
 {

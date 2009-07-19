@@ -1,7 +1,7 @@
 #ifndef __SH_AREAGUN_H__
 #define __SH_AREAGUN_H__
 
-#include "shGun.h"
+#include "bsGun.h"
 
 namespace BS_NMSP
 {

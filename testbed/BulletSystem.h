@@ -1,7 +1,7 @@
 #ifndef __BULLETSYSTEM_H__
 #define __BULLETSYSTEM_H__
 
-#include "shBulletGun.h"
+#include "bsBulletGun.h"
 #include "RendererGL.h"
 
 struct Bullet

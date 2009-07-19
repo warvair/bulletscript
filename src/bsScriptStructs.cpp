@@ -1,6 +1,6 @@
 #include <iostream>
-#include "shScriptStructs.h"
-#include "shScriptMachine.h"
+#include "bsScriptStructs.h"
+#include "bsScriptMachine.h"
 
 namespace BS_NMSP
 {

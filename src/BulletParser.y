@@ -2,7 +2,7 @@
 
 #include <iostream>
 #include <stdlib.h> // for Linux
-#include "shAbstractSyntaxTree.h"
+#include "bsAbstractSyntaxTree.h"
 
 using namespace BS_NMSP;
 

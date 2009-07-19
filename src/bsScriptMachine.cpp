@@ -2,10 +2,10 @@
 #include <fstream>
 #include <iostream>
 #include <assert.h>
-#include "shScriptMachine.h"
-#include "shBulletMachine.h"
-#include "shAbstractSyntaxTree.h"
-#include "shBulletGun.h"
+#include "bsScriptMachine.h"
+#include "bsBulletMachine.h"
+#include "bsAbstractSyntaxTree.h"
+#include "bsBulletGun.h"
 
 
 // Import lexing/parsing functionality

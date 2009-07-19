@@ -1,13 +1,13 @@
 @echo off
-..\..\Tools\flex.exe -o../Src/shBulletLexer.cpp -S../Src/flex.skl ../Src/BulletLexer.l
+..\..\Tools\flex.exe -o../src/bsBulletLexer.cpp -S../src/flex.skl ../src/BulletLexer.l
 
-copy ..\Src\BulletParser.y c:\Code\__Other\bison\bin
+copy ..\src\BulletParser.y c:\Code\__Other\bison\bin
 cd C:\Code\__Other\bison\bin
-bison.exe -oshBulletParser.cpp -d -v BulletParser.y
-cd c:\code\Shmuppet\BulletScript
-move /Y c:\Code\__Other\bison\bin\shBulletParser.output ./Build
-move /Y c:\Code\__Other\bison\bin\shBulletParser.cpp ./Src
-move /Y c:\Code\__Other\bison\bin\shBulletParser.hpp ./Include
+bison.exe -obsBulletParser.cpp -d -v BulletParser.y
+cd c:\code\Shmuppet\bulletscript
+move /Y c:\Code\__Other\bison\bin\bsBulletParser.output ./build
+move /Y c:\Code\__Other\bison\bin\bsBulletParser.cpp ./src
+move /Y c:\Code\__Other\bison\bin\bsBulletParser.hpp ./include
 
 pause
 
