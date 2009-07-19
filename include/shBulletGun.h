@@ -52,7 +52,7 @@ namespace Shmuppet
 		{
 			const BulletGunDefinition* bDef = dynamic_cast<const BulletGunDefinition*>(def);
 			assert(bDef && "BulletGun::setDefinition definition is not a BulletGunDefinition");
-			
+
 			mRecord = def->createGunScriptRecord();
 			mRecord.gun = this;
 			mRecord.controller = controller;

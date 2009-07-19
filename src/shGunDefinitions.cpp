@@ -1,3 +1,4 @@
+#include <iostream>
 #include "shGunDefinitions.h"
 
 namespace Shmuppet
