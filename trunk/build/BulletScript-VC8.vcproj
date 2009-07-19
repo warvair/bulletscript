@@ -183,51 +183,51 @@
 			UniqueIdentifier="{4FC737F1-C7A5-4376-A066-2A32D752A2FF}"
 			>
 			<File
+				RelativePath="..\src\bsAbstractSyntaxTree.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\src\bsAreaGun.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\src\bsBulletGun.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\src\bsBulletLexer.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\src\bsBulletParser.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\src\bsGun.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\src\bsGunDefinitions.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\src\bsScriptMachine.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\src\bsScriptStructs.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\src\bsScriptVariables.cpp"
+				>
+			</File>
+			<File
 				RelativePath="..\Src\BulletLexer.l"
 				>
 			</File>
 			<File
 				RelativePath="..\Src\BulletParser.y"
-				>
-			</File>
-			<File
-				RelativePath="..\Src\shAbstractSyntaxTree.cpp"
-				>
-			</File>
-			<File
-				RelativePath="..\src\shAreaGun.cpp"
-				>
-			</File>
-			<File
-				RelativePath="..\src\shBulletGun.cpp"
-				>
-			</File>
-			<File
-				RelativePath="..\Src\shBulletLexer.cpp"
-				>
-			</File>
-			<File
-				RelativePath="..\Src\shBulletParser.cpp"
-				>
-			</File>
-			<File
-				RelativePath="..\src\shGun.cpp"
-				>
-			</File>
-			<File
-				RelativePath="..\Src\shGunDefinitions.cpp"
-				>
-			</File>
-			<File
-				RelativePath="..\Src\shScriptMachine.cpp"
-				>
-			</File>
-			<File
-				RelativePath="..\Src\shScriptStructs.cpp"
-				>
-			</File>
-			<File
-				RelativePath="..\Src\shScriptVariables.cpp"
 				>
 			</File>
 		</Filter>
@@ -237,51 +237,51 @@
 			UniqueIdentifier="{93995380-89BD-4b04-88EB-625FBE52EBFB}"
 			>
 			<File
-				RelativePath="..\Include\shAbstractSyntaxTree.h"
+				RelativePath="..\include\bsAbstractSyntaxTree.h"
 				>
 			</File>
 			<File
-				RelativePath="..\include\shAreaGun.h"
+				RelativePath="..\include\bsAreaGun.h"
 				>
 			</File>
 			<File
-				RelativePath="..\Include\shBulletAffector.h"
+				RelativePath="..\include\bsBulletAffector.h"
 				>
 			</File>
 			<File
-				RelativePath="..\include\shBulletGun.h"
+				RelativePath="..\include\bsBulletGun.h"
 				>
 			</File>
 			<File
-				RelativePath="..\Include\shBulletMachine.h"
+				RelativePath="..\include\bsBulletMachine.h"
 				>
 			</File>
 			<File
-				RelativePath="..\Include\shBulletParser.hpp"
+				RelativePath="..\include\bsBulletParser.hpp"
 				>
 			</File>
 			<File
-				RelativePath="..\Include\shGun.h"
+				RelativePath="..\include\bsGun.h"
 				>
 			</File>
 			<File
-				RelativePath="..\Include\shGunDefinitions.h"
+				RelativePath="..\include\bsGunDefinitions.h"
 				>
 			</File>
 			<File
-				RelativePath="..\Include\shPrerequisites.h"
+				RelativePath="..\include\bsPrerequisites.h"
 				>
 			</File>
 			<File
-				RelativePath="..\Include\shScriptMachine.h"
+				RelativePath="..\include\bsScriptMachine.h"
 				>
 			</File>
 			<File
-				RelativePath="..\Include\shScriptStructs.h"
+				RelativePath="..\include\bsScriptStructs.h"
 				>
 			</File>
 			<File
-				RelativePath="..\Include\shScriptVariables.h"
+				RelativePath="..\include\bsScriptVariables.h"
 				>
 			</File>
 		</Filter>

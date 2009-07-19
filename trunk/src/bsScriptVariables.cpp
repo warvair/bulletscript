@@ -1,4 +1,4 @@
-#include "shScriptVariables.h"
+#include "bsScriptVariables.h"
 
 namespace BS_NMSP
 {

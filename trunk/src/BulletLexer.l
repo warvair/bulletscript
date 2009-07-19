@@ -9,7 +9,7 @@ BINARY    	[0-1]
 %{
 
 #include <stdio.h>
-#include "shBulletParser.hpp"
+#include "bsBulletParser.hpp"
 
 %}
 

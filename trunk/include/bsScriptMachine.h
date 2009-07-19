@@ -4,10 +4,10 @@
 #include <vector>
 #include <map>
 #include <list>
-#include "shPrerequisites.h"
-#include "shScriptVariables.h"
-#include "shScriptStructs.h"
-#include "shGunDefinitions.h"
+#include "bsPrerequisites.h"
+#include "bsScriptVariables.h"
+#include "bsScriptStructs.h"
+#include "bsGunDefinitions.h"
 
 namespace BS_NMSP
 {

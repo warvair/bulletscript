@@ -2,7 +2,7 @@
 #define __SH_SCRIPTVARIABLES_H__
 
 #include <list>
-#include "shPrerequisites.h"
+#include "bsPrerequisites.h"
 
 namespace BS_NMSP
 {

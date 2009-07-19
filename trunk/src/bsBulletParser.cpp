@@ -113,7 +113,7 @@
 
 #include <iostream>
 #include <stdlib.h> // for Linux
-#include "shAbstractSyntaxTree.h"
+#include "bsAbstractSyntaxTree.h"
 
 using namespace BS_NMSP;
 
@@ -165,7 +165,7 @@ typedef int YYSTYPE;
 
 
 /* Line 219 of yacc.c.  */
-#line 169 "shBulletParser.cpp"
+#line 169 "bsBulletParser.cpp"
 
 #if ! defined (YYSIZE_T) && defined (__SIZE_TYPE__)
 # define YYSIZE_T __SIZE_TYPE__
@@ -1933,7 +1933,7 @@ yyreduce:
     }
 
 /* Line 1126 of yacc.c.  */
-#line 1937 "shBulletParser.cpp"
+#line 1937 "bsBulletParser.cpp"
 
   yyvsp -= yylen;
   yyssp -= yylen;

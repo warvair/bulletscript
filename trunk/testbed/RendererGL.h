@@ -2,7 +2,7 @@
 #define __RENDERERGL_H__
 
 #include <vector>
-#include "shPrerequisites.h"
+#include "bsPrerequisites.h"
 
 #if BS_PLATFORM == BS_PLATFORM_WIN32
 #	include <windows.h>

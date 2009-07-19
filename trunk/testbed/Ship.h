@@ -2,12 +2,12 @@
 #define __SHIP_H__
 
 #include <list>
-#include "shGun.h"
+#include "bsGun.h"
 #include "RendererGL.h"
 #include "BulletSystem.h"
 #include "RendererGL.h"
-#include "shBulletGun.h"
-#include "shAreaGun.h"
+#include "bsBulletGun.h"
+#include "bsAreaGun.h"
 
 class Ship
 {

@@ -2,9 +2,9 @@
 #define __SH_GUNDEFINITIONS_H__
 
 #include <vector>
-#include "shPrerequisites.h"
-#include "shScriptStructs.h"
-#include "shScriptVariables.h"
+#include "bsPrerequisites.h"
+#include "bsScriptStructs.h"
+#include "bsScriptVariables.h"
 
 namespace BS_NMSP
 {

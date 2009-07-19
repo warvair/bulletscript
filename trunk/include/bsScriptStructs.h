@@ -2,8 +2,8 @@
 #define __SH_SCRIPTSTRUCTS_H__
 
 #include <vector>
-#include "shPrerequisites.h"
-#include "shScriptVariables.h"
+#include "bsPrerequisites.h"
+#include "bsScriptVariables.h"
 
 namespace BS_NMSP
 {
