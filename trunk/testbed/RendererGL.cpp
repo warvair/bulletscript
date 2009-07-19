@@ -101,7 +101,7 @@ bool RendererGL::initialise (int width, int height)
 	if (SDL_Init(SDL_INIT_VIDEO) < 0)
 		return false;
 
-	SDL_WM_SetCaption ("Shmuppet BulletScript", "");
+	SDL_WM_SetCaption ("BulletScript", "");
 	SDL_GL_SetAttribute (SDL_GL_SWAP_CONTROL, 0);  // No vsync
 	SDL_SetVideoMode (width, height, 32, SDL_OPENGL | SDL_HWSURFACE | SDL_DOUBLEBUF/* | SDL_FULLSCREEN*/);
 	glViewport (0, 0, width, height);

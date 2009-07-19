@@ -8,11 +8,11 @@
 #include "BulletSystem.h"
 #include "Ship.h"
 
-#if SHMUPPET_PLATFORM == SHMUPPET_PLATFORM_WIN32
+#if BS_PLATFORM == BS_PLATFORM_WIN32
 #	include <windows.h>
 #endif
 
-using namespace Shmuppet;
+using namespace BS;
 
 // Load a script file
 uint8* loadFile(const String& fileName, size_t& byteSize)
@@ -106,7 +106,7 @@ int main (int argc, char **argv)
 	BulletShip player("player.tga", 400, 32, &sm, &bm);
 
 	// Print interface commands
-	std::cout << "Shmuppet BulletScript" << std::endl;
+	std::cout << "BulletScript" << std::endl;
 	std::cout << "---------------------" << std::endl;
 	std::cout << "[1-5] Toggle bullet emitters." << std::endl;
 	std::cout << "[Q/W] Change bullet count." << std::endl;

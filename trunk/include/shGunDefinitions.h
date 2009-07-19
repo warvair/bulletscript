@@ -6,7 +6,7 @@
 #include "shScriptStructs.h"
 #include "shScriptVariables.h"
 
-namespace Shmuppet
+namespace BS_NMSP
 {
 	// Have a base GunDefinition class, derive Bullet and Area definitions from it.
 	// State should be in the base class.
@@ -30,7 +30,7 @@ namespace Shmuppet
 		AO_Centre = 2
 	};
 
-	class _ShmuppetAPI GunDefinition
+	class _BSAPI GunDefinition
 	{
 	public:
 
@@ -70,7 +70,7 @@ namespace Shmuppet
 	};
 
 	// Definition class for bullet-emitting guns
-	class _ShmuppetAPI BulletGunDefinition : public GunDefinition
+	class _BSAPI BulletGunDefinition : public GunDefinition
 	{
 		std::list<int> mAffectors;
 
@@ -89,7 +89,7 @@ namespace Shmuppet
 	};
 
 	// Definition class for area weapons
-	class _ShmuppetAPI AreaGunDefinition : public GunDefinition
+	class _BSAPI AreaGunDefinition : public GunDefinition
 	{
 		int mNumPoints;
 
@@ -118,7 +118,7 @@ namespace Shmuppet
 	};
 
 	// Definition class for spline weapons
-	class _ShmuppetAPI SplineGunDefinition : public GunDefinition
+	class _BSAPI SplineGunDefinition : public GunDefinition
 	{
 	public:
 

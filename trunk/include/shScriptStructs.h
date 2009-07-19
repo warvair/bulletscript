@@ -5,14 +5,14 @@
 #include "shPrerequisites.h"
 #include "shScriptVariables.h"
 
-namespace Shmuppet
+namespace BS_NMSP
 {
 
 	class Gun;
 	class GunController;
 
 	// Class for bytecode storage/access
-	struct _ShmuppetAPI CodeRecord
+	struct _BSAPI CodeRecord
 	{
 		std::vector<String> variables;
 		uint32 *byteCode;
@@ -32,7 +32,7 @@ namespace Shmuppet
 	};
 
 	// Instance class
-	struct _ShmuppetAPI GunScriptRecord
+	struct _BSAPI GunScriptRecord
 	{
 		static const int STACK_SIZE = 64;
 

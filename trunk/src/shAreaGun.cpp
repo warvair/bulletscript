@@ -3,7 +3,7 @@
 #include <cmath>
 #include "shAreaGun.h"
 
-namespace Shmuppet
+namespace BS_NMSP
 {
 
 // --------------------------------------------------------------------------------

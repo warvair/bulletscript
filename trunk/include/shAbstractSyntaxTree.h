@@ -5,7 +5,7 @@
 #include "shScriptStructs.h"
 #include "shGunDefinitions.h"
 
-namespace Shmuppet
+namespace BS_NMSP
 {
 
 	enum ASTNodeType
@@ -55,7 +55,7 @@ namespace Shmuppet
 
 	typedef std::vector<uint32> BytecodeBlock;
 
-	class _ShmuppetAPI AbstractSyntaxTreeNode
+	class _BSAPI AbstractSyntaxTreeNode
 	{
 	public:
 
@@ -132,7 +132,7 @@ namespace Shmuppet
 
 	};
 
-	class _ShmuppetAPI AbstractSyntaxTree
+	class _BSAPI AbstractSyntaxTree
 	{
 		static ScriptMachine* mScriptMachine;
 

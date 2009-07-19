@@ -13,8 +13,8 @@ class Ship
 {
 protected:
 
-	Shmuppet::ScriptMachine* mScriptMachine;
-	Shmuppet::BulletMachine<Bullet>* mBulletMachine;
+	BS_NMSP::ScriptMachine* mScriptMachine;
+	BS_NMSP::BulletMachine<Bullet>* mBulletMachine;
 	
 	float mX;
 	float mY;
@@ -28,7 +28,7 @@ protected:
 
 	struct GunInstance
 	{
-		Shmuppet::GunController *gun;
+		BS_NMSP::GunController *gun;
 		float xOffset, yOffset;
 		bool active;
 	};
@@ -36,7 +36,7 @@ protected:
 	typedef std::vector<GunInstance> GunList;
 	GunList mGuns;
 
-	void setGun(int index, const Shmuppet::String& def);
+	void setGun(int index, const BS_NMSP::String& def);
 
 	virtual void updateGuns(float frameTime) = 0;
 
@@ -44,8 +44,8 @@ protected:
 
 public:
 
-	Ship (const Shmuppet::String& image, float x, float y,
-		Shmuppet::ScriptMachine* sm, Shmuppet::BulletMachine<Bullet>* bm);
+	Ship (const BS_NMSP::String& image, float x, float y,
+		BS_NMSP::ScriptMachine* sm, BS_NMSP::BulletMachine<Bullet>* bm);
 
 	virtual ~Ship();
 
@@ -53,7 +53,7 @@ public:
 
 	float getY() const;
 
-	virtual void addGun(const Shmuppet::String& def, float x, float y) = 0;
+	virtual void addGun(const BS_NMSP::String& def, float x, float y) = 0;
 
 	void move (float x, float y);
 
@@ -71,13 +71,13 @@ class BulletShip : public Ship
 
 public:
 
-	BulletShip (const Shmuppet::String& image, float x, float y,
-		Shmuppet::ScriptMachine* sm, Shmuppet::BulletMachine<Bullet>* bm) :
+	BulletShip (const BS_NMSP::String& image, float x, float y,
+		BS_NMSP::ScriptMachine* sm, BS_NMSP::BulletMachine<Bullet>* bm) :
 		Ship(image, x, y, sm, bm)
 	{
 	}
 
-	void addGun(const Shmuppet::String& def, float x, float y);
+	void addGun(const BS_NMSP::String& def, float x, float y);
 
 };
 
@@ -85,7 +85,7 @@ class AreaShip : public Ship
 {
 	friend class ShipAreaGunController;
 
-	class ShipAreaGunController : public Shmuppet::AreaGunController
+	class ShipAreaGunController : public BS_NMSP::AreaGunController
 	{
 		AreaShip* mShip;
 
@@ -97,8 +97,8 @@ class AreaShip : public Ship
 
 	public:
 
-		ShipAreaGunController(Shmuppet::ScriptMachine *scriptMachine, AreaShip* ship) :
-			Shmuppet::AreaGunController(scriptMachine),
+		ShipAreaGunController(BS_NMSP::ScriptMachine *scriptMachine, AreaShip* ship) :
+			BS_NMSP::AreaGunController(scriptMachine),
 			mShip(ship)
 		{
 		}
@@ -112,7 +112,7 @@ class AreaShip : public Ship
 		{
 		}
 
-		void render(Shmuppet::AreaGunController* gun, RendererGL* renderer, bool solid);
+		void render(BS_NMSP::AreaGunController* gun, RendererGL* renderer, bool solid);
 	};
 
 	AreaGunRenderer* mGunRenderer;
@@ -125,7 +125,7 @@ class AreaShip : public Ship
 
 public:
 
-	AreaShip (const Shmuppet::String& image, float x, float y, Shmuppet::ScriptMachine* sm) :
+	AreaShip (const BS_NMSP::String& image, float x, float y, BS_NMSP::ScriptMachine* sm) :
 		Ship(image, x, y, sm, 0),
 		mAngleTime(0.0f),
 		mAngleSpeed(0.0f)
@@ -139,7 +139,7 @@ public:
 			delete mGunRenderer;
 	}
 
-	void addGun(const Shmuppet::String& def, float x, float y);
+	void addGun(const BS_NMSP::String& def, float x, float y);
 
 	void render(RendererGL* renderer);
 
@@ -149,14 +149,14 @@ class BombShip : public Ship
 {
 	friend class ShipAreaGunController;
 
-	class ShipAreaGunController : public Shmuppet::AreaGunController
+	class ShipAreaGunController : public BS_NMSP::AreaGunController
 	{
 		BombShip* mShip;
 
 	public:
 
-		ShipAreaGunController(Shmuppet::ScriptMachine *scriptMachine, BombShip* ship) :
-			Shmuppet::AreaGunController(scriptMachine),
+		ShipAreaGunController(BS_NMSP::ScriptMachine *scriptMachine, BombShip* ship) :
+			BS_NMSP::AreaGunController(scriptMachine),
 			mShip(ship)
 		{
 		}
@@ -170,7 +170,7 @@ class BombShip : public Ship
 		{
 		}
 
-		void render(Shmuppet::AreaGunController* gun, RendererGL* renderer, bool solid);
+		void render(BS_NMSP::AreaGunController* gun, RendererGL* renderer, bool solid);
 	};
 
 	AreaGunRenderer* mGunRenderer;
@@ -181,7 +181,7 @@ class BombShip : public Ship
 
 public:
 
-	BombShip (float x, float y, Shmuppet::ScriptMachine* sm) :
+	BombShip (float x, float y, BS_NMSP::ScriptMachine* sm) :
 		Ship("", x, y, sm, 0)
 	{
 		mGunRenderer = new AreaGunRenderer;
@@ -193,7 +193,7 @@ public:
 			delete mGunRenderer;
 	}
 
-	void addGun(const Shmuppet::String& def, float x, float y);
+	void addGun(const BS_NMSP::String& def, float x, float y);
 
 	void render(RendererGL* renderer);
 

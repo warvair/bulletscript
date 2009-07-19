@@ -1,7 +1,7 @@
 #include <iostream>
 #include "shGunDefinitions.h"
 
-namespace Shmuppet
+namespace BS_NMSP
 {
 
 // --------------------------------------------------------------------------------

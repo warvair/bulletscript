@@ -4,16 +4,16 @@
 #include <list>
 #include "shPrerequisites.h"
 
-namespace Shmuppet
+namespace BS_NMSP
 {
-	class _ShmuppetAPI VariableListener
+	class _BSAPI VariableListener
 	{
 	public:
 
 		virtual void onChanged() = 0;
 	};
 
-	class _ShmuppetAPI GlobalVariable
+	class _BSAPI GlobalVariable
 	{
 		String mName;
 		float mValue;
@@ -41,7 +41,7 @@ namespace Shmuppet
 		NUM_INSTANCE_VARS
 	};
 
-	class _ShmuppetAPI InstanceVariable
+	class _BSAPI InstanceVariable
 	{
 		String mName;
 

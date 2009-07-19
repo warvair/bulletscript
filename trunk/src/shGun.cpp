@@ -3,7 +3,7 @@
 #include <cmath>
 #include "shGun.h"
 
-namespace Shmuppet
+namespace BS_NMSP
 {
 
 // --------------------------------------------------------------------------------
@@ -56,7 +56,7 @@ bool GunController::setDefinition(const String& def)
 {
 	assert(mGun && "GunController::setDefinition mGun is null");
 
-	const Shmuppet::GunDefinition* gunDef = mScriptMachine->getGunDefinition(def);
+	const BS_NMSP::GunDefinition* gunDef = mScriptMachine->getGunDefinition(def);
 	if (!gunDef)
 		return false;
 

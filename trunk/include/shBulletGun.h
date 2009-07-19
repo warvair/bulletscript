@@ -4,10 +4,10 @@
 #include "shGun.h"
 #include "shBulletMachine.h"
 
-namespace Shmuppet
+namespace BS_NMSP
 {
 
-	class _ShmuppetAPI BulletGunBase : public Gun
+	class _BSAPI BulletGunBase : public Gun
 	{
 	public:
 
@@ -34,7 +34,7 @@ namespace Shmuppet
 	// BulletMachine<BulletType> must be kept here, to stop BulletGunBase from
 	// needing to be templated.
 	template <typename BulletType>
-	class _ShmuppetAPI BulletGun : public BulletGunBase
+	class _BSAPI BulletGun : public BulletGunBase
 	{
 		BulletMachine<BulletType>* mBulletMachine;
 
@@ -87,7 +87,7 @@ namespace Shmuppet
 	};
 
 	template <typename BulletType>
-	class _ShmuppetAPI BulletGunController : public GunController
+	class _BSAPI BulletGunController : public GunController
 	{
 	public:
 
