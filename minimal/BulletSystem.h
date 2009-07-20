@@ -2,7 +2,6 @@
 #define __BULLETSYSTEM_H__
 
 #include "bsBulletGun.h"
-#include "RendererGL.h"
 
 struct Bullet
 {
@@ -58,7 +57,6 @@ public:
 
 	static int update(float frameTime, BS::BulletMachine<Bullet>* bulletMachine);
 
-	static void render(RendererGL* renderer);
 };
 
 

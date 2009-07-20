@@ -3,11 +3,11 @@
 #include "Ship.h"
 
 // --------------------------------------------------------------------------------
-Ship::Ship(const BS_NMSP::String& image, 
+Ship::Ship(const BS::String& image, 
 		   float x, 
 		   float y,
-		   BS_NMSP::ScriptMachine* sm, 
-		   BS_NMSP::BulletMachine<Bullet>* bm) :
+		   BS::ScriptMachine* sm, 
+		   BS::BulletMachine<Bullet>* bm) :
 	mScriptMachine (sm),
 	mBulletMachine (bm),
 	mX (x),
@@ -73,10 +73,10 @@ void Ship::render(RendererGL* renderer)
 }
 // --------------------------------------------------------------------------------
 // --------------------------------------------------------------------------------
-void BulletShip::addGun(const BS_NMSP::String& def, float x, float y)
+void BulletShip::addGun(const BS::String& def, float x, float y)
 {
-	BS_NMSP::BulletGunController<Bullet>* gun =
-		new BS_NMSP::BulletGunController<Bullet>(mScriptMachine, mBulletMachine);
+	BS::BulletGunController<Bullet>* gun =
+		new BS::BulletGunController<Bullet>(mScriptMachine, mBulletMachine, this);
 	gun->setDefinition(def);
 
 	GunInstance shipGun;
@@ -85,6 +85,14 @@ void BulletShip::addGun(const BS_NMSP::String& def, float x, float y)
 	shipGun.xOffset = x;
 	shipGun.yOffset = y;
 	mGuns.push_back(shipGun);
+}
+// --------------------------------------------------------------------------------
+void BulletShip::emitAngleBullet(float x, float y, float angle, float speed, float damage)
+{
+}
+// --------------------------------------------------------------------------------
+void BulletShip::emitTargetBullet(float x, float y, float speed, float damage)
+{
 }
 // --------------------------------------------------------------------------------
 void BulletShip::updateGuns(float frameTime)
@@ -99,9 +107,9 @@ void BulletShip::updateGuns(float frameTime)
 			// If you want the gun to rotate around a point, so that the emission position
 			// and angle change, calculate the position/angle and expose them to the script
 			// here.  Then use Gun_Angle as emission angle in script.
-			gun.gun->setInstanceVariable(BS_NMSP::Instance_Gun_X, mX + gun.xOffset);
-			gun.gun->setInstanceVariable(BS_NMSP::Instance_Gun_Y, mY + gun.yOffset);
-			gun.gun->setInstanceVariable(BS_NMSP::Instance_Gun_Angle, mAngle);
+			gun.gun->setInstanceVariable(BS::Instance_Gun_X, mX + gun.xOffset);
+			gun.gun->setInstanceVariable(BS::Instance_Gun_Y, mY + gun.yOffset);
+			gun.gun->setInstanceVariable(BS::Instance_Gun_Angle, mAngle);
 
 			gun.gun->update(frameTime);
 
@@ -114,7 +122,7 @@ void BulletShip::updateGuns(float frameTime)
 }
 // --------------------------------------------------------------------------------
 // --------------------------------------------------------------------------------
-void AreaShip::AreaGunRenderer::render(BS_NMSP::AreaGunController* gun, 
+void AreaShip::AreaGunRenderer::render(BS::AreaGunController* gun, 
 									   RendererGL* renderer,
 									   bool solid)
 {
@@ -139,9 +147,9 @@ void AreaShip::AreaGunRenderer::render(BS_NMSP::AreaGunController* gun,
 }
 // --------------------------------------------------------------------------------
 // --------------------------------------------------------------------------------
-void AreaShip::addGun(const BS_NMSP::String& def, float x, float y)
+void AreaShip::addGun(const BS::String& def, float x, float y)
 {
-	BS_NMSP::AreaGunController* gun = new ShipAreaGunController(mScriptMachine, this);
+	BS::AreaGunController* gun = new ShipAreaGunController(mScriptMachine, this);
 	gun->setDefinition(def);
 
 	GunInstance shipGun;
@@ -162,14 +170,14 @@ void AreaShip::updateGuns(float frameTime)
 		if (gun.active)
 		{
 			// mX + w2 - 10, mY + h2 - 10
-			float pX = -sin(mAngle * BS_NMSP::DEG_TO_RAD) * 80;
-			float pY = cos(mAngle * BS_NMSP::DEG_TO_RAD) * 80;
+			float pX = -sin(mAngle * BS::DEG_TO_RAD) * 80;
+			float pY = cos(mAngle * BS::DEG_TO_RAD) * 80;
 			float w2 = mWidth / 2;
 			float h2 = mHeight / 2;
 
-			gun.gun->setInstanceVariable(BS_NMSP::Instance_Gun_X, mX + w2 - 10 + pX);
-			gun.gun->setInstanceVariable(BS_NMSP::Instance_Gun_Y, mY + h2 - 10 + pY);
-			gun.gun->setInstanceVariable(BS_NMSP::Instance_Gun_Angle, mAngle);
+			gun.gun->setInstanceVariable(BS::Instance_Gun_X, mX + w2 - 10 + pX);
+			gun.gun->setInstanceVariable(BS::Instance_Gun_Y, mY + h2 - 10 + pY);
+			gun.gun->setInstanceVariable(BS::Instance_Gun_Angle, mAngle);
 
 			gun.gun->update(frameTime);
 
@@ -220,7 +228,7 @@ void AreaShip::render(RendererGL* renderer)
 
 		if (gun.active)
 		{
-			mGunRenderer->render(static_cast<BS_NMSP::AreaGunController*>(gun.gun), renderer, true);
+			mGunRenderer->render(static_cast<BS::AreaGunController*>(gun.gun), renderer, true);
 		}
 
 		++it;
@@ -240,11 +248,11 @@ void AreaShip::render(RendererGL* renderer)
 }
 // --------------------------------------------------------------------------------
 // --------------------------------------------------------------------------------
-void BombShip::AreaGunRenderer::render(BS_NMSP::AreaGunController* gun, 
+void BombShip::AreaGunRenderer::render(BS::AreaGunController* gun, 
 									   RendererGL* renderer,
 									   bool solid)
 {
-	BS_NMSP::AreaGun::PointDataList p = gun->getPoints();
+	BS::AreaGun::PointDataList p = gun->getPoints();
 	int numPoints = gun->getNumPoints();
 	float strength = gun->getStrength();
 
@@ -285,9 +293,9 @@ void BombShip::AreaGunRenderer::render(BS_NMSP::AreaGunController* gun,
 }
 // --------------------------------------------------------------------------------
 // --------------------------------------------------------------------------------
-void BombShip::addGun(const BS_NMSP::String& def, float x, float y)
+void BombShip::addGun(const BS::String& def, float x, float y)
 {
-	BS_NMSP::AreaGunController* gun = new ShipAreaGunController(mScriptMachine, this);
+	BS::AreaGunController* gun = new ShipAreaGunController(mScriptMachine, this);
 	gun->setDefinition(def);
 
 	GunInstance shipGun;
@@ -297,9 +305,9 @@ void BombShip::addGun(const BS_NMSP::String& def, float x, float y)
 	shipGun.yOffset = y;
 	mGuns.push_back(shipGun);
 
-	gun->setInstanceVariable(BS_NMSP::Instance_Gun_X, mX);
-	gun->setInstanceVariable(BS_NMSP::Instance_Gun_Y, mY);
-	gun->setInstanceVariable(BS_NMSP::Instance_Gun_Angle, mAngle);
+	gun->setInstanceVariable(BS::Instance_Gun_X, mX);
+	gun->setInstanceVariable(BS::Instance_Gun_Y, mY);
+	gun->setInstanceVariable(BS::Instance_Gun_Angle, mAngle);
 }
 // --------------------------------------------------------------------------------
 void BombShip::updateGuns(float frameTime)
@@ -335,7 +343,7 @@ void BombShip::render(RendererGL* renderer)
 
 		if (gun.active)
 		{
-			mGunRenderer->render(static_cast<BS_NMSP::AreaGunController*>(gun.gun), renderer, false);
+			mGunRenderer->render(static_cast<BS::AreaGunController*>(gun.gun), renderer, false);
 		}
 
 		++it;

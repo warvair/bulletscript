@@ -1,5 +1,5 @@
-#ifndef __SH_GUNDEFINITIONS_H__
-#define __SH_GUNDEFINITIONS_H__
+#ifndef __BS_GUNDEFINITIONS_H__
+#define __BS_GUNDEFINITIONS_H__
 
 #include <vector>
 #include "bsPrerequisites.h"

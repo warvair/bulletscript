@@ -1,5 +1,5 @@
-#ifndef __SH_SCRIPTSTRUCTS_H__
-#define __SH_SCRIPTSTRUCTS_H__
+#ifndef __BS_SCRIPTSTRUCTS_H__
+#define __BS_SCRIPTSTRUCTS_H__
 
 #include <vector>
 #include "bsPrerequisites.h"
@@ -71,7 +71,7 @@ namespace BS_NMSP
 		// Affectors - only used by BulletGuns
 		std::list<int> affectors;
 
-		// Owning gun
+		// Owning gun - only used by BulletGuns
 		Gun* gun;
 
 		// Owning GunController

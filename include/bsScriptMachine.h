@@ -1,5 +1,5 @@
-#ifndef __SH_SCRIPTMACHINE_H__
-#define __SH_SCRIPTMACHINE_H__
+#ifndef __BS_SCRIPTMACHINE_H__
+#define __BS_SCRIPTMACHINE_H__
 
 #include <vector>
 #include <map>

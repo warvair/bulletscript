@@ -1,5 +1,5 @@
-#ifndef __SH_ABSTRACTSYNTAXTREE_H__
-#define __SH_ABSTRACTSYNTAXTREE_H__
+#ifndef __BS_ABSTRACTSYNTAXTREE_H__
+#define __BS_ABSTRACTSYNTAXTREE_H__
 
 #include "bsPrerequisites.h"
 #include "bsScriptStructs.h"
