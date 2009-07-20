@@ -1,5 +1,5 @@
-#ifndef __SH_BULLETMACHINE_H__
-#define __SH_BULLETMACHINE_H__
+#ifndef __BS_BULLETMACHINE_H__
+#define __BS_BULLETMACHINE_H__
 
 #include <assert.h>
 #include <map>

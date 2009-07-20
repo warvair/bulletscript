@@ -1,5 +1,5 @@
-#ifndef __SH_AREAGUN_H__
-#define __SH_AREAGUN_H__
+#ifndef __BS_AREAGUN_H__
+#define __BS_AREAGUN_H__
 
 #include "bsGun.h"
 

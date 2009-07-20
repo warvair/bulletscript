@@ -1,5 +1,5 @@
-#ifndef __SH_BULLETAFFECTOR_H__
-#define __SH_BULLETAFFECTOR_H__
+#ifndef __BS_BULLETAFFECTOR_H__
+#define __BS_BULLETAFFECTOR_H__
 
 #include "bsPrerequisites.h"
 #include "bsScriptStructs.h"
@@ -121,7 +121,7 @@ namespace BS_NMSP
 			}
 		}
 
-		void runFunction(BulletType& b, float* arguments, float frameTime)
+		inline void runFunction(BulletType& b, float* arguments, float frameTime)
 		{
 			mFunction(b, arguments, frameTime);
 		}

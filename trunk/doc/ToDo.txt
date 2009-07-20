@@ -1,3 +1,18 @@
+Fire functions need to allow the individual gun to chose how to emit, because they may use
+different batteries, for instance.  Therefore, fire functions need a user param, which is
+to do with the emitting gun, and can be called.  
+Or this could even be a function pointer: fire() passes in a BulletGunBase
+
+Profile memory usage:
+	Create console app, no rendering.  Create about 30 ships, give each 2 random emitters (just
+	bullets, do area separately).
+
+Remove containers where possible
+	BulletAffector::mArguments
+	BulletGun::mAffectors
+	BulletMachine::mBulletAffectors
+	GlobalVariable::mListeners
+
 Homing affector
 
 Per-state affectors

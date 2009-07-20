@@ -1,5 +1,5 @@
-#ifndef __SH_BULLETGUN_H__
-#define __SH_BULLETGUN_H__
+#ifndef __BS_BULLETGUN_H__
+#define __BS_BULLETGUN_H__
 
 #include "bsGun.h"
 #include "bsBulletMachine.h"
@@ -22,11 +22,21 @@ namespace BS_NMSP
 		typedef std::list<Affector> AffectorList;
 		AffectorList mAffectors;
 
+		// The user can pass in an object to access when a bullet is emitted, for
+		// finer control over bullet emission, if they wish.
+		void* mUserObject;
+
 	public:
 
-		BulletGunBase(ScriptMachine *sm) :
-			Gun(sm)
+		BulletGunBase(ScriptMachine *sm, void* userObject = 0) :
+			Gun(sm),
+			mUserObject(userObject)
 		{
+		}
+
+		void* getUserObject()
+		{
+			return mUserObject;
 		}
 
 	};
@@ -40,8 +50,8 @@ namespace BS_NMSP
 
 	public:
 
-		BulletGun(ScriptMachine* scriptMachine, BulletMachine<BulletType>* bulletMachine) :
-			BulletGunBase(scriptMachine),
+		BulletGun(ScriptMachine* scriptMachine, BulletMachine<BulletType>* bulletMachine, void* userEmitter) :
+			BulletGunBase(scriptMachine, userEmitter),
 			mBulletMachine(bulletMachine)
 		{
 		}
@@ -91,10 +101,11 @@ namespace BS_NMSP
 	{
 	public:
 
-		BulletGunController(ScriptMachine *scriptMachine, BulletMachine<BulletType>* bulletMachine) :
+		BulletGunController(ScriptMachine *scriptMachine, BulletMachine<BulletType>* bulletMachine,
+							void* userObj = 0) :
 			GunController(scriptMachine)
 		{
-			mGun = new BulletGun<BulletType>(scriptMachine, bulletMachine);
+			mGun = new BulletGun<BulletType>(scriptMachine, bulletMachine, userObj);
 		}
 
 		~BulletGunController()

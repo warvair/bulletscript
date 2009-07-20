@@ -1,5 +1,5 @@
-#ifndef __SH_GUN_H__
-#define __SH_GUN_H__
+#ifndef __BS_GUN_H__
+#define __BS_GUN_H__
 
 #include "bsPrerequisites.h"
 #include "bsScriptStructs.h"
@@ -53,7 +53,7 @@ namespace BS_NMSP
 	protected:
 
 		Gun* mGun;
-		ScriptMachine *mScriptMachine;
+		ScriptMachine* mScriptMachine;
 
 	public:
 

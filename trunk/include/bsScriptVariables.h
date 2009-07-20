@@ -1,5 +1,5 @@
-#ifndef __SH_SCRIPTVARIABLES_H__
-#define __SH_SCRIPTVARIABLES_H__
+#ifndef __BS_SCRIPTVARIABLES_H__
+#define __BS_SCRIPTVARIABLES_H__
 
 #include <list>
 #include "bsPrerequisites.h"

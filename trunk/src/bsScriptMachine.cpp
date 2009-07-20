@@ -188,7 +188,7 @@ GlobalVariable* ScriptMachine::getGlobalVariable(int index)
 	return mGlobals[index];
 }
 // --------------------------------------------------------------------------------
-int ScriptMachine::getInstanceVariableIndex(const String &name) const
+int ScriptMachine::getInstanceVariableIndex(const String& name) const
 {
 	for (size_t i = 0; i < mInstances.size(); ++i)
 	{
@@ -210,7 +210,7 @@ int ScriptMachine::getGunProperty(const String& name) const
 	return -1;
 }
 // --------------------------------------------------------------------------------
-bool ScriptMachine::addGunDefinition(const String &name, GunDefinition* def)
+bool ScriptMachine::addGunDefinition(const String& name, GunDefinition* def)
 {
 	GunDefinitionMap::iterator it = mDefinitions.find(name);
 	if (it != mDefinitions.end())
@@ -220,7 +220,7 @@ bool ScriptMachine::addGunDefinition(const String &name, GunDefinition* def)
 	return true;
 }
 // --------------------------------------------------------------------------------
-const GunDefinition* ScriptMachine::getGunDefinition(const String &name) const
+const GunDefinition* ScriptMachine::getGunDefinition(const String& name) const
 {
 	GunDefinitionMap::const_iterator it = mDefinitions.find(name);
 	if (it == mDefinitions.end())
@@ -233,7 +233,7 @@ const GunDefinition* ScriptMachine::getGunDefinition(const String &name) const
 	}
 }
 // --------------------------------------------------------------------------------
-int ScriptMachine::compileScript(uint8 *buffer, size_t bufferSize)
+int ScriptMachine::compileScript(uint8* buffer, size_t bufferSize)
 {
 	String strBuf((char*) buffer, bufferSize);
 
@@ -546,12 +546,23 @@ void ScriptMachine::interpretCode(const uint32* code,
 				FireFunction func = getFireFunction(funcIndex);
 
 				// Would be nice to get rid of this static_cast because it could be
-				// called a lot at one time.  the gun param is only needed for this,
-				// anyway.
-				state.stackHead -= func(static_cast<BulletGunBase*>(state.gun),
-										state.instanceVars[Instance_Gun_X],
-										state.instanceVars[Instance_Gun_Y],
-										&state.curStack[state.stackHead]);
+				// called a lot at one time.  the gun param is only needed for this, anyway.
+
+				// This is still not satisfactory.  FireFunctions have to act on instances of
+				// Guns, rather than some universal one.  Need to allow the user to pass in
+				// a function of their own, per gun, which takes the arguments that the global
+				// function does.  As we already pass the gun in, it would make sense to store
+				// it in the gun, or BulletGunBase, but then we still need multiple functions per
+				// gun, eg FireA and FireT.  Fire functions should call gun->emit, then.
+
+				// Either way, the issue is: we need to allow some kind of user hook in here, so
+				// that they can decide how to emit the bullet based on the type of gun that
+				// emitted it.  This is because we can only pass in float arguments to it, but 
+				// we may want strings, pointers or whatever, for sprite name, etc.
+
+				BulletGunBase *bg = static_cast<BulletGunBase*>(state.gun);
+				state.stackHead -= func(bg, state.instanceVars[Instance_Gun_X],
+					state.instanceVars[Instance_Gun_Y], &state.curStack[state.stackHead]);
 
 				state.curInstruction += 2;
 			}
@@ -676,7 +687,7 @@ void ScriptMachine::interpretCode(const uint32* code,
 	return;
 }
 // --------------------------------------------------------------------------------
-void ScriptMachine::processGunState(GunScriptRecord &gsr)
+void ScriptMachine::processGunState(GunScriptRecord& gsr)
 {
 	if (gsr.suspendTime > 0.0f)
 		return;

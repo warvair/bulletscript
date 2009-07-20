@@ -2,7 +2,8 @@
 #include <iostream>
 #include <algorithm>
 #include "BulletSystem.h"
-#include "Ship.h"
+
+int gBulletsEmitted = 0;
 
 // --------------------------------------------------------------------------------
 // BulletAffector functions
@@ -106,9 +107,6 @@ unsigned int BulletBattery::getFreeBulletSlot()
 // --------------------------------------------------------------------------------
 int BulletBattery::emitAngle(BS::BulletGunBase *gun, float x, float y, BS::uint32 *args)
 {
-//	BulletShip* ship = static_cast<BulletShip*>(gun->getUserObject());
-//	ship->emitAngleBullet(x, y, UINT32_TO_FLOAT(args[-3]), UINT32_TO_FLOAT(args[-2]), UINT32_TO_FLOAT(args[-1]));
-		
 	int slot = getFreeBulletSlot();
 
 	Bullet &b = mBullets[slot];
@@ -122,6 +120,8 @@ int BulletBattery::emitAngle(BS::BulletGunBase *gun, float x, float y, BS::uint3
 	b.damage = UINT32_TO_FLOAT(args[-1]);
 	b.vx = (float) sin(UINT32_TO_FLOAT(args[-3]) * 0.017453);
 	b.vy = (float) cos(UINT32_TO_FLOAT(args[-3]) * 0.017453);
+
+	gBulletsEmitted++;
 
 	// Return the number of arguments used
 	return 3;
@@ -147,6 +147,8 @@ int BulletBattery::emitTarget(BS::BulletGunBase *gun, float x, float y, BS::uint
 	b.damage = UINT32_TO_FLOAT(args[-1]);
 	b.vx = (float) sin(angle);
 	b.vy = (float) cos(angle);
+
+	gBulletsEmitted++;
 
 	// Return the number of arguments used
 	return 5;
@@ -187,20 +189,5 @@ int BulletBattery::update(float frameTime, BS::BulletMachine<Bullet>* bulletMach
 	}
 
 	return count;
-}
-// --------------------------------------------------------------------------------
-void BulletBattery::render(RendererGL *renderer)
-{
-	std::vector<Bullet>::iterator it = mBullets.begin ();
-	while (it != mBullets.end ())
-	{
-		Bullet &b = *it;
-		if (b.__active)
-		{
-			renderer->addBullet (b.x, b.y);
-		}
-
-		++ it;
-	}
 }
 // --------------------------------------------------------------------------------

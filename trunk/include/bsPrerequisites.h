@@ -1,5 +1,5 @@
-#ifndef __SH_PREREQUISITES_H__
-#define __SH_PREREQUISITES_H__
+#ifndef __BS_PREREQUISITES_H__
+#define __BS_PREREQUISITES_H__
 
 // Platform - based off OGRE3D (www.ogre3d.org)
 #define BS_PLATFORM_WIN32 1
