@@ -39,10 +39,8 @@
 // Set platform
 #if defined( __WIN32__ ) || defined( _WIN32 )
 #   define BS_PLATFORM BS_PLATFORM_WIN32
-
 #elif defined( __APPLE_CC__)
 #   define BS_PLATFORM BS_PLATFORM_APPLE
-
 #else
 #   define BS_PLATFORM BS_PLATFORM_LINUX
 #endif
@@ -61,19 +59,19 @@
 #	else
 #		if defined(__MINGW32__)
 #			define _BSAPI
-#		elsif defined(BS_DLL_IMPORT)
+#		elif defined(BS_DLL_IMPORT)
 #			define _BSAPI __declspec( dllimport )
 #		else
 #			define _BSAPI
 #		endif
 #	endif
+#elif BS_PLATFORM == BS_PLATFORM_LINUX
+#	define _BSAPI __attribute__((visibility("default")))
 #endif
 
 // Ok, because only occurs on non-public STL members
-#pragma warning(disable: 4251)
-
-#if BS_PLATFORM == EX_PLATFORM_LINUX
-#	define _BSAPI __attribute__ ((visibility("default")))
+#if BS_PLATFORM == BS_PLATFORM_WIN32
+#	pragma warning(disable: 4251)
 #endif
 
 #define BS_NMSP				BS

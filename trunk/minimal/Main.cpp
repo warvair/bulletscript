@@ -9,6 +9,25 @@
 #	include <windows.h>
 #endif
 
+#if BS_PLATFORM == BS_PLATFORM_LINUX
+#include <stdlib.h>
+#include <sys/time.h>
+#include <time.h>
+
+timeval start_time;
+
+unsigned int timeGetTime()
+{
+	timeval now;
+	unsigned int ticks;
+	
+	gettimeofday(&now, NULL);
+	ticks = (now.tv_sec - start_time.tv_sec) * 1000 + (now.tv_usec - start_time.tv_usec) / 1000;
+	return ticks;
+}
+	
+#endif
+
 using namespace BS;
 using namespace std;
 
@@ -46,11 +65,15 @@ void script_err(const char* msg)
 
 int main(int argc, char** argv)
 {
-	if (argc < 3)
+	if (argc < 4)
 	{
-		cout << "No file/run length specified." << endl;
+		cout << "No file/guns/run length specified." << endl;
 		return 0;
 	}
+
+#if BS_PLATFORM == BS_PLATFORM_LINUX
+	gettimeofday(&start_time, NULL);
+#endif
 	
 	// Create BulletMachine
 	BulletMachine<Bullet> bm;
@@ -95,14 +118,14 @@ int main(int argc, char** argv)
 		guns.push_back(gun);
 	}
 
-	long curTime = timeGetTime();
-	long totalTime = 0;
-//	long runTime = atof(argv[2]) * 1000;
-	int targetCount = atoi(argv[2]);
-//	while (totalTime < runTime)
-	while (gBulletsEmitted < 10000000)
+	unsigned long curTime = timeGetTime();
+	unsigned long totalTime = 0;
+	unsigned long runTime = atof(argv[3]) * 1000;
+//	int targetCount = atoi(argv[2]);
+	while (totalTime < runTime)
+//	while (gBulletsEmitted < 10000000)
 	{
-		long deltaTime = timeGetTime() - curTime;
+		unsigned long deltaTime = timeGetTime() - curTime;
 		totalTime += deltaTime;
 		curTime += deltaTime;
 
