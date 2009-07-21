@@ -50,7 +50,7 @@ namespace BS_NMSP
 	typedef void (*ErrorFunction)(const char*);
 
 	class BulletGunBase;
-	typedef int (*FireFunction)(BulletGunBase*, float, float, uint32*);
+	typedef int (*FireFunction)(BulletGunBase*, float, float, float*);
 
 	class BulletMachineBase;
 

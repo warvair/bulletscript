@@ -36,7 +36,7 @@ void Gun::setState(const String& state)
 		{
 			mRecord.curState = (int) i;
 			mRecord.curInstruction = 0;
-			mRecord.repeats.clear();
+			mRecord.repeatDepth = 0;
 			mRecord.stackHead = 0;
 			return;
 		}

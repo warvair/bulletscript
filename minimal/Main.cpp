@@ -65,9 +65,11 @@ void script_err(const char* msg)
 
 int main(int argc, char** argv)
 {
+//	std::cout << sizeof(GunScriptRecord) << std::endl;
+
 	if (argc < 4)
 	{
-		cout << "No file/guns/run length specified." << endl;
+		cout << "No file/guns/emitted specified." << endl;
 		return 0;
 	}
 
@@ -120,10 +122,11 @@ int main(int argc, char** argv)
 
 	unsigned long curTime = timeGetTime();
 	unsigned long totalTime = 0;
+	unsigned long numFrames = 0;
 	unsigned long runTime = atof(argv[3]) * 1000;
-//	int targetCount = atoi(argv[2]);
+//	int targetCount = atoi(argv[3]);
 	while (totalTime < runTime)
-//	while (gBulletsEmitted < 10000000)
+//	while (gBulletsEmitted < targetCount)
 	{
 		unsigned long deltaTime = timeGetTime() - curTime;
 		totalTime += deltaTime;
@@ -146,10 +149,14 @@ int main(int argc, char** argv)
 
 		// Update emitted bullets
 		int numBullets = BulletBattery::update(frameTime, &bm);
-//		cout << numBullets << " / " << gBulletsEmitted << endl;
+//		std::cout << numBullets << std::endl;
+//		std::cout << runTime << " " << totalTime << std::endl;
+		numFrames++;	
 	}
 
-	cout << totalTime << endl;
+	cout << totalTime << " " << numFrames << endl;
+	float fps = (float) numFrames / (totalTime / 1000.0f);
+	cout << fps << endl;
 
 	for (int i = 0; i < numGuns; ++i)
 		delete guns[i];

@@ -261,6 +261,31 @@ const String& AbstractSyntaxTreeNode::getStringData() const
 	return mStringData;
 }
 // --------------------------------------------------------------------------------
+void AbstractSyntaxTreeNode::checkRepeatDepth(int& depth)
+{
+	// Todo:
+	// ...
+	depth = 0;
+	return;
+
+	if (mType == ASTN_RepeatStatement)
+	{
+		depth++;
+		if (mChildren[1])
+		{
+			mChildren[1]->checkRepeatDepth(depth);
+		}
+	}
+
+	for (int i = 0; i < MAX_CHILDREN; ++i)
+	{
+		if (mChildren[i])
+		{
+			mChildren[i]->checkRepeatDepth(depth);
+		}
+	}
+}
+// --------------------------------------------------------------------------------
 void AbstractSyntaxTreeNode::countAffectorArguments(int& numArgs)
 {
 	if (mType == ASTN_FunctionCallArg)
@@ -308,6 +333,16 @@ void AbstractSyntaxTreeNode::createGunMembers(GunDefinition* def)
 				return;
 			}
 
+			// We can be certain that this is a BulletGun
+			BulletGunDefinition* bDef = static_cast<BulletGunDefinition*>(def);
+
+			if (bDef->getNumBulletAffectors() >= BS_MAX_AFFECTORS_PER_GUN)
+			{
+				AbstractSyntaxTree::instancePtr()->addError
+					(mLine, "BulletGun '" + bDef->getName() + "' has too many affectors.");
+				return;
+			}
+
 			String funcName = mChildren[0]->getStringData();
 
 			// Make sure it exists
@@ -324,14 +359,20 @@ void AbstractSyntaxTreeNode::createGunMembers(GunDefinition* def)
 			{
 				int numArgs = 0;
 				mChildren[1]->countAffectorArguments(numArgs);
+
+				if (numArgs > BS_MAX_AFFECTOR_ARGS)
+				{
+					AbstractSyntaxTree::instancePtr()->addError
+						(mLine, "Affector '" + funcName + "' has too many arguments.");
+					return;
+				}
+
 				for (int i = 0; i < numArgs; ++i)
 					mBulletMachine->addBulletAffectorArgument(mScriptMachine);
 			}
 
 			int index = mBulletMachine->getNumBulletAffectors() - 1;
-
-			// We can be certain that this is a BulletGun
-			static_cast<BulletGunDefinition*>(def)->addBulletAffector(index);
+			bDef->addBulletAffector(index);
 		}
 		return;
 
@@ -355,6 +396,25 @@ void AbstractSyntaxTreeNode::createGunMembers(GunDefinition* def)
 				st.record->variables.push_back(varName);
 		}
 		break;
+
+	case ASTN_RepeatStatement:
+		{
+			// Check to make sure we don't repeat too deeply.
+			if (mChildren[1])
+			{
+				int repeatDepth = 0;
+				checkRepeatDepth(repeatDepth);
+				if (repeatDepth > BS_SCRIPT_REPEAT_DEPTH)
+				{
+					std::stringstream ss;
+					ss << "Repeats are nested too deeply (max " << BS_SCRIPT_REPEAT_DEPTH << ")";
+					AbstractSyntaxTree::instancePtr()->addError(mLine, ss.str());
+					return;
+				}
+			}
+		}
+		break;
+
 	}
 
 	for (int i = 0; i < MAX_CHILDREN; ++ i)
@@ -446,7 +506,7 @@ void AbstractSyntaxTreeNode::createAffectorArgumentsBytecode(int index,
 
 			mScriptMachine->processConstantExpression(byteCode, byteCodeSize, record);
 
-			float value = UINT32_TO_FLOAT(record.curStack[record.stackHead - 1]);
+			float value = record.stack[record.stackHead - 1];
 			mBulletMachine->setBulletAffectorValue(index, localArgument, value);
 		}
 	}
@@ -465,7 +525,7 @@ void AbstractSyntaxTreeNode::createAffectorArgumentsBytecode(int index,
 	}
 }
 // --------------------------------------------------------------------------------
-void AbstractSyntaxTreeNode::createGunBytecode (GunDefinition* def,
+void AbstractSyntaxTreeNode::createGunBytecode(GunDefinition* def,
 												bool newAffector,
 												BytecodeBlock* bytecode)
 {
@@ -534,10 +594,10 @@ void AbstractSyntaxTreeNode::createGunBytecode (GunDefinition* def,
 				// Set state bytecode
 				s_curState->record->byteCodeSize = stateByteCode.size ();
 				s_curState->record->byteCode = new uint32[s_curState->record->byteCodeSize];
+
 				for (uint32 i = 0; i < s_curState->record->byteCodeSize; ++i)
 					s_curState->record->byteCode[i] = stateByteCode[i];
 			}
-
 		}
 		return;
 
