@@ -38,6 +38,41 @@ namespace BS_NMSP
 	};
 
 
+	const int MAX_AFFECTOR_ARGS = 8;
+
+	struct BulletGunAffector
+	{
+		int index;
+		float arguments[MAX_AFFECTOR_ARGS];
+	};
+
+	typedef std::list<BulletGunAffector> BulletGunAffectorList;
+
+	class _BSAPI BulletGunBase : public Gun
+	{
+	public:
+
+		BulletGunAffectorList mAffectors;
+
+		// The user can pass in an object to access when a bullet is emitted, for
+		// finer control over bullet emission, if they wish.
+		void* mUserObject;
+
+	public:
+
+		BulletGunBase(ScriptMachine *sm, void* userObject = 0) :
+			Gun(sm),
+			mUserObject(userObject)
+		{
+		}
+
+		void* getUserObject()
+		{
+			return mUserObject;
+		}
+
+	};
+
 	enum GunProperty
 	{
 		GunProperty_Strength,

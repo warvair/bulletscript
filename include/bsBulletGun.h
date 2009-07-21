@@ -6,41 +6,7 @@
 
 namespace BS_NMSP
 {
-
-	class _BSAPI BulletGunBase : public Gun
-	{
-	public:
-
-		static const int MAX_AFFECTOR_ARGS = 8;
-
-		struct Affector
-		{
-			int index;
-			float arguments[MAX_AFFECTOR_ARGS];
-		};
-
-		typedef std::list<Affector> AffectorList;
-		AffectorList mAffectors;
-
-		// The user can pass in an object to access when a bullet is emitted, for
-		// finer control over bullet emission, if they wish.
-		void* mUserObject;
-
-	public:
-
-		BulletGunBase(ScriptMachine *sm, void* userObject = 0) :
-			Gun(sm),
-			mUserObject(userObject)
-		{
-		}
-
-		void* getUserObject()
-		{
-			return mUserObject;
-		}
-
-	};
-
+	
 	// BulletMachine<BulletType> must be kept here, to stop BulletGunBase from
 	// needing to be templated.
 	template <typename BulletType>
@@ -70,7 +36,7 @@ namespace BS_NMSP
 			std::list<int>::iterator it = mRecord.affectors.begin();
 			while (it != mRecord.affectors.end())
 			{
-				Affector aff;
+				BulletGunAffector aff;
 				aff.index = *it;
 
 				mAffectors.push_back(aff);
@@ -81,7 +47,7 @@ namespace BS_NMSP
 		// This must be done here, to stop BulletGunBase from needing to be templated.
 		void updateBulletAffectors()
 		{
-			AffectorList::iterator it = mAffectors.begin();
+			BulletGunAffectorList::iterator it = mAffectors.begin();
 			while (it != mAffectors.end())
 			{
 				mBulletMachine->updateInstanceArguments((*it).index, (*it).arguments, mRecord);

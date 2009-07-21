@@ -5,6 +5,7 @@
 #include <map>
 #include "bsBulletAffector.h"
 #include "bsGunDefinitions.h"
+#include "bsGun.h"
 
 namespace BS_NMSP
 {
@@ -59,7 +60,7 @@ namespace BS_NMSP
 		{
 			// Delete BulletAffectors
 			{
-				BulletAffectorList::iterator it = mBulletAffectors.begin();
+				typename BulletAffectorList::iterator it = mBulletAffectors.begin();
 				while (it != mBulletAffectors.end())
 				{
 					delete (*it);
@@ -73,7 +74,7 @@ namespace BS_NMSP
 			if (mFunctions.find(function) == mFunctions.end())
 				return false;
 
-			BulletAffector<BulletType>::Function func = mFunctions[function];
+			typename BulletAffector<BulletType>::Function func = mFunctions[function];
 			BulletAffector<BulletType>* aff = new BulletAffector<BulletType>(func);
 			mBulletAffectors.push_back(aff);
 			return true;
@@ -106,7 +107,7 @@ namespace BS_NMSP
 				assert(affector >= 0 && affector < (int) mBulletAffectors.size () &&
 					"BulletMachine::setBulletAffectorBytecode: out of bounds.");
 
-				BulletAffector<BulletType>::Argument& arg = 
+				typename BulletAffector<BulletType>::Argument& arg = 
 					mBulletAffectors[affector]->getArgument(argument);
 
 				arg.record = new CodeRecord;
@@ -122,7 +123,7 @@ namespace BS_NMSP
 			assert(affector >= 0 && affector < (int) mBulletAffectors.size() &&
 				"BulletMachine::setBulletAffectorBytecode: out of bounds.");
 
-			const BulletAffector<BulletType>::Argument& arg = 
+			const typename BulletAffector<BulletType>::Argument& arg = 
 				mBulletAffectors[affector]->getArgument(argument);
 			
 			codeSize = arg.record->byteCodeSize;
@@ -134,7 +135,7 @@ namespace BS_NMSP
 			assert(affector >= 0 && affector < (int) mBulletAffectors.size () &&
 				"BulletMachine::setBulletAffectorType: out of bounds.");
 
-			BulletAffector<BulletType>::Argument& arg = 
+			typename BulletAffector<BulletType>::Argument& arg = 
 				mBulletAffectors[affector]->getArgument (argument);
 
 			arg.exprTypes |= type;
@@ -145,7 +146,7 @@ namespace BS_NMSP
 			assert(affector >= 0 && affector < (int) mBulletAffectors.size () &&
 				"BulletMachine::getBulletAffectorType: out of bounds.");
 
-			const BulletAffector<BulletType>::Argument& arg = 
+			const typename BulletAffector<BulletType>::Argument& arg = 
 				mBulletAffectors[affector]->getArgument (argument);
 			
 			return arg.exprTypes;
@@ -156,7 +157,7 @@ namespace BS_NMSP
 			assert(affector >= 0 && affector < (int) mBulletAffectors.size () &&
 				"BulletMachine::setBulletAffectorValue: out of bounds.");
 
-			BulletAffector<BulletType>::Argument& arg = 
+			typename BulletAffector<BulletType>::Argument& arg = 
 				mBulletAffectors[affector]->getArgument (argument);
 			
 			arg.value = value;
@@ -167,7 +168,7 @@ namespace BS_NMSP
 			assert(affector >= 0 && affector < (int) mBulletAffectors.size () &&
 				"BulletMachine::getBulletAffectorValue: out of bounds.");
 
-			const BulletAffector<BulletType>::Argument& arg = 
+			const typename BulletAffector<BulletType>::Argument& arg = 
 				mBulletAffectors[affector]->getArgument(argument);
 			
 			return arg.value;
@@ -178,7 +179,7 @@ namespace BS_NMSP
 			assert(affector >= 0 && affector < (int) mBulletAffectors.size () &&
 				"BulletMachine::registerAffectorListener: out of bounds.");
 
-			BulletAffector<BulletType>::Argument& arg = 
+			typename BulletAffector<BulletType>::Argument& arg = 
 				mBulletAffectors[affector]->getArgument(argument);
 
 			var->registerAffectorArgument(&arg);
@@ -195,7 +196,7 @@ namespace BS_NMSP
 		void update()
 		{
 			// Only update if it has function calls
-			BulletAffectorList::iterator it = mBulletAffectors.begin();
+			typename BulletAffectorList::iterator it = mBulletAffectors.begin();
 			while (it != mBulletAffectors.end())
 			{
 				(*it)->updateFunctionArguments();
@@ -210,10 +211,10 @@ namespace BS_NMSP
 
 		void applyBulletAffectors(BulletGunBase* gun, BulletType& bullet, float frameTime)
 		{
-			BulletGunBase::AffectorList::iterator it = gun->mAffectors.begin();
+			BulletGunAffectorList::iterator it = gun->mAffectors.begin();
 			while (it != gun->mAffectors.end())
 			{
-				BulletGunBase::Affector& aff = *it;
+				BulletGunAffector& aff = *it;
 				mBulletAffectors[aff.index]->runFunction(bullet, aff.arguments, frameTime);
 				++it;
 			}			
@@ -222,7 +223,7 @@ namespace BS_NMSP
 		bool registerAffectorFunction(const String& name, 
 			typename BulletAffector<BulletType>::Function func)
 		{
-			FunctionMap::iterator it = mFunctions.find(name);
+			typename FunctionMap::iterator it = mFunctions.find(name);
 			if (it != mFunctions.end())
 				return false;
 

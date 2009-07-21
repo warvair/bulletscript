@@ -7,6 +7,10 @@
 #include "bsAbstractSyntaxTree.h"
 #include "bsBulletGun.h"
 
+#if BS_PLATFORM == BS_PLATFORM_LINUX
+#	include <stdlib.h> // for rand()
+#endif
+
 
 // Import lexing/parsing functionality
 extern int yylineno;
@@ -301,7 +305,7 @@ bool ScriptMachine::checkInstructionPosition(GunScriptRecord& state, size_t leng
 		}
 	}
 
-	if (state.curInstruction == length)
+	if (state.curInstruction == (int) length)
 	{
 		state.curInstruction = 0;
 		return false;

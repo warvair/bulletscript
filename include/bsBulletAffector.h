@@ -10,7 +10,7 @@ namespace BS_NMSP
 
 	class ScriptMachine;
 
-	template <class BulletType>
+	template <typename BulletType>
 	class _BSAPI BulletAffector
 	{
 	public:
@@ -42,6 +42,15 @@ namespace BS_NMSP
 				value = UINT32_TO_FLOAT(gsr.curStack[gsr.stackHead - 1]);
 			}
 		};
+	
+	private:
+
+		typedef std::vector<Argument> ArgumentList;
+		ArgumentList mArguments;
+
+		Function mFunction;
+
+	public:
 
 		BulletAffector(Function func) :
 			mFunction(func)
@@ -50,7 +59,7 @@ namespace BS_NMSP
 
 		~BulletAffector()
 		{
-			ArgumentList::iterator it = mArguments.begin();
+			typename ArgumentList::iterator it = mArguments.begin();
 			while (it != mArguments.end())
 			{
 				delete (*it).record;
@@ -77,7 +86,7 @@ namespace BS_NMSP
 
 		void updateFunctionArguments()
 		{
-			ArgumentList::iterator it = mArguments.begin();
+			typename ArgumentList::iterator it = mArguments.begin();
 			while (it != mArguments.end())
 			{
 				Argument& arg = *it;
@@ -95,7 +104,7 @@ namespace BS_NMSP
 		void updateInstanceArguments(float* arguments, const GunScriptRecord& gunRecord)
 		{
 			int index = 0;
-			ArgumentList::iterator it = mArguments.begin();
+			typename ArgumentList::iterator it = mArguments.begin();
 			while (it != mArguments.end())
 			{
 				Argument& arg = *it;
@@ -126,12 +135,6 @@ namespace BS_NMSP
 			mFunction(b, arguments, frameTime);
 		}
 
-	private:
-
-		typedef std::vector<Argument> ArgumentList;
-		ArgumentList mArguments;
-
-		Function mFunction;
 	};
 
 }
