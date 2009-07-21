@@ -46,7 +46,7 @@ namespace BS_NMSP
 	};
 
 	template <typename BulletType>
-	class _BSAPI BulletMachine : public BulletMachineBase
+	class BulletMachine : public BulletMachineBase
 	{
 		typedef std::vector<BulletAffector<BulletType>*> BulletAffectorList;
 		BulletAffectorList mBulletAffectors;
