@@ -11,7 +11,7 @@ namespace BS_NMSP
 	class ScriptMachine;
 
 	template <typename BulletType>
-	class _BSAPI BulletAffector
+	class BulletAffector
 	{
 	public:
 

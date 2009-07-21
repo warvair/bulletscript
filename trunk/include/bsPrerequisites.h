@@ -59,10 +59,8 @@
 #	else
 #		if defined(__MINGW32__)
 #			define _BSAPI
-#		elif defined(BS_DLL_IMPORT)
-#			define _BSAPI __declspec( dllimport )
 #		else
-#			define _BSAPI
+#			define _BSAPI __declspec( dllimport )
 #		endif
 #	endif
 #elif BS_PLATFORM == BS_PLATFORM_LINUX

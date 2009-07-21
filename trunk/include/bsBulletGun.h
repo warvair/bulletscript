@@ -10,7 +10,7 @@ namespace BS_NMSP
 	// BulletMachine<BulletType> must be kept here, to stop BulletGunBase from
 	// needing to be templated.
 	template <typename BulletType>
-	class _BSAPI BulletGun : public BulletGunBase
+	class BulletGun : public BulletGunBase
 	{
 		BulletMachine<BulletType>* mBulletMachine;
 
@@ -63,7 +63,7 @@ namespace BS_NMSP
 	};
 
 	template <typename BulletType>
-	class _BSAPI BulletGunController : public GunController
+	class BulletGunController : public GunController
 	{
 	public:
 
