@@ -36,10 +36,7 @@ namespace BS_NMSP
 			std::list<int>::iterator it = mRecord.affectors.begin();
 			while (it != mRecord.affectors.end())
 			{
-				BulletGunAffector aff;
-				aff.index = *it;
-
-				mAffectors.push_back(aff);
+				mAffectors[mNumAffectors++].index = *it;
 				++it;
 			}
 		}
@@ -47,12 +44,8 @@ namespace BS_NMSP
 		// This must be done here, to stop BulletGunBase from needing to be templated.
 		void updateBulletAffectors()
 		{
-			BulletGunAffectorList::iterator it = mAffectors.begin();
-			while (it != mAffectors.end())
-			{
-				mBulletMachine->updateInstanceArguments((*it).index, (*it).arguments, mRecord);
-				++it;
-			}
+			for (int i = 0; i < mNumAffectors; ++i)
+				mBulletMachine->updateInstanceArguments(mAffectors[i].index, mAffectors[i].arguments, mRecord);
 		}
 
 		void update(float frameTime)

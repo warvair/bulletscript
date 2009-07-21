@@ -211,17 +211,11 @@ namespace BS_NMSP
 
 		void applyBulletAffectors(BulletGunBase* gun, BulletType& bullet, float frameTime)
 		{
-			BulletGunAffectorList::iterator it = gun->mAffectors.begin();
-			while (it != gun->mAffectors.end())
-			{
-				BulletGunAffector& aff = *it;
-				mBulletAffectors[aff.index]->runFunction(bullet, aff.arguments, frameTime);
-				++it;
-			}			
+			for (int i = 0; i < gun->mNumAffectors; ++i)
+				mBulletAffectors[gun->mAffectors[i].index]->runFunction(bullet, gun->mAffectors[i].arguments, frameTime);
 		}
 
-		bool registerAffectorFunction(const String& name, 
-			typename BulletAffector<BulletType>::Function func)
+		bool registerAffectorFunction(const String& name, typename BulletAffector<BulletType>::Function func)
 		{
 			typename FunctionMap::iterator it = mFunctions.find(name);
 			if (it != mFunctions.end())

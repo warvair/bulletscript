@@ -37,13 +37,10 @@ namespace BS_NMSP
 		void setState(const String& state);
 	};
 
-
-	const int MAX_AFFECTOR_ARGS = 8;
-
 	struct BulletGunAffector
 	{
 		int index;
-		float arguments[MAX_AFFECTOR_ARGS];
+		float arguments[BS_MAX_AFFECTOR_ARGS];
 	};
 
 	typedef std::list<BulletGunAffector> BulletGunAffectorList;
@@ -52,7 +49,9 @@ namespace BS_NMSP
 	{
 	public:
 
-		BulletGunAffectorList mAffectors;
+		BulletGunAffector mAffectors[BS_MAX_AFFECTORS_PER_GUN];
+		int mNumAffectors;
+//		BulletGunAffectorList mAffectors;
 
 		// The user can pass in an object to access when a bullet is emitted, for
 		// finer control over bullet emission, if they wish.
@@ -62,6 +61,7 @@ namespace BS_NMSP
 
 		BulletGunBase(ScriptMachine *sm, void* userObject = 0) :
 			Gun(sm),
+			mNumAffectors(0),
 			mUserObject(userObject)
 		{
 		}

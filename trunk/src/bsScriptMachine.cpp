@@ -26,11 +26,12 @@ namespace BS_NMSP
 void bm_rand(GunScriptRecord& state)
 {
 	int rv = rand();
-	float scale = UINT32_TO_FLOAT(state.curStack[state.stackHead - 1]);
+	float scale = state.stack[state.stackHead - 1];
 	float r = scale * (rv / (float) RAND_MAX);
 
-	// Push rand onto stack
-	state.curStack[state.stackHead - 1] = FLOAT_TO_UINT32(r);
+	// Push random onto stack - don't need to pop stack
+	// because the return value takes the argument's place.
+	state.stack[state.stackHead - 1] = r;
 }
 
 // --------------------------------------------------------------------------------
@@ -282,7 +283,7 @@ void ScriptMachine::addErrorMsg(const String& msg)
 // --------------------------------------------------------------------------------
 bool ScriptMachine::checkInstructionPosition(GunScriptRecord& state, size_t length)
 {
-	int repeatDepth = ((int) state.repeats.size()) - 1;
+	int repeatDepth = state.repeatDepth - 1;
 	if (repeatDepth >= 0)
 	{
 		if (state.repeats[repeatDepth].count < 0)
@@ -290,19 +291,16 @@ bool ScriptMachine::checkInstructionPosition(GunScriptRecord& state, size_t leng
 			if (state.curInstruction >= state.repeats[repeatDepth].end)
 				state.curInstruction = state.repeats[repeatDepth].start;
 		}
-		else
+		else if (state.repeats[repeatDepth].count > 0)
 		{
-			if (state.repeats[repeatDepth].count > 0)
+			if (state.curInstruction >= state.repeats[repeatDepth].end)
 			{
-				if (state.curInstruction >= state.repeats[repeatDepth].end)
-				{
-					state.curInstruction = state.repeats[repeatDepth].start;
-					state.repeats[repeatDepth].count--;
-					if (state.repeats[repeatDepth].count == 0)
-						state.repeats.pop_back();
-				}
+				state.curInstruction = state.repeats[repeatDepth].start;
+				state.repeats[repeatDepth].count--;
+				if (state.repeats[repeatDepth].count == 0)
+					state.repeatDepth--;
 			}
-		}
+		}
 	}
 
 	if (state.curInstruction == (int) length)
@@ -327,7 +325,7 @@ void ScriptMachine::interpretCode(const uint32* code,
 		{
 		case BC_PUSH:
 			{
-				state.curStack[state.stackHead] = code[state.curInstruction + 1];
+				state.stack[state.stackHead] = UINT32_TO_FLOAT(code[state.curInstruction + 1]);
 				state.stackHead++;
 				state.curInstruction += 2;
 			}
@@ -335,7 +333,7 @@ void ScriptMachine::interpretCode(const uint32* code,
 
 		case BC_SET:
 			{
-				float value = UINT32_TO_FLOAT(state.curStack[state.stackHead - 1]);
+				float value = state.stack[state.stackHead - 1];
 				int index = code[state.curInstruction + 1];
 				state.variables[index] = value;
 				state.stackHead--;
@@ -349,21 +347,19 @@ void ScriptMachine::interpretCode(const uint32* code,
 				if (index < VAR_GLOBAL_OFFSET)
 				{
 					// Local
-					state.curStack[state.stackHead] = FLOAT_TO_UINT32(state.variables[index]);
+					state.stack[state.stackHead] = state.variables[index];
 				}
 				else
 				{
 					if (index < VAR_INSTANCE_OFFSET)
 					{
 						// Global
-						float value = getGlobalVariableValue(index - VAR_GLOBAL_OFFSET);
-						state.curStack[state.stackHead] = FLOAT_TO_UINT32(value);
+						state.stack[state.stackHead] = getGlobalVariableValue(index - VAR_GLOBAL_OFFSET);
 					}
 					else
 					{
 						// Instance
-						state.curStack[state.stackHead] = 
-							FLOAT_TO_UINT32(state.instanceVars[index - VAR_INSTANCE_OFFSET]);
+						state.stack[state.stackHead] = state.instanceVars[index - VAR_INSTANCE_OFFSET];
 					}
 				}
 
@@ -381,20 +377,17 @@ void ScriptMachine::interpretCode(const uint32* code,
 
 		case BC_OP_NEG:
 			{
-				float val = -(UINT32_TO_FLOAT(state.curStack[state.stackHead - 1]));
-				state.curStack[state.stackHead] = FLOAT_TO_UINT32(val);
-				state.stackHead++;
+				state.stack[state.stackHead - 1] = -state.stack[state.stackHead - 1];
 				state.curInstruction++;
 			}
 			break;
 
 		case BC_OP_ADD:
 			{
-				float val1 = UINT32_TO_FLOAT(state.curStack[state.stackHead - 2]);
-				float val2 = UINT32_TO_FLOAT(state.curStack[state.stackHead - 1]);
-				float result = val1 + val2;
+				float val1 = state.stack[state.stackHead - 2];
+				float val2 = state.stack[state.stackHead - 1];
 
-				state.curStack[state.stackHead - 2] = FLOAT_TO_UINT32(result);
+				state.stack[state.stackHead - 2] = val1 + val2;
 				state.stackHead--;
 				state.curInstruction++;
 			}
@@ -402,11 +395,10 @@ void ScriptMachine::interpretCode(const uint32* code,
 
 		case BC_OP_SUBTRACT:
 			{
-				float val1 = UINT32_TO_FLOAT(state.curStack[state.stackHead - 2]);
-				float val2 = UINT32_TO_FLOAT(state.curStack[state.stackHead - 1]);
-				float result = val1 - val2;
+				float val1 = state.stack[state.stackHead - 2];
+				float val2 = state.stack[state.stackHead - 1];
 
-				state.curStack[state.stackHead - 2] = FLOAT_TO_UINT32(result);
+				state.stack[state.stackHead - 2] = val1 - val2;
 				state.stackHead--;
 				state.curInstruction++;
 			}
@@ -414,11 +406,11 @@ void ScriptMachine::interpretCode(const uint32* code,
 
 		case BC_OP_MULTIPLY:
 			{
-				float val1 = UINT32_TO_FLOAT(state.curStack[state.stackHead - 2]);
-				float val2 = UINT32_TO_FLOAT(state.curStack[state.stackHead - 1]);
-				float result = val1 * val2;
 
-				state.curStack[state.stackHead - 2] = FLOAT_TO_UINT32(result);
+				float val1 = state.stack[state.stackHead - 2];
+				float val2 = state.stack[state.stackHead - 1];
+
+				state.stack[state.stackHead - 2] = val1 * val2;
 				state.stackHead--;
 				state.curInstruction++;
 			}
@@ -426,11 +418,10 @@ void ScriptMachine::interpretCode(const uint32* code,
 
 		case BC_OP_DIVIDE:
 			{
-				float val1 = UINT32_TO_FLOAT(state.curStack[state.stackHead - 2]);
-				float val2 = UINT32_TO_FLOAT(state.curStack[state.stackHead - 1]);
-				float result = val1 / val2;
+				float val1 = state.stack[state.stackHead - 2];
+				float val2 = state.stack[state.stackHead - 1];
 
-				state.curStack[state.stackHead - 2] = FLOAT_TO_UINT32(result);
+				state.stack[state.stackHead - 2] = val1 / val2;
 				state.stackHead--;
 				state.curInstruction++;
 			}
@@ -438,11 +429,10 @@ void ScriptMachine::interpretCode(const uint32* code,
 		
 		case BC_OP_REMAINDER:
 			{
-				int val1 = (int) UINT32_TO_FLOAT(state.curStack[state.stackHead - 2]);
-				int val2 = (int) UINT32_TO_FLOAT(state.curStack[state.stackHead - 1]);
-				float result = val1 % val2;
+				float val1 = state.stack[state.stackHead - 2];
+				float val2 = state.stack[state.stackHead - 1];
 
-				state.curStack[state.stackHead - 2] = FLOAT_TO_UINT32(result);
+				state.stack[state.stackHead - 2] = (int) val1 % (int) val2;
 				state.stackHead--;
 				state.curInstruction++;
 			}
@@ -450,11 +440,10 @@ void ScriptMachine::interpretCode(const uint32* code,
 
 		case BC_OP_EQ:
 			{
-				float val1 = UINT32_TO_FLOAT(state.curStack[state.stackHead - 2]);
-				float val2 = UINT32_TO_FLOAT(state.curStack[state.stackHead - 1]);
-				uint32 result = (val1 == val2) ? 1 : 0;
+				float val1 = state.stack[state.stackHead - 2];
+				float val2 = state.stack[state.stackHead - 1];
 
-				state.curStack[state.stackHead - 2] = result;
+				state.stack[state.stackHead - 2] = (val1 == val2) ? 1 : 0;
 				state.stackHead--;
 				state.curInstruction++;
 			}
@@ -462,11 +451,10 @@ void ScriptMachine::interpretCode(const uint32* code,
 
 		case BC_OP_NEQ:
 			{
-				float val1 = UINT32_TO_FLOAT(state.curStack[state.stackHead - 2]);
-				float val2 = UINT32_TO_FLOAT(state.curStack[state.stackHead - 1]);
-				uint32 result = (val1 != val2) ? 1 : 0;
+				float val1 = state.stack[state.stackHead - 2];
+				float val2 = state.stack[state.stackHead - 1];
 
-				state.curStack[state.stackHead - 2] = result;
+				state.stack[state.stackHead - 2] = (val1 != val2) ? 1 : 0;
 				state.stackHead--;
 				state.curInstruction++;
 			}
@@ -474,11 +462,10 @@ void ScriptMachine::interpretCode(const uint32* code,
 
 		case BC_OP_LT:
 			{
-				float val1 = UINT32_TO_FLOAT(state.curStack[state.stackHead - 2]);
-				float val2 = UINT32_TO_FLOAT(state.curStack[state.stackHead - 1]);
-				uint32 result = (val1 < val2) ? 1 : 0;
+				float val1 = state.stack[state.stackHead - 2];
+				float val2 = state.stack[state.stackHead - 1];
 
-				state.curStack[state.stackHead - 2] = result;
+				state.stack[state.stackHead - 2] = (val1 < val2) ? 1 : 0;
 				state.stackHead--;
 				state.curInstruction++;
 			}
@@ -486,11 +473,10 @@ void ScriptMachine::interpretCode(const uint32* code,
 
 		case BC_OP_LTE:
 			{
-				float val1 = UINT32_TO_FLOAT(state.curStack[state.stackHead - 2]);
-				float val2 = UINT32_TO_FLOAT(state.curStack[state.stackHead - 1]);
-				uint32 result = (val1 <= val2) ? 1 : 0;
+				float val1 = state.stack[state.stackHead - 2];
+				float val2 = state.stack[state.stackHead - 1];
 
-				state.curStack[state.stackHead - 2] = result;
+				state.stack[state.stackHead - 2] = (val1 <= val2) ? 1 : 0;
 				state.stackHead--;
 				state.curInstruction++;
 			}
@@ -498,11 +484,10 @@ void ScriptMachine::interpretCode(const uint32* code,
 
 		case BC_OP_GT:
 			{
-				float val1 = UINT32_TO_FLOAT(state.curStack[state.stackHead - 2]);
-				float val2 = UINT32_TO_FLOAT(state.curStack[state.stackHead - 1]);
-				uint32 result = (val1 > val2) ? 1 : 0;
+				float val1 = state.stack[state.stackHead - 2];
+				float val2 = state.stack[state.stackHead - 1];
 
-				state.curStack[state.stackHead - 2] = result;
+				state.stack[state.stackHead - 2] = (val1 > val2) ? 1 : 0;
 				state.stackHead--;
 				state.curInstruction++;
 			}
@@ -510,11 +495,10 @@ void ScriptMachine::interpretCode(const uint32* code,
 
 		case BC_OP_GTE:
 			{
-				float val1 = UINT32_TO_FLOAT(state.curStack[state.stackHead - 2]);
-				float val2 = UINT32_TO_FLOAT(state.curStack[state.stackHead - 1]);
-				uint32 result = (val1 >= val2) ? 1 : 0;
+				float val1 = state.stack[state.stackHead - 2];
+				float val2 = state.stack[state.stackHead - 1];
 
-				state.curStack[state.stackHead - 2] = result;
+				state.stack[state.stackHead - 2] = (val1 >= val2) ? 1 : 0;
 				state.stackHead--;
 				state.curInstruction++;
 			}
@@ -522,11 +506,10 @@ void ScriptMachine::interpretCode(const uint32* code,
 
 		case BC_LOG_AND:
 			{
-				float val1 = UINT32_TO_FLOAT(state.curStack[state.stackHead - 2]);
-				float val2 = UINT32_TO_FLOAT(state.curStack[state.stackHead - 1]);
-				uint32 result = (val1 && val2) ? 1 : 0;
+				float val1 = state.stack[state.stackHead - 2];
+				float val2 = state.stack[state.stackHead - 1];
 
-				state.curStack[state.stackHead - 2] = result;
+				state.stack[state.stackHead - 2] = (val1 && val2) ? 1 : 0;
 				state.stackHead--;
 				state.curInstruction++;
 			}
@@ -534,13 +517,12 @@ void ScriptMachine::interpretCode(const uint32* code,
 
 		case BC_LOG_OR:
 			{
-				float val1 = UINT32_TO_FLOAT(state.curStack[state.stackHead - 2]);
-				float val2 = UINT32_TO_FLOAT(state.curStack[state.stackHead - 1]);
-				uint32 result = (val1 || val2) ? 1 : 0;
+				float val1 = state.stack[state.stackHead - 2];
+				float val2 = state.stack[state.stackHead - 1];
 
-				state.curStack[state.stackHead - 2] = result;
-				state.stackHead --;
-				state.curInstruction ++;
+				state.stack[state.stackHead - 2] = (val1 || val2) ? 1 : 0;
+				state.stackHead--;
+				state.curInstruction++;
 			}
 			break;
 
@@ -551,22 +533,9 @@ void ScriptMachine::interpretCode(const uint32* code,
 
 				// Would be nice to get rid of this static_cast because it could be
 				// called a lot at one time.  the gun param is only needed for this, anyway.
-
-				// This is still not satisfactory.  FireFunctions have to act on instances of
-				// Guns, rather than some universal one.  Need to allow the user to pass in
-				// a function of their own, per gun, which takes the arguments that the global
-				// function does.  As we already pass the gun in, it would make sense to store
-				// it in the gun, or BulletGunBase, but then we still need multiple functions per
-				// gun, eg FireA and FireT.  Fire functions should call gun->emit, then.
-
-				// Either way, the issue is: we need to allow some kind of user hook in here, so
-				// that they can decide how to emit the bullet based on the type of gun that
-				// emitted it.  This is because we can only pass in float arguments to it, but 
-				// we may want strings, pointers or whatever, for sprite name, etc.
-
 				BulletGunBase *bg = static_cast<BulletGunBase*>(state.gun);
 				state.stackHead -= func(bg, state.instanceVars[Instance_Gun_X],
-					state.instanceVars[Instance_Gun_Y], &state.curStack[state.stackHead]);
+					state.instanceVars[Instance_Gun_Y], &state.stack[state.stackHead]);
 
 				state.curInstruction += 2;
 			}
@@ -574,8 +543,7 @@ void ScriptMachine::interpretCode(const uint32* code,
 
 		case BC_WAIT:
 			{
-				state.suspendTime = UINT32_TO_FLOAT(state.curStack[--state.stackHead]);
-
+				state.suspendTime = state.stack[--state.stackHead];
 				state.curInstruction++;
 				checkInstructionPosition(state, length);
 				return;
@@ -585,8 +553,8 @@ void ScriptMachine::interpretCode(const uint32* code,
 		case BC_SETPROPERTY:
 			{
 				int gunProp = code[state.curInstruction + 1];
-				float target = UINT32_TO_FLOAT(state.curStack[state.stackHead - 2]);
-				float time = UINT32_TO_FLOAT(state.curStack[state.stackHead - 1]);
+				float target = state.stack[state.stackHead - 2];
+				float time = state.stack[state.stackHead - 1];
 				state.controller->setProperty(gunProp, target, time);
 
 				state.stackHead -= 2;
@@ -608,7 +576,7 @@ void ScriptMachine::interpretCode(const uint32* code,
 			{
 				state.curState = code[state.curInstruction + 1];
 				state.curInstruction = 0;
-				state.repeats.clear();
+				state.repeatDepth = 0;
 				state.stackHead = 0;
 
 				code = state.states[state.curState].record->byteCode;
@@ -618,17 +586,16 @@ void ScriptMachine::interpretCode(const uint32* code,
 
 		case BC_REPEAT:
 			{
-				float counter = UINT32_TO_FLOAT(state.curStack[state.stackHead - 1]);
+				float counter = state.stack[state.stackHead - 1];
 				if (counter < 0.0f)
 				{
 					// Loop infinitely
-					GunScriptRecord::Repeat rpt;
-					rpt.count = -1;
-					rpt.start = state.curInstruction + 2;
-					rpt.end = code[state.curInstruction + 1];
-					state.repeats.push_back(rpt);
+					state.repeats[state.repeatDepth].count = -1;
+					state.repeats[state.repeatDepth].start = state.curInstruction + 2;
+					state.repeats[state.repeatDepth].end = code[state.curInstruction + 1];
+					state.repeatDepth++;
 
-					state.curInstruction = rpt.start;
+					state.curInstruction = state.curInstruction + 2;
 					state.stackHead--;
 				}
 				else
@@ -642,13 +609,12 @@ void ScriptMachine::interpretCode(const uint32* code,
 					else
 					{
 						
-						GunScriptRecord::Repeat rpt;
-						rpt.count = loops - 1;
-						rpt.start = state.curInstruction + 2;
-						rpt.end = code[state.curInstruction + 1];
-						state.repeats.push_back(rpt);
-
-						state.curInstruction = rpt.start;
+						state.repeats[state.repeatDepth].count = loops - 1;
+						state.repeats[state.repeatDepth].start = state.curInstruction + 2;
+						state.repeats[state.repeatDepth].end = code[state.curInstruction + 1];
+						state.repeatDepth++;
+						
+						state.curInstruction = state.curInstruction + 2;
 						state.stackHead--;
 					}
 				}
@@ -665,7 +631,7 @@ void ScriptMachine::interpretCode(const uint32* code,
 
 		case BC_JZ:
 			{
-				if (state.curStack[state.stackHead - 1] == 0)
+				if (FLOAT_TO_UINT32 (state.stack[state.stackHead - 1]) == 0)
 				{
 					int address = code[state.curInstruction + 1];
 					state.stackHead--;

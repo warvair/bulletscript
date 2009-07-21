@@ -83,6 +83,8 @@ namespace BS_NMSP
 		float mFloatData;
 		String mStringData;
 
+		void checkRepeatDepth(int& depth);
+
 		void countAffectorArguments(int& numArgs);
 
 		void createAffectorArgumentsBytecode(int index,	bool newAffector);

@@ -39,7 +39,7 @@ namespace BS_NMSP
 				// Update value
 				GunScriptRecord gsr;
 				scriptMachine->processConstantExpression(record->byteCode, record->byteCodeSize, gsr);
-				value = UINT32_TO_FLOAT(gsr.curStack[gsr.stackHead - 1]);
+				value = gsr.stack[gsr.stackHead - 1];
 			}
 		};
 	
@@ -95,7 +95,7 @@ namespace BS_NMSP
 					GunScriptRecord gsr;
 					arg.scriptMachine->processConstantExpression(arg.record->byteCode, 
 																 arg.record->byteCodeSize, gsr);
-					arg.value = UINT32_TO_FLOAT(gsr.curStack[gsr.stackHead - 1]);
+					arg.value = gsr.stack[gsr.stackHead - 1];
 				}
 				++it;
 			}
@@ -116,7 +116,7 @@ namespace BS_NMSP
 
 					arg.scriptMachine->processConstantExpression(arg.record->byteCode, 
 																 arg.record->byteCodeSize, gsr);
-					arguments[index] = UINT32_TO_FLOAT(gsr.curStack[gsr.stackHead - 1]);
+					arguments[index] = gsr.stack[gsr.stackHead - 1];
 				}
 				else
 				{

@@ -105,8 +105,11 @@ unsigned int BulletBattery::getFreeBulletSlot()
 	return id;
 }
 // --------------------------------------------------------------------------------
-int BulletBattery::emitAngle(BS::BulletGunBase *gun, float x, float y, BS::uint32 *args)
+int BulletBattery::emitAngle(BS::BulletGunBase *gun, float x, float y, float* args)
 {
+	// no emission
+	return 3;
+
 	int slot = getFreeBulletSlot();
 
 	Bullet &b = mBullets[slot];
@@ -116,10 +119,10 @@ int BulletBattery::emitAngle(BS::BulletGunBase *gun, float x, float y, BS::uint3
 	b.stage = 0;
 	b.x = x;
 	b.y = y;
-	b.speed = b.speed0 = UINT32_TO_FLOAT(args[-2]);
-	b.damage = UINT32_TO_FLOAT(args[-1]);
-	b.vx = (float) sin(UINT32_TO_FLOAT(args[-3]) * 0.017453);
-	b.vy = (float) cos(UINT32_TO_FLOAT(args[-3]) * 0.017453);
+	b.speed = b.speed0 = args[-2];
+	b.damage = args[-1];
+	b.vx = (float) sin(args[-3] * 0.017453);
+	b.vy = (float) cos(args[-3] * 0.017453);
 
 	gBulletsEmitted++;
 
@@ -127,14 +130,17 @@ int BulletBattery::emitAngle(BS::BulletGunBase *gun, float x, float y, BS::uint3
 	return 3;
 }
 // --------------------------------------------------------------------------------
-int BulletBattery::emitTarget(BS::BulletGunBase *gun, float x, float y, BS::uint32 *args)
+int BulletBattery::emitTarget(BS::BulletGunBase *gun, float x, float y, float* args)
 {
+	// no emission
+	return 5;
+
 	int slot = getFreeBulletSlot();
 
 	// Calculate angle based on x, y and angle, for targeting a position with an offset of 'angle'
-	float dx = UINT32_TO_FLOAT(args[-5]) - x;
-	float dy = UINT32_TO_FLOAT(args[-4]) - y;
-	float angle = (float) (atan2(dy, -dx) - 1.57) + (UINT32_TO_FLOAT(args[-3]) * 0.017453f);
+	float dx = args[-5] - x;
+	float dy = args[-4] - y;
+	float angle = (float) (atan2(dy, -dx) - 1.57) + (args[-3] * 0.017453f);
 
 	Bullet &b = mBullets[slot];
 	b.__active = true;
@@ -143,8 +149,8 @@ int BulletBattery::emitTarget(BS::BulletGunBase *gun, float x, float y, BS::uint
 	b.stage = 0;
 	b.x = x;
 	b.y = y;
-	b.speed = b.speed0 = UINT32_TO_FLOAT(args[-2]);
-	b.damage = UINT32_TO_FLOAT(args[-1]);
+	b.speed = b.speed0 = args[-2];
+	b.damage = args[-1];
 	b.vx = (float) sin(angle);
 	b.vy = (float) cos(angle);
 
@@ -156,6 +162,9 @@ int BulletBattery::emitTarget(BS::BulletGunBase *gun, float x, float y, BS::uint
 // --------------------------------------------------------------------------------
 int BulletBattery::update(float frameTime, BS::BulletMachine<Bullet>* bulletMachine)
 {
+	// no update
+	return 0;
+
 	int index = 0;
 	int count = 0;
 	std::vector<Bullet>::iterator it = mBullets.begin ();

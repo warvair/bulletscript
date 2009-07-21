@@ -1,6 +1,8 @@
 #ifndef __BS_PREREQUISITES_H__
 #define __BS_PREREQUISITES_H__
 
+#include "bsConfig.h"
+
 // Platform - based off OGRE3D (www.ogre3d.org)
 #define BS_PLATFORM_WIN32 1
 #define BS_PLATFORM_LINUX 2

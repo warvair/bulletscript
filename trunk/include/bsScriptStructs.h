@@ -32,10 +32,11 @@ namespace BS_NMSP
 	};
 
 	// Instance class
+	// 336 bytes, get this down in size
+	// Change Strings to char[], instead of containers specify reasonable maximum sizes
+	// Make stack size configurable
 	struct _BSAPI GunScriptRecord
 	{
-		static const int STACK_SIZE = 64;
-
 		// GunScriptRecord does not own the CodeRecord
 		struct State
 		{
@@ -48,7 +49,9 @@ namespace BS_NMSP
 		int curState;
 		int curInstruction;
 
-		uint32 curStack[STACK_SIZE];
+		// Need to check to see how large the stack gets on average,
+		// or provide way to monitor stack size in ScriptMachine.
+		float stack[BS_SCRIPT_STACK_SIZE];
 		int stackHead;
 
 		struct Repeat
@@ -58,10 +61,11 @@ namespace BS_NMSP
 			int end;
 		};
 
-		std::vector<Repeat> repeats;
+		Repeat repeats[BS_SCRIPT_REPEAT_DEPTH];
+		int repeatDepth;
 
 		std::vector<float> variables;		// Locally accessible variables, this holds the 
-											// variables for whichever is the current gun state
+							// variables for whichever is the current gun state
 
 		float suspendTime;
 		
