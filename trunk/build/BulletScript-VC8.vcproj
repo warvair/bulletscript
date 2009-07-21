@@ -91,7 +91,7 @@
 			/>
 			<Tool
 				Name="VCPostBuildEventTool"
-				CommandLine="copy $(SolutionDir)\..\bin\BulletScriptd.dll $(SolutionDir)\..\testbed\bin&#x0D;&#x0A;copy $(SolutionDir)\..\bin\BulletScriptd.dll $(SolutionDir)\..\minimal\bin"
+				CommandLine="copy $(SolutionDir)\..\bin\BulletScriptd.dll $(SolutionDir)\..\testbed\bin&#x0D;&#x0A;copy $(SolutionDir)\..\bin\BulletScriptd.dll $(SolutionDir)\..\minimal\bin&#x0D;&#x0A;"
 			/>
 		</Configuration>
 		<Configuration
@@ -170,7 +170,7 @@
 			/>
 			<Tool
 				Name="VCPostBuildEventTool"
-				CommandLine="copy $(SolutionDir)\..\bin\BulletScript.dll $(SolutionDir)\..\testbed\bin&#x0D;&#x0A;copy $(SolutionDir)\..\bin\BulletScript.dll $(SolutionDir)\..\minimal\bin"
+				CommandLine="copy $(SolutionDir)\..\bin\BulletScript.dll $(SolutionDir)\..\testbed\bin&#x0D;&#x0A;copy $(SolutionDir)\..\bin\BulletScript.dll $(SolutionDir)\..\minimal\bin&#x0D;&#x0A;"
 			/>
 		</Configuration>
 	</Configurations>
@@ -258,6 +258,10 @@
 			</File>
 			<File
 				RelativePath="..\include\bsBulletParser.hpp"
+				>
+			</File>
+			<File
+				RelativePath="..\include\bsConfig.h"
 				>
 			</File>
 			<File

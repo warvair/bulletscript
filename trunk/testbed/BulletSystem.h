@@ -52,9 +52,9 @@ public:
 
 	static void initialise();
 
-	static int emitAngle(BS::BulletGunBase* gun, float x, float y, BS::uint32 *args);
+	static int emitAngle(BS::BulletGunBase* gun, float x, float y, float* args);
 
-	static int emitTarget(BS::BulletGunBase* gun, float x, float y, BS::uint32 *args);
+	static int emitTarget(BS::BulletGunBase* gun, float x, float y, float* args);
 
 	static int update(float frameTime, BS::BulletMachine<Bullet>* bulletMachine);
 
