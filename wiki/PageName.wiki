@@ -21,11 +21,13 @@ void func_name(BulletType &b, float*, float)
 
 where the first argument is the bullet to be modified (_BulletType_ is the user-defined bullet structure), the second is the list of arguments, and the third is the time for this frame, in seconds.  It is up to the user to know how many arguments are being passed in.  An example affector might look like his:
 
+{{{
 void Force_Affector(Bullet& b, float* args, float frameTime)
 {
     b.vx += args[0] * frameTime;
     b.vy += args[1] * frameTime;
 }
+}}}
 
 The affector is then registered with
 
