@@ -33,11 +33,17 @@ namespace BS_NMSP
 			mRecord.gun = this;
 			mRecord.controller = controller;
 
-			std::list<int>::iterator it = mRecord.affectors.begin();
-			while (it != mRecord.affectors.end())
+			// Get mAffectors from definition
+			int affIndex = bDef->getFirstAffector();
+			if (affIndex >= 0)
 			{
-				mAffectors[mNumAffectors++].index = *it;
-				++it;
+				mAffectors[mNumAffectors++].index = affIndex;
+				affIndex = bDef->getNextAffector();
+				while (affIndex >= 0)
+				{
+					mAffectors[mNumAffectors++].index = affIndex;
+					affIndex = bDef->getNextAffector();
+				}
 			}
 		}
 

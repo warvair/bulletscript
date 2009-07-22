@@ -263,26 +263,30 @@ const String& AbstractSyntaxTreeNode::getStringData() const
 // --------------------------------------------------------------------------------
 void AbstractSyntaxTreeNode::checkRepeatDepth(int& depth)
 {
-	// Todo:
-	// ...
-	depth = 0;
-	return;
-
 	if (mType == ASTN_RepeatStatement)
 	{
 		depth++;
-		if (mChildren[1])
+		if (depth > BS_SCRIPT_REPEAT_DEPTH)
 		{
-			mChildren[1]->checkRepeatDepth(depth);
+			std::stringstream ss;
+			ss << "Repeats are nested too deeply (max " << BS_SCRIPT_REPEAT_DEPTH << ")";
+			AbstractSyntaxTree::instancePtr()->addError(mLine, ss.str());
+			return;
 		}
+
+		if (mChildren[1])
+			mChildren[1]->checkRepeatDepth(depth);
 	}
 
 	for (int i = 0; i < MAX_CHILDREN; ++i)
 	{
 		if (mChildren[i])
-		{
 			mChildren[i]->checkRepeatDepth(depth);
-		}
+	}
+
+	if (mType == ASTN_RepeatStatement)
+	{
+		--depth;
 	}
 }
 // --------------------------------------------------------------------------------
@@ -404,13 +408,6 @@ void AbstractSyntaxTreeNode::createGunMembers(GunDefinition* def)
 			{
 				int repeatDepth = 0;
 				checkRepeatDepth(repeatDepth);
-				if (repeatDepth > BS_SCRIPT_REPEAT_DEPTH)
-				{
-					std::stringstream ss;
-					ss << "Repeats are nested too deeply (max " << BS_SCRIPT_REPEAT_DEPTH << ")";
-					AbstractSyntaxTree::instancePtr()->addError(mLine, ss.str());
-					return;
-				}
 			}
 		}
 		break;
