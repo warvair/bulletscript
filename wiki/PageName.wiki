@@ -1,0 +1,69 @@
+#summary script language syntax
+
+= Syntax =
+
+BulletScript uses a simple imperative syntax, which encapsulates individual _guns_ and organises code by discrete states.  These states are similar to the concept of object states in games, and may be switched between either in script with the `goto` command or using the API.  When execution of a state's code reaches the end, it loops back to the beginning.  The gun starts in the first defined state.
+
+The language uses one implicit type, which is floating point (by default, 32-bits).  Hence variable declaration is not necessary.  There is one built-in function, `wait` but other native C++ functions can be bound to the script as well.  The syntax does not allow for scripted functions to be defined.
+
+== Control Structures ==
+
+=== Iteration ===
+
+The `repeat` keyword runs the specified code a certain number of times.  A negative value will cause an infinite loop.
+
+`repeat` _expression_ `{` _statements_ `}`
+
+example:
+{{{
+repeat (5)
+{
+    emit(12, 13, 0);
+}
+}}}
+
+These can be nested, up to a certain depth (default is about 4, specified in _bsConfig.h_)
+
+=== Branching ===
+
+BulletScript supports the standard `if-else if-else` clause.
+
+example:
+{{{
+if (x > 5)
+{
+    emit(12, 13, 0);
+} else if(x > 0)
+{
+    emit(12, 13, 180);
+} else
+{
+    x = x + 1;
+}
+}}}
+
+Note that BulletScript does not have an equivalent for "unconditional branch".  The `goto` statement is instead used for moving between states.
+
+== Suspending the script ==
+
+The built-in `wait` function suspends the script for the specified number of seconds, before resuming where it left off.
+
+{{{ 
+wait(1.5); 
+}}}
+
+== Properties ==
+
+Some gun types, for instance area guns, are controlled by setting properties.  Properties can either be set instantly, or over a period of time, for smooth control.
+
+{{{
+set width(10); // set gun width immediately to 10
+set length(200, 1.5); // set length to 200 over 1.5 seconds
+}}}
+
+Setting a property over time does not pause the script.  If you do
+{{{
+set width(10, 2);
+set width(20, 2);
+}}}
+Then the first command will be effectively overridden.  You can remedy this by using `wait`.
