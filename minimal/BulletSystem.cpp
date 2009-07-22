@@ -107,9 +107,6 @@ unsigned int BulletBattery::getFreeBulletSlot()
 // --------------------------------------------------------------------------------
 int BulletBattery::emitAngle(BS::BulletGunBase *gun, float x, float y, float* args)
 {
-	// no emission
-	return 3;
-
 	int slot = getFreeBulletSlot();
 
 	Bullet &b = mBullets[slot];
@@ -132,9 +129,6 @@ int BulletBattery::emitAngle(BS::BulletGunBase *gun, float x, float y, float* ar
 // --------------------------------------------------------------------------------
 int BulletBattery::emitTarget(BS::BulletGunBase *gun, float x, float y, float* args)
 {
-	// no emission
-	return 5;
-
 	int slot = getFreeBulletSlot();
 
 	// Calculate angle based on x, y and angle, for targeting a position with an offset of 'angle'
@@ -162,9 +156,6 @@ int BulletBattery::emitTarget(BS::BulletGunBase *gun, float x, float y, float* a
 // --------------------------------------------------------------------------------
 int BulletBattery::update(float frameTime, BS::BulletMachine<Bullet>* bulletMachine)
 {
-	// no update
-	return 0;
-
 	int index = 0;
 	int count = 0;
 	std::vector<Bullet>::iterator it = mBullets.begin ();

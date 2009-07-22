@@ -32,9 +32,6 @@ namespace BS_NMSP
 	};
 
 	// Instance class
-	// 336 bytes, get this down in size
-	// Change Strings to char[], instead of containers specify reasonable maximum sizes
-	// Make stack size configurable
 	struct _BSAPI GunScriptRecord
 	{
 		// GunScriptRecord does not own the CodeRecord
@@ -47,35 +44,32 @@ namespace BS_NMSP
 		std::vector<State> states;
 
 		int curState;
-		int curInstruction;
+		uint16 curInstruction;
 
 		// Need to check to see how large the stack gets on average,
 		// or provide way to monitor stack size in ScriptMachine.
+		uint16 stackHead;
 		float stack[BS_SCRIPT_STACK_SIZE];
-		int stackHead;
 
 		struct Repeat
 		{
-			int count;
-			int start;
-			int end;
+			uint16 count;
+			uint16 start;
+			uint16 end;
 		};
 
 		Repeat repeats[BS_SCRIPT_REPEAT_DEPTH];
 		int repeatDepth;
 
-		std::vector<float> variables;		// Locally accessible variables, this holds the 
-							// variables for whichever is the current gun state
+		std::vector<float> variables;	// Locally accessible variables, this holds the 
+										// variables for whichever is the current gun state
 
-		float suspendTime;
+		float suspendTime;				// Time to wait when the script is suspended
 		
 		// Instance variables
 		float instanceVars[NUM_INSTANCE_VARS];
 
-		// Affectors - only used by BulletGuns
-		std::list<int> affectors;
-
-		// Owning gun - only used by BulletGuns
+		// Owning gun - only used by BulletGuns for emission callbacks
 		Gun* gun;
 
 		// Owning GunController

@@ -45,6 +45,7 @@ namespace BS_NMSP
 	
 	private:
 
+		//
 		typedef std::vector<Argument> ArgumentList;
 		ArgumentList mArguments;
 

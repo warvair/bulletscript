@@ -300,7 +300,8 @@ bool ScriptMachine::checkInstructionPosition(GunScriptRecord& state, size_t leng
 				if (state.repeats[repeatDepth].count == 0)
 					state.repeatDepth--;
 			}
-		}
+		}
+
 	}
 
 	if (state.curInstruction == (int) length)
@@ -443,7 +444,7 @@ void ScriptMachine::interpretCode(const uint32* code,
 				float val1 = state.stack[state.stackHead - 2];
 				float val2 = state.stack[state.stackHead - 1];
 
-				state.stack[state.stackHead - 2] = (val1 == val2) ? 1 : 0;
+				state.stack[state.stackHead - 2] = (val1 == val2) ? 1.0f : 0.0f;
 				state.stackHead--;
 				state.curInstruction++;
 			}
@@ -454,7 +455,7 @@ void ScriptMachine::interpretCode(const uint32* code,
 				float val1 = state.stack[state.stackHead - 2];
 				float val2 = state.stack[state.stackHead - 1];
 
-				state.stack[state.stackHead - 2] = (val1 != val2) ? 1 : 0;
+				state.stack[state.stackHead - 2] = (val1 != val2) ? 1.0f : 0.0f;
 				state.stackHead--;
 				state.curInstruction++;
 			}
@@ -465,7 +466,7 @@ void ScriptMachine::interpretCode(const uint32* code,
 				float val1 = state.stack[state.stackHead - 2];
 				float val2 = state.stack[state.stackHead - 1];
 
-				state.stack[state.stackHead - 2] = (val1 < val2) ? 1 : 0;
+				state.stack[state.stackHead - 2] = (val1 < val2) ? 1.0f : 0.0f;
 				state.stackHead--;
 				state.curInstruction++;
 			}
@@ -476,7 +477,7 @@ void ScriptMachine::interpretCode(const uint32* code,
 				float val1 = state.stack[state.stackHead - 2];
 				float val2 = state.stack[state.stackHead - 1];
 
-				state.stack[state.stackHead - 2] = (val1 <= val2) ? 1 : 0;
+				state.stack[state.stackHead - 2] = (val1 <= val2) ? 1.0f : 0.0f;
 				state.stackHead--;
 				state.curInstruction++;
 			}
@@ -487,7 +488,7 @@ void ScriptMachine::interpretCode(const uint32* code,
 				float val1 = state.stack[state.stackHead - 2];
 				float val2 = state.stack[state.stackHead - 1];
 
-				state.stack[state.stackHead - 2] = (val1 > val2) ? 1 : 0;
+				state.stack[state.stackHead - 2] = (val1 > val2) ? 1.0f : 0.0f;
 				state.stackHead--;
 				state.curInstruction++;
 			}
@@ -498,7 +499,7 @@ void ScriptMachine::interpretCode(const uint32* code,
 				float val1 = state.stack[state.stackHead - 2];
 				float val2 = state.stack[state.stackHead - 1];
 
-				state.stack[state.stackHead - 2] = (val1 >= val2) ? 1 : 0;
+				state.stack[state.stackHead - 2] = (val1 >= val2) ? 1.0f : 0.0f;
 				state.stackHead--;
 				state.curInstruction++;
 			}
@@ -509,7 +510,7 @@ void ScriptMachine::interpretCode(const uint32* code,
 				float val1 = state.stack[state.stackHead - 2];
 				float val2 = state.stack[state.stackHead - 1];
 
-				state.stack[state.stackHead - 2] = (val1 && val2) ? 1 : 0;
+				state.stack[state.stackHead - 2] = (val1 && val2) ? 1.0f : 0.0f;
 				state.stackHead--;
 				state.curInstruction++;
 			}
@@ -520,7 +521,7 @@ void ScriptMachine::interpretCode(const uint32* code,
 				float val1 = state.stack[state.stackHead - 2];
 				float val2 = state.stack[state.stackHead - 1];
 
-				state.stack[state.stackHead - 2] = (val1 || val2) ? 1 : 0;
+				state.stack[state.stackHead - 2] = (val1 || val2) ? 1.0f : 0.0f;
 				state.stackHead--;
 				state.curInstruction++;
 			}
@@ -603,12 +604,19 @@ void ScriptMachine::interpretCode(const uint32* code,
 					int loops = (int) counter;
 					if (loops == 0)
 					{
+						// Ignore and jump to end instruction
 						state.curInstruction = code[state.curInstruction + 1];
+						state.stackHead--;
+					}
+					else if (loops == 1)
+					{
+						// No need to set up a repeat, just move to next instruction
+						state.curInstruction = state.curInstruction + 2;
 						state.stackHead--;
 					}
 					else
 					{
-						
+						// Else, set up a loop
 						state.repeats[state.repeatDepth].count = loops - 1;
 						state.repeats[state.repeatDepth].start = state.curInstruction + 2;
 						state.repeats[state.repeatDepth].end = code[state.curInstruction + 1];

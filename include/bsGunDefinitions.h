@@ -74,6 +74,8 @@ namespace BS_NMSP
 	{
 		std::list<int> mAffectors;
 
+		mutable std::list<int>::const_iterator mAffectorIterator;
+
 	public:
 
 		BulletGunDefinition(const String& name);
@@ -83,6 +85,10 @@ namespace BS_NMSP
 		void addBulletAffector(int index);
 
 		int getNumBulletAffectors() const;
+
+		int getFirstAffector() const;
+
+		int getNextAffector() const;
 
 	private:
 		

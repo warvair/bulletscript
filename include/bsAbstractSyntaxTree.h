@@ -8,6 +8,7 @@
 namespace BS_NMSP
 {
 
+	// Node types
 	enum ASTNodeType
 	{
 		ASTN_Root,

@@ -76,6 +76,24 @@ int BulletGunDefinition::getNumBulletAffectors() const
 	return (int) mAffectors.size();
 }
 // --------------------------------------------------------------------------------
+int BulletGunDefinition::getFirstAffector() const
+{
+	mAffectorIterator = mAffectors.begin();
+	if (mAffectorIterator == mAffectors.end())
+		return -1;
+	else
+		return *mAffectorIterator;
+}
+// --------------------------------------------------------------------------------
+int BulletGunDefinition::getNextAffector() const
+{
+	++mAffectorIterator;
+	if (mAffectorIterator == mAffectors.end())
+		return -1;
+	else
+		return *mAffectorIterator;
+}
+// --------------------------------------------------------------------------------
 GunScriptRecord BulletGunDefinition::createGunScriptRecord() const
 {
 	GunScriptRecord record;
@@ -105,13 +123,6 @@ GunScriptRecord BulletGunDefinition::createGunScriptRecord() const
 
 	for (int i = 0; i < maxVars; ++i)
 		record.variables.push_back(0.0f);
-
-	std::list<int>::const_iterator aIt = mAffectors.begin();
-	while (aIt != mAffectors.end())
-	{
-		record.affectors.push_back(*aIt);
-		++aIt;
-	}
 
 	return record;
 }

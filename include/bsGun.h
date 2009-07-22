@@ -43,15 +43,12 @@ namespace BS_NMSP
 		float arguments[BS_MAX_AFFECTOR_ARGS];
 	};
 
-	typedef std::list<BulletGunAffector> BulletGunAffectorList;
-
 	class _BSAPI BulletGunBase : public Gun
 	{
 	public:
 
 		BulletGunAffector mAffectors[BS_MAX_AFFECTORS_PER_GUN];
 		int mNumAffectors;
-//		BulletGunAffectorList mAffectors;
 
 		// The user can pass in an object to access when a bullet is emitted, for
 		// finer control over bullet emission, if they wish.

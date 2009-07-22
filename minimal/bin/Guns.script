@@ -58,15 +58,9 @@ bullet Swarm
 
 	Main
 	{
-		repeat (10 * Bullet_Count)
+		repeat 1
 		{
-			angle = 160;
-			repeat 11
-			{
-				fireA(angle, 60, 10);
-				angle = angle + 4;	
-			}
-			wait(0.05);
+			fireA(180, 60, 10);
 		}
 		wait(0.5);
 	}

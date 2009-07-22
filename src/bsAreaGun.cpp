@@ -78,7 +78,7 @@ void AreaGun::updateAdaptivePoints()
 	else if (size <= 20)
 		mNumActivePoints = 12;
 	else
-		mNumActivePoints = 4 + size / 6;
+		mNumActivePoints = 4 + (int) (size / 6);
 
 	if ((int) mPoints.size() < (mNumActivePoints * 2))
 		mPoints.resize(mNumActivePoints * 2);
