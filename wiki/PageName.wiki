@@ -1,3 +1,5 @@
+#summary Script language syntax
+
 = Syntax =
 
 BulletScript uses a simple imperative syntax, which encapsulates individual _guns_ and organises code by discrete states.  These states are similar to the concept of object states in games, and may be switched between either in script with the `goto` command or using the API.  When execution of a state's code reaches the end, it loops back to the beginning.  The gun starts in the first defined state.
