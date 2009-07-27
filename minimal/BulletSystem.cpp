@@ -8,7 +8,7 @@ int gBulletsEmitted = 0;
 // --------------------------------------------------------------------------------
 // BulletAffector functions
 // --------------------------------------------------------------------------------
-void BulletAffector_Accel(Bullet &b, float *args, float frameTime)
+void BulletAffector_Accel(Bullet &b, const float *args, float frameTime)
 {
 	// Change velocity
 	float newSpeed = sqrt(args[0] * args[0] + args[1] * args[1]);
@@ -18,13 +18,13 @@ void BulletAffector_Accel(Bullet &b, float *args, float frameTime)
 	b.vy += ((args[1] / newSpeed) - b.vy) / (2.0f / frameTime);
 }
 // --------------------------------------------------------------------------------
-void BulletAffector_Force(Bullet &b, float *args, float frameTime)
+void BulletAffector_Force(Bullet &b, const float *args, float frameTime)
 {
 	b.x += args[0];
 	b.y += args[1];
 }
 // --------------------------------------------------------------------------------
-void BulletAffector_DelayAccel(Bullet &b, float *args, float frameTime)
+void BulletAffector_DelayAccel(Bullet &b, const float *args, float frameTime)
 {
 	// After a set time, change speed
 	if (b.__time > args[1])
@@ -37,7 +37,7 @@ void BulletAffector_DelayAccel(Bullet &b, float *args, float frameTime)
 	}
 }
 // --------------------------------------------------------------------------------
-void BulletAffector_Explode(Bullet &b, float *args, float frameTime)
+void BulletAffector_Explode(Bullet &b, const float *args, float frameTime)
 {
 	if (b.stage == 0 && b.__time > args[0])
 	{
@@ -105,7 +105,7 @@ unsigned int BulletBattery::getFreeBulletSlot()
 	return id;
 }
 // --------------------------------------------------------------------------------
-int BulletBattery::emitAngle(BS::BulletGunBase *gun, float x, float y, float* args)
+int BulletBattery::emitAngle(BS::BulletGunBase *gun, float x, float y, const float* args)
 {
 	int slot = getFreeBulletSlot();
 
@@ -127,7 +127,7 @@ int BulletBattery::emitAngle(BS::BulletGunBase *gun, float x, float y, float* ar
 	return 3;
 }
 // --------------------------------------------------------------------------------
-int BulletBattery::emitTarget(BS::BulletGunBase *gun, float x, float y, float* args)
+int BulletBattery::emitTarget(BS::BulletGunBase *gun, float x, float y, const float* args)
 {
 	int slot = getFreeBulletSlot();
 

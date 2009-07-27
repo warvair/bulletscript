@@ -51,9 +51,9 @@ public:
 
 	static void initialise();
 
-	static int emitAngle(BS::BulletGunBase* gun, float x, float y, float* args);
+	static int emitAngle(BS::BulletGunBase* gun, float x, float y, const float* args);
 
-	static int emitTarget(BS::BulletGunBase* gun, float x, float y, float* args);
+	static int emitTarget(BS::BulletGunBase* gun, float x, float y, const float* args);
 
 	static int update(float frameTime, BS::BulletMachine<Bullet>* bulletMachine);
 
@@ -61,12 +61,12 @@ public:
 
 
 // BulletAffector functions
-void BulletAffector_Accel(Bullet& b, float* args, float frameTime);
+void BulletAffector_Accel(Bullet& b, const float* args, float frameTime);
 
-void BulletAffector_Force(Bullet& b, float* args, float frameTime);
+void BulletAffector_Force(Bullet& b, const float* args, float frameTime);
 
-void BulletAffector_DelayAccel(Bullet& b, float* args, float frameTime);
+void BulletAffector_DelayAccel(Bullet& b, const float* args, float frameTime);
 
-void BulletAffector_Explode(Bullet& b, float* args, float frameTime);
+void BulletAffector_Explode(Bullet& b, const float* args, float frameTime);
 
 #endif
