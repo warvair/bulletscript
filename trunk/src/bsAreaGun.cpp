@@ -50,8 +50,10 @@ void AreaGun::setDefinition(const GunDefinition* def, GunController* controller)
 		// Start with 4 points
 		for (int i = 0; i < 4; ++i)
 		{
-			mPoints.push_back(0.0f); // X
-			mPoints.push_back(0.0f); // Y
+			mBasePoints.push_back(0.0f); // X
+			mBasePoints.push_back(0.0f); // Y
+			mWorldPoints.push_back(0.0f); // X
+			mWorldPoints.push_back(0.0f); // Y
 		}
 	}
 	else
@@ -60,8 +62,10 @@ void AreaGun::setDefinition(const GunDefinition* def, GunController* controller)
 		mNumActivePoints = numPoints;
 		for (int i = 0; i < numPoints; ++i)
 		{
-			mPoints.push_back(0.0f); // X
-			mPoints.push_back(0.0f); // Y
+			mBasePoints.push_back(0.0f); // X
+			mBasePoints.push_back(0.0f); // Y
+			mWorldPoints.push_back(0.0f); // X
+			mWorldPoints.push_back(0.0f); // Y
 		}
 	}
 
@@ -80,8 +84,11 @@ void AreaGun::updateAdaptivePoints()
 	else
 		mNumActivePoints = 4 + (int) (size / 6);
 
-	if ((int) mPoints.size() < (mNumActivePoints * 2))
-		mPoints.resize(mNumActivePoints * 2);
+	if ((int) mBasePoints.size() < (mNumActivePoints * 2))
+	{
+		mBasePoints.resize(mNumActivePoints * 2);
+		mWorldPoints.resize(mNumActivePoints * 2);
+	}
 }
 // --------------------------------------------------------------------------------
 float AreaGun::getX() const
@@ -96,7 +103,7 @@ float AreaGun::getY() const
 // --------------------------------------------------------------------------------
 int AreaGun::getNumPoints() const
 {
-	// If the area is adaptive, then mPoints may be bigger than mNumActivePoints
+	// If the area is adaptive, then mWorldPoints may be bigger than mNumActivePoints
 	return mNumActivePoints;
 }
 // --------------------------------------------------------------------------------
@@ -184,7 +191,7 @@ float AreaGun::getAngle() const
 // --------------------------------------------------------------------------------
 const AreaGun::PointDataList& AreaGun::getPoints() const
 {
-	return mPoints;
+	return mWorldPoints;
 }
 // --------------------------------------------------------------------------------
 void AreaGun::update(float frameTime)
@@ -228,31 +235,32 @@ void AreaGun::update(float frameTime)
 			mStates &= ~ACS_Angle;
 	}
 
+	int numPoints = getNumPoints();
+
 	// Points form a regular polygon: calculate local coords
 	if (mbWidthChanged || mbLengthChanged || mbAngleChanged)
 	{
-		int numPoints = getNumPoints();
 		switch (numPoints)
 		{
 		case 3:
 			switch (mOriginType)
 			{
 			case AO_Base:
-				mPoints[0] = -mWidth / 2;
-				mPoints[1] = 0.0f;
-				mPoints[2] = mWidth / 2;
-				mPoints[3] = 0.0f;
-				mPoints[4] = 0.0f;
-				mPoints[5] = mLength;
+				mBasePoints[0] = -mWidth / 2;
+				mBasePoints[1] = 0.0f;
+				mBasePoints[2] = mWidth / 2;
+				mBasePoints[3] = 0.0f;
+				mBasePoints[4] = 0.0f;
+				mBasePoints[5] = mLength;
 				break;
 
 			case AO_Centre:
-				mPoints[0] = -mWidth / 2;
-				mPoints[1] = -mLength / 2;
-				mPoints[2] = mWidth / 2;
-				mPoints[3] = -mLength / 2;
-				mPoints[4] = 0.0f;
-				mPoints[5] = mLength / 2;
+				mBasePoints[0] = -mWidth / 2;
+				mBasePoints[1] = -mLength / 2;
+				mBasePoints[2] = mWidth / 2;
+				mBasePoints[3] = -mLength / 2;
+				mBasePoints[4] = 0.0f;
+				mBasePoints[5] = mLength / 2;
 				break;
 			}
 			break;
@@ -261,25 +269,25 @@ void AreaGun::update(float frameTime)
 			switch (mOriginType)
 			{
 			case AO_Base:
-				mPoints[0] = -mWidth / 2;
-				mPoints[1] = 0.0f;
-				mPoints[2] = mWidth / 2;
-				mPoints[3] = 0.0f;
-				mPoints[4] = mWidth / 2;
-				mPoints[5] = mLength;
-				mPoints[6] = -mWidth / 2;
-				mPoints[7] = mLength;
+				mBasePoints[0] = -mWidth / 2;
+				mBasePoints[1] = 0.0f;
+				mBasePoints[2] = mWidth / 2;
+				mBasePoints[3] = 0.0f;
+				mBasePoints[4] = mWidth / 2;
+				mBasePoints[5] = mLength;
+				mBasePoints[6] = -mWidth / 2;
+				mBasePoints[7] = mLength;
 				break;
 			
 			case AO_Centre:
-				mPoints[0] = -mWidth / 2;
-				mPoints[1] = -mLength / 2;
-				mPoints[2] = mWidth / 2;
-				mPoints[3] = -mLength / 2;
-				mPoints[4] = mWidth / 2;
-				mPoints[5] = mLength / 2;
-				mPoints[6] = -mWidth / 2;
-				mPoints[7] = mLength / 2;
+				mBasePoints[0] = -mWidth / 2;
+				mBasePoints[1] = -mLength / 2;
+				mBasePoints[2] = mWidth / 2;
+				mBasePoints[3] = -mLength / 2;
+				mBasePoints[4] = mWidth / 2;
+				mBasePoints[5] = mLength / 2;
+				mBasePoints[6] = -mWidth / 2;
+				mBasePoints[7] = mLength / 2;
 				break;
 			}
 			break;
@@ -292,18 +300,18 @@ void AreaGun::update(float frameTime)
 				for (int i = 0; i < numPoints * 2; i += 2)
 				{
 					// Rotate point (0, 1)
-					mPoints[i + 0] = -sin(rAngle);
-					mPoints[i + 1] = cos(rAngle);
+					mBasePoints[i + 0] = -sin(rAngle);
+					mBasePoints[i + 1] = cos(rAngle);
 
-					if (mPoints[i + 0] > maxs[0])
-						maxs[0] = mPoints[i + 0];
-					if (mPoints[i + 1] > maxs[1])
-						maxs[1] = mPoints[i + 1];
+					if (mBasePoints[i + 0] > maxs[0])
+						maxs[0] = mBasePoints[i + 0];
+					if (mBasePoints[i + 1] > maxs[1])
+						maxs[1] = mBasePoints[i + 1];
 
-					if (mPoints[i + 0] < mins[0])
-						mins[0] = mPoints[i + 0];
-					if (mPoints[i + 1] < mins[1])
-						mins[1] = mPoints[i + 1];
+					if (mBasePoints[i + 0] < mins[0])
+						mins[0] = mBasePoints[i + 0];
+					if (mBasePoints[i + 1] < mins[1])
+						mins[1] = mBasePoints[i + 1];
 
 					rAngle += (2 * 3.14159f / numPoints);
 				}
@@ -314,16 +322,16 @@ void AreaGun::update(float frameTime)
 				// Scale and translate
 				for (int i = 0; i < numPoints * 2; i += 2)
 				{
-					mPoints[i + 0] = mPoints[i + 0] * ratioX;
+					mBasePoints[i + 0] = mBasePoints[i + 0] * ratioX;
 
 					switch (mOriginType)
 					{
 					case AO_Base:
-						mPoints[i + 1] = (mPoints[i + 1] - mins[1]) * ratioY;
+						mBasePoints[i + 1] = (mBasePoints[i + 1] - mins[1]) * ratioY;
 						break;
 
 					case AO_Centre:
-						mPoints[i + 1] = mPoints[i + 1] * ratioY;
+						mBasePoints[i + 1] = mBasePoints[i + 1] * ratioY;
 						break;
 					}
 				}
@@ -331,7 +339,12 @@ void AreaGun::update(float frameTime)
 			break;
 
 		}
+	}
 
+	// Todo:
+	// ...
+	if (true /* instance x/y/angle vars changed */ )
+	{
 		float angle = mRecord.instanceVars[Instance_Gun_Angle];
 		float cosAngle = cos(angle * DEG_TO_RAD);
 		float sinAngle = sin(angle * DEG_TO_RAD);
@@ -339,15 +352,12 @@ void AreaGun::update(float frameTime)
 		{
 			if (!mbAdaptivePoints)
 			{
-				float px = mPoints[i + 0];
-				float py = mPoints[i + 1];
-
-				mPoints[i + 0] = cosAngle * px - sinAngle * py;
-				mPoints[i + 1] = sinAngle * px + cosAngle * py;
+				mWorldPoints[i + 0] = cosAngle * mBasePoints[i + 0] - sinAngle * mBasePoints[i + 1];
+				mWorldPoints[i + 1] = sinAngle * mBasePoints[i + 0] + cosAngle * mBasePoints[i + 1];
 			}
 
-			mPoints[i + 0] += mRecord.instanceVars[Instance_Gun_X];
-			mPoints[i + 1] += mRecord.instanceVars[Instance_Gun_Y];
+			mWorldPoints[i + 0] += mRecord.instanceVars[Instance_Gun_X];
+			mWorldPoints[i + 1] += mRecord.instanceVars[Instance_Gun_Y];
 		}
 	}
 

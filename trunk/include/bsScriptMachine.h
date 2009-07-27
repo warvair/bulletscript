@@ -50,7 +50,7 @@ namespace BS_NMSP
 	typedef void (*ErrorFunction)(const char*);
 
 	class BulletGunBase;
-	typedef int (*FireFunction)(BulletGunBase*, float, float, float*);
+	typedef int (*FireFunction)(BulletGunBase*, float, float, const float*);
 
 	class BulletMachineBase;
 
@@ -95,8 +95,6 @@ namespace BS_NMSP
 		bool checkInstructionPosition (GunScriptRecord& state, size_t length);
 
 		void interpretCode (const uint32* code, size_t length, GunScriptRecord& state, bool loop);
-
-		void addErrorMsg (const String& msg);
 
 	public:
 
@@ -151,6 +149,9 @@ namespace BS_NMSP
 
 		// Compile string to bytecode
 		int compileScript(uint8* buffer, size_t bufferSize);
+
+		// Errors
+		void addErrorMsg (const String& msg);
 	};
 
 }

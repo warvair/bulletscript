@@ -1,3 +1,5 @@
+Crash if named affector not registered.
+
 Remove containers where possible
 	BulletAffector::mArguments
 	BulletGun::mAffectors
@@ -7,3 +9,4 @@ Remove containers where possible
 Homing affector
 
 Per-state affectors
+

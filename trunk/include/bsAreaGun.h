@@ -58,7 +58,8 @@ namespace BS_NMSP
 	private:
 
 		// 2 points per vertex
-		PointDataList mPoints;
+		PointDataList mBasePoints;
+		PointDataList mWorldPoints;
 
 		float mOrientation;
 

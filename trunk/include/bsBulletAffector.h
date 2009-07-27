@@ -15,7 +15,7 @@ namespace BS_NMSP
 	{
 	public:
 
-		typedef void (*Function)(BulletType&, float*, float);
+		typedef void (*Function)(BulletType&, const float*, float);
 
 		class Argument : public VariableListener
 		{

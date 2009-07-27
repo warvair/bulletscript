@@ -45,14 +45,14 @@ namespace BS_NMSP
 
 	class _BSAPI BulletGunBase : public Gun
 	{
+		// The user can pass in an object to access when a bullet is emitted, for
+		// finer control over bullet emission, if they wish.
+		void* mUserObject;
+
 	public:
 
 		BulletGunAffector mAffectors[BS_MAX_AFFECTORS_PER_GUN];
 		int mNumAffectors;
-
-		// The user can pass in an object to access when a bullet is emitted, for
-		// finer control over bullet emission, if they wish.
-		void* mUserObject;
 
 	public:
 

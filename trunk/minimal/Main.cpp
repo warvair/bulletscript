@@ -65,6 +65,9 @@ void script_err(const char* msg)
 
 int main(int argc, char** argv)
 {
+	std::cout << sizeof(BulletGunController<Bullet>) << std::endl;
+	std::cout << sizeof(BulletGun<Bullet>) << std::endl;
+
 	if (argc < 4)
 	{
 		cout << "No file/guns/emitted specified." << endl;
