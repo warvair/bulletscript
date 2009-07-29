@@ -101,7 +101,7 @@ class AreaShip : public Ship
 	public:
 
 		ShipAreaGunController(BS::ScriptMachine *scriptMachine, AreaShip* ship) :
-			BS::AreaGunController(scriptMachine),
+			BS::AreaGunController(scriptMachine, &(ship->getPoints()), &(ship->getStrength())),
 			mShip(ship)
 		{
 		}
@@ -109,16 +109,21 @@ class AreaShip : public Ship
 
 	class AreaGunRenderer
 	{
+		AreaShip *mShip;
+
 	public:
 
-		AreaGunRenderer()
-		{
-		}
+		AreaGunRenderer(AreaShip *ship) :
+			mShip (ship) {}
 
 		void render(BS::AreaGunController* gun, RendererGL* renderer, bool solid);
 	};
 
 	AreaGunRenderer* mGunRenderer;
+
+	std::vector<float> mPoints;
+
+	float mStrength;
 
 	float mAngleTime, mAngleSpeed;
 
@@ -130,16 +135,27 @@ public:
 
 	AreaShip (const BS::String& image, float x, float y, BS::ScriptMachine* sm) :
 		Ship(image, x, y, sm, 0),
+		mStrength(1.0f),
 		mAngleTime(0.0f),
 		mAngleSpeed(0.0f)
 	{
-		mGunRenderer = new AreaGunRenderer;
+		mGunRenderer = new AreaGunRenderer(this);
 	}
 
 	~AreaShip()
 	{
 		if (mGunRenderer)
 			delete mGunRenderer;
+	}
+
+	std::vector<float>& getPoints ()
+	{
+		return mPoints;
+	}
+
+	float& getStrength()
+	{
+		return mStrength;
 	}
 
 	void addGun(const BS::String& def, float x, float y);
@@ -159,7 +175,7 @@ class BombShip : public Ship
 	public:
 
 		ShipAreaGunController(BS::ScriptMachine *scriptMachine, BombShip* ship) :
-			BS::AreaGunController(scriptMachine),
+			BS::AreaGunController(scriptMachine, &(ship->getPoints()), &(ship->getStrength())),
 			mShip(ship)
 		{
 		}
@@ -167,16 +183,21 @@ class BombShip : public Ship
 
 	class AreaGunRenderer
 	{
+		BombShip *mShip;
+
 	public:
 
-		AreaGunRenderer()
-		{
-		}
+		AreaGunRenderer(BombShip *ship) :
+			mShip (ship) {}
 
 		void render(BS::AreaGunController* gun, RendererGL* renderer, bool solid);
 	};
 
 	AreaGunRenderer* mGunRenderer;
+
+	std::vector<float> mPoints;
+
+	float mStrength;
 
 	void updateGuns(float frameTime);
 
@@ -185,15 +206,26 @@ class BombShip : public Ship
 public:
 
 	BombShip (float x, float y, BS::ScriptMachine* sm) :
-		Ship("", x, y, sm, 0)
+		Ship("", x, y, sm, 0),
+		mStrength(1.0f)
 	{
-		mGunRenderer = new AreaGunRenderer;
+		mGunRenderer = new AreaGunRenderer (this);
 	}
 
 	~BombShip()
 	{
 		if (mGunRenderer)
 			delete mGunRenderer;
+	}
+
+	std::vector<float> &getPoints ()
+	{
+		return mPoints;
+	}
+
+	float& getStrength()
+	{
+		return mStrength;
 	}
 
 	void addGun(const BS::String& def, float x, float y);

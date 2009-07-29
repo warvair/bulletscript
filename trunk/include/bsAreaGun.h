@@ -14,15 +14,13 @@ namespace BS_NMSP
 
 		typedef std::vector<float> PointDataList;
 
-		AreaGun(ScriptMachine* scriptMachine);
+		AreaGun(ScriptMachine* scriptMachine, std::vector<float>* points, float* strength);
 
 		void setDefinition(const GunDefinition* def, GunController* controller);
 
 		float getX() const;
 
 		float getY() const;
-
-		int getNumPoints() const;
 
 		void setStrength(float value);
 
@@ -39,8 +37,6 @@ namespace BS_NMSP
 		void setLengthTo(float value, float time);
 
 		void setAngleTo(float value, float time);
-
-		float getStrength() const;
 		
 		float getWidth() const;
 
@@ -48,18 +44,13 @@ namespace BS_NMSP
 
 		float getAngle() const;
 
-		// Look into how safe it is to pass this across the DLL boundary
-		// Should be ok as long as everything is compiled together with
-		// the same CRT.
-		const PointDataList& getPoints() const;
-
 		void update(float frameTime);
 
 	private:
 
 		// 2 points per vertex
 		PointDataList mBasePoints;
-		PointDataList mWorldPoints;
+		PointDataList *mWorldPoints;
 
 		float mOrientation;
 
@@ -74,7 +65,9 @@ namespace BS_NMSP
 
 		int mStates;
 
-		float mStrength, mStrengthSpeed, mStrengthTime;
+		float* mStrength;
+		float mStrengthSpeed, mStrengthTime;
+
 		float mWidth, mWidthSpeed, mWidthTime;
 		float mLength, mLengthSpeed, mLengthTime;
 		float mAngle, mAngleSpeed, mAngleTime;
@@ -82,7 +75,6 @@ namespace BS_NMSP
 		int mOriginType;
 
 		bool mbAdaptivePoints;
-		int mNumActivePoints;
 
 		// For caching
 		bool mbWidthChanged, mbLengthChanged, mbAngleChanged;
@@ -102,7 +94,7 @@ namespace BS_NMSP
 
 	public:
 
-		AreaGunController(ScriptMachine *scriptMachine);
+		AreaGunController(ScriptMachine *scriptMachine, std::vector<float>* points, float* strength);
 
 		void setProperty(int prop, float value, float time);
 
@@ -112,11 +104,9 @@ namespace BS_NMSP
 
 		float getY() const;
 
-		const AreaGun::PointDataList& getPoints() const;
+		float getWidth() const;
 
-		int getNumPoints() const;
-
-		float getStrength() const;
+		float getLength() const;
 
 	};
 

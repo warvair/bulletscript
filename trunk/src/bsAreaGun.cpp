@@ -7,11 +7,12 @@ namespace BS_NMSP
 {
 
 // --------------------------------------------------------------------------------
-AreaGun::AreaGun(ScriptMachine* scriptMachine) :
+AreaGun::AreaGun(ScriptMachine* scriptMachine, std::vector<float>* points, float* strength) :
 	Gun(scriptMachine),
+	mWorldPoints(points),
 	mOrientation(0.0f),
 	mStates(ACS_None),
-	mStrength(0.0f),
+	mStrength(strength),
 	mStrengthSpeed(0.0f),
 	mStrengthTime(0.0f),
 	mWidth(0.0f),
@@ -25,7 +26,6 @@ AreaGun::AreaGun(ScriptMachine* scriptMachine) :
 	mAngleTime(0.0f),
 	mOriginType(AO_Base),
 	mbAdaptivePoints(false),
-	mNumActivePoints(0),
 	mbWidthChanged(true),
 	mbLengthChanged(true),
 	mbAngleChanged(true)
@@ -41,31 +41,32 @@ void AreaGun::setDefinition(const GunDefinition* def, GunController* controller)
 	mRecord.gun = this;
 	mRecord.controller = controller;
 
+	mBasePoints.clear();
+	mWorldPoints->clear();
+
 	int numPoints = bDef->getNumPoints();
 	if (numPoints <= 0)
 	{
 		mbAdaptivePoints = true;
-		mNumActivePoints = 4;
 
 		// Start with 4 points
 		for (int i = 0; i < 4; ++i)
 		{
 			mBasePoints.push_back(0.0f); // X
 			mBasePoints.push_back(0.0f); // Y
-			mWorldPoints.push_back(0.0f); // X
-			mWorldPoints.push_back(0.0f); // Y
+			(*mWorldPoints).push_back(0.0f); // X
+			(*mWorldPoints).push_back(0.0f); // Y
 		}
 	}
 	else
 	{
 		mbAdaptivePoints = false;
-		mNumActivePoints = numPoints;
 		for (int i = 0; i < numPoints; ++i)
 		{
 			mBasePoints.push_back(0.0f); // X
 			mBasePoints.push_back(0.0f); // Y
-			mWorldPoints.push_back(0.0f); // X
-			mWorldPoints.push_back(0.0f); // Y
+			(*mWorldPoints).push_back(0.0f); // X
+			(*mWorldPoints).push_back(0.0f); // Y
 		}
 	}
 
@@ -75,19 +76,22 @@ void AreaGun::setDefinition(const GunDefinition* def, GunController* controller)
 // --------------------------------------------------------------------------------
 void AreaGun::updateAdaptivePoints()
 {
+	int curPoints = (int) mBasePoints.size () / 2;
+	int newPoints;
+	
 	// check length/width
 	float size = mWidth + mLength;
 	if (size <= 8)
-		mNumActivePoints = 4;
+		newPoints = 4;
 	else if (size <= 20)
-		mNumActivePoints = 12;
+		newPoints = 12;
 	else
-		mNumActivePoints = 4 + (int) (size / 6);
+		newPoints = 4 + (int) (size / 6);
 
-	if ((int) mBasePoints.size() < (mNumActivePoints * 2))
+	if (newPoints != curPoints)
 	{
-		mBasePoints.resize(mNumActivePoints * 2);
-		mWorldPoints.resize(mNumActivePoints * 2);
+		mBasePoints.resize(newPoints * 2);
+		mWorldPoints->resize(newPoints * 2);
 	}
 }
 // --------------------------------------------------------------------------------
@@ -101,15 +105,9 @@ float AreaGun::getY() const
 	return mRecord.instanceVars[Instance_Gun_Y];
 }
 // --------------------------------------------------------------------------------
-int AreaGun::getNumPoints() const
-{
-	// If the area is adaptive, then mWorldPoints may be bigger than mNumActivePoints
-	return mNumActivePoints;
-}
-// --------------------------------------------------------------------------------
 void AreaGun::setStrength(float value)
 {
-	mStrength = value;
+	*mStrength = value;
 	mStates &= ~ACS_Strength;
 }
 // --------------------------------------------------------------------------------
@@ -143,7 +141,7 @@ void AreaGun::setAngle(float value)
 void AreaGun::setStrengthTo(float value, float time)
 {
 	mStates |= ACS_Strength;
-	mStrengthSpeed = (value - mStrength) / time;
+	mStrengthSpeed = (value - *mStrength) / time;
 	mStrengthTime = time;
 }
 // --------------------------------------------------------------------------------
@@ -169,11 +167,6 @@ void AreaGun::setAngleTo(float value, float time)
 	mAngleTime = time;
 }
 // --------------------------------------------------------------------------------
-float AreaGun::getStrength() const
-{
-	return mStrength;
-}
-// --------------------------------------------------------------------------------
 float AreaGun::getWidth() const
 {
 	return mWidth;
@@ -189,17 +182,12 @@ float AreaGun::getAngle() const
 	return mAngle;
 }
 // --------------------------------------------------------------------------------
-const AreaGun::PointDataList& AreaGun::getPoints() const
-{
-	return mWorldPoints;
-}
-// --------------------------------------------------------------------------------
 void AreaGun::update(float frameTime)
 {
 	// Update states
 	if (mStates & ACS_Strength)
 	{
-		mStrength += mStrengthSpeed * frameTime;
+		*mStrength += mStrengthSpeed * frameTime;
 		mStrengthTime -= frameTime;
 		if (mStrengthTime <= 0.0f)
 			mStates &= ~ACS_Strength;
@@ -235,7 +223,7 @@ void AreaGun::update(float frameTime)
 			mStates &= ~ACS_Angle;
 	}
 
-	int numPoints = getNumPoints();
+	int numPoints = (int) mBasePoints.size() / 2;
 
 	// Points form a regular polygon: calculate local coords
 	if (mbWidthChanged || mbLengthChanged || mbAngleChanged)
@@ -345,19 +333,24 @@ void AreaGun::update(float frameTime)
 	// ...
 	if (true /* instance x/y/angle vars changed */ )
 	{
-		float angle = mRecord.instanceVars[Instance_Gun_Angle];
+		float angle = mAngle;
 		float cosAngle = cos(angle * DEG_TO_RAD);
 		float sinAngle = sin(angle * DEG_TO_RAD);
 		for (int i = 0; i < numPoints * 2; i += 2)
 		{
 			if (!mbAdaptivePoints)
 			{
-				mWorldPoints[i + 0] = cosAngle * mBasePoints[i + 0] - sinAngle * mBasePoints[i + 1];
-				mWorldPoints[i + 1] = sinAngle * mBasePoints[i + 0] + cosAngle * mBasePoints[i + 1];
+				(*mWorldPoints)[i + 0] = cosAngle * mBasePoints[i + 0] - sinAngle * mBasePoints[i + 1];
+				(*mWorldPoints)[i + 1] = sinAngle * mBasePoints[i + 0] + cosAngle * mBasePoints[i + 1];
+			}
+			else
+			{
+				(*mWorldPoints)[i + 0] = mBasePoints[i + 0];
+				(*mWorldPoints)[i + 1] = mBasePoints[i + 1];
 			}
 
-			mWorldPoints[i + 0] += mRecord.instanceVars[Instance_Gun_X];
-			mWorldPoints[i + 1] += mRecord.instanceVars[Instance_Gun_Y];
+			(*mWorldPoints)[i + 0] += mRecord.instanceVars[Instance_Gun_X];
+			(*mWorldPoints)[i + 1] += mRecord.instanceVars[Instance_Gun_Y];
 		}
 	}
 
@@ -368,10 +361,16 @@ void AreaGun::update(float frameTime)
 }
 // --------------------------------------------------------------------------------
 // --------------------------------------------------------------------------------
-AreaGunController::AreaGunController(ScriptMachine *scriptMachine) :
+AreaGunController::AreaGunController(ScriptMachine *scriptMachine, 
+									 std::vector<float>* points,
+									 float* strength) :
 	GunController(scriptMachine)
 {
-	mGun = new AreaGun(scriptMachine);
+	// Want to pass vector<float>* into the gun, so that the gun can update the
+	// points.  so mWorldPoints should be a pointer, and we just have to pass the
+	// pointer into AreaGunController and then AreaGun.
+
+	mGun = new AreaGun(scriptMachine, points, strength);
 	mAreaGun = static_cast<AreaGun*>(mGun); // for convenience/speed
 }
 // --------------------------------------------------------------------------------
@@ -407,7 +406,7 @@ void AreaGunController::setProperty(int prop, float value, float time)
 		break;
 
 	case GunProperty_Angle:
-		if (time <= 0.0f)
+		if (time <= 0.0f) // should use epsilon value
 			mAreaGun->setAngle(value);
 		else
 			mAreaGun->setAngleTo(value, time);
@@ -422,11 +421,6 @@ void AreaGunController::update(float frameTime)
 	mGun->update(frameTime);
 }
 // --------------------------------------------------------------------------------
-const std::vector<float>& AreaGunController::getPoints() const
-{
-	return mAreaGun->getPoints();
-}
-// --------------------------------------------------------------------------------
 float AreaGunController::getX() const
 {
 	return mAreaGun->getX();
@@ -437,14 +431,14 @@ float AreaGunController::getY() const
 	return mAreaGun->getY();
 }
 // --------------------------------------------------------------------------------
-int AreaGunController::getNumPoints() const
+float AreaGunController::getWidth() const
 {
-	return mAreaGun->getNumPoints();
+	return mAreaGun->getWidth();
 }
 // --------------------------------------------------------------------------------
-float AreaGunController::getStrength() const
+float AreaGunController::getLength() const
 {
-	return mAreaGun->getStrength();
+	return mAreaGun->getLength();
 }
 // --------------------------------------------------------------------------------
 

@@ -2,6 +2,7 @@ area[4, 0.0, BASE] Beam
 {
 	Setup
 	{
+		set strength(0);
 		set width(20);
 		set length(100);
 		set angle(180);
@@ -16,14 +17,12 @@ area[4, 0.0, BASE] Beam
 	{		
 		set angle(180, 6);
 		wait(6);
-		set angle(90, 6);
-		wait(6);
-		set angle(135, 3);
-		wait(5);
 		set length(400, 0.4);
 		wait(2);
 		set length(100, 3);
 		wait(4);
+		set angle(90, 2);
+		wait(2);
 	}
 }
 

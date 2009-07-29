@@ -126,9 +126,9 @@ void AreaShip::AreaGunRenderer::render(BS::AreaGunController* gun,
 									   RendererGL* renderer,
 									   bool solid)
 {
-	std::vector<float> p = gun->getPoints();
-	int numPoints = gun->getNumPoints();
-	float strength = gun->getStrength();
+	std::vector<float> p = mShip->getPoints();
+	float strength = mShip->getStrength();
+	int numPoints = (int) p.size() / 2;
 
 	if (numPoints == 3)
 	{
@@ -252,9 +252,9 @@ void BombShip::AreaGunRenderer::render(BS::AreaGunController* gun,
 									   RendererGL* renderer,
 									   bool solid)
 {
-	BS::AreaGun::PointDataList p = gun->getPoints();
-	int numPoints = gun->getNumPoints();
-	float strength = gun->getStrength();
+	std::vector<float> p = mShip->getPoints();
+	float strength = mShip->getStrength();
+	int numPoints = (int) p.size() / 2;
 
 	if (numPoints == 3)
 	{
