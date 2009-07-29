@@ -73,10 +73,6 @@ namespace BS_NMSP
 			mGun = new BulletGun<BulletType>(scriptMachine, bulletMachine, userObj);
 		}
 
-		~BulletGunController()
-		{
-		}
-
 		void setProperty(int prop, float value, float time)
 		{
 			// BulletGuns do not have any properties
