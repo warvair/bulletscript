@@ -6,6 +6,14 @@
 
 namespace BS_NMSP
 {
+	enum
+	{
+		Member_X,
+		Member_Y,
+		Member_Angle,
+		NUM_SPECIAL_MEMBERS
+	};
+
 	class _BSAPI VariableListener
 	{
 	public:
@@ -31,25 +39,6 @@ namespace BS_NMSP
 		float getValue() const;
 
 		void registerAffectorArgument(VariableListener* listener);
-	};
-
-	enum InstanceVariables
-	{
-		Instance_Gun_X,
-		Instance_Gun_Y,
-		Instance_Gun_Angle,
-		NUM_INSTANCE_VARS
-	};
-
-	class _BSAPI InstanceVariable
-	{
-		String mName;
-
-	public:
-
-		InstanceVariable(const String& name);
-
-		const String& getName() const;
 	};
 
 }

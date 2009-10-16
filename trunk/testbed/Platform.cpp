@@ -5,6 +5,8 @@ static float gVert = 0.0f;
 
 static float gCount = 1.0f;
 
+static bool gInFocus = true;
+
 void toggleGun(int index);
 
 bool processMessages()
@@ -51,6 +53,20 @@ bool processMessages()
 				gVert = 0.0f;
 			break;
 
+		case SDL_ACTIVEEVENT:
+			if (evt.active.state == SDL_APPMOUSEFOCUS)
+			{
+				if (evt.active.gain == 0)
+				{
+					gInFocus = false;
+				}
+				else if (evt.active.gain == 1)
+				{
+					gInFocus = true;
+				}
+			}
+			break;
+
 		default:
 			break;
 		}
@@ -72,4 +88,9 @@ float getVertMovement()
 float getBulletCount()
 {
 	return gCount;
+}
+
+bool inFocus()
+{
+	return gInFocus;
 }

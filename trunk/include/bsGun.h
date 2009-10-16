@@ -13,6 +13,8 @@ namespace BS_NMSP
 
 	class _BSAPI Gun 
 	{
+		virtual void updateImpl(float frameTime) {}
+
 	protected:
 
 		ScriptMachine* mScriptMachine;
@@ -21,16 +23,22 @@ namespace BS_NMSP
 
 	public:
 
-		Gun(ScriptMachine* scriptMachine);
+		explicit Gun(ScriptMachine* scriptMachine);
 
 		virtual void setDefinition(const GunDefinition* def, 
 			GunController* controller) = 0;
 
-		virtual void update(float frameTime) 
+		void update(float frameTime, float x, float y, float angle) 
 		{
+			// Update hardcoded vars and call updateImpl()
+			setMemberVariable(Member_X, x);
+			setMemberVariable(Member_Y, y);
+			setMemberVariable(Member_Angle, angle);
+
+			updateImpl(frameTime);
 		}
 		
-		void setInstanceVariable(int index, float value);
+		void setMemberVariable(int index, float value);
 
 		void runScript(float frameTime);
 
@@ -72,10 +80,14 @@ namespace BS_NMSP
 
 	enum GunProperty
 	{
-		GunProperty_Strength,
-		GunProperty_Width,
-		GunProperty_Length,
-		GunProperty_Angle
+		GunProperty_Strength,	// area/arc
+		GunProperty_Width,		// area
+		GunProperty_Length,		// area
+		GunProperty_Angle,		// area
+		GunProperty_Distance,	// arc
+		GunProperty_Depth,		// arc
+		GunProperty_StartAngle,	// arc
+		GunProperty_EndAngle	// arc
 	};
 
 	// GunController is the class that the user interfaces with.  It is essentially a
@@ -89,7 +101,7 @@ namespace BS_NMSP
 
 	public:
 
-		GunController(ScriptMachine *scriptMachine);
+		explicit GunController(ScriptMachine *scriptMachine);
 
 		virtual ~GunController()
 		{
@@ -99,14 +111,14 @@ namespace BS_NMSP
 
 		bool setDefinition(const String& def);
 
-		void setInstanceVariable(int index, float value);
+		void setMemberVariable(int index, float value);
 
 		void runScript(float frameTime);
 
 		// This needs to call a user-implemented member function
 		virtual void setProperty(int prop, float value, float time) = 0;
 
-		virtual void update(float frameTime);
+		virtual void update(float frameTime, float x, float y, float angle);
 
 	};
 

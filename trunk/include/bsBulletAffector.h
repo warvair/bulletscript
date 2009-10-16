@@ -25,7 +25,7 @@ namespace BS_NMSP
 			{
 				AT_Constant =		0,
 				AT_Globals =		1,
-				AT_Instances =		2,
+				AT_Members =		2,
 				AT_Functions =		4,
 			};
 
@@ -39,7 +39,7 @@ namespace BS_NMSP
 				// Update value
 				GunScriptRecord gsr;
 				scriptMachine->processConstantExpression(record->byteCode, record->byteCodeSize, gsr);
-				value = gsr.stack[gsr.stackHead - 1];
+				value = gsr.scriptState.stack[gsr.scriptState.stackHead - 1];
 			}
 		};
 	
@@ -96,32 +96,41 @@ namespace BS_NMSP
 					GunScriptRecord gsr;
 					arg.scriptMachine->processConstantExpression(arg.record->byteCode, 
 																 arg.record->byteCodeSize, gsr);
-					arg.value = gsr.stack[gsr.stackHead - 1];
+					arg.value = gsr.scriptState.stack[gsr.scriptState.stackHead - 1];
 				}
 				++it;
 			}
 		}
 
-		void updateInstanceArguments(float* arguments, const GunScriptRecord& gunRecord)
+		void updateMemberArguments(float* arguments, const GunScriptRecord& gunRecord)
 		{
+			// Currently, it updates affector arguments which contain member variables every
+			// frame, but it shouldn't do this.  For instance, Gun_Angle may not change at all,
+			// so we should keep track of when member variables change.
+			// See: Gun::setMemberVariable (bsGun.cpp:22)
+			// ...
+
 			int index = 0;
 			typename ArgumentList::iterator it = mArguments.begin();
 			while (it != mArguments.end())
 			{
 				Argument& arg = *it;
-				if (arg.exprTypes & Argument::AT_Instances)
+				if (arg.exprTypes & Argument::AT_Members)
 				{
 					GunScriptRecord gsr;
-					for (int i = 0; i < NUM_INSTANCE_VARS; ++i)
-						gsr.instanceVars[i] = gunRecord.instanceVars[i];
+
+					size_t mCount = gunRecord.members.size();
+					gsr.members.reserve(mCount);
+					for (size_t i = 0; i < mCount; ++i)
+						gsr.members.push_back(gunRecord.members[i]);
 
 					arg.scriptMachine->processConstantExpression(arg.record->byteCode, 
 																 arg.record->byteCodeSize, gsr);
-					arguments[index] = gsr.stack[gsr.stackHead - 1];
+					arguments[index] = gsr.scriptState.stack[gsr.scriptState.stackHead - 1];
 				}
 				else
 				{
-					// If not an instance argument, we need to just copy the already calculated
+					// If not a member argument, we need to just copy the already calculated
 					// value into the argument list.
 					arguments[index] = arg.value;
 				}

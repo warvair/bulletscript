@@ -1,10 +1,25 @@
-Crash if named affector not registered.
+initial x/y/angle should be specified when new'ing a gun
+	not necessarily, the offset functionality will be wrapped by the script system's Unit class.
+
+affector arguments may change: do we have it so that already emitted bullets use the old arguments, or
+the current ones?
+
+Member variables may need to have listeners like global variables.
+
+have the possibility of bullets taking a script behaviour function
+
+scriptmachine needs an error log.
+
+how can we have bullets emitting bullets? also areas: for instance we could do forked lightning with
+area-emitters, also beams that change direction, bullet fireworks, etc.
 
 Remove containers where possible
 	BulletAffector::mArguments
 	BulletGun::mAffectors
 	BulletMachine::mBulletAffectors
 	GlobalVariable::mListeners
+	
+	simple memory allocator
 
 Homing affector
 

@@ -23,6 +23,8 @@ struct Bullet
 
 	// This must be added to the Bullet type in order to use BulletAffectors
 	BS::BulletGunBase *__gun;
+	// This must be added to the Bullet type for control functions
+	BS::ScriptState* __ctrl;
 };
 
 /* This class is based off code from motorherp, posted on the SHMUP-DEV forums

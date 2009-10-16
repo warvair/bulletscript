@@ -37,16 +37,5 @@ void GlobalVariable::registerAffectorArgument(VariableListener* listener)
 	mListeners.push_back(listener);
 }
 // --------------------------------------------------------------------------------
-// --------------------------------------------------------------------------------
-InstanceVariable::InstanceVariable (const String& name) :
-	mName (name)
-{
-}
-// --------------------------------------------------------------------------------
-const String& InstanceVariable::getName() const
-{
-	return mName;
-}
-// --------------------------------------------------------------------------------
 
 }

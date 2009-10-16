@@ -1,5 +1,6 @@
 #include <iostream>
 #include "bsGunDefinitions.h"
+#include "bsScriptMachine.h"
 
 namespace BS_NMSP
 {
@@ -7,12 +8,17 @@ namespace BS_NMSP
 // --------------------------------------------------------------------------------
 GunDefinition::GunDefinition(const String& name, int type) :
 	mName(name),
-	mType(type)
+	mType(type),
+	m_constructCode(0),
+	m_constructSize(0),
+	mNumUserMembers(0)
 {
 }
 // --------------------------------------------------------------------------------
 GunDefinition::~GunDefinition()
 {
+	delete[] m_constructCode;
+	
 	std::vector<State>::iterator it = mStates.begin();
 	while (it != mStates.end())
 	{
@@ -29,6 +35,71 @@ const String& GunDefinition::getName() const
 int GunDefinition::getType() const
 {
 	return mType;
+}
+// --------------------------------------------------------------------------------
+void GunDefinition::addMemberVariable(const String& name, bool readonly)
+{
+	MemberVariable var;
+	var.name = name;
+	var.readonly = readonly;
+	var.value = 0.0f;
+
+	mVariables.push_back(var);
+}
+// --------------------------------------------------------------------------------
+void GunDefinition::addMemberVariable(const String& name, bool readonly, float value)
+{
+	MemberVariable var;
+	var.name = name;
+	var.readonly = readonly;
+	var.value = value;
+
+	mVariables.push_back(var);
+}
+// --------------------------------------------------------------------------------
+GunDefinition::MemberVariable& GunDefinition::getMemberVariable(int index)
+{
+	return mVariables[index];
+}
+// --------------------------------------------------------------------------------
+bool GunDefinition::memberVariableExists(const String& name) const
+{
+	std::vector<MemberVariable>::const_iterator it = mVariables.begin();
+	while (it != mVariables.end())
+	{
+		if ((*it).name == name)
+			return true;
+
+		++it;
+	}
+
+	return false;
+}
+// --------------------------------------------------------------------------------
+int GunDefinition::getMemberVariableIndex(const String& name) const
+{
+	for (int i = 0; i < getNumMemberVariables(); ++i)
+	{
+		if (mVariables[i].name == name)
+			return i;
+	}
+
+	return -1;
+}
+// --------------------------------------------------------------------------------
+int GunDefinition::getNumMemberVariables() const
+{
+	return (int) mVariables.size();
+}
+// --------------------------------------------------------------------------------
+void GunDefinition::setNumUserMembers(int count)
+{
+	mNumUserMembers = count;
+}
+// --------------------------------------------------------------------------------
+int GunDefinition::getNumUserMembers() const
+{
+	return mNumUserMembers;
 }
 // --------------------------------------------------------------------------------
 void GunDefinition::addState(const State& state)
@@ -58,6 +129,68 @@ bool GunDefinition::stateExists(const String& name) const
 int GunDefinition::getNumStates() const
 {
 	return (int) mStates.size();
+}
+// --------------------------------------------------------------------------------
+void GunDefinition::appendConstructionCode(const BytecodeBlock& code)
+{
+	m_constructor.insert(m_constructor.end(), code.begin(), code.end());
+}
+// --------------------------------------------------------------------------------
+void GunDefinition::finaliseConstructor()
+{
+	m_constructSize = m_constructor.size();
+	if (m_constructSize > 0)
+	{
+		m_constructCode = new uint32[m_constructSize];
+		for (size_t i = 0; i < m_constructSize; ++i)
+			m_constructCode[i] = m_constructor[i];
+	}
+}
+// --------------------------------------------------------------------------------
+GunScriptRecord GunDefinition::createGunScriptRecord(ScriptMachine* sm) const
+{
+	GunScriptRecord record;
+
+	// Allocate space for member vars, and set where possible
+	for (int i = 0; i < getNumMemberVariables(); ++i)
+		record.members.push_back(mVariables[i].value);
+
+	// Run construction code, if there is any
+	if (m_constructSize > 0)
+	{
+		sm->interpretCode(m_constructCode, m_constructSize, record, false);
+		record.scriptState.stackHead = 0;
+		record.scriptState.curInstruction = 0;
+	}
+
+	// Count maximum local vars and allocate space for them
+	std::vector<State>::const_iterator it = mStates.begin();
+	int maxVars = -1, maxState = -1, curState = 0;
+	while (it != mStates.end())
+	{
+		const State& curSt = *it;
+
+		int curVars = (int) curSt.record->variables.size();
+		if (curVars > maxVars)
+		{
+			maxState = curState;
+			maxVars = curVars;
+		}
+
+		GunScriptRecord::State st;
+		st.name = curSt.name;
+		st.record = curSt.record;
+
+		record.states.push_back(st);
+
+		++curState;
+		++it;
+	}
+
+	for (int i = 0; i < maxVars; ++i)
+		record.scriptState.locals.push_back(0.0f);
+
+	return record;
 }
 // --------------------------------------------------------------------------------
 // --------------------------------------------------------------------------------
@@ -92,39 +225,6 @@ int BulletGunDefinition::getNextAffector() const
 		return -1;
 	else
 		return *mAffectorIterator;
-}
-// --------------------------------------------------------------------------------
-GunScriptRecord BulletGunDefinition::createGunScriptRecord() const
-{
-	GunScriptRecord record;
-
-	std::vector<State>::const_iterator it = mStates.begin();
-	int maxVars = -1, maxState = -1, curState = 0;
-	while (it != mStates.end())
-	{
-		const State& curSt = *it;
-
-		int curVars = (int) curSt.record->variables.size();
-		if (curVars > maxVars)
-		{
-			maxState = curState;
-			maxVars = curVars;
-		}
-
-		GunScriptRecord::State st;
-		st.name = curSt.name;
-		st.record = curSt.record;
-
-		record.states.push_back(st);
-
-		++curState;
-		++it;
-	}
-
-	for (int i = 0; i < maxVars; ++i)
-		record.variables.push_back(0.0f);
-
-	return record;
 }
 // --------------------------------------------------------------------------------
 // --------------------------------------------------------------------------------
@@ -166,77 +266,23 @@ int AreaGunDefinition::getOriginType() const
 	return mOriginType;
 }
 // --------------------------------------------------------------------------------
-GunScriptRecord AreaGunDefinition::createGunScriptRecord() const
-{
-	GunScriptRecord record;
-
-	std::vector<State>::const_iterator it = mStates.begin();
-	int maxVars = -1, maxState = -1, curState = 0;
-	while (it != mStates.end())
-	{
-		const State& curSt = *it;
-
-		int curVars = (int) curSt.record->variables.size();
-		if (curVars > maxVars)
-		{
-			maxState = curState;
-			maxVars = curVars;
-		}
-
-		GunScriptRecord::State st;
-		st.name = curSt.name;
-		st.record = curSt.record;
-
-		record.states.push_back(st);
-
-		++curState;
-		++it;
-	}
-
-	for (int i = 0; i < maxVars; ++i)
-		record.variables.push_back(0.0f);
-
-	return record;
-}
 // --------------------------------------------------------------------------------
-// --------------------------------------------------------------------------------
-SplineGunDefinition::SplineGunDefinition(const String& name) :
-	GunDefinition(name, GT_Spline)
+ArcGunDefinition::ArcGunDefinition(const String& name) :
+	GunDefinition(name, GT_Arc),
+	mOriginType(AO_Base)
 {
 }
 // --------------------------------------------------------------------------------
-GunScriptRecord SplineGunDefinition::createGunScriptRecord() const
+void ArcGunDefinition::setOriginType(int type)
 {
-	GunScriptRecord record;
-
-	std::vector<State>::const_iterator it = mStates.begin();
-	int maxVars = -1, maxState = -1, curState = 0;
-	while (it != mStates.end())
-	{
-		const State& curSt = *it;
-
-		int curVars = (int) curSt.record->variables.size();
-		if (curVars > maxVars)
-		{
-			maxState = curState;
-			maxVars = curVars;
-		}
-
-		GunScriptRecord::State st;
-		st.name = curSt.name;
-		st.record = curSt.record;
-
-		record.states.push_back(st);
-
-		++curState;
-		++it;
-	}
-
-	for (int i = 0; i < maxVars; ++i)
-		record.variables.push_back(0.0f);
-
-	return record;
+	mOriginType = type;
 }
+// --------------------------------------------------------------------------------
+int ArcGunDefinition::getOriginType() const
+{
+	return mOriginType;
+}
+// --------------------------------------------------------------------------------
 // --------------------------------------------------------------------------------
 
 }

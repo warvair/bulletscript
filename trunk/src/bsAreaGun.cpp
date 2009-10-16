@@ -7,9 +7,15 @@ namespace BS_NMSP
 {
 
 // --------------------------------------------------------------------------------
-AreaGun::AreaGun(ScriptMachine* scriptMachine, std::vector<float>* points, float* strength) :
+AreaGun::AreaGun(ScriptMachine* scriptMachine, 
+				 std::vector<float>* points, 
+				 float* centreX,
+				 float* centreY,
+				 float* strength) :
 	Gun(scriptMachine),
 	mWorldPoints(points),
+	mPointsCentreX(centreX),
+	mPointsCentreY(centreY),
 	mOrientation(0.0f),
 	mStates(ACS_None),
 	mStrength(strength),
@@ -35,10 +41,10 @@ AreaGun::AreaGun(ScriptMachine* scriptMachine, std::vector<float>* points, float
 void AreaGun::setDefinition(const GunDefinition* def, GunController* controller)
 {
 	const AreaGunDefinition* bDef = dynamic_cast<const AreaGunDefinition*>(def);
-	assert(bDef && "AreaGun::setDefinition definition is not a AreaGunDefinition");
+	assert(bDef && "AreaGun::setDefinition definition is not an AreaGunDefinition");
 
-	mRecord = bDef->createGunScriptRecord();
-	mRecord.gun = this;
+	mRecord = bDef->createGunScriptRecord(mScriptMachine);
+//	mRecord.gun = this;
 	mRecord.controller = controller;
 
 	mBasePoints.clear();
@@ -97,12 +103,12 @@ void AreaGun::updateAdaptivePoints()
 // --------------------------------------------------------------------------------
 float AreaGun::getX() const
 {
-	return mRecord.instanceVars[Instance_Gun_X];
+	return mRecord.members[BS::Member_X];
 }
 // --------------------------------------------------------------------------------
 float AreaGun::getY() const
 {
-	return mRecord.instanceVars[Instance_Gun_Y];
+	return mRecord.members[BS::Member_Y];
 }
 // --------------------------------------------------------------------------------
 void AreaGun::setStrength(float value)
@@ -182,7 +188,7 @@ float AreaGun::getAngle() const
 	return mAngle;
 }
 // --------------------------------------------------------------------------------
-void AreaGun::update(float frameTime)
+void AreaGun::updateImpl(float frameTime)
 {
 	// Update states
 	if (mStates & ACS_Strength)
@@ -312,16 +318,10 @@ void AreaGun::update(float frameTime)
 				{
 					mBasePoints[i + 0] = mBasePoints[i + 0] * ratioX;
 
-					switch (mOriginType)
-					{
-					case AO_Base:
+					if (mOriginType == AO_Base)
 						mBasePoints[i + 1] = (mBasePoints[i + 1] - mins[1]) * ratioY;
-						break;
-
-					case AO_Centre:
+					else if (mOriginType == AO_Centre)
 						mBasePoints[i + 1] = mBasePoints[i + 1] * ratioY;
-						break;
-					}
 				}
 			}
 			break;
@@ -331,7 +331,7 @@ void AreaGun::update(float frameTime)
 
 	// Todo:
 	// ...
-	if (true /* instance x/y/angle vars changed */ )
+	if (true /* if instance x/y/angle vars have changed */ )
 	{
 		float angle = mAngle;
 		float cosAngle = cos(angle * DEG_TO_RAD);
@@ -349,10 +349,23 @@ void AreaGun::update(float frameTime)
 				(*mWorldPoints)[i + 1] = mBasePoints[i + 1];
 			}
 
-			(*mWorldPoints)[i + 0] += mRecord.instanceVars[Instance_Gun_X];
-			(*mWorldPoints)[i + 1] += mRecord.instanceVars[Instance_Gun_Y];
+			(*mWorldPoints)[i + 0] += mRecord.members[BS::Member_X];
+			(*mWorldPoints)[i + 1] += mRecord.members[BS::Member_Y];
 		}
 	}
+
+	if (mPointsCentreX)
+	{
+		*mPointsCentreX = mRecord.members[BS::Member_X];
+	}
+	if (mPointsCentreY)
+	{
+		if (mOriginType == AO_Centre)
+			*mPointsCentreY = mRecord.members[BS::Member_Y];
+		else if (mOriginType == AO_Base)
+			*mPointsCentreY = mRecord.members[BS::Member_Y] + mLength / 2.0f;
+	}
+
 
 	// Update cached values
 	mbWidthChanged = false;
@@ -363,6 +376,8 @@ void AreaGun::update(float frameTime)
 // --------------------------------------------------------------------------------
 AreaGunController::AreaGunController(ScriptMachine *scriptMachine, 
 									 std::vector<float>* points,
+									 float* centreX,
+									 float* centreY,
 									 float* strength) :
 	GunController(scriptMachine)
 {
@@ -370,7 +385,7 @@ AreaGunController::AreaGunController(ScriptMachine *scriptMachine,
 	// points.  so mWorldPoints should be a pointer, and we just have to pass the
 	// pointer into AreaGunController and then AreaGun.
 
-	mGun = new AreaGun(scriptMachine, points, strength);
+	mGun = new AreaGun(scriptMachine, points, centreX, centreY, strength);
 	mAreaGun = static_cast<AreaGun*>(mGun); // for convenience/speed
 }
 // --------------------------------------------------------------------------------
@@ -416,9 +431,9 @@ void AreaGunController::setProperty(int prop, float value, float time)
 	}
 }
 // --------------------------------------------------------------------------------
-void AreaGunController::update(float frameTime)
+void AreaGunController::update(float frameTime, float x, float y, float angle)
 {
-	mGun->update(frameTime);
+	mGun->update(frameTime, x, y, angle);
 }
 // --------------------------------------------------------------------------------
 float AreaGunController::getX() const

@@ -55,7 +55,9 @@ public:
 
 	virtual void addGun(const BS::String& def, float x, float y) = 0;
 
-	void move (float x, float y);
+	void move(float x, float y);
+
+	void set(float x, float y);
 
 	void toggleGun(int index);
 
@@ -101,7 +103,7 @@ class AreaShip : public Ship
 	public:
 
 		ShipAreaGunController(BS::ScriptMachine *scriptMachine, AreaShip* ship) :
-			BS::AreaGunController(scriptMachine, &(ship->getPoints()), &(ship->getStrength())),
+			BS::AreaGunController(scriptMachine, &(ship->getPoints()), 0, 0, &(ship->getStrength())),
 			mShip(ship)
 		{
 		}
@@ -175,7 +177,7 @@ class BombShip : public Ship
 	public:
 
 		ShipAreaGunController(BS::ScriptMachine *scriptMachine, BombShip* ship) :
-			BS::AreaGunController(scriptMachine, &(ship->getPoints()), &(ship->getStrength())),
+			BS::AreaGunController(scriptMachine, &(ship->getPoints()), 0, 0, &(ship->getStrength())),
 			mShip(ship)
 		{
 		}
@@ -233,5 +235,76 @@ public:
 	void render(RendererGL* renderer);
 
 };
+/*
+class ArcShip
+{
+	friend class ShipArcGunController;
+
+	class ShipArcGunController : public BS::ArcGunController
+	{
+		ArcShip* mShip;
+
+	public:
+
+		ShipArcGunController(BS::ScriptMachine *scriptMachine, ArcShip* ship) :
+			BS::ArcGunController(scriptMachine, &(ship->getPoints()), 0, 0, &(ship->getStrength())),
+			mShip(ship)
+		{
+		}
+	};
+
+	class AreaGunRenderer
+	{
+		BombShip *mShip;
+
+	public:
+
+		AreaGunRenderer(BombShip *ship) :
+			mShip (ship) {}
+
+		void render(BS::AreaGunController* gun, RendererGL* renderer, bool solid);
+	};
+
+	AreaGunRenderer* mGunRenderer;
+
+	std::vector<float> mPoints;
+
+	float mStrength;
+
+	void updateGuns(float frameTime);
+
+	void updateImpl(float frameTime);
+
+public:
+
+	BombShip (float x, float y, BS::ScriptMachine* sm) :
+		Ship("", x, y, sm, 0),
+		mStrength(1.0f)
+	{
+		mGunRenderer = new AreaGunRenderer (this);
+	}
+
+	~BombShip()
+	{
+		if (mGunRenderer)
+			delete mGunRenderer;
+	}
+
+	std::vector<float> &getPoints ()
+	{
+		return mPoints;
+	}
+
+	float& getStrength()
+	{
+		return mStrength;
+	}
+
+	void addGun(const BS::String& def, float x, float y);
+
+	void render(RendererGL* renderer);
+
+};
+*/
 
 #endif

@@ -54,6 +54,12 @@ void Ship::move(float x, float y)
 	mY += y;
 }
 // --------------------------------------------------------------------------------
+void Ship::set(float x, float y)
+{
+	mX = x;
+	mY = y;
+}
+// --------------------------------------------------------------------------------
 void Ship::toggleGun(int index)
 {
 	mGuns[index].active = !mGuns[index].active;
@@ -107,11 +113,7 @@ void BulletShip::updateGuns(float frameTime)
 			// If you want the gun to rotate around a point, so that the emission position
 			// and angle change, calculate the position/angle and expose them to the script
 			// here.  Then use Gun_Angle as emission angle in script.
-			gun.gun->setInstanceVariable(BS::Instance_Gun_X, mX + gun.xOffset);
-			gun.gun->setInstanceVariable(BS::Instance_Gun_Y, mY + gun.yOffset);
-			gun.gun->setInstanceVariable(BS::Instance_Gun_Angle, mAngle);
-
-			gun.gun->update(frameTime);
+			gun.gun->update(frameTime, mX + gun.xOffset, mY + gun.yOffset, mAngle);
 
 			// Run script
 			gun.gun->runScript(frameTime);
@@ -175,11 +177,7 @@ void AreaShip::updateGuns(float frameTime)
 			float w2 = mWidth / 2;
 			float h2 = mHeight / 2;
 
-			gun.gun->setInstanceVariable(BS::Instance_Gun_X, mX + w2 - 10 + pX);
-			gun.gun->setInstanceVariable(BS::Instance_Gun_Y, mY + h2 - 10 + pY);
-			gun.gun->setInstanceVariable(BS::Instance_Gun_Angle, mAngle);
-
-			gun.gun->update(frameTime);
+			gun.gun->update(frameTime, mX + w2 - 10 + pX, mY + h2 - 10 + pY, mAngle);
 
 			// Run script
 			gun.gun->runScript(frameTime);
@@ -304,10 +302,6 @@ void BombShip::addGun(const BS::String& def, float x, float y)
 	shipGun.xOffset = x;
 	shipGun.yOffset = y;
 	mGuns.push_back(shipGun);
-
-	gun->setInstanceVariable(BS::Instance_Gun_X, mX);
-	gun->setInstanceVariable(BS::Instance_Gun_Y, mY);
-	gun->setInstanceVariable(BS::Instance_Gun_Angle, mAngle);
 }
 // --------------------------------------------------------------------------------
 void BombShip::updateGuns(float frameTime)
@@ -319,7 +313,7 @@ void BombShip::updateGuns(float frameTime)
 
 		if (gun.active)
 		{
-			gun.gun->update(frameTime);
+			gun.gun->update(frameTime, mX, mY, mAngle);
 
 			// Run script
 			gun.gun->runScript(frameTime);

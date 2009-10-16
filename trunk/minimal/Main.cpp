@@ -115,9 +115,9 @@ int main(int argc, char** argv)
 	{
 		BulletGunController<Bullet>* gun = new BulletGunController<Bullet>(&sm, &bm, 0);
 		gun->setDefinition("Swarm");
-		gun->setInstanceVariable(BS::Instance_Gun_X, 400 + (rand() % 200) - 100);
-		gun->setInstanceVariable(BS::Instance_Gun_Y, 300);
-		gun->setInstanceVariable(BS::Instance_Gun_Angle, 180 + (rand() % 40) - 20);
+		gun->setMemberVariable(0, 400 + (rand() % 200) - 100); // X
+		gun->setMemberVariable(1, 300); // Y
+		gun->setMemberVariable(2, 180 + (rand() % 40) - 20); // Angle
 		guns.push_back(gun);
 	}
 
@@ -144,7 +144,7 @@ int main(int argc, char** argv)
 		// Update guns
 		for (int i = 0; i < numGuns; ++i)
 		{
-			guns[i]->update(frameTime);		// Update affector instance arguments
+			guns[i]->update(frameTime, 0, 0, 0); // Update affector instance arguments
 			guns[i]->runScript(frameTime);	// Run script
 		}
 

@@ -185,14 +185,6 @@ namespace BS_NMSP
 			var->registerAffectorArgument(&arg);
 		}
 
-		void updateAffectorInstances(int affector, float* arguments)
-		{
-			assert(affector >= 0 && affector < (int) mBulletAffectors.size() &&
-				"BulletMachine::updateAffectorInstances: out of bounds.");
-
-			mBulletAffectors[affector]->updateInstanceArguments(arguments);
-		}
-
 		void update()
 		{
 			// Only update if it has function calls
@@ -204,15 +196,23 @@ namespace BS_NMSP
 			}
 		}
 
-		void updateInstanceArguments(int index, float* arguments, const GunScriptRecord& gunRecord)
+		void updateMemberArguments(int index, float* arguments, const GunScriptRecord& gunRecord)
 		{
-			mBulletAffectors[index]->updateInstanceArguments(arguments, gunRecord);
+			mBulletAffectors[index]->updateMemberArguments(arguments, gunRecord);
 		}
 
 		void applyBulletAffectors(BulletGunBase* gun, BulletType& bullet, float frameTime)
 		{
 			for (int i = 0; i < gun->mNumAffectors; ++i)
 				mBulletAffectors[gun->mAffectors[i].index]->runFunction(bullet, gun->mAffectors[i].arguments, frameTime);
+		}
+
+		void applyBulletController(BulletType& bullet, float frameTime)
+		{
+			if (bullet.__ctrl)
+			{
+//				ScriptMachine::interpretCode(func, len, bullet.__ctrl, false);
+			}
 		}
 
 		bool registerAffectorFunction(const String& name, typename BulletAffector<BulletType>::Function func)

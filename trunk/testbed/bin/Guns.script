@@ -1,153 +1,16 @@
-area[4, 0.0, BASE] Beam
+bullet Test
 {
-	Setup
-	{
-		set strength(0);
-		set width(20);
-		set length(100);
-		set angle(180);
-		set strength(1, 2);
-		wait(2);
-		set angle(90, 6);
-		wait(6);
-		goto Main;
-	}
+	// speed is getting set to 'time', here
+	speed = 500;
+	time = 1;
 
-	Main
-	{		
-		set angle(180, 6);
-		wait(6);
-		set length(400, 0.4);
-		wait(2);
-		set length(100, 3);
-		wait(4);
-		set angle(90, 2);
-		wait(2);
-	}
-}
-
-area[, 0, CENTRE] CircleBomb
-{
-	Setup
-	{
-		set width(10);
-		set length(10);
-		set strength(1);
-		wait(2);
-		goto Main;
-	}
-	
-	Main
-	{
-		set width(100, 5);
-		set length(100, 5);
-		wait(8);
-		set width(10, 5);
-		set length(10, 5);
-		wait(8);
-		set width(80, 3);
-		set length(120, 2);
-		wait(2);
-	}
-}
-	
-bullet Swarm
-{
-	affectors DelayAccel(300, 1, 1.5);
+//	affectors DelayAccel(speed * 2, time, time + 0.5);
 
 	Main
 	{
-		repeat (10 * Bullet_Count)
-		{
-			angle = 160;
-			repeat 11
-			{
-				fireA(angle, 60, 10);
-				angle = angle + 4;	
-			}
-			wait(0.1);
-		}
-		wait(2);
-	}
-}
+		fireA(180, speed, 10);
 
-bullet ClusterBomb
-{
-	affectors Explode(2, 400);
+		wait(0.5);
 
-	Main
-	{
-		repeat (100 * Bullet_Count)
-		{
-			fireA(180, 100, 10);
-		}
-		wait(5);
-	}
-}
-
-bullet Tracker
-{
-	Steady
-	{
-		repeat (50 * Bullet_Count)
-		{
-			fireT(Player_X, Player_Y, 0, 396, 10);
-			wait(0.05);
-		}
-		wait(0.3);
-		goto Erratic;
-	}
-
-	Erratic
-	{
-		repeat (50 * Bullet_Count)
-		{
-			offset = rand(10) - 5;
-			fireT(Player_X, Player_Y, offset, 396, 10);
-			wait(rand(0.1));
-		}
-		wait(0.3);
-		goto Steady;
-	}
-}
-
-bullet Jitterer
-{
-	affectors Force(0.4 - rand(0.78), 0);
-
-	Main
-	{	
-		repeat (40 * Bullet_Count)
-		{
-			fireA(190, 296, 10);
-			wait(0.1);
-		}
-		wait(1);
-
-		goto Stage2;
-	}
-
-	Stage2
-	{
-		repeat (40 * Bullet_Count)
-		{
-			fireA(170, 296, 10);
-			wait(0.1);
-		}
-		wait(1);
-		
-		goto Main;
-	}
-}
-
-bullet Gravity
-{
-	affectors Accel(0, -400);
-
-	Main
-	{
-		fireA(225, 0, 10);
-		fireA(135, 0, 10);
-		wait(1 / Bullet_Count);
 	}
 }

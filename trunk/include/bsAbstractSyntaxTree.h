@@ -15,14 +15,15 @@ namespace BS_NMSP
 		ASTN_GunDefinitionList,
 		ASTN_BulletGunDefinition,
 		ASTN_AreaGunDefinition,
-		ASTN_SplineGunDefinition,
+		ASTN_ArcGunDefinition,
+		ASTN_MemberList,
 		ASTN_StateList,
 		ASTN_State,
 		ASTN_StatementList,
 		ASTN_Statement,
 		ASTN_IfStatement,
 		ASTN_AssignStatement,
-		ASTN_RepeatStatement,
+		ASTN_LoopStatement,
 		ASTN_GotoStatement,
 		ASTN_WaitStatement,
 		ASTN_SetStatement,
@@ -54,17 +55,17 @@ namespace BS_NMSP
 	class ScriptMachine;
 	class BulletMachineBase;
 
-	typedef std::vector<uint32> BytecodeBlock;
-
 	class _BSAPI AbstractSyntaxTreeNode
 	{
 	public:
 
-		static const int MAX_CHILDREN = 5;
+		static const int MAX_CHILDREN = 6;
 
 	private:
 
 		AbstractSyntaxTreeNode* mChildren[MAX_CHILDREN];
+
+		AbstractSyntaxTreeNode* mParent;
 
 		// Weak pointer to script machine
 		ScriptMachine* mScriptMachine;
@@ -84,11 +85,14 @@ namespace BS_NMSP
 		float mFloatData;
 		String mStringData;
 
-		void checkRepeatDepth(int& depth);
+		void checkLoopDepth(int& depth);
 
 		void countAffectorArguments(int& numArgs);
 
-		void createAffectorArgumentsBytecode(int index,	bool newAffector);
+		void createAffectorArgumentsBytecode(GunDefinition* def, int index,	bool newAffector);
+
+		void createMemberVariableBytecode(GunDefinition* def, bool first,
+			AbstractSyntaxTreeNode* node);
 
 		void foldBinaryNode();
 
@@ -104,14 +108,16 @@ namespace BS_NMSP
 			DT_String
 		};
 
-		AbstractSyntaxTreeNode(int type, int line, ScriptMachine* scriptMachine,
-			BulletMachineBase* bulletMachine);
+		AbstractSyntaxTreeNode(int type, int line,
+			ScriptMachine* scriptMachine, BulletMachineBase* bulletMachine);
 
 		~AbstractSyntaxTreeNode();
 
 		void setChild(int index, AbstractSyntaxTreeNode* node);
 
 		AbstractSyntaxTreeNode* getChild(int index) const;
+
+		AbstractSyntaxTreeNode* getParent() const;
 
 		int getType() const;
 
@@ -151,11 +157,20 @@ namespace BS_NMSP
 		
 		void destroy();
 
-		BulletGunDefinition* createBulletGunDefinition(AbstractSyntaxTreeNode* node);
+		void createMemberVariables(GunDefinition* def, AbstractSyntaxTreeNode* node);
 
-		AreaGunDefinition* createAreaGunDefinition(AbstractSyntaxTreeNode* node);
+		bool checkConstantExpression(GunDefinition* def, AbstractSyntaxTreeNode* node);
+		
+		BulletGunDefinition* createBulletGunDefinition(AbstractSyntaxTreeNode* node,
+			const MemberVariableDeclarationMap& memberDecls);
 
-		SplineGunDefinition* createSplineGunDefinition(AbstractSyntaxTreeNode* node);
+		AreaGunDefinition* createAreaGunDefinition(AbstractSyntaxTreeNode* node,
+			const MemberVariableDeclarationMap& memberDecls);
+
+		ArcGunDefinition* createArcGunDefinition(AbstractSyntaxTreeNode* node,
+			const MemberVariableDeclarationMap& memberDecls);
+
+		void addMemberVariables(GunDefinition* def, const MemberVariableDeclarationMap& memberDecls);
 
 	protected:
 
@@ -183,7 +198,8 @@ namespace BS_NMSP
 
 		int getNumErrors() const;
 
-		void createGunDefinitions(AbstractSyntaxTreeNode* node);
+		void createGunDefinitions(AbstractSyntaxTreeNode* node, 
+			const MemberVariableDeclarationMap& memberDecls);
 	};
 
 }

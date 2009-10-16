@@ -1,5 +1,6 @@
 #include <cmath>
 #include <iostream>
+#include <ctime>
 #include "bsScriptMachine.h"
 #include "bsBulletMachine.h"
 #include "bsGun.h"
@@ -52,6 +53,8 @@ void toggleGun(int index)
 
 int main (int argc, char **argv)
 {
+	srand(time(0));
+
 	BulletMachine<Bullet> bm;
 	bm.registerAffectorFunction("Accel", BulletAffector_Accel);
 	bm.registerAffectorFunction("Force", BulletAffector_Force);
@@ -68,6 +71,11 @@ int main (int argc, char **argv)
 	sm.registerGlobalVariable("ScreenSize_Y", 600.0f);
 	sm.registerGlobalVariable("Bullet_Count", 1.0f);
 
+	// User member variables must be declared before compiling scripts
+	sm.declareMemberVariable("Test", "health", 100);
+
+	std::cout << "Compiling..." << std::endl;
+
 	// Load file
 	size_t fileSize;
 	uint8* fileBuf = loadFile("Guns.script", fileSize);
@@ -78,6 +86,8 @@ int main (int argc, char **argv)
 	}
 
 	delete[] fileBuf;
+
+	std::cout << "Initialising..." << std::endl;
 
 	// Initialise battery
 	BulletBattery::initialise();
@@ -91,21 +101,22 @@ int main (int argc, char **argv)
 
 	// Create a test ship
 	gShip = new BulletShip("ship1.tga", 400, 550, &sm, &bm);
-	gShip->addGun("ClusterBomb", 0, -28);
-	gShip->addGun("Swarm", 20, 5);
-	gShip->addGun("Tracker", -20, 5);
-	gShip->addGun("Jitterer", 12, -16);
-	gShip->addGun("Gravity", -12, -16);
+//	gShip->addGun("ClusterBomb", 0, -28);
+	gShip->addGun("Test", 20, 5);
+//	gShip->addGun("Tracker", -20, 5);
+//	gShip->addGun("Jitterer", 12, -16);
+//	gShip->addGun("Gravity", -12, -16);
 
-	AreaShip areaShip("turret.tga", 736, 536, &sm);
-	areaShip.addGun("Beam", 0, -28);
+//	AreaShip areaShip("turret.tga", 736, 536, &sm);
+//	areaShip.addGun("Beam", 0, -28);
 
-	BombShip bomb(300, 300, &sm);
-	bomb.addGun("CircleBomb", 0, 0);
+//	BombShip bomb(300, 300, &sm);
+//	bomb.addGun("CircleBomb", 0, 0);
 
 	BulletShip player("player.tga", 400, 32, &sm, &bm);
 
 	// Print interface commands
+	std::cout << std::endl;
 	std::cout << "BulletScript" << std::endl;
 	std::cout << "---------------------" << std::endl;
 	std::cout << "[1-5] Toggle bullet emitters." << std::endl;
@@ -122,16 +133,13 @@ int main (int argc, char **argv)
 
 	int numBullets = 0;
 
+	int moveDir = -1;
+	int oldX = -10000, oldY = -10000;
+	int mouseX = oldX, mouseY = oldY;
 	while (true)
 	{
 		if (!processMessages())
 			break;
-
-		int mouseRelX, mouseRelY;
-		SDL_GetRelativeMouseState(&mouseRelX, &mouseRelY);
-
-		float keysX = getHorzMovement();
-		float keysY = getVertMovement();
 
 		// Get update time
 		unsigned int newTime = SDL_GetTicks();
@@ -160,12 +168,33 @@ int main (int argc, char **argv)
 		// Update BulletAffector function arguments
 		bm.update();
 
-		// Update ships
-		player.move (mouseRelX + keysX * frameTime * 100, -mouseRelY + keysY * frameTime * 100);
+		// Update player
+		if (inFocus())
+		{
+			oldX = mouseX;
+			oldY = mouseY;
+			SDL_GetMouseState(&mouseX, &mouseY);
 
+			if (oldX == mouseX && oldY == mouseY)
+			{
+				float keysX = getHorzMovement();
+				float keysY = getVertMovement();
+				player.move (keysX * frameTime * 100, keysY * frameTime * 100);
+			}
+			else
+			{
+				player.set(mouseX, 600 - mouseY);
+			}
+		}
+
+		// Update enemies
 		gShip->update(frameTime);
-		areaShip.update(frameTime);
-		bomb.update(frameTime);
+		gShip->move(40 * moveDir * frameTime, 0);
+		if (gShip->getX() < 64 || gShip->getX() > (800 - 64))
+			moveDir *= -1;
+
+//		areaShip.update(frameTime);
+//		bomb.update(frameTime);
 		
 		// Update bullets
 		numBullets = BulletBattery::update(frameTime, &bm);
@@ -175,8 +204,8 @@ int main (int argc, char **argv)
 
 		player.render(&renderer);
 		gShip->render(&renderer);
-		areaShip.render(&renderer);
-		bomb.render(&renderer);
+//		areaShip.render(&renderer);
+//		bomb.render(&renderer);
 		BulletBattery::render(&renderer);
 
 		renderer.finishRendering();

@@ -36,10 +36,16 @@ BINARY    	[0-1]
 
 "//"[^\n]*                      { /* process comments */ }
 
+"unit"							{ return (KEYWORD_UNIT); }
+"gun"							{ return (KEYWORD_GUN); }
+"enable"						{ return (KEYWORD_ENABLE); }
+"disable"						{ return (KEYWORD_DISABLE); }
+"event"							{ return (KEYWORD_EVENT); }
 "bullet"						{ return (KEYWORD_BULLET); }
 "area"							{ return (KEYWORD_AREA); }
+"arc"							{ return (KEYWORD_ARC); }
 "spline"						{ return (KEYWORD_SPLINE); }
-"repeat"						{ return (KEYWORD_REPEAT); }
+"loop"						{ return (KEYWORD_LOOP); }
 "if"							{ return (KEYWORD_IF); }
 "else"							{ return (KEYWORD_ELSE); }
 "goto"							{ return (KEYWORD_GOTO); }
