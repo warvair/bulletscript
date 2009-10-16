@@ -14,6 +14,11 @@ namespace BS_NMSP
 	{
 		BulletMachine<BulletType>* mBulletMachine;
 
+		void updateImpl(float frameTime)
+		{
+			updateBulletAffectors();
+		}
+
 	public:
 
 		BulletGun(ScriptMachine* scriptMachine, BulletMachine<BulletType>* bulletMachine, void* userEmitter) :
@@ -29,7 +34,7 @@ namespace BS_NMSP
 			const BulletGunDefinition* bDef = dynamic_cast<const BulletGunDefinition*>(def);
 			assert(bDef && "BulletGun::setDefinition definition is not a BulletGunDefinition");
 
-			mRecord = def->createGunScriptRecord();
+			mRecord = def->createGunScriptRecord(mScriptMachine);
 			mRecord.gun = this;
 			mRecord.controller = controller;
 
@@ -51,12 +56,7 @@ namespace BS_NMSP
 		void updateBulletAffectors()
 		{
 			for (int i = 0; i < mNumAffectors; ++i)
-				mBulletMachine->updateInstanceArguments(mAffectors[i].index, mAffectors[i].arguments, mRecord);
-		}
-
-		void update(float frameTime)
-		{
-			updateBulletAffectors();
+				mBulletMachine->updateMemberArguments(mAffectors[i].index, mAffectors[i].arguments, mRecord);
 		}
 
 	};

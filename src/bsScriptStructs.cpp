@@ -8,13 +8,13 @@ namespace BS_NMSP
 // --------------------------------------------------------------------------------
 GunScriptRecord::GunScriptRecord() :
 	curState(0),
-	curInstruction(0),
-	stackHead(0),
-	repeatDepth(0),
-	suspendTime(0.0f),
 	gun(0),
 	controller(0)
 {
+	scriptState.curInstruction = 0;
+	scriptState.loopDepth = 0;
+	scriptState.stackHead = 0;
+	scriptState.suspendTime = 0.0f;
 }
 // --------------------------------------------------------------------------------
 

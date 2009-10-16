@@ -187,6 +187,28 @@
 				>
 			</File>
 			<File
+				RelativePath="..\src\bsArcGun.cpp"
+				>
+				<FileConfiguration
+					Name="Debug|Win32"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						ObjectFile="$(IntDir)\$(InputName)1.obj"
+						XMLDocumentationFileName="$(IntDir)\$(InputName)1.xdc"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Release|Win32"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						ObjectFile="$(IntDir)\$(InputName)1.obj"
+						XMLDocumentationFileName="$(IntDir)\$(InputName)1.xdc"
+					/>
+				</FileConfiguration>
+			</File>
+			<File
 				RelativePath="..\src\bsAreaGun.cpp"
 				>
 			</File>
@@ -238,6 +260,10 @@
 			>
 			<File
 				RelativePath="..\include\bsAbstractSyntaxTree.h"
+				>
+			</File>
+			<File
+				RelativePath="..\include\bsArcGun.h"
 				>
 			</File>
 			<File
@@ -294,6 +320,10 @@
 			Filter="rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav"
 			UniqueIdentifier="{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}"
 			>
+			<File
+				RelativePath="..\doc\Ideas.txt"
+				>
+			</File>
 			<File
 				RelativePath="..\Doc\ToDo.txt"
 				>

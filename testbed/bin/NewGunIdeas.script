@@ -1,0 +1,147 @@
+/*
+	mob definitions should just affect guns, not mob behaviour like movement or health.  The C++ code
+	triggers events which can change behaviour of guns.
+
+	Guns can have members variables, which are instanced.  These can be accessed publically by mobs so
+	that the gun behaviour can be modified by external means.  This way, we can have the same gun used by
+	different mobs, and have it fire differently for each one.
+
+	As well as setting vars, should be able to change state.
+
+	You can add member variables yourself, and update them, so you can pass say, unit health to the
+	script system easily.  Same goes for guns.
+
+	What about non-float bullet params?  Ie sprite, sprite orientation.
+*/
+
+unit Boss1
+{
+	// guns take x-offset, y-offset and angle, but should be able to take further user-defined
+	// parameters to customise guns.  In other words, the arguments should map to member variables,
+	// with the first 3 hardcoded to map to Gun_X, Gun_Y and Gun_Angle, and any further will map to
+	// the corresponding further member variables in the gun.
+
+	// events are triggered by C++ code.  There is no need to trigger them in script.
+
+	// member variables - declared first
+	speed = 20;
+
+	// guns
+	gun CircleBomb b1(-32, 16, 225);
+	gun Simple s1(32, 16, 135, 200); // override default Swarm 'speed' variable (which is 100)
+
+	event at50Health
+	{
+		goto Stage2;
+	}
+
+	event at10Health
+	{
+		goto Stage3;
+	}
+
+	Setup
+	{
+		enable b1; // enable is a keyword not a function (like goto) which does not take a
+			   // constant expression, so no brackets needed.  Guns are enabled by default.
+		disable s1;
+		goto Stage1;
+	}
+
+	Stage1
+	{
+		// change from b1 to s1
+		disable b1;
+		enable s1;
+		while (1)
+		{
+			// wait a bit, to stop an infinite loop
+			wait(5);
+		}
+	}
+
+	Stage2
+	{
+		s1.count = s1.count + 10; // increase bullet count for gun s1
+		s1.__state = Stage2; // change state syntax? or
+		goto s1.Stage2;
+		s1.goto Stage2;
+	}
+
+	Stage3
+	{
+
+	}
+}
+
+If we allow bullets to have their own update script functions, then the bullet structure that
+the user supplies must contain a function pointer.
+
+// or we could force the user to put a special struct into their bullet struct
+template<class T> void func(const T& t)
+{
+	t.__bs.func = 0;
+	t.__bs.affs = ; // bitfield - still, this is slow
+}
+
+// The changes this would require are: 
+// 	affectors must be named in compile-info, for index lookup.
+// 	how do we store the affectors per-bullet?  Need to be able to loop through
+//	them quickly.
+
+The main issue is: we want flexibility, do we get this by making guns complex and flexible, or
+by making them simple and having lots of them, and using Unit to control them?  On the whole,
+probably better to let Unit control them.  For instance, to have alternating sprites, just create
+2 guns in the same place, with different sprites.  So having per-bullet affectors is not a good idea.
+
+Units should be able to enable/disable a gun's affectors: this gives us a certain amount of flexibility.
+eg 
+	enable s1.aff1;
+
+bullet Simple
+{
+	// members
+	speed = 100;
+	count = 10;
+	time = 1;
+
+	// affectors
+	aff1 = DelayAccel(speed * 2, time, time + 0.5);
+	aff2 = Explode(2, 400);
+
+	// bullet controllers
+	BulletFunc1 = function // space for later on passing in arguments?
+	{
+		wait(3);
+		
+		// how do we change bullet params?
+		// could use set, ie change to 270 over 1 second
+		// but this is slow, so only do it if it only affects bullets which have
+		// a controlling function
+		set angle(270, 1); // these params correspond to struct members
+
+		fireA(250, 100, 10);
+		fireA(250, 100, 10);
+	}
+
+	Main = state 
+	{
+		repeat (count)
+		{
+			fireA(180, speed, 10);
+			wait(0.25);
+		}
+		wait(0.5);
+	}
+
+	Stage2 = state
+	{
+		fireA(270, 100, 10) BulletFunc1; // this syntax is only for fire functions
+		wait(2);
+	}
+}
+
+area[, 0, CENTRE] CircleBomb
+{
+}
+

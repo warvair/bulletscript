@@ -10,11 +10,14 @@ namespace BS_NMSP
 	{
 		void updateAdaptivePoints();
 
+		void updateImpl(float frameTime);
+
 	public:
 
 		typedef std::vector<float> PointDataList;
 
-		AreaGun(ScriptMachine* scriptMachine, std::vector<float>* points, float* strength);
+		AreaGun(ScriptMachine* scriptMachine, std::vector<float>* points, float* centreX,
+			float* centreY, float* strength);
 
 		void setDefinition(const GunDefinition* def, GunController* controller);
 
@@ -44,13 +47,14 @@ namespace BS_NMSP
 
 		float getAngle() const;
 
-		void update(float frameTime);
-
 	private:
 
 		// 2 points per vertex
 		PointDataList mBasePoints;
 		PointDataList *mWorldPoints;
+
+		float* mPointsCentreX;
+		float* mPointsCentreY;
 
 		float mOrientation;
 
@@ -94,11 +98,12 @@ namespace BS_NMSP
 
 	public:
 
-		AreaGunController(ScriptMachine *scriptMachine, std::vector<float>* points, float* strength);
+		AreaGunController(ScriptMachine *scriptMachine, std::vector<float>* points, float* centreX,
+			float* centreY, float* strength);
 
 		void setProperty(int prop, float value, float time);
 
-		void update(float frameTime);
+		void update(float frameTime, float x, float y, float angle);
 
 		float getX() const;
 

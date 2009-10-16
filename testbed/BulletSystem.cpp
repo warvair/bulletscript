@@ -106,15 +106,12 @@ unsigned int BulletBattery::getFreeBulletSlot()
 // --------------------------------------------------------------------------------
 int BulletBattery::emitAngle(BS::BulletGunBase *gun, float x, float y, const float* args)
 {
-//	BulletShip* ship = static_cast<BulletShip*>(gun->getUserObject());
-//	ship->emitAngleBullet(x, y, UINT32_TO_FLOAT(args[-3]), UINT32_TO_FLOAT(args[-2]), UINT32_TO_FLOAT(args[-1]));
-		
 	int slot = getFreeBulletSlot();
-
 	Bullet &b = mBullets[slot];
+
+	// User parameters
 	b.__active = true;
 	b.__time = 0.0f;
-	b.__gun = gun;
 	b.stage = 0;
 	b.x = x;
 	b.y = y;
@@ -123,6 +120,10 @@ int BulletBattery::emitAngle(BS::BulletGunBase *gun, float x, float y, const flo
 	b.vx = (float) sin(args[-3] * 0.017453);
 	b.vy = (float) cos(args[-3] * 0.017453);
 
+	// Required by bulletscript
+	b.__gun = gun;
+	b.__ctrl = 0;
+
 	// Return the number of arguments used
 	return 3;
 }
@@ -130,16 +131,16 @@ int BulletBattery::emitAngle(BS::BulletGunBase *gun, float x, float y, const flo
 int BulletBattery::emitTarget(BS::BulletGunBase *gun, float x, float y, const float *args)
 {
 	int slot = getFreeBulletSlot();
+	Bullet &b = mBullets[slot];
 
 	// Calculate angle based on x, y and angle, for targeting a position with an offset of 'angle'
 	float dx = args[-5] - x;
 	float dy = args[-4] - y;
 	float angle = (float) (atan2(dy, -dx) - 1.57) + args[-3] * 0.017453f;
 
-	Bullet &b = mBullets[slot];
+	// User parameters
 	b.__active = true;
 	b.__time = 0.0f;
-	b.__gun = gun;
 	b.stage = 0;
 	b.x = x;
 	b.y = y;
@@ -147,6 +148,10 @@ int BulletBattery::emitTarget(BS::BulletGunBase *gun, float x, float y, const fl
 	b.damage = args[-1];
 	b.vx = (float) sin(angle);
 	b.vy = (float) cos(angle);
+
+	// Required by bulletscript
+	b.__gun = gun;
+	b.__ctrl = 0;
 
 	// Return the number of arguments used
 	return 5;
@@ -168,7 +173,9 @@ int BulletBattery::update(float frameTime, BS::BulletMachine<Bullet>* bulletMach
 			b.x += b.vx * b.speed * frameTime;
 			b.y += b.vy * b.speed * frameTime;
 
+			// bulletscript: apply affectors and control functions
 			bulletMachine->applyBulletAffectors(b.__gun, b, frameTime);
+			bulletMachine->applyBulletController(b, frameTime);
 
 			// Check for death
 			if (b.y < 0 || b.y > 600 || b.x < 0 || b.x > 800)

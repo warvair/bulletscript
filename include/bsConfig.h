@@ -7,6 +7,6 @@
 
 #define BS_SCRIPT_STACK_SIZE			32
 
-#define BS_SCRIPT_REPEAT_DEPTH			4
+#define BS_SCRIPT_LOOP_DEPTH			4
 
 #endif

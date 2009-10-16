@@ -17,11 +17,13 @@ namespace BS_NMSP
 	// structure for both, as the differences (mainly affectors) are small enough that
 	// a couple of redundant fields won't matter.
 
+	class ScriptMachine;
+
 	enum GunType
 	{
 		GT_Bullet,
 		GT_Area,
-		GT_Spline
+		GT_Arc
 	};
 
 	enum AreaOriginType
@@ -33,6 +35,13 @@ namespace BS_NMSP
 	class _BSAPI GunDefinition
 	{
 	public:
+
+		struct MemberVariable
+		{
+			String name;
+			bool readonly;
+			float value;
+		};
 
 		struct State
 		{
@@ -47,6 +56,22 @@ namespace BS_NMSP
 		const String& getName() const;
 
 		int getType() const;
+
+		void addMemberVariable(const String& name, bool readonly);
+
+		void addMemberVariable(const String& name, bool readonly, float value);
+
+		MemberVariable& getMemberVariable(int index);
+
+		bool memberVariableExists(const String& name) const;
+
+		int getMemberVariableIndex(const String& name) const;
+
+		int getNumMemberVariables() const;
+
+		void setNumUserMembers(int count);
+
+		int getNumUserMembers() const;
 		
 		void addState(const State& state);
 
@@ -56,9 +81,24 @@ namespace BS_NMSP
 
 		int getNumStates() const;
 
-		virtual GunScriptRecord createGunScriptRecord() const = 0;
+		void appendConstructionCode(const BytecodeBlock& code);
+
+		void finaliseConstructor();
+
+		virtual GunScriptRecord createGunScriptRecord(ScriptMachine* sm) const;
 
 	protected:
+
+
+		BytecodeBlock m_constructor;
+
+		uint32* m_constructCode;
+
+		size_t m_constructSize;
+		
+		std::vector<MemberVariable> mVariables;
+
+		int mNumUserMembers;
 
 		std::vector<State> mStates;
 
@@ -79,8 +119,6 @@ namespace BS_NMSP
 	public:
 
 		BulletGunDefinition(const String& name);
-
-		GunScriptRecord createGunScriptRecord() const;
 
 		void addBulletAffector(int index);
 
@@ -107,8 +145,6 @@ namespace BS_NMSP
 
 		AreaGunDefinition(const String& name);
 
-		GunScriptRecord createGunScriptRecord() const;
-
 		void setNumPoints(int count);
 
 		int getNumPoints() const;
@@ -123,14 +159,18 @@ namespace BS_NMSP
 
 	};
 
-	// Definition class for spline weapons
-	class _BSAPI SplineGunDefinition : public GunDefinition
+	// Definition class for arc weapons
+	class _BSAPI ArcGunDefinition : public GunDefinition
 	{
+		int mOriginType;
+
 	public:
 
-		SplineGunDefinition(const String& name);
+		ArcGunDefinition(const String& name);
 
-		GunScriptRecord createGunScriptRecord() const;
+		void setOriginType(int type);
+
+		int getOriginType() const;
 
 	};
 

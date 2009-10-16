@@ -4,6 +4,12 @@
 #include "bsScriptMachine.h"
 #include "bsBulletMachine.h"
 
+/**
+	Check function and identifier names in all places.
+*/
+
+
+
 BS_NMSP::ScriptMachine* BS_NMSP::AbstractSyntaxTree::mScriptMachine = 0;
 
 BS_NMSP::BulletMachineBase* BS_NMSP::AbstractSyntaxTree::mBulletMachine = 0;
@@ -18,6 +24,7 @@ AbstractSyntaxTreeNode::AbstractSyntaxTreeNode(int type,
 											   int line, 
 											   ScriptMachine* scriptMachine,
 											   BulletMachineBase* bulletMachine) :
+	mParent(0),
 	mScriptMachine(scriptMachine),
 	mBulletMachine(bulletMachine),
 	mType(type),
@@ -33,21 +40,24 @@ AbstractSyntaxTreeNode::~AbstractSyntaxTreeNode()
 {
 	for (int i = 0; i < MAX_CHILDREN; ++i)
 	{
-		if (mChildren[i])
-		{
-			delete mChildren[i];
-		}
+		delete mChildren[i];
 	}
 }
 // --------------------------------------------------------------------------------
 void AbstractSyntaxTreeNode::setChild(int index, AbstractSyntaxTreeNode *node)
 {
 	mChildren[index] = node;
+	mChildren[index]->mParent = this;
 }
 // --------------------------------------------------------------------------------
 AbstractSyntaxTreeNode* AbstractSyntaxTreeNode::getChild(int index) const
 {
 	return mChildren[index];
+}
+// --------------------------------------------------------------------------------
+AbstractSyntaxTreeNode* AbstractSyntaxTreeNode::getParent() const
+{
+	return mParent;
 }
 // --------------------------------------------------------------------------------
 int AbstractSyntaxTreeNode::getType() const
@@ -147,6 +157,10 @@ void AbstractSyntaxTreeNode::foldUnaryNode ()
 	case ASTN_UnaryNegStatement:
 		setFloat (-val);
 		break;
+
+	case ASTN_ConstantExpression:
+		setFloat(val);
+		break;
 	}
 
 	mType = ASTN_Constant;
@@ -221,6 +235,7 @@ void AbstractSyntaxTreeNode::foldConstants()
 
 	case ASTN_UnaryPosStatement:
 	case ASTN_UnaryNegStatement:
+	case ASTN_ConstantExpression:
 		foldUnaryNode();
 		break;
 
@@ -261,30 +276,30 @@ const String& AbstractSyntaxTreeNode::getStringData() const
 	return mStringData;
 }
 // --------------------------------------------------------------------------------
-void AbstractSyntaxTreeNode::checkRepeatDepth(int& depth)
+void AbstractSyntaxTreeNode::checkLoopDepth(int& depth)
 {
-	if (mType == ASTN_RepeatStatement)
+	if (mType == ASTN_LoopStatement)
 	{
 		depth++;
-		if (depth > BS_SCRIPT_REPEAT_DEPTH)
+		if (depth > BS_SCRIPT_LOOP_DEPTH)
 		{
 			std::stringstream ss;
-			ss << "Repeats are nested too deeply (max " << BS_SCRIPT_REPEAT_DEPTH << ")";
+			ss << "Loops are nested too deeply (max " << BS_SCRIPT_LOOP_DEPTH << ")";
 			AbstractSyntaxTree::instancePtr()->addError(mLine, ss.str());
 			return;
 		}
 
 		if (mChildren[1])
-			mChildren[1]->checkRepeatDepth(depth);
+			mChildren[1]->checkLoopDepth(depth);
 	}
 
 	for (int i = 0; i < MAX_CHILDREN; ++i)
 	{
 		if (mChildren[i])
-			mChildren[i]->checkRepeatDepth(depth);
+			mChildren[i]->checkLoopDepth(depth);
 	}
 
-	if (mType == ASTN_RepeatStatement)
+	if (mType == ASTN_LoopStatement)
 	{
 		--depth;
 	}
@@ -337,7 +352,7 @@ void AbstractSyntaxTreeNode::createGunMembers(GunDefinition* def)
 				return;
 			}
 
-			// We can be certain that this is a BulletGun
+			// We can now be certain that this is a BulletGun
 			BulletGunDefinition* bDef = static_cast<BulletGunDefinition*>(def);
 
 			if (bDef->getNumBulletAffectors() >= BS_MAX_AFFECTORS_PER_GUN)
@@ -383,6 +398,27 @@ void AbstractSyntaxTreeNode::createGunMembers(GunDefinition* def)
 	case ASTN_AssignStatement:
 		{
 			String varName = mChildren[0]->getStringData();
+
+			// See if it's a member or global
+			if (def->memberVariableExists(varName))
+			{
+				int mvIndex = def->getMemberVariableIndex(varName);
+				const GunDefinition::MemberVariable& mv = def->getMemberVariable(mvIndex);
+				if (mv.readonly)
+				{
+					AbstractSyntaxTree::instancePtr()->addError
+						(mLine, "'" + varName + "' is read-only.");
+				}
+				break;
+			}
+			else if (mScriptMachine->getGlobalVariableIndex(varName) >= 0)
+			{
+				AbstractSyntaxTree::instancePtr()->addError
+					(mLine, "'" + varName + "' is read-only.");
+				break;
+			}
+
+			// If it isn't, it's a local, so see if we need to create it.
 			int numStates = (int) def->getNumStates();
 			GunDefinition::State& st = def->getState(numStates - 1);
 
@@ -401,13 +437,46 @@ void AbstractSyntaxTreeNode::createGunMembers(GunDefinition* def)
 		}
 		break;
 
-	case ASTN_RepeatStatement:
+	case ASTN_Identifier:
 		{
-			// Check to make sure we don't repeat too deeply.
+			int pType = getParent()->getType();
+			String varName = getStringData();
+			
+			if (pType >= ASTN_ConstantExpression && pType <= ASTN_UnaryNegStatement)
+			{
+				if (!def->memberVariableExists(varName) &&
+					mScriptMachine->getGlobalVariableIndex(varName) < 0)
+				{
+					int numStates = (int) def->getNumStates();
+					GunDefinition::State& st = def->getState(numStates - 1);
+
+					bool varFound = false;
+					for (size_t i = 0; i < st.record->variables.size(); ++ i)
+					{
+						if (st.record->variables[i] == varName)
+						{
+							varFound = true;
+							break;
+						}
+					}
+
+					if (!varFound)
+					{
+						AbstractSyntaxTree::instancePtr()->addError
+							(mLine, "Variable '" + varName + "' is not declared.");
+					}
+				}
+			}
+		}
+		break;
+
+	case ASTN_LoopStatement:
+		{
+			// Check to make sure we don't loop too deeply.
 			if (mChildren[1])
 			{
-				int repeatDepth = 0;
-				checkRepeatDepth(repeatDepth);
+				int loopDepth = 0;
+				checkLoopDepth(loopDepth);
 			}
 		}
 		break;
@@ -417,16 +486,14 @@ void AbstractSyntaxTreeNode::createGunMembers(GunDefinition* def)
 	for (int i = 0; i < MAX_CHILDREN; ++ i)
 	{
 		if (mChildren[i])
-		{
 			mChildren[i]->createGunMembers(def);
-		}
 	}
 }
 // --------------------------------------------------------------------------------
-void AbstractSyntaxTreeNode::createAffectorArgumentsBytecode(int index,
+void AbstractSyntaxTreeNode::createAffectorArgumentsBytecode(GunDefinition* def,
+															 int index,
 															 bool newAffector)
 {
-
 	static int s_curArgument = 0;
 	if (newAffector)
 		s_curArgument = 0;
@@ -436,8 +503,8 @@ void AbstractSyntaxTreeNode::createAffectorArgumentsBytecode(int index,
 	{
 		localArgument = s_curArgument;
 
-		std::vector<uint32> bytecode;
-		mChildren[0]->createGunBytecode(0, true, &bytecode);
+		BytecodeBlock bytecode;
+		mChildren[0]->createGunBytecode(def, true, &bytecode);
 
 		// Add bytecode to affector
 		mBulletMachine->setBulletAffectorBytecode(index, localArgument, bytecode);
@@ -445,31 +512,27 @@ void AbstractSyntaxTreeNode::createAffectorArgumentsBytecode(int index,
 	}
 	else if (mType == ASTN_Identifier)
 	{
-		// Distinguish between global and instance variables
 		localArgument = s_curArgument - 1;
 
-		// See whether it's global or instance
+		// See whether it's member or global
 		String varName = getStringData();
+
 		GlobalVariable *gVar = mScriptMachine->getGlobalVariable(varName);
 		if (gVar)
 		{
-			mBulletMachine->setBulletAffectorType(index,localArgument, 
+			mBulletMachine->setBulletAffectorType(index, localArgument, 
 				BulletAffector<int>::Argument::AT_Globals);
+		}
+		else if (def->memberVariableExists(varName))
+		{
+			mBulletMachine->setBulletAffectorType(index, localArgument, 
+				BulletAffector<int>::Argument::AT_Members);
 		}
 		else
 		{
-			int ivIndex = mScriptMachine->getInstanceVariableIndex(varName);
-			if (ivIndex >= 0)
-			{
-				mBulletMachine->setBulletAffectorType(index, localArgument, 
-					BulletAffector<int>::Argument::AT_Instances);
-			}
-			else
-			{
-				AbstractSyntaxTree::instancePtr()->addError
-					(mLine, "Variable '" + varName + "' is not declared.");
-				return;
-			}
+			AbstractSyntaxTree::instancePtr()->addError
+				(mLine, "Variable '" + varName + "' is not declared.");
+			return;
 		}
 	}
 	else if (mType == ASTN_FunctionCall)
@@ -484,7 +547,7 @@ void AbstractSyntaxTreeNode::createAffectorArgumentsBytecode(int index,
 	{
 		if (mChildren[i])
 		{
-			mChildren[i]->createAffectorArgumentsBytecode(index, false);
+			mChildren[i]->createAffectorArgumentsBytecode(def, index, false);
 		}
 	}
 
@@ -503,7 +566,7 @@ void AbstractSyntaxTreeNode::createAffectorArgumentsBytecode(int index,
 
 			mScriptMachine->processConstantExpression(byteCode, byteCodeSize, record);
 
-			float value = record.stack[record.stackHead - 1];
+			float value = record.scriptState.stack[record.scriptState.stackHead - 1];
 			mBulletMachine->setBulletAffectorValue(index, localArgument, value);
 		}
 	}
@@ -511,7 +574,7 @@ void AbstractSyntaxTreeNode::createAffectorArgumentsBytecode(int index,
 	{
 		int exprType = mBulletMachine->getBulletAffectorType (index, localArgument);
 
-		// Only register if it's a pure global/constant expression, because instance and
+		// Only register if it's a pure global/constant expression, because members and
 		// functions are updated elsewhere, and we wouldn't want to do the update twice
 		if (exprType == BulletAffector<int>::Argument::AT_Globals)
 		{
@@ -522,12 +585,58 @@ void AbstractSyntaxTreeNode::createAffectorArgumentsBytecode(int index,
 	}
 }
 // --------------------------------------------------------------------------------
+void AbstractSyntaxTreeNode::createMemberVariableBytecode(GunDefinition* def,
+														  bool first,
+														  AbstractSyntaxTreeNode* node)
+{
+	static int s_index = 0;
+	if (first)
+		s_index = NUM_SPECIAL_MEMBERS + def->getNumUserMembers();
+
+	if (node->getType() == ASTN_AssignStatement)
+	{
+		// Create 'constructor' code for this gun.  We only need to do this if member 
+		// variables are not constants.  If they are, then we can just set the constants here.
+		GunDefinition::MemberVariable& memVar = def->getMemberVariable(s_index);
+		
+		int exprType = mChildren[1]->getType();
+		if (exprType == ASTN_ConstantExpression)
+		{
+			memVar.value = 0.0f;
+
+			// Add to 'construction code'
+			BytecodeBlock constructCode;
+			mChildren[1]->createGunBytecode(def, false, &constructCode);
+			
+			int index = def->getMemberVariableIndex(memVar.name);
+			constructCode.push_back(BC_SETM);
+			constructCode.push_back((uint32) index);
+
+			def->appendConstructionCode(constructCode);
+		}
+		else
+		{
+			// Constant - just set the variable now
+			memVar.value = mChildren[1]->getFloatData(); 
+		}
+
+		++s_index;
+	}
+
+	for (int i = 0; i < MAX_CHILDREN; ++ i)
+	{
+		if (mChildren[i])
+			mChildren[i]->createMemberVariableBytecode(def, false, mChildren[i]);
+	}
+}
+// --------------------------------------------------------------------------------
 void AbstractSyntaxTreeNode::createGunBytecode(GunDefinition* def,
-												bool newAffector,
-												BytecodeBlock* bytecode)
+											   bool newAffector,
+											   BytecodeBlock* bytecode)
 {
 	static GunDefinition::State* s_curState = 0;
 	static int s_curAffector = 0;
+
 	if (newAffector)
 		s_curAffector = 0;
 
@@ -564,7 +673,7 @@ void AbstractSyntaxTreeNode::createGunBytecode(GunDefinition* def,
 			int affIndex = (numAffectors - defAffectors) + s_curAffector;
 		
 			if (mChildren[1])
-				mChildren[1]->createAffectorArgumentsBytecode(affIndex, true);
+				mChildren[1]->createAffectorArgumentsBytecode(def, affIndex, true);
 
 			s_curAffector++;
 		}
@@ -585,7 +694,7 @@ void AbstractSyntaxTreeNode::createGunBytecode(GunDefinition* def,
 			// Generate code
 			if (mChildren[1])
 			{
-				std::vector<uint32> stateByteCode;
+				BytecodeBlock stateByteCode;
 				mChildren[1]->createGunBytecode(def, false, &stateByteCode);
 				
 				// Set state bytecode
@@ -598,27 +707,43 @@ void AbstractSyntaxTreeNode::createGunBytecode(GunDefinition* def,
 		}
 		return;
 
+	case ASTN_MemberList:
+		{
+			createMemberVariableBytecode(def, true, this);
+		}
+		return;
+
 	case ASTN_AssignStatement:
 		{
 			String varName = mChildren[0]->getStringData ();
 			// Make sure we're not assigning to a global
-			if (mScriptMachine->getGlobalVariableIndex(varName) >= 0 ||
-				mScriptMachine->getInstanceVariableIndex(varName) >= 0)
+			if (mScriptMachine->getGlobalVariableIndex(varName) >= 0)
 			{
-				// Error, globals are read-only
+				// Error, globals are read-only - however it should not get this far.
 				AbstractSyntaxTree::instancePtr()->addError(mLine, varName + " is read-only.");
+				break;
 			}
 
 			// Generate value
 			mChildren[1]->createGunBytecode(def, false, bytecode);
 
-			// Set variable
-			for (size_t i = 0; i < s_curState->record->variables.size(); ++i)
+			// Set variable - see if it is a member first
+			if (def->memberVariableExists(varName))
 			{
-				if (s_curState->record->variables[i] == varName)
+				int index = def->getMemberVariableIndex(varName);
+				bytecode->push_back(BC_SETM);
+				bytecode->push_back((uint32) index);
+			}
+			else
+			{
+				// Local variable
+				for (size_t i = 0; i < s_curState->record->variables.size(); ++i)
 				{
-					bytecode->push_back(BC_SET);
-					bytecode->push_back((uint32) i);
+					if (s_curState->record->variables[i] == varName)
+					{
+						bytecode->push_back(BC_SETL);
+						bytecode->push_back((uint32) i);
+					}
 				}
 			}
 		}
@@ -656,14 +781,14 @@ void AbstractSyntaxTreeNode::createGunBytecode(GunDefinition* def,
 		}
 		return;
 
-	case ASTN_RepeatStatement:
+	case ASTN_LoopStatement:
 		{
-			// Repeat takes the counter off the stack, and then loops the code from
+			// Loop takes the counter off the stack, and then loops the code from
 			// its (position+2) to the address specified in (position+1)
 			// Generate counter value
 			mChildren[0]->createGunBytecode(def, false, bytecode);
 
-			bytecode->push_back(BC_REPEAT);
+			bytecode->push_back(BC_LOOP);
 			size_t endJumpPos = bytecode->size();
 			bytecode->push_back(0); // dummy jump address
 
@@ -778,42 +903,46 @@ void AbstractSyntaxTreeNode::createGunBytecode(GunDefinition* def,
 
 	case ASTN_Identifier:
 		{
-			// Get local
-			bytecode->push_back(BC_GET);
-
 			String varName = getStringData();
 
-			// Check to see if it's a local
-			bool isLocal = false;
-			for (size_t i = 0; i < s_curState->record->variables.size(); ++i)
+			// See whether it's a member or a local/global/instance
+			if (def->memberVariableExists(varName))
 			{
-				if (s_curState->record->variables[i] == varName)
-				{
-					isLocal = true;
-					bytecode->push_back((uint32) i);
-				}
+				int index = def->getMemberVariableIndex(varName);
+				bytecode->push_back(BC_GETM);
+				bytecode->push_back((uint32) index);
 			}
-
-			// Else it must be a global
-			if (!isLocal)
+			else
 			{
-				int globalIndex = mScriptMachine->getGlobalVariableIndex(varName);
-				if (globalIndex >= 0)
+				// Get local
+				bytecode->push_back(BC_GETL);
+
+				// Check to see if it's a local
+				bool isLocal = false;
+				for (size_t i = 0; i < s_curState->record->variables.size(); ++i)
 				{
-					bytecode->push_back((uint32) globalIndex + VAR_GLOBAL_OFFSET);
+					if (s_curState->record->variables[i] == varName)
+					{
+						isLocal = true;
+						bytecode->push_back((uint32) i);
+					}
 				}
-				else
+
+				// Else it must be a global
+				if (!isLocal)
 				{
-					int instIndex = mScriptMachine->getInstanceVariableIndex(varName);
-					if (instIndex < 0)
+					int globalIndex = mScriptMachine->getGlobalVariableIndex(varName);
+					if (globalIndex >= 0)
+					{
+						bytecode->push_back((uint32) globalIndex + VAR_GLOBAL_OFFSET);
+					}
+					else
 					{
 						AbstractSyntaxTree::instancePtr()->addError 
 							(mLine, "Variable '" + varName + "' is not declared.");
 
 						return;
 					}
-
-					bytecode->push_back((uint32) instIndex + VAR_INSTANCE_OFFSET);
 				}
 			}
 		}
@@ -975,12 +1104,171 @@ int AbstractSyntaxTree::getNumErrors() const
 	return mNumErrors;
 }
 // --------------------------------------------------------------------------------
-BulletGunDefinition* AbstractSyntaxTree::createBulletGunDefinition(AbstractSyntaxTreeNode* node)
+bool AbstractSyntaxTree::checkConstantExpression(GunDefinition* def, 
+												 AbstractSyntaxTreeNode* node)
+{
+	int nodeType = node->getType();
+	if (nodeType == ASTN_FunctionCall)
+	{
+		String funcName = node->getChild(0)->getStringData();
+		int index = mScriptMachine->getNativeFunctionIndex(funcName);
+		if (index < 0)
+		{
+			addError(node->getLine(), "Function '" + funcName + "' not found.");
+			return false;
+		}
+		else
+		{
+			return true;
+		}
+	}
+	else if (nodeType == ASTN_Identifier)
+	{
+		String varName = node->getStringData();
+		
+		if (!def->memberVariableExists(varName) &&
+			mScriptMachine->getGlobalVariableIndex(varName) < 0)
+		{
+			bool varFound = false;
+			int numStates = (int) def->getNumStates();
+			if (numStates > 0)
+			{
+				GunDefinition::State& st = def->getState(numStates - 1);
+				for (size_t i = 0; i < st.record->variables.size(); ++ i)
+				{
+					if (st.record->variables[i] == varName)
+					{
+						varFound = true;
+						break;
+					}
+				}
+			}
+
+			if (!varFound)
+			{
+				AbstractSyntaxTree::instancePtr()->addError
+					(node->getLine(), "Variable '" + varName + "' is not declared.");
+				return false;
+			}
+		}
+	}
+
+	for (int i = 0; i < AbstractSyntaxTreeNode::MAX_CHILDREN; ++ i)
+	{
+		AbstractSyntaxTreeNode* child = node->getChild(i);
+		if (child)
+		{
+			if (!checkConstantExpression(def, child))
+				return false;
+		}
+	}
+
+	return true;
+}
+// --------------------------------------------------------------------------------
+void AbstractSyntaxTree::createMemberVariables(GunDefinition* def, 
+											   AbstractSyntaxTreeNode* node)
+{
+	if (node->getType() == ASTN_AssignStatement)
+	{
+		String varName = node->getChild(0)->getStringData();
+
+		// Make sure that constant expressions are valid, ie use declared variables/functions
+		if (node->getChild(1)->getType() == ASTN_ConstantExpression)
+		{
+			if (!checkConstantExpression(def, node->getChild(1)))
+				return;
+		}
+
+		// Make sure it doesn't already exist
+		if (def->memberVariableExists(varName))
+		{
+			String msg = "Member variable '" + varName + "' already declared.";
+			addError(node->getLine(), msg);
+		}
+		else if (mScriptMachine->getGlobalVariableIndex(varName) >= 0)
+		{
+			String msg = "Member variable '" + varName + "' already declared as a global.";
+			addError(node->getLine(), msg);
+		}
+
+		def->addMemberVariable(varName, false);
+	}
+
+	for (int i = 0; i < AbstractSyntaxTreeNode::MAX_CHILDREN; ++ i)
+	{
+		AbstractSyntaxTreeNode* child = node->getChild(i);
+		if (child)
+			createMemberVariables(def, child);
+	}
+}
+// --------------------------------------------------------------------------------
+void AbstractSyntaxTree::addMemberVariables(GunDefinition* def, 
+											const MemberVariableDeclarationMap& memberDecls)
+{
+	// Add special members
+	def->addMemberVariable("Gun_X", true);
+	def->addMemberVariable("Gun_Y", true);
+	def->addMemberVariable("Gun_Angle", true);
+
+	// Add user-specified member variables (and their initial value) here.
+	// They must be added before we compile the script, predeclared essentially.
+	typedef MemberVariableDeclarationMap::const_iterator declIt;
+	std::pair<declIt, declIt> range = memberDecls.equal_range(def->getName());
+
+	int members = 0;
+	while (range.first != range.second)
+	{
+		String varName = range.first->second.name;
+		if (def->memberVariableExists(varName))
+		{
+			String msg = "Member variable '" + varName + "' already declared.";
+			addError(0, msg);
+		}
+		else
+		{
+			def->addMemberVariable(varName, true, range.first->second.value);
+			members++;
+		}
+
+		range.first++;
+	}
+
+	def->setNumUserMembers(members);
+}
+// --------------------------------------------------------------------------------
+BulletGunDefinition* AbstractSyntaxTree::createBulletGunDefinition(AbstractSyntaxTreeNode* node,
+																   const MemberVariableDeclarationMap& memberDecls)
 {
 	String name = node->getChild(0)->getStringData();
 	BulletGunDefinition* def = new BulletGunDefinition(name);
 
+	// Create member variables first
+	addMemberVariables(def, memberDecls);
+	if (node->getChild(3))
+		createMemberVariables(def, node->getChild(3));
+
+	if (mNumErrors > 0)
+	{
+		delete def;
+		return 0;
+	}
+
+	// Then create the states
 	node->createGunMembers(def);
+
+	if (mNumErrors > 0)
+	{
+		delete def;
+		return 0;
+	}
+
+	// Initialise member vars
+	if (node->getChild(3))
+		node->getChild(3)->createGunBytecode(def, true, 0);
+
+	// Finish constructor here
+	def->finaliseConstructor();
 
 	// Create state bytecode
 	node->getChild(1)->createGunBytecode(def, true, 0);
@@ -1000,7 +1288,8 @@ BulletGunDefinition* AbstractSyntaxTree::createBulletGunDefinition(AbstractSynta
 	}
 }
 // --------------------------------------------------------------------------------
-AreaGunDefinition* AbstractSyntaxTree::createAreaGunDefinition(AbstractSyntaxTreeNode* node)
+AreaGunDefinition* AbstractSyntaxTree::createAreaGunDefinition(AbstractSyntaxTreeNode* node,
+															   const MemberVariableDeclarationMap& memberDecls)
 {
 	String name = node->getChild(0)->getStringData();
 
@@ -1023,7 +1312,32 @@ AreaGunDefinition* AbstractSyntaxTree::createAreaGunDefinition(AbstractSyntaxTre
 	int originType = (int) node->getChild(4)->getFloatData();
 	def->setOriginType(originType);
 
+	// Create member variables first
+	addMemberVariables(def, memberDecls);
+	if (node->getChild(5))
+		createMemberVariables(def, node->getChild(5));
+
+	if (mNumErrors > 0)
+	{
+		delete def;
+		return 0;
+	}
+
+	// Create members
 	node->createGunMembers(def);
+
+	if (mNumErrors > 0)
+	{
+		delete def;
+		return 0;
+	}
+
+	// Initialise member vars
+	if (node->getChild(5))
+		node->getChild(5)->createGunBytecode(def, true, 0);
+
+	// Finish constructor here
+	def->finaliseConstructor();
 
 	// Create state bytecode
 	node->getChild(1)->createGunBytecode(def, true, 0);
@@ -1037,13 +1351,13 @@ AreaGunDefinition* AbstractSyntaxTree::createAreaGunDefinition(AbstractSyntaxTre
 	{
 		return def;
 	}
-
 }
 // --------------------------------------------------------------------------------
-SplineGunDefinition* AbstractSyntaxTree::createSplineGunDefinition(AbstractSyntaxTreeNode* node)
+ArcGunDefinition* AbstractSyntaxTree::createArcGunDefinition(AbstractSyntaxTreeNode* node,
+															 const MemberVariableDeclarationMap& memberDecls)
 {
 	String name = node->getChild(0)->getStringData();
-	SplineGunDefinition* def = new SplineGunDefinition(name);
+	ArcGunDefinition* def = new ArcGunDefinition(name);
 
 	node->createGunMembers(def);
 
@@ -1062,40 +1376,33 @@ SplineGunDefinition* AbstractSyntaxTree::createSplineGunDefinition(AbstractSynta
 
 }
 // --------------------------------------------------------------------------------
-void AbstractSyntaxTree::createGunDefinitions(AbstractSyntaxTreeNode* node)
+void AbstractSyntaxTree::createGunDefinitions(AbstractSyntaxTreeNode* node,
+											  const MemberVariableDeclarationMap& memberDecls)
 {
 	if (node->getType() == ASTN_BulletGunDefinition)
 	{
-		BulletGunDefinition* def = createBulletGunDefinition(node);
+		BulletGunDefinition* def = createBulletGunDefinition(node, memberDecls);
 		if (def)
-		{
 			mScriptMachine->addGunDefinition(def->getName(), def);
-		}
 	}
 	else if (node->getType() == ASTN_AreaGunDefinition)
 	{
-		AreaGunDefinition* def = createAreaGunDefinition(node);
+		AreaGunDefinition* def = createAreaGunDefinition(node, memberDecls);
 		if (def)
-		{
 			mScriptMachine->addGunDefinition(def->getName(), def);
-		}
 	}
-	else if (node->getType() == ASTN_SplineGunDefinition)
+	else if (node->getType() == ASTN_ArcGunDefinition)
 	{
-		SplineGunDefinition* def = createSplineGunDefinition(node);
+		ArcGunDefinition* def = createArcGunDefinition(node, memberDecls);
 		if (def)
-		{
 			mScriptMachine->addGunDefinition(def->getName(), def);
-		}
 	}
 	else
 	{
 		for (int i = 0; i < AbstractSyntaxTreeNode::MAX_CHILDREN; ++i)
 		{
 			if (node->getChild(i))
-			{
-				createGunDefinitions(node->getChild(i));
-			}
+				createGunDefinitions(node->getChild(i), memberDecls);
 		}
 	}
 }

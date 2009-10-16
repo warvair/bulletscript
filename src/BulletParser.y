@@ -23,10 +23,16 @@ void yyerror (char *a_msg)
 
 %}
 
+%token KEYWORD_UNIT
+%token KEYWORD_GUN
+%token KEYWORD_ENABLE
+%token KEYWORD_DISABLE
+%token KEYWORD_EVENT
 %token KEYWORD_BULLET
 %token KEYWORD_AREA
+%token KEYWORD_ARC
 %token KEYWORD_SPLINE
-%token KEYWORD_REPEAT
+%token KEYWORD_LOOP
 %token KEYWORD_IF
 %token KEYWORD_ELSE
 %token KEYWORD_GOTO
@@ -82,6 +88,43 @@ gun_definition
 			$$->setChild(0, $2);
 			$$->setChild(1, $4);
 		}
+	| KEYWORD_BULLET identifier '{' member_list KEYWORD_AFFECTORS affector_list ';' state_definition_list '}'
+		{
+			$$ = AST->createNode(ASTN_BulletGunDefinition, yylineno);
+			$$->setChild(0, $2);
+			$$->setChild(1, $8);
+			$$->setChild(2, $6);
+			
+			if ($4->getType() == ASTN_AssignStatement)
+			{
+				// Create a ASTN_MemberList and make $4 the child of it.
+				YYSTYPE newChild = AST->createNode(ASTN_MemberList, $4->getLine());
+				newChild->setChild(0, $4);
+				$$->setChild(3, newChild);
+			}
+			else
+			{
+				$$->setChild(3, $4);
+			}
+		}		
+	| KEYWORD_BULLET identifier '{' member_list state_definition_list '}'
+		{
+			$$ = AST->createNode(ASTN_BulletGunDefinition, yylineno);
+			$$->setChild(0, $2);
+			$$->setChild(1, $5);
+
+			if ($4->getType() == ASTN_AssignStatement)
+			{
+				// Create a ASTN_MemberList and make $4 the child of it.
+				YYSTYPE newChild = AST->createNode(ASTN_MemberList, $4->getLine());
+				newChild->setChild(0, $4);
+				$$->setChild(3, newChild);
+			}
+			else
+			{
+				$$->setChild(3, $4);
+			}
+		}
 	| KEYWORD_AREA '[' constant_integer ',' constant ',' KEYWORD_BASE ']' identifier '{' state_definition_list '}'
 		{
 			$$ = AST->createNode(ASTN_AreaGunDefinition, yylineno);
@@ -130,6 +173,108 @@ gun_definition
 			originNode->setFloat(AO_Centre);
 			$$->setChild(4, originNode);
 		}
+	| KEYWORD_AREA '[' constant_integer ',' constant ',' KEYWORD_BASE ']' identifier '{' member_list state_definition_list '}'
+		{
+			$$ = AST->createNode(ASTN_AreaGunDefinition, yylineno);
+			$$->setChild(0, $9);
+			$$->setChild(1, $12);
+			$$->setChild(2, $3);
+			$$->setChild(3, $5);
+			YYSTYPE originNode = AST->createNode(ASTN_Constant, yylineno);
+			originNode->setFloat(AO_Base);
+			$$->setChild(4, originNode);
+			
+			if ($11->getType() == ASTN_AssignStatement)
+			{
+				// Create a ASTN_MemberList and make $11 the child of it.
+				YYSTYPE newChild = AST->createNode(ASTN_MemberList, $11->getLine());
+				newChild->setChild(0, $11);
+				$$->setChild(5, newChild);
+			}
+			else
+			{
+				$$->setChild(5, $11);
+			}
+		}
+	| KEYWORD_AREA '[' ',' constant ',' KEYWORD_BASE ']' identifier '{' member_list state_definition_list '}'
+		{
+			$$ = AST->createNode(ASTN_AreaGunDefinition, yylineno);
+			$$->setChild(0, $8);
+			$$->setChild(1, $11);
+			YYSTYPE sideNode = AST->createNode(ASTN_Constant, yylineno);
+			sideNode->setFloat(-1.0f); // negative number means adaptive circle
+			$$->setChild(2, sideNode);
+			$$->setChild(3, $4);
+			YYSTYPE originNode = AST->createNode(ASTN_Constant, yylineno);
+			originNode->setFloat(AO_Base);
+			$$->setChild(4, originNode);
+
+			if ($10->getType() == ASTN_AssignStatement)
+			{
+				// Create a ASTN_MemberList and make $10 the child of it.
+				YYSTYPE newChild = AST->createNode(ASTN_MemberList, $10->getLine());
+				newChild->setChild(0, $10);
+				$$->setChild(5, newChild);
+			}
+			else
+			{
+				$$->setChild(5, $10);
+			}
+		}
+	| KEYWORD_AREA '[' constant_integer ',' constant ',' KEYWORD_CENTRE ']' identifier '{' member_list state_definition_list '}'
+		{
+			$$ = AST->createNode(ASTN_AreaGunDefinition, yylineno);
+			$$->setChild(0, $9);
+			$$->setChild(1, $12);
+			$$->setChild(2, $3);
+			$$->setChild(3, $5);
+			YYSTYPE originNode = AST->createNode(ASTN_Constant, yylineno);
+			originNode->setFloat(AO_Centre);
+			$$->setChild(4, originNode);
+
+			if ($11->getType() == ASTN_AssignStatement)
+			{
+				// Create a ASTN_MemberList and make $11 the child of it.
+				YYSTYPE newChild = AST->createNode(ASTN_MemberList, $11->getLine());
+				newChild->setChild(0, $11);
+				$$->setChild(5, newChild);
+			}
+			else
+			{
+				$$->setChild(5, $11);
+			}
+		}
+	| KEYWORD_AREA '[' ',' constant ',' KEYWORD_CENTRE ']' identifier '{' member_list state_definition_list '}'
+		{
+			$$ = AST->createNode(ASTN_AreaGunDefinition, yylineno);
+			$$->setChild(0, $8);
+			$$->setChild(1, $11);
+			YYSTYPE sideNode = AST->createNode(ASTN_Constant, yylineno);
+			sideNode->setFloat(-1.0f); // negative number means adaptive circle
+			$$->setChild(2, sideNode);
+			$$->setChild(3, $4);
+			YYSTYPE originNode = AST->createNode(ASTN_Constant, yylineno);
+			originNode->setFloat(AO_Centre);
+			$$->setChild(4, originNode);
+		
+			if ($10->getType() == ASTN_AssignStatement)
+			{
+				// Create a ASTN_MemberList and make $10 the child of it.
+				YYSTYPE newChild = AST->createNode(ASTN_MemberList, $10->getLine());
+				newChild->setChild(0, $10);
+				$$->setChild(5, newChild);
+			}
+			else
+			{
+				$$->setChild(5, $10);
+			}
+		}
+	| KEYWORD_ARC identifier '{' state_definition_list '}'
+		{
+			$$ = AST->createNode(ASTN_ArcGunDefinition, yylineno);
+			$$->setChild(0, $2);
+			$$->setChild(1, $4);
+		}
 	;
 	
 affector_list
@@ -149,6 +294,19 @@ affector_call
 	: identifier function_call_arguments
 		{
 			$$ = AST->createNode(ASTN_AffectorCall, yylineno);
+			$$->setChild(0, $1);
+			$$->setChild(1, $2);
+		}
+	;
+	
+member_list
+	: assignment_statement
+		{
+			$$ = $1;
+		}
+	| member_list assignment_statement
+		{
+			$$ = AST->createNode(ASTN_MemberList, yylineno);
 			$$->setChild(0, $1);
 			$$->setChild(1, $2);
 		}
@@ -275,9 +433,9 @@ assignment_statement
 	;
 		
 iteration_statement
-	: KEYWORD_REPEAT constant_expression compound_statement
+	: KEYWORD_LOOP constant_expression compound_statement
 		{
-			$$ = AST->createNode(ASTN_RepeatStatement, yylineno);
+			$$ = AST->createNode(ASTN_LoopStatement, yylineno);
 			$$->setChild(0, $2);
 			$$->setChild(1, $3);
 		}		

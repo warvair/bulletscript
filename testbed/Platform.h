@@ -11,4 +11,6 @@ float getVertMovement();
 
 float getBulletCount();
 
+bool inFocus();
+
 #endif

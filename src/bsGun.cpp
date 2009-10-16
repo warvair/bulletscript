@@ -12,20 +12,19 @@ Gun::Gun(ScriptMachine* sm) :
 {
 }
 // --------------------------------------------------------------------------------
-void Gun::setInstanceVariable(int index, float value)
+void Gun::setMemberVariable(int index, float value)
 {
-	assert(index >= 0 && index < NUM_INSTANCE_VARS &&
-		"Gun::setInstanceVariable: out of bounds.");
-
-	mRecord.instanceVars[index] = value;
+	mRecord.members[index] = value;
+	// Callback for affector arguments?
+	// ...
 }
 // --------------------------------------------------------------------------------
 void Gun::runScript(float frameTime)
 {
 	mScriptMachine->processGunState(mRecord);
 
-	if (mRecord.suspendTime > 0.0f)
-			mRecord.suspendTime -= frameTime;
+	if (mRecord.scriptState.suspendTime > 0.0f)
+			mRecord.scriptState.suspendTime -= frameTime;
 }
 // --------------------------------------------------------------------------------
 void Gun::setState(const String& state)
@@ -35,9 +34,9 @@ void Gun::setState(const String& state)
 		if (mRecord.states[i].name == state)
 		{
 			mRecord.curState = (int) i;
-			mRecord.curInstruction = 0;
-			mRecord.repeatDepth = 0;
-			mRecord.stackHead = 0;
+			mRecord.scriptState.curInstruction = 0;
+			mRecord.scriptState.loopDepth = 0;
+			mRecord.scriptState.stackHead = 0;
 			return;
 		}
 	}
@@ -64,10 +63,10 @@ bool GunController::setDefinition(const String& def)
 	return true;
 }
 // --------------------------------------------------------------------------------
-void GunController::setInstanceVariable(int index, float value)
+void GunController::setMemberVariable(int index, float value)
 {
-	assert(mGun && "GunController::setInstanceVariable mGun is null");
-	mGun->setInstanceVariable(index, value);
+	assert(mGun && "GunController::setMemberVariable mGun is null");
+	mGun->setMemberVariable(index, value);
 }
 // --------------------------------------------------------------------------------
 void GunController::runScript(float frameTime)
@@ -76,10 +75,10 @@ void GunController::runScript(float frameTime)
 	mGun->runScript(frameTime);
 }
 // --------------------------------------------------------------------------------
-void GunController::update(float frameTime) 
+void GunController::update(float frameTime, float x, float y, float angle) 
 {
 	if (mGun)
-		mGun->update(frameTime);
+		mGun->update(frameTime, x, y, angle);
 }
 // --------------------------------------------------------------------------------
 

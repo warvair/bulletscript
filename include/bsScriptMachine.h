@@ -13,13 +13,14 @@ namespace BS_NMSP
 {
 	const int VAR_LOCAL_OFFSET		= 0;
 	const int VAR_GLOBAL_OFFSET		= 32768;
-	const int VAR_INSTANCE_OFFSET	= 65536;
 
 	enum
 	{
 		BC_PUSH,
-		BC_SET,
-		BC_GET,
+		BC_SETL,
+		BC_GETL,
+		BC_SETM,
+		BC_GETM,
 		BC_OP_POS,
 		BC_OP_NEG,
 		BC_OP_ADD,
@@ -37,7 +38,7 @@ namespace BS_NMSP
 		BC_LOG_OR,
 		BC_CALL,
 		BC_GOTO,
-		BC_REPEAT,
+		BC_LOOP,
 		BC_JUMP,
 		BC_JZ,
 		BC_FIRE,
@@ -79,13 +80,13 @@ namespace BS_NMSP
 		// Global variables
 		std::vector<GlobalVariable*> mGlobals;
 
-		// Instance variables
-		std::vector<String> mInstances;
-
 		// Gun properties
 		std::vector<String> mGunProperties;
 
 		ErrorFunction mErrorFunction;
+
+		// Member variable declarations
+		MemberVariableDeclarationMap mMemberVariableDeclarations;
 
 		// Gun Definitions
 		typedef std::map<String, GunDefinition*> GunDefinitionMap;
@@ -93,8 +94,6 @@ namespace BS_NMSP
 
 		// Functions
 		bool checkInstructionPosition (GunScriptRecord& state, size_t length);
-
-		void interpretCode (const uint32* code, size_t length, GunScriptRecord& state, bool loop);
 
 	public:
 
@@ -131,9 +130,6 @@ namespace BS_NMSP
 
 		GlobalVariable *getGlobalVariable(int index);
 
-		// Instance variables
-		int getInstanceVariableIndex(const String &name) const;
-
 		// Gun Properties
 		int getGunProperty(const String& name) const;
 
@@ -143,12 +139,16 @@ namespace BS_NMSP
 		const GunDefinition* getGunDefinition(const String &name) const;
 
 		// Script state processing
+		void interpretCode (const uint32* code, size_t length, GunScriptRecord& state, bool loop);
+
 		void processGunState(GunScriptRecord& gsr);
 
 		void processConstantExpression(const uint32* code, size_t length, GunScriptRecord& state);
 
-		// Compile string to bytecode
+		// Compilation
 		int compileScript(uint8* buffer, size_t bufferSize);
+
+		void declareMemberVariable(const String& gun, const String& var, float value);
 
 		// Errors
 		void addErrorMsg (const String& msg);
