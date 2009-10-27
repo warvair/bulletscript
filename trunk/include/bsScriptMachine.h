@@ -8,7 +8,6 @@
 #include "bsScriptVariables.h"
 #include "bsScriptStructs.h"
 #include "bsGunDefinition.h"
-#include "bsFireType.h"
 #include "bsDeepMemoryPool.h"
 #include "bsLog.h"
 
@@ -17,6 +16,9 @@ namespace BS_NMSP
 	typedef void (*NativeFunction)(ScriptState&);
 
 	class Gun;
+	class TypeManagerBase;
+	struct FireTypeScriptRecord;
+	class FireTypeBase;
 
 	class _BSAPI ScriptMachine
 	{

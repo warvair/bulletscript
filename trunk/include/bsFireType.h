@@ -6,6 +6,11 @@
 #include "bsScriptStructs.h"
 #include "bsParseTree.h"
 #include "bsDeepMemoryPool.h"
+#include "bsScriptMachine.h"
+
+#if BS_PLATFORM == BS_PLATFORM_LINUX
+#include <string.h> // for memcpy
+#endif
 
 namespace BS_NMSP
 {
@@ -159,6 +164,11 @@ namespace BS_NMSP
 		FireType(const String& name, int type, TypeManagerBase* typeMan, ScriptMachine* vm) : 
 			FireTypeBase(name, type, typeMan, vm)
 		{
+		}
+
+		~FireType()
+		{
+			mFunctions.clear();
 		}
 
 		bool fireFunctionExists(const String& name) const
