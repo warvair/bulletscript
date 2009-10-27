@@ -852,7 +852,7 @@ void ParseTree::createStates(GunDefinition* def, ParseTreeNode* node)
 			{
 				addError(node->getLine(), "Unknown fire type ' " + funcType + "'.");
 			}
-			else if (!mScriptMachine->fireFunctionExists(ft->getType(), funcName))
+			else if (!ft->fireFunctionExists(funcName))
 			{
 				addError(node->getLine(), "Fire function '" + funcName + "' is not registered.");
 			}
@@ -1545,7 +1545,7 @@ GunDefinition* ParseTree::createGunDefinition(ParseTreeNode* node,
 	else
 	{
 		//def->print(std::cerr);
-
+/*
 		for (int i = 0; i < mScriptMachine->getNumCodeRecords(); ++i)
 		{
 			CodeRecord* rec = mScriptMachine->getCodeRecord(i);
@@ -1553,7 +1553,7 @@ GunDefinition* ParseTree::createGunDefinition(ParseTreeNode* node,
 				std::cout << rec->byteCode[j] << std::endl;
 			std::cout << std::endl;
 		}
-
+*/
 		return def;
 	}
 }

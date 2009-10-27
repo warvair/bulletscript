@@ -24,7 +24,6 @@ namespace BS_NMSP
 		A1 mArg1;
 
 		std::list<int> mFreeList;
-		std::list<int> mUsedList;
 
 		void recreatePool(size_t newSize)
 		{

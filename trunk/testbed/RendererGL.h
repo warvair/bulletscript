@@ -56,7 +56,7 @@ public:
 
 	void finishRendering ();
 
-	void addBullet (float x, float y, float fade, bool selected);
+	void addBullet (float x, float y, float fade);
 
 	void renderQuickQuad(float x0, float y0, float x1, float y1, GLuint texture);
 

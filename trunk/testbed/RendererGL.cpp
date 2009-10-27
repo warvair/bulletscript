@@ -92,6 +92,9 @@ RendererGL::RendererGL () :
 		mBulletTex[i + 7] = 1;
 	}
 
+	for (int i = 0; i < MAX_BULLETS * 16; ++i)
+		mBulletCol[i] = 1;
+
 	for (int i = 0; i < MAX_BULLETS * 4; ++ i)
 		mIndices[i] = i;
 }
@@ -140,7 +143,7 @@ void RendererGL::finishRendering ()
 	SDL_GL_SwapBuffers ();
 }
 // --------------------------------------------------------------------------------
-void RendererGL::addBullet (float x, float y, float fade, bool selected)
+void RendererGL::addBullet (float x, float y, float fade)
 {
 	if (mNumBullets >= MAX_BULLETS)
 	{
@@ -160,27 +163,9 @@ void RendererGL::addBullet (float x, float y, float fade, bool selected)
 	mBulletPos[bOffset + 6] = x - BULLET_RADIUS;
 	mBulletPos[bOffset + 7] = y + BULLET_RADIUS;
 
-	float col;
-	if (selected)
-		col = 0.0f;
-	else
-		col = 1.0f;
-
-	mBulletCol[cOffset + 0] = 1;
-	mBulletCol[cOffset + 1] = col;
-	mBulletCol[cOffset + 2] = col;
 	mBulletCol[cOffset + 3] = fade;
-	mBulletCol[cOffset + 4] = 1;
-	mBulletCol[cOffset + 5] = col;
-	mBulletCol[cOffset + 6] = col;
 	mBulletCol[cOffset + 7] = fade;
-	mBulletCol[cOffset + 8] = 1;
-	mBulletCol[cOffset + 9] = col;
-	mBulletCol[cOffset + 10] = col;
 	mBulletCol[cOffset + 11] = fade;
-	mBulletCol[cOffset + 12] = 1;
-	mBulletCol[cOffset + 13] = col;
-	mBulletCol[cOffset + 14] = col;
 	mBulletCol[cOffset + 15] = fade;
 
 	mNumBullets ++;

@@ -105,9 +105,6 @@ namespace BS_NMSP
 
 		NativeFunction getNativeFunction(int index) const;
 
-		// Fire functions
-		bool fireFunctionExists(int type, const String& name) const;
-
 		// Fire types
 		FireTypeBase* getFireType(const String& name) const;
 

@@ -86,8 +86,6 @@ namespace BS_NMSP
 
 		void finaliseConstructor();
 
-		void print(std::ostream& stream);
-
 		// Core
 		GunScriptRecord* createGunScriptRecord(ScriptMachine* sm);
 

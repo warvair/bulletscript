@@ -3,20 +3,25 @@
 #include <algorithm>
 #include "BulletSystem.h"
 
-int gBulletsEmitted = 0;
-
 // --------------------------------------------------------------------------------
 // BulletBattery
 // --------------------------------------------------------------------------------
+BS::Machine<Bullet>* BulletBattery::mMachine = 0;
 std::vector<Bullet> BulletBattery::mBullets;
 std::vector<unsigned int> BulletBattery::mFreeList[2];
 int BulletBattery::mStoreIndex;
 int BulletBattery::mUseIndex;
 std::vector<Bullet> BulletBattery::mSpawnedBullets;
 
+int BulletBattery::mCurBullets = 0;
+int BulletBattery::mSpawned = 0;
+int BulletBattery::mKilled = 0;
+
 // --------------------------------------------------------------------------------
-void BulletBattery::initialise()
+void BulletBattery::initialise(BS::Machine<Bullet>* machine)
 {
+	mMachine = machine;
+	
 	mStoreIndex = 0;
 	mUseIndex = 1;
 
@@ -25,7 +30,7 @@ void BulletBattery::initialise()
 	mFreeList[mUseIndex].reserve(BATTERY_SIZE);
 
 	for (int i = 0; i < BATTERY_SIZE; ++ i)
-		mFreeList[mUseIndex].push_back (BATTERY_SIZE - i - 1);
+		mFreeList[mUseIndex].push_back(BATTERY_SIZE - i - 1);
 }
 // --------------------------------------------------------------------------------
 unsigned int BulletBattery::getFreeBulletSlot()
@@ -41,19 +46,20 @@ unsigned int BulletBattery::getFreeBulletSlot()
 	{
 		if (mFreeList[mStoreIndex].size())
 		{
-			std::sort (mFreeList[mStoreIndex].begin(), 
-					   mFreeList[mStoreIndex].end(),
-					   BulletSorter());
+			std::sort(mFreeList[mStoreIndex].begin(), 
+					  mFreeList[mStoreIndex].end(),
+					  BulletSorter());
+
 			mStoreIndex = mUseIndex;
 			mUseIndex = (mStoreIndex == 0) ? 1 : 0;
 
-			id = mFreeList[mUseIndex].back();
-			mFreeList[mUseIndex].pop_back();
+			id = mFreeList[mUseIndex].back ();
+			mFreeList[mUseIndex].pop_back ();
 		}
 		else
 		{
 			id = (unsigned int) mBullets.size();
-			mBullets.push_back (Bullet());
+			mBullets.push_back(Bullet());
 		}
 	}
 
@@ -62,72 +68,107 @@ unsigned int BulletBattery::getFreeBulletSlot()
 // --------------------------------------------------------------------------------
 Bullet* BulletBattery::emitAngle(BS::bstype x, BS::bstype y, const BS::bstype* args)
 {
-	std::cout << "fireA " << x << " " << y << " " << args[-3] << std::endl;
-
 	Bullet b;
 	b.__active = true;
 	b.__time = 0;
-	b.stage = 0;
+
 	b.x = x;
 	b.y = y;
-	b.speed = b.speed0 = args[-2];
-	b.damage = args[-1];
-	b.vx = (BS::bstype) sin(args[-3] * 0.017453);
-	b.vy = (BS::bstype) cos(args[-3] * 0.017453);
+	b.speed = args[-1];
+	b.vx = (BS::bstype) sin(args[-2] * BS::DEG_TO_RAD);
+	b.vy = (BS::bstype) cos(args[-2] * BS::DEG_TO_RAD);
 
 	size_t count = mSpawnedBullets.size();
 	mSpawnedBullets.push_back(b);
 
-	// Set args used and return bullet
 	return &(mSpawnedBullets[count]);
 }
 // --------------------------------------------------------------------------------
-int BulletBattery::update(float frameTime, BS::Machine<Bullet>* machine)
+void BulletBattery::killBullet(Bullet* b)
 {
-	int count = 0;
+	mBullets[b->__index].__active = false;
+	mFreeList[mStoreIndex].push_back(b->__index);
+	mMachine->releaseType(b);
+	mKilled++;
+}
+// --------------------------------------------------------------------------------
+void BulletBattery::killBullet(void* object)
+{
+	killBullet(static_cast<Bullet*>(object));
+}
+// --------------------------------------------------------------------------------
+void BulletBattery::setAngle(void* object, BS::bstype value)
+{
+	Bullet* b = static_cast<Bullet*>(object);
 
+	b->vx = (BS::bstype) sin(value * BS::DEG_TO_RAD);
+	b->vy = (BS::bstype) cos(value * BS::DEG_TO_RAD);
+}
+// --------------------------------------------------------------------------------
+BS::bstype BulletBattery::getAngle(void* object)
+{
+	Bullet* b = static_cast<Bullet*>(object);
+
+	// Oh atan2, how do I hate thee.  Let me count the ways...
+	BS::bstype angle = atan2(b->vy, b->vx) * BS::RAD_TO_DEG;
+	if (angle < 0)
+		return fabs(angle) + 90;
+	else
+	{
+		return (180 - angle) - 90;
+	}
+}
+// --------------------------------------------------------------------------------
+void BulletBattery::update(float frameTime)
+{
 	// Add recently spawned bullets
 	for (size_t i = 0; i < mSpawnedBullets.size(); ++i)
 	{
 		unsigned int slot = getFreeBulletSlot();
 		mBullets[slot] = mSpawnedBullets[i];
-		gBulletsEmitted++;
+		mSpawned++;
 	}
 
 	mSpawnedBullets.clear();
 
-	// And now update all bullets
-	for (size_t i = 0; i < mBullets.size(); ++i)
+	int index = 0;
+	mCurBullets = 0;
+	std::vector<Bullet>::iterator it = mBullets.begin();
+	while (it != mBullets.end())
 	{
-		Bullet* b = &(mBullets[i]);
-		if (b->__active)
+		Bullet &b = *it;
+		b.__index = index;
+		if (b.__active)
 		{
-			b->__time += frameTime;
+			b.__time += frameTime;
 			
 			// Apply normal movement update
-			b->x += b->vx * b->speed * frameTime;
-			b->y += b->vy * b->speed * frameTime;
+			b.x += b.vx * b.speed * frameTime;
+			b.y += b.vy * b.speed * frameTime;
 
-			// Apply bulletscript update/control here.
-			machine->updateType(b, b->x, b->y, frameTime);
-
-			// No idea why we have to re-acquire here.  STL internal weirdness or something?
-			b = &(mBullets[i]);
+			// bulletscript: apply affectors and control functions
+			mMachine->updateType(&b, b.x, b.y, frameTime);
 
 			// Check for death
-			if (b->y < 0 || b->y > 800 || b->x < 0 || b->x > 600)
-			{
-				mBullets[i].__active = false;
-				mFreeList[mStoreIndex].push_back(i);
-				machine->releaseType(b);
-			}
+			if (b.y < 0 || b.y > 600 || b.x < 0 || b.x > 800)
+				killBullet(&b);
 			else
-			{
-				count++;
-			}
+				mCurBullets++;
 		}
-	}
 
-	return count;
+		++it;
+		++index;
+	}
+}
+// --------------------------------------------------------------------------------
+void BulletBattery::getStats(int& active, int& spawned, int& killed)
+{
+	active = mCurBullets;
+	spawned = mSpawned;
+	killed = mKilled;
+
+	mCurBullets = 0;
+	mSpawned = 0;
+	mKilled = 0;
 }
 // --------------------------------------------------------------------------------
