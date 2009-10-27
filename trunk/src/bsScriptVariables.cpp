@@ -4,7 +4,7 @@ namespace BS_NMSP
 {
 
 // --------------------------------------------------------------------------------
-GlobalVariable::GlobalVariable(const String& name, float value) :
+GlobalVariable::GlobalVariable(const String& name, bstype value) :
 	mName(name),
 	mValue(value)
 {
@@ -15,7 +15,7 @@ const String& GlobalVariable::getName() const
 	return mName;
 }
 // --------------------------------------------------------------------------------
-void GlobalVariable::setValue( float value)
+void GlobalVariable::setValue(bstype value)
 {
 	mValue = value;
 
@@ -27,7 +27,7 @@ void GlobalVariable::setValue( float value)
 	}
 }
 // --------------------------------------------------------------------------------
-float GlobalVariable::getValue() const
+bstype GlobalVariable::getValue() const
 {
 	return mValue;
 }

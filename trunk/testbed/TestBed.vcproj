@@ -197,10 +197,6 @@
 				RelativePath=".\RendererGL.cpp"
 				>
 			</File>
-			<File
-				RelativePath=".\Ship.cpp"
-				>
-			</File>
 		</Filter>
 		<Filter
 			Name="Header Files"
@@ -212,15 +208,15 @@
 				>
 			</File>
 			<File
+				RelativePath=".\Main.h"
+				>
+			</File>
+			<File
 				RelativePath=".\Platform.h"
 				>
 			</File>
 			<File
 				RelativePath=".\RendererGL.h"
-				>
-			</File>
-			<File
-				RelativePath=".\Ship.h"
 				>
 			</File>
 		</Filter>

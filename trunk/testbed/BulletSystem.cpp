@@ -1,93 +1,54 @@
 #include <cmath>
 #include <iostream>
 #include <algorithm>
+#include "Main.h"
 #include "BulletSystem.h"
-#include "Ship.h"
 
-// --------------------------------------------------------------------------------
-// BulletAffector functions
-// --------------------------------------------------------------------------------
-void BulletAffector_Accel(Bullet &b, const float *args, float frameTime)
-{
-	// Change velocity
-	float newSpeed = sqrt(args[0] * args[0] + args[1] * args[1]);
-	b.speed += newSpeed * frameTime;
-	
-	b.vx += ((args[0] / newSpeed) - b.vx) / (2.0f / frameTime);
-	b.vy += ((args[1] / newSpeed) - b.vy) / (2.0f / frameTime);
-}
-// --------------------------------------------------------------------------------
-void BulletAffector_Force(Bullet &b, const float *args, float frameTime)
-{
-	b.x += args[0];
-	b.y += args[1];
-}
-// --------------------------------------------------------------------------------
-void BulletAffector_DelayAccel(Bullet &b, const float *args, float frameTime)
-{
-	// After a set time, change speed
-	if (b.__time > args[1])
-	{
-		float dt =(b.__time - args[1]) / (args[2] - args[1]); 
-		if (dt >= 1.0f)
-			b.speed = args[0];
-		else
-			b.speed = b.speed0 + (args[0] - b.speed0) * dt;
-	}
-}
-// --------------------------------------------------------------------------------
-void BulletAffector_Explode(Bullet &b, const float *args, float frameTime)
-{
-	if (b.stage == 0 && b.__time > args[0])
-	{
-		// random angle
-		b.stage = 1;
-		float newAngle = (float) 110 + (rand() % 140);
-		b.vx = (float) sin (newAngle * 0.017453);
-		b.vy = (float) cos (newAngle * 0.017453);
-		b.speed = args[1];
-	}
-}
-// --------------------------------------------------------------------------------
+int gTotalBullets = 0;
 
 // --------------------------------------------------------------------------------
 // BulletBattery
 // --------------------------------------------------------------------------------
+BS::Machine<Bullet>* BulletBattery::mMachine = 0;
 std::vector<Bullet> BulletBattery::mBullets;
 std::vector<unsigned int> BulletBattery::mFreeList[2];
 int BulletBattery::mStoreIndex;
 int BulletBattery::mUseIndex;
+std::vector<Bullet> BulletBattery::mSpawnedBullets;
 
 // --------------------------------------------------------------------------------
-void BulletBattery::initialise()
+void BulletBattery::initialise(BS::Machine<Bullet>* machine)
 {
+	mMachine = machine;
+	
 	mStoreIndex = 0;
 	mUseIndex = 1;
 
-	mBullets.resize (BATTERY_SIZE);
-	mFreeList[mStoreIndex].reserve (BATTERY_SIZE);
-	mFreeList[mUseIndex].reserve (BATTERY_SIZE);
+	mBullets.resize(BATTERY_SIZE);
+	mFreeList[mStoreIndex].reserve(BATTERY_SIZE);
+	mFreeList[mUseIndex].reserve(BATTERY_SIZE);
 
 	for (int i = 0; i < BATTERY_SIZE; ++ i)
-		mFreeList[mUseIndex].push_back (BATTERY_SIZE - i - 1);
+		mFreeList[mUseIndex].push_back(BATTERY_SIZE - i - 1);
 }
 // --------------------------------------------------------------------------------
 unsigned int BulletBattery::getFreeBulletSlot()
 {
 	unsigned int id;
 
-	if (mFreeList[mUseIndex].size ())
+	if (mFreeList[mUseIndex].size())
 	{
-		id = mFreeList[mUseIndex].back ();
-		mFreeList[mUseIndex].pop_back ();
+		id = mFreeList[mUseIndex].back();
+		mFreeList[mUseIndex].pop_back();
 	}
 	else
 	{
-		if (mFreeList[mStoreIndex].size ())
+		if (mFreeList[mStoreIndex].size())
 		{
-			std::sort (mFreeList[mStoreIndex].begin (), 
-					   mFreeList[mStoreIndex].end (),
-					   BulletSorter ());
+			std::sort(mFreeList[mStoreIndex].begin(), 
+					  mFreeList[mStoreIndex].end(),
+					  BulletSorter());
+
 			mStoreIndex = mUseIndex;
 			mUseIndex = (mStoreIndex == 0) ? 1 : 0;
 
@@ -96,75 +57,98 @@ unsigned int BulletBattery::getFreeBulletSlot()
 		}
 		else
 		{
-			id = (unsigned int) mBullets.size ();
-			mBullets.push_back (Bullet());
+			id = (unsigned int) mBullets.size();
+			mBullets.push_back(Bullet());
 		}
 	}
 
 	return id;
 }
 // --------------------------------------------------------------------------------
-int BulletBattery::emitAngle(BS::BulletGunBase *gun, float x, float y, const float* args)
+Bullet* BulletBattery::emitAngle(BS::bstype x, BS::bstype y, const BS::bstype* args)
 {
-	int slot = getFreeBulletSlot();
-	Bullet &b = mBullets[slot];
-
-	// User parameters
+	Bullet b;
 	b.__active = true;
-	b.__time = 0.0f;
-	b.stage = 0;
+	b.__selected = false;
+	b.__time = 0;
+
 	b.x = x;
 	b.y = y;
-	b.speed = b.speed0 = args[-2];
-	b.damage = UINT32_TO_FLOAT(args[-1]);
-	b.vx = (float) sin(args[-3] * 0.017453);
-	b.vy = (float) cos(args[-3] * 0.017453);
+	b.speed = args[-1];
+	b.vx = (BS::bstype) sin(args[-2] * BS::DEG_TO_RAD);
+	b.vy = (BS::bstype) cos(args[-2] * BS::DEG_TO_RAD);
+	b.fade = 1;
 
-	// Required by bulletscript
-	b.__gun = gun;
-	b.__ctrl = 0;
+	size_t count = mSpawnedBullets.size();
+	mSpawnedBullets.push_back(b);
 
-	// Return the number of arguments used
-	return 3;
+	return &(mSpawnedBullets[count]);
 }
 // --------------------------------------------------------------------------------
-int BulletBattery::emitTarget(BS::BulletGunBase *gun, float x, float y, const float *args)
+void BulletBattery::killBullet(Bullet* b)
 {
-	int slot = getFreeBulletSlot();
-	Bullet &b = mBullets[slot];
-
-	// Calculate angle based on x, y and angle, for targeting a position with an offset of 'angle'
-	float dx = args[-5] - x;
-	float dy = args[-4] - y;
-	float angle = (float) (atan2(dy, -dx) - 1.57) + args[-3] * 0.017453f;
-
-	// User parameters
-	b.__active = true;
-	b.__time = 0.0f;
-	b.stage = 0;
-	b.x = x;
-	b.y = y;
-	b.speed = b.speed0 = args[-2];
-	b.damage = args[-1];
-	b.vx = (float) sin(angle);
-	b.vy = (float) cos(angle);
-
-	// Required by bulletscript
-	b.__gun = gun;
-	b.__ctrl = 0;
-
-	// Return the number of arguments used
-	return 5;
+	mBullets[b->__index].__active = false;
+	mFreeList[mStoreIndex].push_back(b->__index);
+	mMachine->releaseType(b);
 }
 // --------------------------------------------------------------------------------
-int BulletBattery::update(float frameTime, BS::BulletMachine<Bullet>* bulletMachine)
+void BulletBattery::killBullet(void* object)
 {
+	killBullet(static_cast<Bullet*>(object));
+}
+// --------------------------------------------------------------------------------
+void BulletBattery::setAngle(void* object, BS::bstype value)
+{
+	Bullet* b = static_cast<Bullet*>(object);
+
+	b->vx = (BS::bstype) sin(value * BS::DEG_TO_RAD);
+	b->vy = (BS::bstype) cos(value * BS::DEG_TO_RAD);
+}
+// --------------------------------------------------------------------------------
+BS::bstype BulletBattery::getAngle(void* object)
+{
+	Bullet* b = static_cast<Bullet*>(object);
+
+	BS::bstype angle = atan2(b->vy, b->vx) * BS::RAD_TO_DEG;
+	if (angle < 0)
+		return fabs(angle) + 90;
+	else
+	{
+		return (180 - angle) - 90;
+	}
+}
+// --------------------------------------------------------------------------------
+void BulletBattery::setFade(void* object, BS::bstype value)
+{
+	Bullet* b = static_cast<Bullet*>(object);
+	b->fade = value;
+}
+// --------------------------------------------------------------------------------
+BS::bstype BulletBattery::getFade(void* object)
+{
+	Bullet* b = static_cast<Bullet*>(object);
+	return b->fade;
+}
+// --------------------------------------------------------------------------------
+int BulletBattery::update(float frameTime)
+{
+	// Add recently spawned bullets
+	for (size_t i = 0; i < mSpawnedBullets.size(); ++i)
+	{
+		unsigned int slot = getFreeBulletSlot();
+		mBullets[slot] = mSpawnedBullets[i];
+		gTotalBullets++;
+	}
+
+	mSpawnedBullets.clear();
+
 	int index = 0;
 	int count = 0;
-	std::vector<Bullet>::iterator it = mBullets.begin ();
-	while (it != mBullets.end ())
+	std::vector<Bullet>::iterator it = mBullets.begin();
+	while (it != mBullets.end())
 	{
 		Bullet &b = *it;
+		b.__index = index;
 		if (b.__active)
 		{
 			b.__time += frameTime;
@@ -174,19 +158,13 @@ int BulletBattery::update(float frameTime, BS::BulletMachine<Bullet>* bulletMach
 			b.y += b.vy * b.speed * frameTime;
 
 			// bulletscript: apply affectors and control functions
-			bulletMachine->applyBulletAffectors(b.__gun, b, frameTime);
-			bulletMachine->applyBulletController(b, frameTime);
+			mMachine->updateType(&b, b.x, b.y, frameTime);
 
 			// Check for death
-			if (b.y < 0 || b.y > 600 || b.x < 0 || b.x > 800)
-			{
-				mBullets[index].__active = false;
-				mFreeList[mStoreIndex].push_back(index);
-			}
+			if (b.y < 0 || b.y > SCREEN_HEIGHT || b.x < 0 || b.x > SCREEN_WIDTH)
+				killBullet(&b);
 			else
-			{
 				count++;
-			}
 		}
 
 		++it;
@@ -198,16 +176,24 @@ int BulletBattery::update(float frameTime, BS::BulletMachine<Bullet>* bulletMach
 // --------------------------------------------------------------------------------
 void BulletBattery::render(RendererGL *renderer)
 {
-	std::vector<Bullet>::iterator it = mBullets.begin ();
+	std::vector<Bullet>::iterator it = mBullets.begin();
 	while (it != mBullets.end ())
 	{
 		Bullet &b = *it;
 		if (b.__active)
-		{
-			renderer->addBullet (b.x, b.y);
-		}
+			renderer->addBullet(b.x, b.y, b.fade, b.__selected);
 
 		++ it;
 	}
+}
+// --------------------------------------------------------------------------------
+Bullet* BulletBattery::getBullet(int index)
+{
+	return &(mBullets[index]);
+}
+// --------------------------------------------------------------------------------
+int BulletBattery::getNumBullets()
+{
+	return mBullets.size();
 }
 // --------------------------------------------------------------------------------

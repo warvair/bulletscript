@@ -1,19 +1,22 @@
 #include <cmath>
 #include <iostream>
 #include <ctime>
-#include "bsScriptMachine.h"
-#include "bsBulletMachine.h"
-#include "bsGun.h"
+#include "bsBulletScript.h"
+#include "Main.h"
 #include "Platform.h"
 #include "RendererGL.h"
 #include "BulletSystem.h"
-#include "Ship.h"
 
 #if BS_PLATFORM == BS_PLATFORM_WIN32
 #	include <windows.h>
 #endif
 
+#define GUN_X	(SCREEN_WIDTH / 2)
+#define GUN_Y	(SCREEN_HEIGHT * 0.9)
+
 using namespace BS;
+
+extern int gTotalBullets;
 
 // Load a script file
 uint8* loadFile(const String& fileName, size_t& byteSize)
@@ -37,50 +40,46 @@ uint8* loadFile(const String& fileName, size_t& byteSize)
 	return buffer;
 }
 
-// Error callback function for ScriptMachine
-void script_err(const char* msg)
-{
-	std::cerr << msg << std::endl;
-}
-
-static BulletShip *gShip = 0;
-
-// Cycle gun on ship
-void toggleGun(int index)
-{
-	gShip->toggleGun(index);
-}
-
 int main (int argc, char **argv)
 {
 	srand(time(0));
 
-	BulletMachine<Bullet> bm;
-	bm.registerAffectorFunction("Accel", BulletAffector_Accel);
-	bm.registerAffectorFunction("Force", BulletAffector_Force);
-	bm.registerAffectorFunction("DelayAccel", BulletAffector_DelayAccel);
-	bm.registerAffectorFunction("Explode", BulletAffector_Explode);
+	// Create machine
+	Machine<Bullet> machine("bullet");
 
-	ScriptMachine sm(script_err, &bm);
-	sm.registerFireFunction("fireA", BulletBattery::emitAngle);
-	sm.registerFireFunction("fireT", BulletBattery::emitTarget);
-	sm.registerGlobalVariable("Player_X", 400);
-	sm.registerGlobalVariable("Player_Y", 32);
-	sm.registerGlobalVariable("Level_Time", 0.0f);
-	sm.registerGlobalVariable("ScreenSize_X", 800.0f);
-	sm.registerGlobalVariable("ScreenSize_Y", 600.0f);
-	sm.registerGlobalVariable("Bullet_Count", 1.0f);
+	// Register global variables
+	machine.registerGlobalVariable("Level_Time", 0);
+
+	// Register bullet functions
+	machine.registerFireFunction<Bullet>("fireA", 2, BulletBattery::emitAngle);
+	machine.setDieFunction<Bullet>(BulletBattery::killBullet);
+	machine.registerProperty<Bullet>("angle", BulletBattery::setAngle, BulletBattery::getAngle);
+	machine.registerProperty<Bullet>("fade", BulletBattery::setFade, BulletBattery::getFade);
+
+	machine.registerGlobalVariable("Level_Time", 0);
+	machine.registerGlobalVariable("ScreenSize_X", SCREEN_WIDTH);
+	machine.registerGlobalVariable("ScreenSize_Y", SCREEN_HEIGHT);
 
 	// User member variables must be declared before compiling scripts
-	sm.declareMemberVariable("Test", "health", 100);
+//	machine.declareMemberVariable("Test", "health", 100);
 
 	std::cout << "Compiling..." << std::endl;
 
 	// Load file
 	size_t fileSize;
 	uint8* fileBuf = loadFile("Guns.script", fileSize);
-	if(sm.compileScript (fileBuf, fileSize) != 0)
+	if(machine.compileScript (fileBuf, fileSize) != 0)
 	{
+		std::cout << "Could not compile Guns.script"  << std::endl;
+		const Log& _log = machine.getLog();
+
+		String msg = _log.getFirst();
+		while (msg != Log::END)
+		{
+			std::cout << msg << std::endl;
+			msg = _log.getNext();
+		}
+
 		delete[] fileBuf;
 		return 0;
 	}
@@ -90,39 +89,27 @@ int main (int argc, char **argv)
 	std::cout << "Initialising..." << std::endl;
 
 	// Initialise battery
-	BulletBattery::initialise();
+	BulletBattery::initialise(&machine);
 
 	// Renderer
 	RendererGL renderer;
-	if (!renderer.initialise(800, 600))
+	if (!renderer.initialise(SCREEN_WIDTH, SCREEN_HEIGHT))
 		return 0;
 
 	SDL_ShowCursor(SDL_DISABLE);
-
-	// Create a test ship
-	gShip = new BulletShip("ship1.tga", 400, 550, &sm, &bm);
-//	gShip->addGun("ClusterBomb", 0, -28);
-	gShip->addGun("Test", 20, 5);
-//	gShip->addGun("Tracker", -20, 5);
-//	gShip->addGun("Jitterer", 12, -16);
-//	gShip->addGun("Gravity", -12, -16);
-
-//	AreaShip areaShip("turret.tga", 736, 536, &sm);
-//	areaShip.addGun("Beam", 0, -28);
-
-//	BombShip bomb(300, 300, &sm);
-//	bomb.addGun("CircleBomb", 0, 0);
-
-	BulletShip player("player.tga", 400, 32, &sm, &bm);
 
 	// Print interface commands
 	std::cout << std::endl;
 	std::cout << "BulletScript" << std::endl;
 	std::cout << "---------------------" << std::endl;
-	std::cout << "[1-5] Toggle bullet emitters." << std::endl;
-	std::cout << "[Q/W] Change bullet count." << std::endl;
 	std::cout << "[Esc] Quit." << std::endl;
 	std::cout << "[Mouse, cursors] Move ship." << std::endl;
+
+	// Create a gun
+	Gun* gun = machine.createGun("Test");
+	gun->setMemberVariable(Member_X, GUN_X);
+	gun->setMemberVariable(Member_Y, GUN_Y);
+	gun->setMemberVariable(Member_Angle, 180);
 
 	// Main loop
 	unsigned int curTime = SDL_GetTicks();
@@ -136,38 +123,39 @@ int main (int argc, char **argv)
 	int moveDir = -1;
 	int oldX = -10000, oldY = -10000;
 	int mouseX = oldX, mouseY = oldY;
+
+	float updateCounter = 0;
+	float updateFreq = 1 / 60.0f;
+	bool updateLogic = false;
+
+	int lastSel = -1, curSel = -1;
+
 	while (true)
 	{
 		if (!processMessages())
 			break;
 
 		// Get update time
-		unsigned int newTime = SDL_GetTicks();
-		unsigned int deltaTime = newTime - curTime;
+		unsigned int deltaTime = 0;
+		unsigned int newTime = 0;
+//		while (deltaTime < 1)
+		{
+			newTime = SDL_GetTicks();
+			deltaTime = newTime - curTime;
+		}
+
 		curTime = newTime;
 		numFrames++;
 		
 		totalTime += deltaTime;
 		fpsCounter += deltaTime;
-		if (fpsCounter > 1000)
-		{
-			fpsCounter -= 1000;
-			std::cerr << "FPS: " << numFrames << " Bullets: " << numBullets << std::endl;
-			numFrames = 0;
-		}
 
 		float frameTime = deltaTime / 1000.0f;
 
 		// Set script globals - this will update BulletAffector global arguments
-		sm.setGlobalVariableValue("Level_Time", totalTime / 1000.0f);
-		sm.setGlobalVariableValue("Player_X", player.getX());
-		sm.setGlobalVariableValue("Player_Y", player.getY());
-
-		sm.setGlobalVariableValue("Bullet_Count", getBulletCount());
+		machine.setGlobalVariableValue("Level_Time", totalTime / 1000.0f);
 	
-		// Update BulletAffector function arguments
-		bm.update();
-
+/*
 		// Update player
 		if (inFocus())
 		{
@@ -186,32 +174,104 @@ int main (int argc, char **argv)
 				player.set(mouseX, 600 - mouseY);
 			}
 		}
+*/
 
-		// Update enemies
-		gShip->update(frameTime);
-		gShip->move(40 * moveDir * frameTime, 0);
-		if (gShip->getX() < 64 || gShip->getX() > (800 - 64))
-			moveDir *= -1;
+		if (!paused())
+		{
+			if (fpsCounter > 1000)
+			{
+				fpsCounter -= 1000;
+				std::cerr << (totalTime/1000.0f) << " FPS: " << numFrames << " Bullets: " << numBullets << "/" << gTotalBullets << std::endl;
+				numFrames = 0;
+			}
 
-//		areaShip.update(frameTime);
-//		bomb.update(frameTime);
-		
-		// Update bullets
-		numBullets = BulletBattery::update(frameTime, &bm);
+			updateCounter += frameTime;
+			if (updateCounter >= updateFreq)
+			{
+				updateCounter -= updateFreq;
+				updateLogic = true;
+			}
+			else
+			{
+				updateLogic = false;
+			}
+
+			if (updateLogic)
+			{
+				// Update machine
+				machine.update(updateFreq);
+
+				// Update bullets
+				numBullets = BulletBattery::update(updateFreq);
+			}
+		}
+		else
+		{
+			curSel = getCurBullet();
+
+			if (lastSel != curSel)
+			{
+				if (curSel == -1)
+				{
+					curSel = BulletBattery::getNumBullets() - 1;
+					Bullet* b = BulletBattery::getBullet(curSel);
+					while (!b->__active)
+					{
+						curSel--;
+						b = BulletBattery::getBullet(curSel);
+					}
+				}
+				else if (curSel == BulletBattery::getNumBullets())
+				{
+					curSel = 0;
+					Bullet* b = BulletBattery::getBullet(curSel);
+					while (!b->__active)
+					{
+						curSel++;
+						b = BulletBattery::getBullet(curSel);
+					}
+				}
+				else
+				{
+					Bullet* b = BulletBattery::getBullet(curSel);
+					while (!b->__active)
+					{
+						curSel++;
+						b = BulletBattery::getBullet(curSel);
+					}
+				}
+
+				if (lastSel >= 0)
+				{
+					Bullet* b = BulletBattery::getBullet(lastSel);
+					b->__selected = false;
+				}
+
+				Bullet* b = BulletBattery::getBullet(curSel);
+				b->__selected = true;
+				std::cout << "bullet:" << std::endl;
+				std::cout << "time " << b->__ft->state.suspendTime << std::endl;
+				std::cout << "inst " << b->__ft->state.curInstruction << std::endl;
+				std::cout << "head " << b->__ft->state.stackHead << std::endl;
+
+				setCurBullet(curSel);
+				lastSel = curSel;
+			}
+		}
 
 		// Render
 		renderer.startRendering();
 
-		player.render(&renderer);
-		gShip->render(&renderer);
-//		areaShip.render(&renderer);
-//		bomb.render(&renderer);
 		BulletBattery::render(&renderer);
 
 		renderer.finishRendering();
+
+		if (debugging())
+		{
+			std::cout << "hello" << std::endl;
+		}
 	}
 
 	SDL_Quit();
-	delete gShip;
 	return 0;
 }

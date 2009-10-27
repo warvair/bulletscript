@@ -29,65 +29,63 @@
    /* Put the tokens into the symbol table, so that GDB and other debuggers
       know about them.  */
    enum yytokentype {
-     KEYWORD_UNIT = 258,
-     KEYWORD_GUN = 259,
-     KEYWORD_ENABLE = 260,
-     KEYWORD_DISABLE = 261,
-     KEYWORD_EVENT = 262,
-     KEYWORD_BULLET = 263,
-     KEYWORD_AREA = 264,
-     KEYWORD_ARC = 265,
-     KEYWORD_SPLINE = 266,
-     KEYWORD_LOOP = 267,
-     KEYWORD_IF = 268,
-     KEYWORD_ELSE = 269,
-     KEYWORD_GOTO = 270,
-     KEYWORD_WAIT = 271,
-     KEYWORD_SET = 272,
-     KEYWORD_AFFECTORS = 273,
-     KEYWORD_BASE = 274,
-     KEYWORD_CENTRE = 275,
-     INTEGER = 276,
-     REAL = 277,
-     IDENTIFIER = 278,
-     SYMBOL_LTE = 279,
-     SYMBOL_GTE = 280,
-     SYMBOL_EQ = 281,
-     SYMBOL_NEQ = 282,
-     SYMBOL_LOG_AND = 283,
-     SYMBOL_LOG_OR = 284,
-     TOKEN_ERROR = 285
+     KEYWORD_GUN = 258,
+     KEYWORD_FUNCTION = 259,
+     KEYWORD_STATE = 260,
+     KEYWORD_LOOP = 261,
+     KEYWORD_WHILE = 262,
+     KEYWORD_IF = 263,
+     KEYWORD_ELSE = 264,
+     KEYWORD_GOTO = 265,
+     KEYWORD_WAIT = 266,
+     KEYWORD_DIE = 267,
+     INTEGER = 268,
+     REAL = 269,
+     FUNC_ARGS = 270,
+     IDENTIFIER = 271,
+     SYMBOL_LTE = 272,
+     SYMBOL_GTE = 273,
+     SYMBOL_EQ = 274,
+     SYMBOL_NEQ = 275,
+     SYMBOL_LOG_AND = 276,
+     SYMBOL_LOG_OR = 277,
+     SYMBOL_INC = 278,
+     SYMBOL_DEC = 279,
+     SYMBOL_ADD_A = 280,
+     SYMBOL_SUB_A = 281,
+     SYMBOL_MUL_A = 282,
+     SYMBOL_DIV_A = 283,
+     TOKEN_ERROR = 284
    };
 #endif
 /* Tokens.  */
-#define KEYWORD_UNIT 258
-#define KEYWORD_GUN 259
-#define KEYWORD_ENABLE 260
-#define KEYWORD_DISABLE 261
-#define KEYWORD_EVENT 262
-#define KEYWORD_BULLET 263
-#define KEYWORD_AREA 264
-#define KEYWORD_ARC 265
-#define KEYWORD_SPLINE 266
-#define KEYWORD_LOOP 267
-#define KEYWORD_IF 268
-#define KEYWORD_ELSE 269
-#define KEYWORD_GOTO 270
-#define KEYWORD_WAIT 271
-#define KEYWORD_SET 272
-#define KEYWORD_AFFECTORS 273
-#define KEYWORD_BASE 274
-#define KEYWORD_CENTRE 275
-#define INTEGER 276
-#define REAL 277
-#define IDENTIFIER 278
-#define SYMBOL_LTE 279
-#define SYMBOL_GTE 280
-#define SYMBOL_EQ 281
-#define SYMBOL_NEQ 282
-#define SYMBOL_LOG_AND 283
-#define SYMBOL_LOG_OR 284
-#define TOKEN_ERROR 285
+#define KEYWORD_GUN 258
+#define KEYWORD_FUNCTION 259
+#define KEYWORD_STATE 260
+#define KEYWORD_LOOP 261
+#define KEYWORD_WHILE 262
+#define KEYWORD_IF 263
+#define KEYWORD_ELSE 264
+#define KEYWORD_GOTO 265
+#define KEYWORD_WAIT 266
+#define KEYWORD_DIE 267
+#define INTEGER 268
+#define REAL 269
+#define FUNC_ARGS 270
+#define IDENTIFIER 271
+#define SYMBOL_LTE 272
+#define SYMBOL_GTE 273
+#define SYMBOL_EQ 274
+#define SYMBOL_NEQ 275
+#define SYMBOL_LOG_AND 276
+#define SYMBOL_LOG_OR 277
+#define SYMBOL_INC 278
+#define SYMBOL_DEC 279
+#define SYMBOL_ADD_A 280
+#define SYMBOL_SUB_A 281
+#define SYMBOL_MUL_A 282
+#define SYMBOL_DIV_A 283
+#define TOKEN_ERROR 284
 
 
 

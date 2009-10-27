@@ -183,40 +183,6 @@
 			UniqueIdentifier="{4FC737F1-C7A5-4376-A066-2A32D752A2FF}"
 			>
 			<File
-				RelativePath="..\src\bsAbstractSyntaxTree.cpp"
-				>
-			</File>
-			<File
-				RelativePath="..\src\bsArcGun.cpp"
-				>
-				<FileConfiguration
-					Name="Debug|Win32"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-						ObjectFile="$(IntDir)\$(InputName)1.obj"
-						XMLDocumentationFileName="$(IntDir)\$(InputName)1.xdc"
-					/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="Release|Win32"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-						ObjectFile="$(IntDir)\$(InputName)1.obj"
-						XMLDocumentationFileName="$(IntDir)\$(InputName)1.xdc"
-					/>
-				</FileConfiguration>
-			</File>
-			<File
-				RelativePath="..\src\bsAreaGun.cpp"
-				>
-			</File>
-			<File
-				RelativePath="..\src\bsBulletGun.cpp"
-				>
-			</File>
-			<File
 				RelativePath="..\src\bsBulletLexer.cpp"
 				>
 			</File>
@@ -225,11 +191,19 @@
 				>
 			</File>
 			<File
-				RelativePath="..\src\bsGun.cpp"
+				RelativePath="..\src\bsFireType.cpp"
 				>
 			</File>
 			<File
-				RelativePath="..\src\bsGunDefinitions.cpp"
+				RelativePath="..\src\bsGunDefinition.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\src\bsLog.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\src\bsParseTree.cpp"
 				>
 			</File>
 			<File
@@ -259,31 +233,15 @@
 			UniqueIdentifier="{93995380-89BD-4b04-88EB-625FBE52EBFB}"
 			>
 			<File
-				RelativePath="..\include\bsAbstractSyntaxTree.h"
-				>
-			</File>
-			<File
-				RelativePath="..\include\bsArcGun.h"
-				>
-			</File>
-			<File
-				RelativePath="..\include\bsAreaGun.h"
-				>
-			</File>
-			<File
-				RelativePath="..\include\bsBulletAffector.h"
-				>
-			</File>
-			<File
-				RelativePath="..\include\bsBulletGun.h"
-				>
-			</File>
-			<File
-				RelativePath="..\include\bsBulletMachine.h"
-				>
-			</File>
-			<File
 				RelativePath="..\include\bsBulletParser.hpp"
+				>
+			</File>
+			<File
+				RelativePath="..\include\bsBulletScript.h"
+				>
+			</File>
+			<File
+				RelativePath="..\include\bsBytecode.h"
 				>
 			</File>
 			<File
@@ -291,11 +249,31 @@
 				>
 			</File>
 			<File
+				RelativePath="..\include\bsDeepMemoryPool.h"
+				>
+			</File>
+			<File
+				RelativePath="..\include\bsFireType.h"
+				>
+			</File>
+			<File
 				RelativePath="..\include\bsGun.h"
 				>
 			</File>
 			<File
-				RelativePath="..\include\bsGunDefinitions.h"
+				RelativePath="..\include\bsGunDefinition.h"
+				>
+			</File>
+			<File
+				RelativePath="..\include\bsLog.h"
+				>
+			</File>
+			<File
+				RelativePath="..\include\bsMachine.h"
+				>
+			</File>
+			<File
+				RelativePath="..\include\bsParseTree.h"
 				>
 			</File>
 			<File
@@ -314,6 +292,10 @@
 				RelativePath="..\include\bsScriptVariables.h"
 				>
 			</File>
+			<File
+				RelativePath="..\include\bsTypeManager.h"
+				>
+			</File>
 		</Filter>
 		<Filter
 			Name="Resource Files"
@@ -322,6 +304,10 @@
 			>
 			<File
 				RelativePath="..\doc\Ideas.txt"
+				>
+			</File>
+			<File
+				RelativePath="..\doc\Syntax.txt"
 				>
 			</File>
 			<File

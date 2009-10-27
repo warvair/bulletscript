@@ -1,30 +1,28 @@
 #ifndef __BULLETSYSTEM_H__
 #define __BULLETSYSTEM_H__
 
-#include "bsBulletGun.h"
+#include "bsBulletScript.h"
 #include "RendererGL.h"
 
 struct Bullet
 {
-	float x, y;
-	float vx, vy;
-	float speed;
-	float damage;
-
-	int stage; // for BulletAffectors
-	float speed0; // initial speed
+	BS::bstype x, y;
+	BS::bstype vx, vy;
+	BS::bstype speed;
+	BS::bstype fade;
 
 	// Internal variables, do not modify in affector function!
+	int __index;
 	float __time;
+
+	// For bulletscript
+	BS::FireTypeScriptRecord* __ft;
+
 	bool __active;
-	char padding[7]; // pad to 48 bytes
+	bool __selected;
+	char padding[10]; // pad to 48 bytes
 
 	Bullet() : __active (false) {}
-
-	// This must be added to the Bullet type in order to use BulletAffectors
-	BS::BulletGunBase *__gun;
-	// This must be added to the Bullet type for control functions
-	BS::ScriptState* __ctrl;
 };
 
 /* This class is based off code from motorherp, posted on the SHMUP-DEV forums
@@ -41,6 +39,8 @@ class BulletBattery
 		}
 	};
 
+	static BS::Machine<Bullet>* mMachine;
+
 	static const int BATTERY_SIZE = 2048;
 
 	static std::vector<Bullet> mBullets;
@@ -48,29 +48,37 @@ class BulletBattery
 	static int mStoreIndex;
 	static int mUseIndex;
 
+	static std::vector<Bullet> mSpawnedBullets;
+
 	static unsigned int getFreeBulletSlot();
+
+	static void killBullet(Bullet* b);
 
 public:
 
-	static void initialise();
+	static void initialise(BS::Machine<Bullet>* machine);
 
-	static int emitAngle(BS::BulletGunBase* gun, float x, float y, const float* args);
-
-	static int emitTarget(BS::BulletGunBase* gun, float x, float y, const float* args);
-
-	static int update(float frameTime, BS::BulletMachine<Bullet>* bulletMachine);
+	static int update(float frameTime);
 
 	static void render(RendererGL* renderer);
+
+	static Bullet* getBullet(int index);
+
+	static int getNumBullets();
+
+	// Scripting
+	static Bullet* emitAngle(BS::bstype x, BS::bstype y, const BS::bstype* args);
+
+	static void killBullet(void* object);
+
+	static void setAngle(void* object, BS::bstype value);
+
+	static BS::bstype getAngle(void* object);
+
+	static void setFade(void* object, BS::bstype value);
+
+	static BS::bstype getFade(void* object);
+
 };
-
-
-// BulletAffector functions
-void BulletAffector_Accel(Bullet& b, const float* args, float frameTime);
-
-void BulletAffector_Force(Bullet& b, const float* args, float frameTime);
-
-void BulletAffector_DelayAccel(Bullet& b, const float* args, float frameTime);
-
-void BulletAffector_Explode(Bullet& b, const float* args, float frameTime);
 
 #endif

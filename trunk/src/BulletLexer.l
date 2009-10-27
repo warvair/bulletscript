@@ -5,6 +5,7 @@ DIGIT     	[0-9]
 LETTER    	[a-zA-Z_]
 HEX       	[a-fA-F0-9]
 BINARY    	[0-1]
+FUNC_ARGS	[RP]
 
 %{
 
@@ -36,29 +37,23 @@ BINARY    	[0-1]
 
 "//"[^\n]*                      { /* process comments */ }
 
-"unit"							{ return (KEYWORD_UNIT); }
 "gun"							{ return (KEYWORD_GUN); }
-"enable"						{ return (KEYWORD_ENABLE); }
-"disable"						{ return (KEYWORD_DISABLE); }
-"event"							{ return (KEYWORD_EVENT); }
-"bullet"						{ return (KEYWORD_BULLET); }
-"area"							{ return (KEYWORD_AREA); }
-"arc"							{ return (KEYWORD_ARC); }
-"spline"						{ return (KEYWORD_SPLINE); }
-"loop"						{ return (KEYWORD_LOOP); }
+"function"						{ return (KEYWORD_FUNCTION); }
+"state"							{ return (KEYWORD_STATE); }
+"loop"							{ return (KEYWORD_LOOP); }
+"while"							{ return (KEYWORD_WHILE); }
 "if"							{ return (KEYWORD_IF); }
 "else"							{ return (KEYWORD_ELSE); }
 "goto"							{ return (KEYWORD_GOTO); }
 "wait"							{ return (KEYWORD_WAIT); }
-"set"							{ return (KEYWORD_SET); }
-"affectors"						{ return (KEYWORD_AFFECTORS); }
-"BASE"							{ return (KEYWORD_BASE); }
-"CENTRE"						{ return (KEYWORD_CENTRE); }
+"die"							{ return (KEYWORD_DIE); }
 
 {DIGIT}+						{ return (INTEGER); }
+"-"{DIGIT}+						{ return (INTEGER); /* this is a bit of a hack */ }
 {DIGIT}*"."{DIGIT}+				{ return (REAL); }
 {DIGIT}+"."{DIGIT}*				{ return (REAL); }
 
+{FUNC_ARGS}+					{ return (FUNC_ARGS); }
 {LETTER}({LETTER}|{DIGIT})*     { return (IDENTIFIER); }
 
 "<="							{ return (SYMBOL_LTE); }
@@ -68,7 +63,10 @@ BINARY    	[0-1]
 "&&"							{ return (SYMBOL_LOG_AND); }
 "||"							{ return (SYMBOL_LOG_OR); }
 ";"								{ return (';'); }
+"$"								{ return ('$'); }
+":"								{ return (':'); }
 ","								{ return (','); }
+"."								{ return ('.'); }
 "="								{ return ('='); }
 "["								{ return ('['); }
 "]"								{ return (']'); }
@@ -83,6 +81,12 @@ BINARY    	[0-1]
 "%"								{ return ('%'); }
 "<"								{ return ('<'); }
 ">"								{ return ('>'); }
+"++"							{ return (SYMBOL_INC); }
+"--"							{ return (SYMBOL_DEC); }
+"+="							{ return (SYMBOL_ADD_A); }
+"-="							{ return (SYMBOL_SUB_A); }
+"*="							{ return (SYMBOL_MUL_A); }
+"/="							{ return (SYMBOL_DIV_A); }
 
 [ \t\v\n\r\f]					{ /* eat up whitespace */ }
 

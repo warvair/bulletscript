@@ -1,17 +1,15 @@
-initial x/y/angle should be specified when new'ing a gun
-	not necessarily, the offset functionality will be wrapped by the script system's Unit class.
+'while' language feature to complement 'loop'
+
+++ -- += -=
+
+What to do when user wants to manually control bullets from code?  Ie, when you fire a weapon,
+the bullets stop their current behaviour and get sucked towards/blown away from you, and then
+maybe resume their old behaviour when you stop firing.  This is an edge case but it must be considered.
+
+avoid float-int conversions where possible
 
 affector arguments may change: do we have it so that already emitted bullets use the old arguments, or
 the current ones?
-
-Member variables may need to have listeners like global variables.
-
-have the possibility of bullets taking a script behaviour function
-
-scriptmachine needs an error log.
-
-how can we have bullets emitting bullets? also areas: for instance we could do forked lightning with
-area-emitters, also beams that change direction, bullet fireworks, etc.
 
 Remove containers where possible
 	BulletAffector::mArguments
@@ -19,9 +17,8 @@ Remove containers where possible
 	BulletMachine::mBulletAffectors
 	GlobalVariable::mListeners
 	
-	simple memory allocator
+	simple memory allocator?
 
 Homing affector
 
 Per-state affectors
-
