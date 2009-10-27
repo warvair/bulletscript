@@ -58,9 +58,9 @@ uint8* loadFile(const String& fileName, size_t& byteSize)
 
 int main(int argc, char** argv)
 {
-	if (argc < 3)
+	if (argc < 5)
 	{
-		cout << "No file/time specified." << endl;
+		cout << "No file/guns/count/time specified." << endl;
 		return 0;
 	}
 
@@ -72,7 +72,9 @@ int main(int argc, char** argv)
 	Machine<Bullet> machine("bullet");
 
 	// Register global variables
+	float bulletCount = atof(argv[3]);
 	machine.registerGlobalVariable("Level_Time", 0);
+	machine.registerGlobalVariable("Bullet_Time", bulletCount);
 
 	// Register bullet functions
 	machine.registerFireFunction<Bullet>("fireA", 2, BulletBattery::emitAngle);
@@ -86,8 +88,8 @@ int main(int argc, char** argv)
 
 	// Load script file
 	size_t fileSize;
-	std::auto_ptr<uint8> fb(loadFile(argv[1], fileSize));
-	if (machine.compileScript(fb.get(), fileSize) != 0)
+	uint8* buffer = loadFile(argv[1], fileSize);
+	if (machine.compileScript(buffer, fileSize) != 0)
 	{
 		cout << "Could not compile " << argv[1] << endl;
 		const Log& _log = machine.getLog();
@@ -99,23 +101,31 @@ int main(int argc, char** argv)
 			msg = _log.getNext();
 		}
 
+		delete[] buffer;
 		return 0;
 	}
+
+	delete[] buffer;
 
 	// Initialise
 	std::cout << "Initialising..." << std::endl;
 	BulletBattery::initialise(&machine);
 
 	// Create a gun
-	Gun* gun = machine.createGun("Test");
-	gun->setMemberVariable(Member_X, 400);
-	gun->setMemberVariable(Member_Y, 540);
-	gun->setMemberVariable(Member_Angle, 180);
+	Gun* gun;
+	int numGuns = atoi(argv[2]);
+	for (int i = 0; i < numGuns; ++i)
+	{
+		gun = machine.createGun("Test");
+		gun->setMemberVariable(Member_X, 400);
+		gun->setMemberVariable(Member_Y, 540);
+		gun->setMemberVariable(Member_Angle, 180);
+	}
 
 	// Timing
 	unsigned long curTime = timeGetTime();
 	unsigned long totalTime = 0;
-	unsigned long runTime = atof(argv[2]) * 1000;
+	unsigned long runTime = atof(argv[4]) * 1000;
 	unsigned long statCounter = 0;
 	unsigned long frameCounter = 0;
 

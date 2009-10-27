@@ -832,7 +832,8 @@ property
 	: '$' identifier
 		{
 			$$ = AST->createNode(PT_Property, yylineno);
-			$$->setString(yytext);
+			$$->setString($2->getStringData().c_str());
+			delete $2;
 		}
 	;
 			

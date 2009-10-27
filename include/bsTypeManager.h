@@ -77,6 +77,8 @@ namespace BS_NMSP
 		{
 			for (int i = 0; i < mNumTypes; ++i)
 				delete mTypes[i];
+
+			delete[] mTypes;
 		}
 
 		void addErrorMsg(const String& msg)

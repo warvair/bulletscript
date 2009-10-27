@@ -27,6 +27,6 @@ gun Test
 	{
 		fireA bullet(170, m_speed) : Func1(1.2, m_speed, 120);
 		fireA bullet(190, m_speed) : Func2(1.2, m_speed, 120);
-		wait(0.2);
+		wait(Bullet_Time);
 	}
 }

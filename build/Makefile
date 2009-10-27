@@ -5,9 +5,7 @@ LIBNAME_D = bulletscript.so
 
 LIBSRCDIR = ../src
 
-LIBSRC = $(LIBSRCDIR)/bsBulletLexer.cpp $(LIBSRCDIR)/bsBulletParser.cpp  
-$(LIBSRCDIR)/bsFireType.cpp $(LIBSRCDIR)/bsGunDefinition.cpp $(LIBSRCDIR)/bsLog.cpp $(LIBSRCDIR)/bsParseTree.cpp
-$(LIBSRCDIR)/bsScriptMachine.cpp $(LIBSRCDIR)/bsScriptStructs.cpp $(LIBSRCDIR)/bsScriptVariables.cpp
+LIBSRC = $(LIBSRCDIR)/bsBulletLexer.cpp $(LIBSRCDIR)/bsBulletParser.cpp $(LIBSRCDIR)/bsFireType.cpp $(LIBSRCDIR)/bsGunDefinition.cpp $(LIBSRCDIR)/bsLog.cpp $(LIBSRCDIR)/bsParseTree.cpp $(LIBSRCDIR)/bsScriptMachine.cpp $(LIBSRCDIR)/bsScriptStructs.cpp $(LIBSRCDIR)/bsScriptVariables.cpp
 
 LIBOUTDIR_S = ../lib
 
@@ -31,7 +29,7 @@ MINFILES = $(MINSRC:.cpp=.o)
 # compiler
 CXX = g++
 
-CXXFLAGS = -O2 -I../include -g
+CXXFLAGS = -O2 -I../include -I/usr/local/boost_1_40_0 -g
 
 # bulletscript
 lib-static: $(LIBFILES)
