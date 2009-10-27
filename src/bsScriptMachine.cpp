@@ -195,11 +195,6 @@ NativeFunction ScriptMachine::getNativeFunction(int index) const
 	return mNativeFunctions[index].function;
 }
 // --------------------------------------------------------------------------------
-bool ScriptMachine::fireFunctionExists(int type, const String& name) const
-{
-	return mTypeManager->fireFunctionExists(type, name);
-}
-// --------------------------------------------------------------------------------
 FireTypeBase* ScriptMachine::getFireType(const String& name) const
 {
 	return mTypeManager->getType(name);

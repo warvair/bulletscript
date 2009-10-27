@@ -69,7 +69,6 @@ Bullet* BulletBattery::emitAngle(BS::bstype x, BS::bstype y, const BS::bstype* a
 {
 	Bullet b;
 	b.__active = true;
-	b.__selected = false;
 	b.__time = 0;
 
 	b.x = x;
@@ -181,7 +180,7 @@ void BulletBattery::render(RendererGL *renderer)
 	{
 		Bullet &b = *it;
 		if (b.__active)
-			renderer->addBullet(b.x, b.y, b.fade, b.__selected);
+			renderer->addBullet(b.x, b.y, b.fade);
 
 		++ it;
 	}

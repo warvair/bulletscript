@@ -205,59 +205,6 @@ int main (int argc, char **argv)
 				numBullets = BulletBattery::update(updateFreq);
 			}
 		}
-		else
-		{
-			curSel = getCurBullet();
-
-			if (lastSel != curSel)
-			{
-				if (curSel == -1)
-				{
-					curSel = BulletBattery::getNumBullets() - 1;
-					Bullet* b = BulletBattery::getBullet(curSel);
-					while (!b->__active)
-					{
-						curSel--;
-						b = BulletBattery::getBullet(curSel);
-					}
-				}
-				else if (curSel == BulletBattery::getNumBullets())
-				{
-					curSel = 0;
-					Bullet* b = BulletBattery::getBullet(curSel);
-					while (!b->__active)
-					{
-						curSel++;
-						b = BulletBattery::getBullet(curSel);
-					}
-				}
-				else
-				{
-					Bullet* b = BulletBattery::getBullet(curSel);
-					while (!b->__active)
-					{
-						curSel++;
-						b = BulletBattery::getBullet(curSel);
-					}
-				}
-
-				if (lastSel >= 0)
-				{
-					Bullet* b = BulletBattery::getBullet(lastSel);
-					b->__selected = false;
-				}
-
-				Bullet* b = BulletBattery::getBullet(curSel);
-				b->__selected = true;
-				std::cout << "bullet:" << std::endl;
-				std::cout << "time " << b->__ft->state.suspendTime << std::endl;
-				std::cout << "inst " << b->__ft->state.curInstruction << std::endl;
-				std::cout << "head " << b->__ft->state.stackHead << std::endl;
-
-				setCurBullet(curSel);
-				lastSel = curSel;
-			}
-		}
 
 		// Render
 		renderer.startRendering();
@@ -265,11 +212,6 @@ int main (int argc, char **argv)
 		BulletBattery::render(&renderer);
 
 		renderer.finishRendering();
-
-		if (debugging())
-		{
-			std::cout << "hello" << std::endl;
-		}
 	}
 
 	SDL_Quit();

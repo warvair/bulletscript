@@ -132,51 +132,57 @@ namespace BS_NMSP
 			// First apply function: high level control goes first
 			if (ft->__ft)
 			{
+				FireTypeScriptRecord* rec = ft->__ft;
+
 				// Update pointer to the user object
-				ft->__ft->object = ft;
+				rec->object = ft;
 
 				// Update changing properties first, because they are independent of script status
-				for (int i = 0; i < ft->__ft->type->mNumProperties; ++i)
+				int numProperties = rec->type->mNumProperties;
+				for (int i = 0; i < numProperties; ++i)
 				{
-					if (ft->__ft->activeProperties & (1 << i))
+					int mask = 1 << i;
+					if (rec->activeProperties & mask)
 					{
-						bstype curValue = ft->__ft->type->mProperties[i].getter(ft->__ft->object);
-						bstype newValue = curValue + ft->__ft->properties[i].speed * frameTime;
+						bstype curValue = rec->type->mProperties[i].getter(rec->object);
+						bstype newValue = curValue + rec->properties[i].speed * frameTime;
 
-						ft->__ft->type->mProperties[i].setter(ft->__ft->object, newValue);
+						rec->type->mProperties[i].setter(rec->object, newValue);
 
-						ft->__ft->properties[i].time -= frameTime;
-						if (ft->__ft->properties[i].time <= 0)
-							ft->__ft->activeProperties &= ~(1 << i);
+						rec->properties[i].time -= frameTime;
+						if (rec->properties[i].time <= 0)
+							rec->activeProperties &= ~mask;
 					}
 				}
 
-				if (ft->__ft->state.suspendTime <= 0)
+				if (rec->state.suspendTime <= 0)
 				{
 					// Need to get the Gun that this bullet was spawned by, and get its member variables
-					mVM->interpretCode(ft->__ft->code->byteCode, ft->__ft->code->byteCodeSize, 
-									   ft->__ft->state, 0, ft->__ft, x, y, ft->__ft->members, false);
+					mVM->interpretCode(rec->code->byteCode, rec->code->byteCodeSize, 
+									   rec->state, 0, rec, x, y, rec->members, false);
 
 
 					// At this point, ft->__ft may have already been released by die()
-					if (ft->__ft)
+					if (rec)
 					{
 						// Check to see if we're at the end of the script and have no properties left to do
-						if (ft->__ft->state.curInstruction >= ft->__ft->code->byteCodeSize &&
-							ft->__ft->activeProperties == 0)
+						if (rec->state.curInstruction >= rec->code->byteCodeSize &&
+							rec->activeProperties == 0)
 							releaseType(ft);
 					}
 
 				}
 				else
 				{
-					ft->__ft->state.suspendTime -= frameTime;
+					rec->state.suspendTime -= frameTime;
 				}
 			}
 
 			// Then affectors
+			// ...
 
 			// Then anchors
+			// ...
 
 		}
 

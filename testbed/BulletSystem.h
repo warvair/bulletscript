@@ -19,10 +19,9 @@ struct Bullet
 	BS::FireTypeScriptRecord* __ft;
 
 	bool __active;
-	bool __selected;
-	char padding[10]; // pad to 48 bytes
+	char padding[11]; // pad to 48 bytes
 
-	Bullet() : __active (false) {}
+	Bullet() : __active(false) {}
 };
 
 /* This class is based off code from motorherp, posted on the SHMUP-DEV forums

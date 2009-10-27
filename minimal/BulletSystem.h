@@ -6,26 +6,25 @@
 
 struct Bullet
 {
-	BS::FireTypeScriptRecord* __ft;
-
 	BS::bstype x, y;
 	BS::bstype vx, vy;
 	BS::bstype speed;
-	BS::bstype damage;
-
-	int stage; // for BulletAffectors
-	BS::bstype speed0; // initial speed
 
 	// Internal variables, do not modify in affector function!
+	int __index;
 	float __time;
-	bool __active;
-	char padding[7]; // pad to 48 bytes
 
-	Bullet() : __active (false) {}
+	// For bulletscript
+	BS::FireTypeScriptRecord* __ft;
+
+	bool __active;
+	char padding[15]; // pad to 48 bytes
+
+	Bullet() : __active(false) {}
 };
 
 /* This class is based off code from motorherp, posted on the SHMUP-DEV forums
-   at http://www.shmup-dev.com/forum
+	at http://www.shmup-dev.com/forum
 */
 
 class BulletBattery
@@ -38,6 +37,8 @@ class BulletBattery
 		}
 	};
 
+	static BS::Machine<Bullet>* mMachine;
+
 	static const int BATTERY_SIZE = 2048;
 
 	static std::vector<Bullet> mBullets;
@@ -47,15 +48,28 @@ class BulletBattery
 
 	static std::vector<Bullet> mSpawnedBullets;
 
+	static int mCurBullets, mSpawned, mKilled;
+
 	static unsigned int getFreeBulletSlot();
+
+	static void killBullet(Bullet* b);
 
 public:
 
-	static void initialise();
+	static void initialise(BS::Machine<Bullet>* machine);
 
+	static void update(float frameTime);
+
+	static void getStats(int& active, int& spawned, int& killed);
+
+	// Scripting
 	static Bullet* emitAngle(BS::bstype x, BS::bstype y, const BS::bstype* args);
 
-	static int update(float frameTime, BS::Machine<Bullet>* machine);
+	static void killBullet(void* object);
+
+	static void setAngle(void* object, BS::bstype value);
+
+	static BS::bstype getAngle(void* object);
 
 };
 

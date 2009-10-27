@@ -5,7 +5,9 @@ LIBNAME_D = bulletscript.so
 
 LIBSRCDIR = ../src
 
-LIBSRC = $(LIBSRCDIR)/bsAbstractSyntaxTree.cpp $(LIBSRCDIR)/bsBulletLexer.cpp $(LIBSRCDIR)/bsScriptMachine.cpp $(LIBSRCDIR)/bsAreaGun.cpp $(LIBSRCDIR)/bsBulletParser.cpp $(LIBSRCDIR)/bsScriptMachine.cpp $(LIBSRCDIR)/bsGun.cpp $(LIBSRCDIR)/bsScriptStructs.cpp $(LIBSRCDIR)/bsBulletGun.cpp $(LIBSRCDIR)/bsGunDefinitions.cpp $(LIBSRCDIR)/bsScriptVariables.cpp
+LIBSRC = $(LIBSRCDIR)/bsBulletLexer.cpp $(LIBSRCDIR)/bsBulletParser.cpp  
+$(LIBSRCDIR)/bsFireType.cpp $(LIBSRCDIR)/bsGunDefinition.cpp $(LIBSRCDIR)/bsLog.cpp $(LIBSRCDIR)/bsParseTree.cpp
+$(LIBSRCDIR)/bsScriptMachine.cpp $(LIBSRCDIR)/bsScriptStructs.cpp $(LIBSRCDIR)/bsScriptVariables.cpp
 
 LIBOUTDIR_S = ../lib
 

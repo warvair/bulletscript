@@ -19,26 +19,6 @@ GunDefinition::GunDefinition(const String& name) :
 GunDefinition::~GunDefinition()
 {
 	delete[] m_constructCode;
-
-	// Delete state code
-	{
-		std::vector<State>::iterator it = mStates.begin();
-		while (it != mStates.end())
-		{
-//			delete (*it).record;
-			++it;
-		}
-	}
-
-	// Delete function code
-	{
-		std::vector<Function>::iterator it = mFunctions.begin();
-		while (it != mFunctions.end())
-		{
-//			delete (*it).record;
-			++it;
-		}
-	}
 }
 // --------------------------------------------------------------------------------
 const String& GunDefinition::getName() const
@@ -207,53 +187,6 @@ GunScriptRecord* GunDefinition::createGunScriptRecord(ScriptMachine* sm)
 	record->curState = mInitialState;
 
 	return record;
-}
-// --------------------------------------------------------------------------------
-void GunDefinition::print(std::ostream& stream)
-{
-	for (int i = 0; i < getNumFunctions(); ++i)
-	{
-		const Function& func = getFunction(i);
-		stream << "Function: " << func.name << " " << func.numArguments << std::endl;
-		stream << "---------------" << std::endl;
-/*
-		if (func.record)
-		{
-			for (int j = 0; j < func.record->getNumVariables(); ++j)
-				stream << func.record->getVariable(j) << std::endl;
-
-			if (func.record->byteCodeSize > 0)
-			{
-				stream << std::endl;
-				for (size_t j = 0; j < func.record->byteCodeSize; ++j)
-					stream << func.record->byteCode[j] << std::endl;
-			}
-		}
-*/
-		stream << std::endl;
-	}
-
-	for (int i = 0; i < getNumStates(); ++i)
-	{
-		const State& st = getState(i);
-		stream << "State: " << st.name << std::endl;
-		stream << "---------------" << std::endl;
-/*
-		if (st.record)
-		{
-			for (int j = 0; j < st.record->getNumVariables(); ++j)
-				stream << st.record->getVariable(i) << std::endl;
-
-			if (st.record->byteCodeSize > 0)
-			{
-				stream << std::endl;
-				for (size_t j = 0; j < st.record->byteCodeSize; ++j)
-					stream << st.record->byteCode[j] << std::endl;
-			}
-		}
-*/
-		stream << std::endl;
-	}
 }
 // --------------------------------------------------------------------------------
 

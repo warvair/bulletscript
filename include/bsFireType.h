@@ -279,15 +279,6 @@ namespace BS_NMSP
 			mFunctions.push_back(fe);
 		}
 
-		FireFunction getFireFunction(const String& name) const
-		{
-			for (size_t i = 0; i < mFunctions.size(); ++i)
-				if (mFunctions[i].name == name)
-					return mFunctions[i].func;
-
-			return 0;
-		}
-
 		int getNumFireFunctionArguments(const String& name) const
 		{
 			for (size_t i = 0; i < mFunctions.size(); ++i)
