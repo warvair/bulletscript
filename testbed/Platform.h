@@ -13,4 +13,12 @@ float getBulletCount();
 
 bool inFocus();
 
+bool debugging();
+
+bool paused();
+
+int getCurBullet();
+
+void setCurBullet(int val);
+
 #endif

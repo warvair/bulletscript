@@ -82,14 +82,14 @@ RendererGL::RendererGL () :
 {
 	for (int i = 0; i < MAX_BULLETS * 8; i += 8)
 	{
-		mBulletTex[i + 0] = 0.0f;
-		mBulletTex[i + 1] = 0.0f;
-		mBulletTex[i + 2] = 1.0f;
-		mBulletTex[i + 3] = 0.0f;
-		mBulletTex[i + 4] = 1.0f;
-		mBulletTex[i + 5] = 1.0f;
-		mBulletTex[i + 6] = 0.0f;
-		mBulletTex[i + 7] = 1.0f;
+		mBulletTex[i + 0] = 0;
+		mBulletTex[i + 1] = 0;
+		mBulletTex[i + 2] = 1;
+		mBulletTex[i + 3] = 0;
+		mBulletTex[i + 4] = 1;
+		mBulletTex[i + 5] = 1;
+		mBulletTex[i + 6] = 0;
+		mBulletTex[i + 7] = 1;
 	}
 
 	for (int i = 0; i < MAX_BULLETS * 4; ++ i)
@@ -135,29 +135,21 @@ void RendererGL::startRendering ()
 void RendererGL::finishRendering ()
 {
 	// Draw bullets
-	glBindTexture (GL_TEXTURE_2D, mTextureId);
-	glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
-
-	glEnableClientState (GL_VERTEX_ARRAY);
-	glEnableClientState (GL_TEXTURE_COORD_ARRAY);
-
-	glVertexPointer (2, GL_FLOAT, 0, mBulletPos);
-	glTexCoordPointer (2, GL_FLOAT, 0, mBulletTex);
-
-	glDrawElements (GL_QUADS, 4 * mNumBullets, GL_UNSIGNED_SHORT, mIndices);
-
-	glDisableClientState (GL_TEXTURE_COORD_ARRAY);
-	glDisableClientState (GL_VERTEX_ARRAY);
+	renderBatch();
 
 	SDL_GL_SwapBuffers ();
 }
 // --------------------------------------------------------------------------------
-void RendererGL::addBullet (float x, float y)
+void RendererGL::addBullet (float x, float y, float fade, bool selected)
 {
 	if (mNumBullets >= MAX_BULLETS)
-		return;
+	{
+		renderBatch();
+		mNumBullets = 0;
+	}
 
 	int bOffset = mNumBullets * 8;
+	int cOffset = mNumBullets * 16;
 
 	mBulletPos[bOffset + 0] = x - BULLET_RADIUS;
 	mBulletPos[bOffset + 1] = y - BULLET_RADIUS;
@@ -167,13 +159,57 @@ void RendererGL::addBullet (float x, float y)
 	mBulletPos[bOffset + 5] = y + BULLET_RADIUS;
 	mBulletPos[bOffset + 6] = x - BULLET_RADIUS;
 	mBulletPos[bOffset + 7] = y + BULLET_RADIUS;
+
+	float col;
+	if (selected)
+		col = 0.0f;
+	else
+		col = 1.0f;
+
+	mBulletCol[cOffset + 0] = 1;
+	mBulletCol[cOffset + 1] = col;
+	mBulletCol[cOffset + 2] = col;
+	mBulletCol[cOffset + 3] = fade;
+	mBulletCol[cOffset + 4] = 1;
+	mBulletCol[cOffset + 5] = col;
+	mBulletCol[cOffset + 6] = col;
+	mBulletCol[cOffset + 7] = fade;
+	mBulletCol[cOffset + 8] = 1;
+	mBulletCol[cOffset + 9] = col;
+	mBulletCol[cOffset + 10] = col;
+	mBulletCol[cOffset + 11] = fade;
+	mBulletCol[cOffset + 12] = 1;
+	mBulletCol[cOffset + 13] = col;
+	mBulletCol[cOffset + 14] = col;
+	mBulletCol[cOffset + 15] = fade;
+
 	mNumBullets ++;
+}
+// --------------------------------------------------------------------------------
+void RendererGL::renderBatch()
+{
+	glBindTexture (GL_TEXTURE_2D, mTextureId);
+	glColor4f(1, 1, 1, 1);
+
+	glEnableClientState (GL_VERTEX_ARRAY);
+	glEnableClientState (GL_TEXTURE_COORD_ARRAY);
+	glEnableClientState (GL_COLOR_ARRAY);
+
+	glVertexPointer (2, GL_FLOAT, 0, mBulletPos);
+	glTexCoordPointer (2, GL_FLOAT, 0, mBulletTex);
+	glColorPointer (4, GL_FLOAT, 0, mBulletCol);
+
+	glDrawElements (GL_QUADS, 4 * mNumBullets, GL_UNSIGNED_SHORT, mIndices);
+
+	glDisableClientState (GL_COLOR_ARRAY);
+	glDisableClientState (GL_TEXTURE_COORD_ARRAY);
+	glDisableClientState (GL_VERTEX_ARRAY);
 }
 // --------------------------------------------------------------------------------
 void RendererGL::renderQuickQuad(float x0, float y0, float x1, float y1, GLuint texture)
 {
 	glBindTexture(GL_TEXTURE_2D, texture);
-	glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
+	glColor4f(1, 1, 1, 1);
 	glBegin(GL_QUADS);
 	{
 		glTexCoord2i(0, 0);
@@ -192,7 +228,7 @@ void RendererGL::renderQuickQuad(float x0, float y0, float x1, float y1,
 								 float x2, float y2, float x3, float y3, GLuint texture)
 {
 	glBindTexture(GL_TEXTURE_2D, texture);
-	glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
+	glColor4f(1, 1, 1, 1);
 	glBegin(GL_QUADS);
 	{
 		glTexCoord2i(0, 0);
@@ -211,7 +247,7 @@ void RendererGL::renderQuickUVQuad(float x0, float y0, float x1, float y1,
 								   float u0, float v0, float u1, float v1, GLuint texture)
 {
 	glBindTexture(GL_TEXTURE_2D, texture);
-	glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
+	glColor4f(1, 1, 1, 1);
 	glBegin(GL_QUADS);
 	{
 		glTexCoord2f(u0, v0);
@@ -230,7 +266,7 @@ void RendererGL::renderQuickTriangle(float x0, float y0, float x1, float y1, flo
 									 float y2, float alpha, GLuint texture)
 {
 	glBindTexture(GL_TEXTURE_2D, texture);
-	glColor4f(1.0f, 1.0f, 1.0f, alpha);
+	glColor4f(1, 1, 1, alpha);
 	glBegin(GL_TRIANGLES);
 	{
 		glTexCoord2i(0, 0);
@@ -246,7 +282,7 @@ void RendererGL::renderQuickTriangle(float x0, float y0, float x1, float y1, flo
 void RendererGL::renderQuickLines(const std::vector<float>& points, int numPoints, float alpha)
 {
 	glBindTexture(GL_TEXTURE_2D, 0);
-	glColor4f(1.0f, 1.0f, 1.0f, alpha);
+	glColor4f(1, 1, 1, alpha);
 	glBegin(GL_LINE_LOOP);
 	for (int i = 0; i < numPoints * 2; i += 2)
 		glVertex2f(points[i + 0], points[i + 1]);

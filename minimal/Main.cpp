@@ -1,8 +1,6 @@
 #include <iostream>
 #include <cmath>
-#include "bsScriptMachine.h"
-#include "bsBulletMachine.h"
-#include "bsBulletGun.h"
+#include "bsBulletScript.h"
 #include "BulletSystem.h"
 
 #if BS_PLATFORM == BS_PLATFORM_WIN32
@@ -54,80 +52,63 @@ uint8* loadFile(const String& fileName, size_t& byteSize)
 	return buffer;
 }
 
-void script_err(const char* msg)
-{
-	cerr << msg << endl;
-}
-
 // --------------------------------------------------------------------------------
 // Main
 // --------------------------------------------------------------------------------
 
 int main(int argc, char** argv)
 {
-	std::cout << sizeof(BulletGunController<Bullet>) << std::endl;
-	std::cout << sizeof(BulletGun<Bullet>) << std::endl;
-
-	if (argc < 4)
+	if (argc < 3)
 	{
-		cout << "No file/guns/emitted specified." << endl;
+		cout << "No file/time specified." << endl;
 		return 0;
 	}
 
 #if BS_PLATFORM == BS_PLATFORM_LINUX
 	gettimeofday(&start_time, NULL);
 #endif
-	
-	// Create BulletMachine
-	BulletMachine<Bullet> bm;
-	bm.registerAffectorFunction("Accel", BulletAffector_Accel);
-	bm.registerAffectorFunction("Force", BulletAffector_Force);
-	bm.registerAffectorFunction("DelayAccel", BulletAffector_DelayAccel);
-	bm.registerAffectorFunction("Explode", BulletAffector_Explode);
 
-	// Create ScriptMachine
-	ScriptMachine sm(script_err, &bm);
-	sm.registerGlobalVariable("Player_X", 400);
-	sm.registerGlobalVariable("Player_Y", 32);
-	sm.registerGlobalVariable("Level_Time", 0.0f);
-	sm.registerGlobalVariable("ScreenSize_X", 800.0f);
-	sm.registerGlobalVariable("ScreenSize_Y", 600.0f);
-	sm.registerGlobalVariable("Bullet_Count", 1.0f);
-	sm.registerFireFunction("fireA", BulletBattery::emitAngle);
-	sm.registerFireFunction("fireT", BulletBattery::emitTarget);
+	// Create machine
+	Machine<Bullet> machine("bullet");
+
+	// Register global variables
+	machine.registerGlobalVariable("Level_Time", 0);
+
+	// Register fire functions
+	machine.registerFireFunction<Bullet>("fireA", 3, BulletBattery::emitAngle);
+
+	// Add extra member variables
+	// ...
 
 	// Load script file
 	size_t fileSize;
-	uint8* fileBuf = loadFile(argv[1], fileSize);
-	if (sm.compileScript(fileBuf, fileSize) != 0)
+	std::auto_ptr<uint8> fb(loadFile(argv[1], fileSize));
+	if (machine.compileScript(fb.get(), fileSize) != 0)
 	{
 		cout << "Could not compile " << argv[1] << endl;
-		delete[] fileBuf;
+		const Log& _log = machine.getLog();
+
+		String msg = _log.getFirst();
+		while (msg != Log::END)
+		{
+			cout << msg << endl;
+			msg = _log.getNext();
+		}
+
 		return 0;
 	}
 
-	delete[] fileBuf;
-
-	// Create guns
-	std::vector<BulletGunController<Bullet>*> guns;
-	int numGuns = atoi(argv[2]);
-	for (int i = 0; i < numGuns; ++i)
-	{
-		BulletGunController<Bullet>* gun = new BulletGunController<Bullet>(&sm, &bm, 0);
-		gun->setDefinition("Swarm");
-		gun->setMemberVariable(0, 400 + (rand() % 200) - 100); // X
-		gun->setMemberVariable(1, 300); // Y
-		gun->setMemberVariable(2, 180 + (rand() % 40) - 20); // Angle
-		guns.push_back(gun);
-	}
+	// Create a gun
+	Gun* gun = machine.createGun("Test");
+	gun->setMemberVariable(Member_X, 300);
+	gun->setMemberVariable(Member_Y, 400);
+	gun->setMemberVariable(Member_Angle, 180);
 
 	unsigned long curTime = timeGetTime();
 	unsigned long totalTime = 0;
 	unsigned long numFrames = 0;
-	unsigned long runTime = atof(argv[3]) * 1000;
-//	int targetCount = atoi(argv[3]);
+	unsigned long runTime = atof(argv[2]) * 1000;
 	while (totalTime < runTime)
-//	while (gBulletsEmitted < targetCount)
 	{
 		unsigned long deltaTime = timeGetTime() - curTime;
 		totalTime += deltaTime;
@@ -136,31 +117,20 @@ int main(int argc, char** argv)
 		float frameTime = deltaTime / 1000.0f;
 
 		// Set global script variables
-		sm.setGlobalVariableValue("Level_Time", totalTime / 1000.0f);
+		machine.setGlobalVariableValue("Level_Time", totalTime / 1000.0f);
 
-		// Update affector function arguments
-		bm.update();
+		// Update the machine - this updates Guns
+		machine.update(frameTime);
 
-		// Update guns
-		for (int i = 0; i < numGuns; ++i)
-		{
-			guns[i]->update(frameTime, 0, 0, 0); // Update affector instance arguments
-			guns[i]->runScript(frameTime);	// Run script
-		}
-
-		// Update emitted bullets
-		int numBullets = BulletBattery::update(frameTime, &bm);
+		int numBullets = BulletBattery::update(frameTime, &machine);
 //		std::cout << numBullets << std::endl;
 //		std::cout << runTime << " " << totalTime << std::endl;
 		numFrames++;	
 	}
 
 	cout << totalTime << " " << numFrames << endl;
-	float fps = (float) numFrames / (totalTime / 1000.0f);
-	cout << fps << endl;
-
-	for (int i = 0; i < numGuns; ++i)
-		delete guns[i];
+//	float fps = (float) numFrames / (totalTime / 1000.0f);
+//	cout << fps << endl;
 
 	return 0;
 }

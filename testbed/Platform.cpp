@@ -1,13 +1,17 @@
 #include "Platform.h"
 
-static float gHorz = 0.0f;
-static float gVert = 0.0f;
+static float gHorz = 0;
+static float gVert = 0;
 
-static float gCount = 1.0f;
+static float gCount = 1;
 
 static bool gInFocus = true;
 
-void toggleGun(int index);
+static bool gDebug = false;
+
+static bool gPaused = false;
+
+static int gCurBullet = -1;
 
 bool processMessages()
 {
@@ -22,35 +26,39 @@ bool processMessages()
 		case SDL_KEYDOWN:
 			if (evt.key.keysym.sym == SDLK_ESCAPE)
 				return false;
-			else if(evt.key.keysym.sym >= SDLK_1 && evt.key.keysym.sym <= SDLK_5)
-				toggleGun(evt.key.keysym.sym - SDLK_1);
-			else if(evt.key.keysym.sym == SDLK_LEFT)
-				gHorz = -1.0f;
-			else if(evt.key.keysym.sym == SDLK_RIGHT)
-				gHorz = 1.0f;
 			else if(evt.key.keysym.sym == SDLK_UP)
-				gVert = 1.0f;
+			{
+				gCurBullet++;
+			}
 			else if(evt.key.keysym.sym == SDLK_DOWN)
-				gVert = -1.0f;
+			{
+				gCurBullet--;
+				if (gCurBullet < 0)
+					gCurBullet = -1;
+			}
 			else if(evt.key.keysym.sym == SDLK_w)
-				gCount += 1.0f;
+				gCount += 1;
 			else if(evt.key.keysym.sym == SDLK_q)
 			{
-				gCount -= 1.0f;
-				if (gCount < 1.0f)
-					gCount = 1.0f;
+				gCount -= 1;
+				if (gCount < 1)
+					gCount = 1;
 			}
+			else if (evt.key.keysym.sym == SDLK_d)
+				gDebug = !gDebug;
+			else if (evt.key.keysym.sym == SDLK_p)
+				gPaused = !gPaused;
 			break;
 
 		case SDL_KEYUP:
 			if(evt.key.keysym.sym == SDLK_LEFT)
-				gHorz = 0.0f;
+				gHorz = 0;
 			else if(evt.key.keysym.sym == SDLK_RIGHT)
-				gHorz = 0.0f;
+				gHorz = 0;
 			else if(evt.key.keysym.sym == SDLK_UP)
-				gVert = 0.0f;
+				gVert = 0;
 			else if(evt.key.keysym.sym == SDLK_DOWN)
-				gVert = 0.0f;
+				gVert = 0;
 			break;
 
 		case SDL_ACTIVEEVENT:
@@ -93,4 +101,24 @@ float getBulletCount()
 bool inFocus()
 {
 	return gInFocus;
+}
+
+bool debugging()
+{
+	return gDebug;
+}
+
+bool paused()
+{
+	return gPaused;
+}
+
+int getCurBullet()
+{
+	return gCurBullet;
+}
+
+void setCurBullet(int val)
+{
+	gCurBullet = val;
 }

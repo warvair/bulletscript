@@ -3,9 +3,10 @@
 #include <iostream>
 #include <assert.h>
 #include "bsScriptMachine.h"
-#include "bsBulletMachine.h"
-#include "bsAbstractSyntaxTree.h"
-#include "bsBulletGun.h"
+#include "bsParseTree.h"
+#include "bsBytecode.h"
+#include "bsTypeManager.h"
+#include "bsGun.h"
 
 #if BS_PLATFORM == BS_PLATFORM_LINUX
 #	include <stdlib.h> // for rand()
@@ -23,56 +24,147 @@ void yy_delete_buffer(yy_buffer_state*);
 namespace BS_NMSP
 {
 
-void bm_rand(GunScriptRecord& state)
+void bm_rand(ScriptState& state)
 {
 	int rv = rand();
-	float scale = state.scriptState.stack[state.scriptState.stackHead - 1];
-	float r = scale * (rv / (float) RAND_MAX);
+	bstype scale = state.stack[state.stackHead - 1];
+	bstype r = scale * (rv / (float) RAND_MAX);
 
 	// Push random onto stack - don't need to pop stack
 	// because the return value takes the argument's place.
-	state.scriptState.stack[state.scriptState.stackHead - 1] = r;
+	state.stack[state.stackHead - 1] = r;
 }
 
 // --------------------------------------------------------------------------------
-ScriptMachine::ScriptMachine(ErrorFunction err, BulletMachineBase* bulletMachine) :
-	mErrorFunction(err)
+ScriptMachine::ScriptMachine(Log* _log) :
+	mTypeManager(0),
+	mLog(_log)
 {
 	// Register functions
-	registerNativeFunction("rand", bm_rand);
+//	registerNativeFunction("rand", bm_rand);
 
-	// Register gun properties.  These MUST be registered in order to match enum
-	// GunProperty in shGun.h.
-	mGunProperties.push_back("strength");
-	mGunProperties.push_back("width");
-	mGunProperties.push_back("length");
-	mGunProperties.push_back("angle");
+	mGuns = new DeepMemoryPool<Gun, ScriptMachine*>(32, this);
 
 	// Set up AST
-	AbstractSyntaxTree::setMachines(this, bulletMachine);
+	ParseTree::setMachines(this);
 }
 // --------------------------------------------------------------------------------
 ScriptMachine::~ScriptMachine()
 {
-	delete AbstractSyntaxTree::instancePtr();
+	// Delete Guns
+	delete mGuns;
+
+	delete ParseTree::instancePtr();
 
 	// Delete globals
-	std::vector<GlobalVariable*>::iterator it = mGlobals.begin();
-	while (it != mGlobals.end())
 	{
-		delete (*it);
-		++it;
+		std::vector<GlobalVariable*>::iterator it = mGlobals.begin();
+		while (it != mGlobals.end())
+		{
+			delete (*it);
+			++it;
+		}
 	}
 
 	// Delete GunDefinitions
 	{
-		GunDefinitionMap::iterator it = mDefinitions.begin();
-		while (it != mDefinitions.end())
+		GunRecordList::iterator it = mGunRecords.begin();
+		while (it != mGunRecords.end())
 		{
-			delete it->second;
+			delete (*it).def;
+			delete (*it).pool;
 			++it;
 		}
 	}
+
+	// Delete CodeRecords
+	{
+		CodeList::iterator it = mCodeRecords.begin();
+		while (it != mCodeRecords.end())
+		{
+			delete *it;
+			++it;
+		}
+	}
+}
+// --------------------------------------------------------------------------------
+void ScriptMachine::setTypeManager(TypeManagerBase* typeMan)
+{
+	mTypeManager = typeMan;
+}
+// --------------------------------------------------------------------------------
+Gun* ScriptMachine::createGun(const String& definition)
+{
+	GunDefinition* def = getGunDefinition(definition);
+
+	Gun* gun = 0;
+	if (def)
+	{
+		gun = mGuns->acquire();
+		gun->setDefinition(def);
+	}
+	else
+	{
+		// Error
+		mLog->addEntry("Could not find Gun definition '" + definition + "'.");
+	}
+
+	return gun;
+}
+// --------------------------------------------------------------------------------
+void ScriptMachine::destroyGun(Gun* gun)
+{
+	mGuns->release(gun);
+}
+// --------------------------------------------------------------------------------
+void ScriptMachine::updateGuns(float frameTime)
+{
+	Gun* gun = mGuns->getFirst();
+	while (gun)
+	{
+		gun->runScript(frameTime);
+		gun = mGuns->getNext(gun);
+	}
+}
+// --------------------------------------------------------------------------------
+void ScriptMachine::createCodeRecord()
+{
+	mCodeRecords.push_back(new CodeRecord);
+}
+// --------------------------------------------------------------------------------
+CodeRecord* ScriptMachine::getCodeRecord(int index)
+{
+	assert(index >= 0 && index < mCodeRecords.size() && 
+		"ScriptMachine::getCodeRecord: out of bounds.");
+
+	return mCodeRecords[index];
+}
+// --------------------------------------------------------------------------------
+int ScriptMachine::getNumCodeRecords() const
+{
+	return (int) mCodeRecords.size();
+}
+// --------------------------------------------------------------------------------
+FireTypeScriptRecord* ScriptMachine::getFireTypeRecord(int index)
+{
+	assert(index >= 0 && index < mGunRecords.size() && 
+		"ScriptMachine::getFireTypeRecord: out of bounds.");
+
+	FireTypeScriptRecord* rec = mGunRecords[index].pool->acquire();
+	rec->activeProperties = 0;
+	rec->state.curInstruction = 0;
+	rec->state.stackHead = 0;
+	rec->state.suspendTime = 0;
+	rec->state.loopDepth = 0;
+	return rec;
+}
+// --------------------------------------------------------------------------------
+void ScriptMachine::releaseFireTypeRecord(int index, FireTypeScriptRecord* rec)
+{
+	assert(index >= 0 && index < mGunRecords.size() && 
+		"ScriptMachine::releaseFireTypeRecord: out of bounds.");
+
+	mGunRecords[index].pool->release(rec);
 }
 // --------------------------------------------------------------------------------
 void ScriptMachine::registerNativeFunction(const String& name, NativeFunction func)
@@ -97,39 +189,42 @@ int ScriptMachine::getNativeFunctionIndex(const String &name) const
 // --------------------------------------------------------------------------------
 NativeFunction ScriptMachine::getNativeFunction(int index) const
 {
-	assert(index >= 0 && index < (int) mNativeFunctions.size() && "getNativeFunction: out of bounds");
+	assert(index >= 0 && index < (int) mNativeFunctions.size() && 
+		"ScriptMachine::getNativeFunction: out of bounds");
+
 	return mNativeFunctions[index].function;
 }
 // --------------------------------------------------------------------------------
-void ScriptMachine::registerFireFunction(const String &name, FireFunction func)
+bool ScriptMachine::fireFunctionExists(int type, const String& name) const
 {
-	FireFunctionRecord rec;
-	rec.name = name;
-	rec.function = func;
-
-	mFireFunctions.push_back(rec);
+	return mTypeManager->fireFunctionExists(type, name);
 }
 // --------------------------------------------------------------------------------
-int ScriptMachine::getFireFunctionIndex(const String &name) const
+FireTypeBase* ScriptMachine::getFireType(const String& name) const
 {
-	for (size_t i = 0; i < mFireFunctions.size(); ++ i)
-	{
-		if (mFireFunctions[i].name == name)
+	return mTypeManager->getType(name);
+}
+// --------------------------------------------------------------------------------
+void ScriptMachine::addProperty(const String& prop)
+{
+	mProperties.push_back(prop);
+}
+// --------------------------------------------------------------------------------
+int ScriptMachine::getPropertyIndex(const String& prop) const
+{
+	for (size_t i = 0; i < mProperties.size(); ++i)
+		if (prop == mProperties[i])
 			return (int) i;
-	}
 
 	return -1;
 }
 // --------------------------------------------------------------------------------
-FireFunction ScriptMachine::getFireFunction(int index) const
+const String& ScriptMachine::getProperty(int index) const
 {
-	assert(index >= 0 && index < (int) mFireFunctions.size() && 
-		"ScriptMachine::getFireFunction: out of bounds");
-
-	return mFireFunctions[index].function;
+	return mProperties[index];
 }
 // --------------------------------------------------------------------------------
-void ScriptMachine::registerGlobalVariable(const String& name, float initialValue)
+void ScriptMachine::registerGlobalVariable(const String& name, bstype initialValue)
 {
 	GlobalVariable *var = new GlobalVariable(name, initialValue);
 	mGlobals.push_back(var);
@@ -146,7 +241,7 @@ int ScriptMachine::getGlobalVariableIndex(const String& name) const
 	return -1;
 }
 // --------------------------------------------------------------------------------
-float ScriptMachine::getGlobalVariableValue(int index) const
+bstype ScriptMachine::getGlobalVariableValue(int index) const
 {
 	assert(index >= 0 && index < (int) mGlobals.size() && 
 		"ScriptMachine::getGlobalVariableValue: out of bounds");
@@ -154,7 +249,7 @@ float ScriptMachine::getGlobalVariableValue(int index) const
 	return mGlobals[index]->getValue();
 }
 // --------------------------------------------------------------------------------
-void ScriptMachine::setGlobalVariableValue(const String& name, float value)
+void ScriptMachine::setGlobalVariableValue(const String& name, bstype value)
 {
 	for (size_t i = 0; i < mGlobals.size(); ++i)
 	{
@@ -187,38 +282,45 @@ GlobalVariable* ScriptMachine::getGlobalVariable(int index)
 	return mGlobals[index];
 }
 // --------------------------------------------------------------------------------
-int ScriptMachine::getGunProperty(const String& name) const
-{
-	for (size_t i = 0; i < mGunProperties.size(); ++i)
-	{
-		if (mGunProperties[i] == name)
-			return (int) i;
-	}
-
-	return -1;
-}
-// --------------------------------------------------------------------------------
 bool ScriptMachine::addGunDefinition(const String& name, GunDefinition* def)
 {
-	GunDefinitionMap::iterator it = mDefinitions.find(name);
-	if (it != mDefinitions.end())
-		return false;
+	GunRecordList::iterator it = mGunRecords.begin();
+	while (it != mGunRecords.end())
+	{
+		if ((*it).name == def->getName())
+			return false;
+		++it;
+	}
 
-	mDefinitions[name] = def;
+	GunRecord rec;
+	rec.name = def->getName();
+	rec.def = def;
+
+	// Create pool
+	int maxLocals = def->getMaxLocalVariables();
+	rec.pool = new DeepMemoryPool<FireTypeScriptRecord, int>(128, maxLocals);
+
+	mGunRecords.push_back(rec);
+
 	return true;
 }
 // --------------------------------------------------------------------------------
-const GunDefinition* ScriptMachine::getGunDefinition(const String& name) const
+GunDefinition* ScriptMachine::getGunDefinition(const String& name) const
 {
-	GunDefinitionMap::const_iterator it = mDefinitions.find(name);
-	if (it == mDefinitions.end())
+	GunRecordList::const_iterator it = mGunRecords.begin();
+	while (it != mGunRecords.end())
 	{
-		return 0;
+		if ((*it).name == name)
+			return (*it).def;
+		++it;
 	}
-	else
-	{
-		return it->second;
-	}
+
+	return 0;
+}
+// --------------------------------------------------------------------------------
+int ScriptMachine::getNumGunDefinitions() const
+{
+	return (int) mGunRecords.size();
 }
 // --------------------------------------------------------------------------------
 int ScriptMachine::compileScript(uint8* buffer, size_t bufferSize)
@@ -227,7 +329,7 @@ int ScriptMachine::compileScript(uint8* buffer, size_t bufferSize)
 
 	int numParseErrors = -1;
 
-	AbstractSyntaxTree* ast = AbstractSyntaxTree::instancePtr();
+	ParseTree* ast = ParseTree::instancePtr();
 	ast->reset();
 
 	yy_buffer_state* parseBuffer = yy_scan_string(strBuf.c_str());
@@ -258,7 +360,7 @@ int ScriptMachine::compileScript(uint8* buffer, size_t bufferSize)
 	return 0;
 }
 // --------------------------------------------------------------------------------
-void ScriptMachine::declareMemberVariable(const String& gun, const String& var, float value)
+void ScriptMachine::declareMemberVariable(const String& gun, const String& var, bstype value)
 {
 	// Add a declaration to the named gun
 	MemberVariableDeclarationMap::iterator it = mMemberVariableDeclarations.find(gun);
@@ -281,9 +383,7 @@ void ScriptMachine::declareMemberVariable(const String& gun, const String& var, 
 			if (range.first->second.name == var)
 			{
 				// Print to error log
-				// ...
-
-//				std::cout << "error: mv " << var << " already declared in " << gun << std::endl;
+				addErrorMsg("Member variable '" + var + "' already declared in '" + gun + "'.");
 				return;
 			}
 
@@ -299,37 +399,37 @@ void ScriptMachine::declareMemberVariable(const String& gun, const String& var, 
 // --------------------------------------------------------------------------------
 void ScriptMachine::addErrorMsg(const String& msg)
 {
-	if (mErrorFunction)
-		mErrorFunction(msg.c_str());
+	mLog->addEntry(msg);
 }
 // --------------------------------------------------------------------------------
-bool ScriptMachine::checkInstructionPosition(GunScriptRecord& state, size_t length)
+bool ScriptMachine::checkInstructionPosition(ScriptState& st, size_t length, bool loop)
 {
-	int loopDepth = state.scriptState.loopDepth - 1;
+	int loopDepth = st.loopDepth - 1;
 	if (loopDepth >= 0)
 	{
-		if (state.scriptState.loops[loopDepth].count < 0)
+		if (st.loops[loopDepth].count < 0)
 		{
-			if (state.scriptState.curInstruction >= state.scriptState.loops[loopDepth].end)
-				state.scriptState.curInstruction = state.scriptState.loops[loopDepth].start;
+			if (st.curInstruction >= st.loops[loopDepth].end)
+				st.curInstruction = st.loops[loopDepth].start;
 		}
-		else if (state.scriptState.loops[loopDepth].count > 0)
+		else if (st.loops[loopDepth].count > 0)
 		{
-			if (state.scriptState.curInstruction >= state.scriptState.loops[loopDepth].end)
+			if (st.curInstruction >= st.loops[loopDepth].end)
 			{
-				state.scriptState.curInstruction = state.scriptState.loops[loopDepth].start;
-				state.scriptState.loops[loopDepth].count--;
-				if (state.scriptState.loops[loopDepth].count == 0)
-					state.scriptState.loopDepth--;
+				st.curInstruction = st.loops[loopDepth].start;
+				st.loops[loopDepth].count--;
+				if (st.loops[loopDepth].count == 0)
+					st.loopDepth--;
 			}
 		}
-
 	}
 
-	if (state.scriptState.curInstruction == (int) length)
+	if (st.curInstruction >= (int) length)
 	{
-		state.scriptState.curInstruction = 0;
-		return false;
+		if (loop)
+			st.curInstruction = 0;
+		
+		return loop;
 	}
 	else
 	{
@@ -337,384 +437,424 @@ bool ScriptMachine::checkInstructionPosition(GunScriptRecord& state, size_t leng
 	}
 }
 // --------------------------------------------------------------------------------
-void ScriptMachine::interpretCode(const uint32* code, 
-								  size_t length, 
-								  GunScriptRecord& state,
-								  bool loop)
+void ScriptMachine::interpretCode(const uint32* code, size_t length, ScriptState& st, 
+								  int* curState, FireTypeScriptRecord* record, 
+								  bstype x, bstype y, bstype* members, bool loop)
 {
+	if (st.curInstruction >= length)
+		return;
+
 	while (true)
 	{
-		switch (code[state.scriptState.curInstruction])
+		switch (code[st.curInstruction])
 		{
 		case BC_PUSH:
 			{
-				state.scriptState.stack[state.scriptState.stackHead] = UINT32_TO_FLOAT(code[state.scriptState.curInstruction + 1]);
-				state.scriptState.stackHead++;
-				state.scriptState.curInstruction += 2;
+				st.stack[st.stackHead] = UINT32_TO_TYPE(code[st.curInstruction + 1]);
+				st.stackHead++;
+				st.curInstruction += 2;
+
+				assert(st.stackHead < BS_SCRIPT_STACK_SIZE && 
+					"Stack limit reached: increase BS_SCRIPT_STACK_SIZE");
 			}
 			break;
 
 		case BC_SETL:
 			{
-				float value = state.scriptState.stack[state.scriptState.stackHead - 1];
-				int index = code[state.scriptState.curInstruction + 1];
-				state.scriptState.locals[index] = value;
-				state.scriptState.stackHead--;
-				state.scriptState.curInstruction += 2;
+				bstype value = st.stack[st.stackHead - 1];
+				int index = code[st.curInstruction + 1];
+				st.locals[index] = value;
+				st.stackHead--;
+				st.curInstruction += 2;
 			}			
 			break;
 
 		case BC_GETL:
 			{
-				int index = code[state.scriptState.curInstruction + 1];
-				if (index < VAR_GLOBAL_OFFSET)
-				{
-					// Local
-					state.scriptState.stack[state.scriptState.stackHead] = state.scriptState.locals[index];
-				}
-				else
-				{
-					// Global
-					state.scriptState.stack[state.scriptState.stackHead] = getGlobalVariableValue(index - VAR_GLOBAL_OFFSET);
-				}
+				int index = code[st.curInstruction + 1];
+				st.stack[st.stackHead] = st.locals[index];
+				st.stackHead++;
+				st.curInstruction += 2;
 
-				state.scriptState.stackHead++;
-				state.scriptState.curInstruction += 2;
+				assert(st.stackHead < BS_SCRIPT_STACK_SIZE && 
+					"Stack limit reached: increase BS_SCRIPT_STACK_SIZE");
 			}
 			break;
 
 		case BC_SETM:
 			{
-				float value = state.scriptState.stack[state.scriptState.stackHead - 1];
-				int index = code[state.scriptState.curInstruction + 1];
-				state.members[index] = value;
-				state.scriptState.stackHead--;
-				state.scriptState.curInstruction += 2;
+				bstype value = st.stack[st.stackHead - 1];
+				int index = code[st.curInstruction + 1];
+				members[index] = value;
+				st.stackHead--;
+				st.curInstruction += 2;
 			}			
 			break;
 
 		case BC_GETM:
 			{
-				int index = code[state.scriptState.curInstruction + 1];
-				state.scriptState.stack[state.scriptState.stackHead] = state.members[index];
-				state.scriptState.stackHead++;
-				state.scriptState.curInstruction += 2;
+				int index = code[st.curInstruction + 1];
+				st.stack[st.stackHead] = members[index];
+				st.stackHead++;
+				st.curInstruction += 2;
+
+				assert(st.stackHead < BS_SCRIPT_STACK_SIZE && 
+					"Stack limit reached: increase BS_SCRIPT_STACK_SIZE");
 			}
 			break;
 
+		case BC_GETG:
+			{
+				int index = code[st.curInstruction + 1];
+				st.stack[st.stackHead] = getGlobalVariableValue(index);
+				st.stackHead++;
+				st.curInstruction += 2;
+
+				assert(st.stackHead < BS_SCRIPT_STACK_SIZE && 
+					"Stack limit reached: increase BS_SCRIPT_STACK_SIZE");
+			}
+			break;
+
+		case BC_SETPROPERTY1:
+			{
+				assert(record->object != 0 && "ScriptMachine::interpretCode record->object is null");
+
+				int index = code[st.curInstruction + 1];
+				bstype value = st.stack[--st.stackHead];
+
+				const String& propName = getProperty(index);
+
+				record->type->setProperty1(record->object, propName, value);
+				st.curInstruction += 2;
+			}
+			break;
+
+		case BC_SETPROPERTY2:
+			{
+				assert(record->object != 0 && "ScriptMachine::interpretCode record->object is null");
+
+				int index = code[st.curInstruction + 1];
+				bstype time = st.stack[st.stackHead - 1];
+				bstype value = st.stack[st.stackHead - 2];
+				st.stackHead -= 2;
+
+				const String& propName = getProperty(index);
+
+				record->type->setProperty2(record, propName, value, time);
+				st.curInstruction += 2;
+			}
+			break;
+
+		case BC_GETPROPERTY:
+			{
+				assert(record->object != 0 && "ScriptMachine::interpretCode record->object is null");
+
+				int index = code[st.curInstruction + 1];
+				const String& propName = getProperty(index);
+
+				st.stack[st.stackHead] = record->type->getProperty(record->object, propName);
+				st.stackHead++;
+				st.curInstruction += 2;
+
+				assert(st.stackHead < BS_SCRIPT_STACK_SIZE && 
+					"Stack limit reached: increase BS_SCRIPT_STACK_SIZE");
+			}
+			break;
 
 		case BC_OP_POS:
 			{
 				// Don't actually need to do anything
-				state.scriptState.curInstruction++;
+				st.curInstruction++;
 			}
 			break;
 
 		case BC_OP_NEG:
 			{
-				state.scriptState.stack[state.scriptState.stackHead - 1] = -state.scriptState.stack[state.scriptState.stackHead - 1];
-				state.scriptState.curInstruction++;
+				st.stack[st.stackHead - 1] = -st.stack[st.stackHead - 1];
+				st.curInstruction++;
 			}
 			break;
 
 		case BC_OP_ADD:
 			{
-				float val1 = state.scriptState.stack[state.scriptState.stackHead - 2];
-				float val2 = state.scriptState.stack[state.scriptState.stackHead - 1];
+				bstype val1 = st.stack[st.stackHead - 2];
+				bstype val2 = st.stack[st.stackHead - 1];
 
-				state.scriptState.stack[state.scriptState.stackHead - 2] = val1 + val2;
-				state.scriptState.stackHead--;
-				state.scriptState.curInstruction++;
+				st.stack[st.stackHead - 2] = val1 + val2;
+				st.stackHead--;
+				st.curInstruction++;
 			}
 			break;
 
 		case BC_OP_SUBTRACT:
 			{
-				float val1 = state.scriptState.stack[state.scriptState.stackHead - 2];
-				float val2 = state.scriptState.stack[state.scriptState.stackHead - 1];
+				bstype val1 = st.stack[st.stackHead - 2];
+				bstype val2 = st.stack[st.stackHead - 1];
 
-				state.scriptState.stack[state.scriptState.stackHead - 2] = val1 - val2;
-				state.scriptState.stackHead--;
-				state.scriptState.curInstruction++;
+				st.stack[st.stackHead - 2] = val1 - val2;
+				st.stackHead--;
+				st.curInstruction++;
 			}
 			break;
 
 		case BC_OP_MULTIPLY:
 			{
 
-				float val1 = state.scriptState.stack[state.scriptState.stackHead - 2];
-				float val2 = state.scriptState.stack[state.scriptState.stackHead - 1];
+				bstype val1 = st.stack[st.stackHead - 2];
+				bstype val2 = st.stack[st.stackHead - 1];
 
-				state.scriptState.stack[state.scriptState.stackHead - 2] = val1 * val2;
-				state.scriptState.stackHead--;
-				state.scriptState.curInstruction++;
+				st.stack[st.stackHead - 2] = val1 * val2;
+				st.stackHead--;
+				st.curInstruction++;
 			}
 			break;
 
 		case BC_OP_DIVIDE:
 			{
-				float val1 = state.scriptState.stack[state.scriptState.stackHead - 2];
-				float val2 = state.scriptState.stack[state.scriptState.stackHead - 1];
+				bstype val1 = st.stack[st.stackHead - 2];
+				bstype val2 = st.stack[st.stackHead - 1];
 
-				state.scriptState.stack[state.scriptState.stackHead - 2] = val1 / val2;
-				state.scriptState.stackHead--;
-				state.scriptState.curInstruction++;
+				st.stack[st.stackHead - 2] = val1 / val2;
+				st.stackHead--;
+				st.curInstruction++;
 			}
 			break;
 		
 		case BC_OP_REMAINDER:
 			{
-				float val1 = state.scriptState.stack[state.scriptState.stackHead - 2];
-				float val2 = state.scriptState.stack[state.scriptState.stackHead - 1];
+				bstype val1 = st.stack[st.stackHead - 2];
+				bstype val2 = st.stack[st.stackHead - 1];
 
-				state.scriptState.stack[state.scriptState.stackHead - 2] = (int) val1 % (int) val2;
-				state.scriptState.stackHead--;
-				state.scriptState.curInstruction++;
+				st.stack[st.stackHead - 2] = (bstype) ((int) val1 % (int) val2);
+				st.stackHead--;
+				st.curInstruction++;
 			}
 			break;
 
 		case BC_OP_EQ:
 			{
-				float val1 = state.scriptState.stack[state.scriptState.stackHead - 2];
-				float val2 = state.scriptState.stack[state.scriptState.stackHead - 1];
+				bstype val1 = st.stack[st.stackHead - 2];
+				bstype val2 = st.stack[st.stackHead - 1];
 
-				state.scriptState.stack[state.scriptState.stackHead - 2] = (val1 == val2) ? 1.0f : 0.0f;
-				state.scriptState.stackHead--;
-				state.scriptState.curInstruction++;
+				st.stack[st.stackHead - 2] = (val1 == val2) ? 1 : 0;
+				st.stackHead--;
+				st.curInstruction++;
 			}
 			break;
 
 		case BC_OP_NEQ:
 			{
-				float val1 = state.scriptState.stack[state.scriptState.stackHead - 2];
-				float val2 = state.scriptState.stack[state.scriptState.stackHead - 1];
+				bstype val1 = st.stack[st.stackHead - 2];
+				bstype val2 = st.stack[st.stackHead - 1];
 
-				state.scriptState.stack[state.scriptState.stackHead - 2] = (val1 != val2) ? 1.0f : 0.0f;
-				state.scriptState.stackHead--;
-				state.scriptState.curInstruction++;
+				st.stack[st.stackHead - 2] = (val1 != val2) ? 1 : 0;
+				st.stackHead--;
+				st.curInstruction++;
 			}
 			break;
 
 		case BC_OP_LT:
 			{
-				float val1 = state.scriptState.stack[state.scriptState.stackHead - 2];
-				float val2 = state.scriptState.stack[state.scriptState.stackHead - 1];
+				bstype val1 = st.stack[st.stackHead - 2];
+				bstype val2 = st.stack[st.stackHead - 1];
 
-				state.scriptState.stack[state.scriptState.stackHead - 2] = (val1 < val2) ? 1.0f : 0.0f;
-				state.scriptState.stackHead--;
-				state.scriptState.curInstruction++;
+				st.stack[st.stackHead - 2] = (val1 < val2) ? 1 : 0;
+				st.stackHead--;
+				st.curInstruction++;
 			}
 			break;
 
 		case BC_OP_LTE:
 			{
-				float val1 = state.scriptState.stack[state.scriptState.stackHead - 2];
-				float val2 = state.scriptState.stack[state.scriptState.stackHead - 1];
+				bstype val1 = st.stack[st.stackHead - 2];
+				bstype val2 = st.stack[st.stackHead - 1];
 
-				state.scriptState.stack[state.scriptState.stackHead - 2] = (val1 <= val2) ? 1.0f : 0.0f;
-				state.scriptState.stackHead--;
-				state.scriptState.curInstruction++;
+				st.stack[st.stackHead - 2] = (val1 <= val2) ? 1 : 0;
+				st.stackHead--;
+				st.curInstruction++;
 			}
 			break;
 
 		case BC_OP_GT:
 			{
-				float val1 = state.scriptState.stack[state.scriptState.stackHead - 2];
-				float val2 = state.scriptState.stack[state.scriptState.stackHead - 1];
+				bstype val1 = st.stack[st.stackHead - 2];
+				bstype val2 = st.stack[st.stackHead - 1];
 
-				state.scriptState.stack[state.scriptState.stackHead - 2] = (val1 > val2) ? 1.0f : 0.0f;
-				state.scriptState.stackHead--;
-				state.scriptState.curInstruction++;
+				st.stack[st.stackHead - 2] = (val1 > val2) ? 1 : 0;
+				st.stackHead--;
+				st.curInstruction++;
 			}
 			break;
 
 		case BC_OP_GTE:
 			{
-				float val1 = state.scriptState.stack[state.scriptState.stackHead - 2];
-				float val2 = state.scriptState.stack[state.scriptState.stackHead - 1];
+				bstype val1 = st.stack[st.stackHead - 2];
+				bstype val2 = st.stack[st.stackHead - 1];
 
-				state.scriptState.stack[state.scriptState.stackHead - 2] = (val1 >= val2) ? 1.0f : 0.0f;
-				state.scriptState.stackHead--;
-				state.scriptState.curInstruction++;
+				st.stack[st.stackHead - 2] = (val1 >= val2) ? 1 : 0;
+				st.stackHead--;
+				st.curInstruction++;
 			}
 			break;
 
 		case BC_LOG_AND:
 			{
-				float val1 = state.scriptState.stack[state.scriptState.stackHead - 2];
-				float val2 = state.scriptState.stack[state.scriptState.stackHead - 1];
+				bstype val1 = st.stack[st.stackHead - 2];
+				bstype val2 = st.stack[st.stackHead - 1];
 
-				state.scriptState.stack[state.scriptState.stackHead - 2] = (val1 && val2) ? 1.0f : 0.0f;
-				state.scriptState.stackHead--;
-				state.scriptState.curInstruction++;
+				st.stack[st.stackHead - 2] = (val1 && val2) ? 1 : 0;
+				st.stackHead--;
+				st.curInstruction++;
 			}
 			break;
 
 		case BC_LOG_OR:
 			{
-				float val1 = state.scriptState.stack[state.scriptState.stackHead - 2];
-				float val2 = state.scriptState.stack[state.scriptState.stackHead - 1];
+				bstype val1 = st.stack[st.stackHead - 2];
+				bstype val2 = st.stack[st.stackHead - 1];
 
-				state.scriptState.stack[state.scriptState.stackHead - 2] = (val1 || val2) ? 1.0f : 0.0f;
-				state.scriptState.stackHead--;
-				state.scriptState.curInstruction++;
+				st.stack[st.stackHead - 2] = (val1 || val2) ? 1 : 0;
+				st.stackHead--;
+				st.curInstruction++;
 			}
 			break;
 
 		case BC_FIRE:
 			{
-				int funcIndex = code[state.scriptState.curInstruction + 1];
-				FireFunction func = getFireFunction(funcIndex);
-
-//				BulletGunBase *bg = static_cast<BulletGunBase*>(state.gun);
-//				state.scriptState.stackHead -= func(bg, state.members[BS::Member_X], 
-//					state.members[BS::Member_Y], &state.scriptState.stack[state.scriptState.stackHead]);
-
-				state.scriptState.stackHead -= func(state.gun, state.members[BS::Member_X], 
-					state.members[BS::Member_Y], &state.scriptState.stack[state.scriptState.stackHead]);
-
-				state.scriptState.curInstruction += 2;
+				int fireType = code[st.curInstruction + 1];
+				FireTypeBase* ft = mTypeManager->getType(fireType);
+				st.curInstruction += ft->processCode(code, st, x, y, members);
 			}
 			break;
 
 		case BC_WAIT:
 			{
-				state.scriptState.suspendTime = state.scriptState.stack[--state.scriptState.stackHead];
-				state.scriptState.curInstruction++;
-				checkInstructionPosition(state, length);
-				return;
+				st.suspendTime = st.stack[--st.stackHead];
+				st.curInstruction++;
+				checkInstructionPosition(st, length, loop);
 			}
-			break;
+			return;
 
-		case BC_SETPROPERTY:
+		case BC_DIE:
 			{
-				int gunProp = code[state.scriptState.curInstruction + 1];
-				float target = state.scriptState.stack[state.scriptState.stackHead - 2];
-				float time = state.scriptState.stack[state.scriptState.stackHead - 1];
-				state.controller->setProperty(gunProp, target, time);
+				assert(record->type->mDieFunction != 0 &&
+					"ScriptMachine::interpretCode no die() function provided.");
 
-				state.scriptState.stackHead -= 2;
-				state.scriptState.curInstruction += 2;
+				assert(record->object != 0 &&
+					"ScriptMachine::interpretCode record->object is null");
+
+				record->type->mDieFunction(record->object);
+				st.curInstruction++;
 			}
 			break;
 
 		case BC_CALL:
 			{
-				int function = code[state.scriptState.curInstruction + 1];
+				int function = code[st.curInstruction + 1];
 				NativeFunction func = getNativeFunction(function);
-				func(state);
-				state.scriptState.curInstruction += 2;
+				func(st);
+
+				st.curInstruction += 2;
 			}
 			break;
 
 		case BC_GOTO:
 			{
-				state.curState = code[state.scriptState.curInstruction + 1];
-				state.scriptState.curInstruction = 0;
-				state.scriptState.loopDepth = 0;
-				state.scriptState.stackHead = 0;
+				*curState = code[st.curInstruction + 1];
+				st.curInstruction = 0;
+				st.loopDepth = 0;
+				st.stackHead = 0;
 
-				code = state.states[state.curState].record->byteCode;
-				length = state.states[state.curState].record->byteCodeSize;
+				CodeRecord* rec = getCodeRecord(*curState);
+				code = rec->byteCode;
+				length = rec->byteCodeSize;
 			}
 			break;
 
 		case BC_LOOP:
 			{
-				float counter = state.scriptState.stack[state.scriptState.stackHead - 1];
-				if (counter < 0.0f)
+				int loops = (int) st.stack[st.stackHead - 1];
+				if (loops < 1)
 				{
-					// Loop infinitely
-					state.scriptState.loops[state.scriptState.loopDepth].count = -1;
-					state.scriptState.loops[state.scriptState.loopDepth].start = state.scriptState.curInstruction + 2;
-					state.scriptState.loops[state.scriptState.loopDepth].end = code[state.scriptState.curInstruction + 1];
-					state.scriptState.loopDepth++;
-
-					state.scriptState.curInstruction += 2;
-					state.scriptState.stackHead--;
+					// Ignore and jump to end instruction
+					st.curInstruction = code[st.curInstruction + 1];
+					st.stackHead--;
+				}
+				else if (loops == 1)
+				{
+					// No need to set up a loop, just move to next instruction
+					st.curInstruction += 2;
+					st.stackHead--;
 				}
 				else
 				{
-					int loops = (int) counter;
-					if (loops == 0)
-					{
-						// Ignore and jump to end instruction
-						state.scriptState.curInstruction = code[state.scriptState.curInstruction + 1];
-						state.scriptState.stackHead--;
-					}
-					else if (loops == 1)
-					{
-						// No need to set up a loop, just move to next instruction
-						state.scriptState.curInstruction += 2;
-						state.scriptState.stackHead--;
-					}
-					else
-					{
-						// Else, set up a loop
-						state.scriptState.loops[state.scriptState.loopDepth].count = loops - 1;
-						state.scriptState.loops[state.scriptState.loopDepth].start = state.scriptState.curInstruction + 2;
-						state.scriptState.loops[state.scriptState.loopDepth].end = code[state.scriptState.curInstruction + 1];
-						state.scriptState.loopDepth++;
-						
-						state.scriptState.curInstruction += 2;
-						state.scriptState.stackHead--;
-					}
+					// Else, set up a loop
+					st.loops[st.loopDepth].count = loops - 1;
+					st.loops[st.loopDepth].start = st.curInstruction + 2;
+					st.loops[st.loopDepth].end = code[st.curInstruction + 1];
+					st.loopDepth++;
+					
+					st.curInstruction += 2;
+					st.stackHead--;
 				}
 			}
 			break;
 
 		case BC_JUMP:
 			{
-				int address = code[state.scriptState.curInstruction + 1];
-				state.scriptState.stackHead--;
-				state.scriptState.curInstruction = address;
+				int address = code[st.curInstruction + 1];
+				st.curInstruction = address;
 			}
 			break;
 
 		case BC_JZ:
 			{
-				if (FLOAT_TO_UINT32 (state.scriptState.stack[state.scriptState.stackHead - 1]) == 0)
+				if (TYPE_TO_UINT32 (st.stack[st.stackHead - 1]) == 0)
 				{
-					int address = code[state.scriptState.curInstruction + 1];
-					state.scriptState.stackHead--;
-					state.scriptState.curInstruction = address;
+					int address = code[st.curInstruction + 1];
+					st.stackHead--;
+					st.curInstruction = address;
 				}
 				else
 				{
-					state.scriptState.stackHead--;
-					state.scriptState.curInstruction += 2;
+					st.stackHead--;
+					st.curInstruction += 2;
 				}
 			}
 			break;
 
+		default:
+			st.curInstruction++;
+			break;
+
 		}
 
-		if (!checkInstructionPosition(state, length))
-		{
-			if (!loop)
-				return;
-		}
+		if (!checkInstructionPosition(st, length, loop))
+			return;
 	}
 
 	return;
 }
 // --------------------------------------------------------------------------------
-void ScriptMachine::processGunState(GunScriptRecord& gsr)
+void ScriptMachine::processGunState(GunScriptRecord* gsr)
 {
-	if (gsr.scriptState.suspendTime > 0.0f)
+	if (gsr->scriptState.suspendTime > 0)
 		return;
 
-	uint32 *bytecode = gsr.states[gsr.curState].record->byteCode;
-	size_t bytecodeLen = gsr.states[gsr.curState].record->byteCodeSize;
+	CodeRecord* rec = getCodeRecord(gsr->curState);
+	uint32 *bytecode = rec->byteCode;
+	size_t bytecodeLen = rec->byteCodeSize;
 
-	interpretCode(bytecode, bytecodeLen, gsr, true);
+	interpretCode(bytecode, bytecodeLen, gsr->scriptState, &gsr->curState, 0,
+		gsr->members[Member_X], gsr->members[Member_Y], gsr->members, true);
 }
 // --------------------------------------------------------------------------------
 void ScriptMachine::processConstantExpression(const uint32* code, 
 											  size_t length, 
-											  GunScriptRecord& state)
+											  GunScriptRecord* gsr)
 {
-	interpretCode(code, length, state, false);
+	interpretCode(code, length, gsr->scriptState, &gsr->curState, 0,
+		gsr->members[Member_X], gsr->members[Member_Y], gsr->members, false);
 }
 // --------------------------------------------------------------------------------
 }

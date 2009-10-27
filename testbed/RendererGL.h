@@ -37,11 +37,14 @@ class RendererGL
 
 	float mBulletPos[MAX_BULLETS * 8];
 	float mBulletTex[MAX_BULLETS * 8];
+	float mBulletCol[MAX_BULLETS * 16];
 	unsigned short mIndices[MAX_BULLETS * 4];
 
 	int mNumBullets;
 
 	GLuint mTextureId;
+
+	void renderBatch();
 
 public:
 
@@ -53,7 +56,7 @@ public:
 
 	void finishRendering ();
 
-	void addBullet (float x, float y);
+	void addBullet (float x, float y, float fade, bool selected);
 
 	void renderQuickQuad(float x0, float y0, float x1, float y1, GLuint texture);
 

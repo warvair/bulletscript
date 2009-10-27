@@ -74,18 +74,13 @@
 #	pragma warning(disable: 4251)
 #endif
 
-#define BS_NMSP				BS
-
 // Common typedefs, etc
-#define FLOAT_TO_UINT32(x) (*((BS_NMSP::uint32*) ((void*) (&x))))
-#define UINT32_TO_FLOAT(x) (*((float*) ((void*) (&x))))
-
 #include <string>
 
 namespace BS_NMSP
 {
-	const float DEG_TO_RAD = 0.01745328f;
-	const float RAD_TO_DEG = 57.29582791f;
+	const double DEG_TO_RAD = 0.01745328;
+	const double RAD_TO_DEG = 57.29582791;
 
 	typedef std::string String;
 

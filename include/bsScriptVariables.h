@@ -24,19 +24,19 @@ namespace BS_NMSP
 	class _BSAPI GlobalVariable
 	{
 		String mName;
-		float mValue;
+		bstype mValue;
 
 		std::list<VariableListener*> mListeners;
 
 	public:
 
-		GlobalVariable (const String& name, float value);
+		GlobalVariable (const String& name, bstype value);
 
 		const String &getName() const;
 		
-		void setValue(float value);
+		void setValue(bstype value);
 
-		float getValue() const;
+		bstype getValue() const;
 
 		void registerAffectorArgument(VariableListener* listener);
 	};

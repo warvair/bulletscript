@@ -4,47 +4,46 @@
 #include <vector>
 #include <map>
 #include "bsPrerequisites.h"
-#include "bsScriptVariables.h"
+#include "bsDeepMemoryPool.h"
 
 namespace BS_NMSP
 {
-
-	typedef std::vector<uint32> BytecodeBlock;
-
-	class BulletGunBase;
-	class GunController;
 
 	// Structure for declaring member variables
 	struct _BSAPI MemberVariableDeclaration
 	{
 		String name;
-		float value;
+		bstype value;
 	};
 
 	typedef std::multimap<String, MemberVariableDeclaration> MemberVariableDeclarationMap;
 
 	// Class for bytecode storage/access
-	struct _BSAPI CodeRecord
+	class _BSAPI CodeRecord
 	{
-		std::vector<String> variables;
+		std::vector<String> mVariables;
+
+	public:
+
 		uint32 *byteCode;
 		size_t byteCodeSize;
 
-		CodeRecord() :
-			byteCode(0),
-			byteCodeSize(0)
-		{
-		}
+		CodeRecord();
 
-		~CodeRecord()
-		{
-			delete[] byteCode;
-		}
+		~CodeRecord();
+
+		void addVariable(const String& name);
+
+		const String& getVariable(int index) const;
+
+		int getVariableIndex(const String& name) const;
+
+		int getNumVariables() const;
 	};
 
 	struct _BSAPI ScriptState
 	{
-		struct Loop
+		struct Loop // pack into 32 bits?
 		{
 			uint16 count;
 			uint16 start;
@@ -54,45 +53,38 @@ namespace BS_NMSP
 		uint16 curInstruction;
 		uint16 stackHead;
 
-		float stack[BS_SCRIPT_STACK_SIZE];
+		bstype stack[BS_SCRIPT_STACK_SIZE];
 
 		Loop loops[BS_SCRIPT_LOOP_DEPTH];
 		int loopDepth;
 
-		float suspendTime;				// Time to wait when the script is suspended
+		// Time to wait when the script is suspended
+		bstype suspendTime;				
 
-		std::vector<float> locals;		// Locally accessible variables, this holds the 
-										// variables for whichever is the current gun state
+		// Local variables for whichever is the current gun state
+		bstype* locals;					
+
+		// Functions
+		ScriptState();
 	};
 
-	// Instance class
+	// Declaration for GunScriptRecord
+	class GunDefinition;
+
+	// Instance classes
 	struct _BSAPI GunScriptRecord
 	{
-		// GunScriptRecord does not own the CodeRecord
-		struct State
-		{
-			String name;
-			CodeRecord* record;
-		};
-
-		std::vector<State> states;
+		bstype* members;
 
 		int curState;
 
-		std::vector<float> members;		// Member variables, accessible by all states
-
-		ScriptState scriptState;		// Script state for virtual machine
-
-		// Owning gun - only used by BulletGuns for emission callbacks
-		// If we let area/arc guns emit, then must change this to a Gun and static_cast
-		// appropriately in the VM/BC_FIRE
-		BulletGunBase* gun;
-
-		// Owning GunController
-		GunController* controller;
+		// Script state for virtual machine
+		ScriptState scriptState;		
 
 		// Functions
-		GunScriptRecord();
+		GunScriptRecord(int numLocals);
+		
+		~GunScriptRecord();
 	};
 
 }

@@ -7,58 +7,28 @@
 #include "bsPrerequisites.h"
 #include "bsScriptVariables.h"
 #include "bsScriptStructs.h"
-#include "bsGunDefinitions.h"
+#include "bsGunDefinition.h"
+#include "bsFireType.h"
+#include "bsDeepMemoryPool.h"
+#include "bsLog.h"
 
 namespace BS_NMSP
 {
-	const int VAR_LOCAL_OFFSET		= 0;
-	const int VAR_GLOBAL_OFFSET		= 32768;
+	typedef void (*NativeFunction)(ScriptState&);
 
-	enum
-	{
-		BC_PUSH,
-		BC_SETL,
-		BC_GETL,
-		BC_SETM,
-		BC_GETM,
-		BC_OP_POS,
-		BC_OP_NEG,
-		BC_OP_ADD,
-		BC_OP_SUBTRACT,
-		BC_OP_MULTIPLY,
-		BC_OP_DIVIDE,
-		BC_OP_REMAINDER,
-		BC_OP_EQ,
-		BC_OP_NEQ,
-		BC_OP_LT,
-		BC_OP_LTE,
-		BC_OP_GT,
-		BC_OP_GTE,
-		BC_LOG_AND,
-		BC_LOG_OR,
-		BC_CALL,
-		BC_GOTO,
-		BC_LOOP,
-		BC_JUMP,
-		BC_JZ,
-		BC_FIRE,
-		BC_WAIT,
-		BC_SETPROPERTY
-	};
-
-	typedef void (*NativeFunction)(GunScriptRecord&);
-
-	typedef void (*ErrorFunction)(const char*);
-
-	class BulletGunBase;
-	typedef int (*FireFunction)(BulletGunBase*, float, float, const float*);
-
-	class BulletMachineBase;
+	class Gun;
 
 	class _BSAPI ScriptMachine
 	{
-		friend class AbstractSyntaxTree;
-		
+		template<class A, class B, class C> friend class Machine;
+		friend class ParseTree;
+
+		// TypeManager
+		TypeManagerBase* mTypeManager;
+
+		// Log
+		Log* mLog;
+
 		// Native functions callable by script
 		struct NativeFunctionRecord
 		{
@@ -68,40 +38,65 @@ namespace BS_NMSP
 
 		std::vector<NativeFunctionRecord> mNativeFunctions;
 
-		// Fire functions
-		struct FireFunctionRecord
-		{
-			String name;
-			FireFunction function;
-		};
-
-		std::vector<FireFunctionRecord> mFireFunctions;
-
 		// Global variables
 		std::vector<GlobalVariable*> mGlobals;
-
-		// Gun properties
-		std::vector<String> mGunProperties;
-
-		ErrorFunction mErrorFunction;
 
 		// Member variable declarations
 		MemberVariableDeclarationMap mMemberVariableDeclarations;
 
-		// Gun Definitions
-		typedef std::map<String, GunDefinition*> GunDefinitionMap;
-		GunDefinitionMap mDefinitions;
+		// Gun Definitions and pools
+		struct GunRecord
+		{
+			String name;
+			GunDefinition* def;
+			DeepMemoryPool<FireTypeScriptRecord, int>* pool;
+		};
+		
+		typedef std::vector<GunRecord> GunRecordList;
+		GunRecordList mGunRecords;
 
-		// Functions
-		bool checkInstructionPosition (GunScriptRecord& state, size_t length);
+		DeepMemoryPool<Gun, ScriptMachine*>* mGuns;
+
+		// Global property list
+		std::vector<String> mProperties;
+
+		// CodeRecords
+		typedef std::vector<CodeRecord*> CodeList;
+		CodeList mCodeRecords;
+
+	private:
+
+		bool checkInstructionPosition(ScriptState& st, size_t length, bool loop);
+
+		void setTypeManager(TypeManagerBase* typeMan);
+
+	protected:
+
+		// Can only be created by Machine
+		ScriptMachine(Log* _log);
 
 	public:
 
-		ScriptMachine(ErrorFunction err, BulletMachineBase* bulletMachine);
-
 		~ScriptMachine();
 
-		void addCodeRecord(CodeRecord* record);
+		// Guns
+		Gun* createGun(const String& definition);
+
+		void destroyGun(Gun* gun);
+
+		void updateGuns(float frameTime);
+
+		// CodeRecords
+		void createCodeRecord();
+
+		CodeRecord* getCodeRecord(int index);
+
+		int getNumCodeRecords() const;
+
+		// FireTypeScriptRecords
+		FireTypeScriptRecord* getFireTypeRecord(int index);
+
+		void releaseFireTypeRecord(int index, FireTypeScriptRecord* rec);
 
 		// Native functions
 		void registerNativeFunction(const String& name, NativeFunction func);
@@ -111,44 +106,50 @@ namespace BS_NMSP
 		NativeFunction getNativeFunction(int index) const;
 
 		// Fire functions
-		void registerFireFunction(const String& name, FireFunction func);
+		bool fireFunctionExists(int type, const String& name) const;
 
-		int getFireFunctionIndex (const String& name) const;
+		// Fire types
+		FireTypeBase* getFireType(const String& name) const;
 
-		FireFunction getFireFunction(int index) const;
+		// Properties
+		void addProperty(const String& prop);
+
+		int getPropertyIndex(const String& prop) const;
+
+		const String& getProperty(int index) const;
 
 		// Global variables
-		void registerGlobalVariable(const String& name, float initialValue);
+		void registerGlobalVariable(const String& name, bstype initialValue);
 
 		int getGlobalVariableIndex(const String& name) const;
 
-		float getGlobalVariableValue(int index) const;
+		bstype getGlobalVariableValue(int index) const;
 
-		void setGlobalVariableValue(const String& name, float value);
+		void setGlobalVariableValue(const String& name, bstype value);
 
 		GlobalVariable *getGlobalVariable(const String& name);
 
 		GlobalVariable *getGlobalVariable(int index);
 
-		// Gun Properties
-		int getGunProperty(const String& name) const;
-
 		// Gun Definitions
 		bool addGunDefinition(const String &name, GunDefinition* def);
 
-		const GunDefinition* getGunDefinition(const String &name) const;
+		GunDefinition* getGunDefinition(const String &name) const;
+
+		int getNumGunDefinitions() const;
 
 		// Script state processing
-		void interpretCode (const uint32* code, size_t length, GunScriptRecord& state, bool loop);
+		void interpretCode(const uint32* code, size_t length, ScriptState& st, int* curState, 
+			FireTypeScriptRecord* record, bstype x, bstype y, bstype* members, bool loop);
 
-		void processGunState(GunScriptRecord& gsr);
+		void processGunState(GunScriptRecord* gsr);
 
-		void processConstantExpression(const uint32* code, size_t length, GunScriptRecord& state);
+		void processConstantExpression(const uint32* code, size_t length, GunScriptRecord* gsr);
 
 		// Compilation
 		int compileScript(uint8* buffer, size_t bufferSize);
 
-		void declareMemberVariable(const String& gun, const String& var, float value);
+		void declareMemberVariable(const String& gun, const String& var, bstype value);
 
 		// Errors
 		void addErrorMsg (const String& msg);

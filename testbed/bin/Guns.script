@@ -1,16 +1,34 @@
-bullet Test
+gun Test
 {
-	// speed is getting set to 'time', here
-	speed = 500;
-	time = 1;
+	m_speed = 60;
 
-//	affectors DelayAccel(speed * 2, time, time + 0.5);
-
-	Main
+	Func1 = function(time, speed, angle)
 	{
-		fireA(180, speed, 10);
+		wait(time);
+		$angle = {$angle + angle, 2};
+		wait(2);
+		fireA bullet(-angle, speed) : Func2(2, speed, angle + 50);
+		$fade = {0, 2};
+		wait(2);
+		die();
 
-		wait(0.5);
+	}
 
+	Func2 = function(time, speed, angle)
+	{
+		wait(time);
+		$angle = {$angle - angle, 2};
+		wait(2);
+		fireA bullet(angle, speed) : Func1(2, speed, angle - 50);
+		$fade = {0, 2};
+		wait(2);
+		die();
+	}
+
+	Main = state
+	{
+		fireA bullet(170, m_speed) : Func1(1.2, m_speed, 120);
+		fireA bullet(190, m_speed) : Func2(1.2, m_speed, 120);
+		wait(0.2);
 	}
 }
