@@ -4,6 +4,8 @@
 #include "bsBulletScript.h"
 #include "RendererGL.h"
 
+struct Area;
+
 struct Bullet
 {
 	BS::bstype x, y;
@@ -38,7 +40,7 @@ class BulletBattery
 		}
 	};
 
-	static BS::Machine<Bullet>* mMachine;
+	static BS::Machine<Bullet, Area>* mMachine;
 
 	static const int BATTERY_SIZE = 2048;
 
@@ -55,7 +57,7 @@ class BulletBattery
 
 public:
 
-	static void initialise(BS::Machine<Bullet>* machine);
+	static void initialise(BS::Machine<Bullet, Area>* machine);
 
 	static int update(float frameTime);
 

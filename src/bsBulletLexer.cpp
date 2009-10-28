@@ -951,12 +951,12 @@ YY_RULE_SETUP
 case 48:
 YY_RULE_SETUP
 #line 88 "../src/BulletLexer.l"
-{ return (SYMBOL_ADD_A); }
+{ return (SYMBOL_MUL_A); }
 	YY_BREAK
 case 49:
 YY_RULE_SETUP
 #line 89 "../src/BulletLexer.l"
-{ return (SYMBOL_SUB_A); }
+{ return (SYMBOL_DIV_A); }
 	YY_BREAK
 case 50:
 YY_RULE_SETUP

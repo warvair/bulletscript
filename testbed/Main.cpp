@@ -6,6 +6,7 @@
 #include "Platform.h"
 #include "RendererGL.h"
 #include "BulletSystem.h"
+#include "AreaSystem.h"
 
 #if BS_PLATFORM == BS_PLATFORM_WIN32
 #	include <windows.h>
@@ -45,10 +46,7 @@ int main (int argc, char **argv)
 	srand(time(0));
 
 	// Create machine
-	Machine<Bullet> machine("bullet");
-
-	// Register global variables
-	machine.registerGlobalVariable("Level_Time", 0);
+	Machine<Bullet, Area> machine("bullet", "area");
 
 	// Register bullet functions
 	machine.registerFireFunction<Bullet>("fireA", 2, BulletBattery::emitAngle);
@@ -56,6 +54,17 @@ int main (int argc, char **argv)
 	machine.registerProperty<Bullet>("angle", BulletBattery::setAngle, BulletBattery::getAngle);
 	machine.registerProperty<Bullet>("fade", BulletBattery::setFade, BulletBattery::getFade);
 
+	// Register area functions
+	machine.registerFireFunction<Area>("quadC", 3, AreaBattery::emitQuadC);
+	machine.registerFireFunction<Area>("quadB", 3, AreaBattery::emitQuadB);
+	machine.registerFireFunction<Area>("ellipse", 2, AreaBattery::emitEllipse);
+	machine.setDieFunction<Area>(AreaBattery::killArea);
+	machine.registerProperty<Area>("fade", AreaBattery::setFade, AreaBattery::getFade);
+	machine.registerProperty<Area>("width", AreaBattery::setWidth, AreaBattery::getWidth);
+	machine.registerProperty<Area>("height", AreaBattery::setHeight, AreaBattery::getHeight);
+	machine.registerProperty<Area>("angle", AreaBattery::setAngle, AreaBattery::getAngle);
+
+	// Register global variables
 	machine.registerGlobalVariable("Level_Time", 0);
 	machine.registerGlobalVariable("ScreenSize_X", SCREEN_WIDTH);
 	machine.registerGlobalVariable("ScreenSize_Y", SCREEN_HEIGHT);
@@ -90,6 +99,7 @@ int main (int argc, char **argv)
 
 	// Initialise battery
 	BulletBattery::initialise(&machine);
+	AreaBattery::initialise(&machine);
 
 	// Renderer
 	RendererGL renderer;
@@ -106,9 +116,14 @@ int main (int argc, char **argv)
 	std::cout << "[Mouse, cursors] Move ship." << std::endl;
 
 	// Create a gun
-	Gun* gun = machine.createGun("Test");
+	Gun* gun = machine.createGun("Abstract");
 	gun->setMemberVariable(Member_X, GUN_X);
 	gun->setMemberVariable(Member_Y, GUN_Y);
+	gun->setMemberVariable(Member_Angle, 180);
+
+	gun = machine.createGun("Beam");
+	gun->setMemberVariable(Member_X, GUN_X + 200);
+	gun->setMemberVariable(Member_Y, GUN_Y - 100);
 	gun->setMemberVariable(Member_Angle, 180);
 
 	// Main loop
@@ -154,27 +169,6 @@ int main (int argc, char **argv)
 
 		// Set script globals - this will update BulletAffector global arguments
 		machine.setGlobalVariableValue("Level_Time", totalTime / 1000.0f);
-	
-/*
-		// Update player
-		if (inFocus())
-		{
-			oldX = mouseX;
-			oldY = mouseY;
-			SDL_GetMouseState(&mouseX, &mouseY);
-
-			if (oldX == mouseX && oldY == mouseY)
-			{
-				float keysX = getHorzMovement();
-				float keysY = getVertMovement();
-				player.move (keysX * frameTime * 100, keysY * frameTime * 100);
-			}
-			else
-			{
-				player.set(mouseX, 600 - mouseY);
-			}
-		}
-*/
 
 		if (!paused())
 		{
@@ -201,8 +195,9 @@ int main (int argc, char **argv)
 				// Update machine
 				machine.update(updateFreq);
 
-				// Update bullets
+				// Update types
 				numBullets = BulletBattery::update(updateFreq);
+				AreaBattery::update(updateFreq);
 			}
 		}
 
@@ -210,6 +205,7 @@ int main (int argc, char **argv)
 		renderer.startRendering();
 
 		BulletBattery::render(&renderer);
+		AreaBattery::render(&renderer);
 
 		renderer.finishRendering();
 	}

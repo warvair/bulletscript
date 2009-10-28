@@ -1,5 +1,7 @@
+#include <cmath>
 #include <iostream>
 #include "RendererGL.h"
+#include "AreaSystem.h"
 
 // --------------------------------------------------------------------------------
 GLuint TGALoader::loadToVRAM(int& width, int& height)
@@ -78,8 +80,13 @@ GLuint TGALoader::loadToVRAM(int& width, int& height)
 // --------------------------------------------------------------------------------
 RendererGL::RendererGL () :
 	mNumBullets (0),
-	mTextureId (0)
+	mNumQuads(0),
+	mBulletTexture (0),
+	mBeamTexture(0),
+	mBeamTipTexture(0),
+	mNumEllipsePoints(0)
 {
+	// Set up bullets
 	for (int i = 0; i < MAX_BULLETS * 8; i += 8)
 	{
 		mBulletTex[i + 0] = 0;
@@ -96,7 +103,35 @@ RendererGL::RendererGL () :
 		mBulletCol[i] = 1;
 
 	for (int i = 0; i < MAX_BULLETS * 4; ++ i)
-		mIndices[i] = i;
+		mBulletIndices[i] = i;
+
+	// Set up beams
+	for (int i = 0; i < MAX_QUADS * 8; i += 8)
+	{
+		mQuadTex[i + 0] = 0;
+		mQuadTex[i + 1] = 0;
+		mQuadTex[i + 2] = 1;
+		mQuadTex[i + 3] = 0;
+		mQuadTex[i + 4] = 1;
+		mQuadTex[i + 5] = 1;
+		mQuadTex[i + 6] = 0;
+		mQuadTex[i + 7] = 1;
+	}
+
+	for (int i = 0; i < MAX_QUADS * 16; ++i)
+		mQuadCol[i] = 1;
+
+	for (int i = 0; i < MAX_QUADS * 4; ++ i)
+		mQuadIndices[i] = i;
+
+	// Set up ellipses
+	// Set indices
+	for (int i = 0; i < MAX_ELLIPSE_POINTS; ++ i)
+		mEllipseIndices[i] = i;
+
+	// Set colours
+	for (int i = 0; i < MAX_ELLIPSE_POINTS * 4; ++i)
+		mEllipseCol[i] = 1.0f;
 }
 // --------------------------------------------------------------------------------
 bool RendererGL::initialise (int width, int height)
@@ -117,10 +152,21 @@ bool RendererGL::initialise (int width, int height)
 	glEnable (GL_BLEND);
 
 	// Create bullet sprite
-	TGALoader sprLoader ("bullet1.tga");
+	TGALoader bulletLoader ("bullet1.tga");
 	int bwidth, bheight;
-	mTextureId = sprLoader.loadToVRAM (bwidth, bheight);
-	if (mTextureId == 0)
+	mBulletTexture = bulletLoader.loadToVRAM (bwidth, bheight);
+	if (mBulletTexture == 0)
+		return false;
+
+	// Create beam sprite
+	TGALoader beamLoader ("beam1.tga");
+	mBeamTexture = beamLoader.loadToVRAM (bwidth, bheight);
+	if (mBeamTexture == 0)
+		return false;
+
+	TGALoader beamTipLoader ("beam2.tga");
+	mBeamTipTexture = beamTipLoader.loadToVRAM (bwidth, bheight);
+	if (mBeamTipTexture == 0)
 		return false;
 
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -132,13 +178,15 @@ bool RendererGL::initialise (int width, int height)
 void RendererGL::startRendering ()
 {
 	mNumBullets = 0;
+	mNumQuads = 0;
+	mNumEllipsePoints = 0;
 	glClear (GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 }
 // --------------------------------------------------------------------------------
 void RendererGL::finishRendering ()
 {
-	// Draw bullets
-	renderBatch();
+	renderBulletBatch();
+	renderQuadBatch();
 
 	SDL_GL_SwapBuffers ();
 }
@@ -147,7 +195,7 @@ void RendererGL::addBullet (float x, float y, float fade)
 {
 	if (mNumBullets >= MAX_BULLETS)
 	{
-		renderBatch();
+		renderBulletBatch();
 		mNumBullets = 0;
 	}
 
@@ -168,13 +216,114 @@ void RendererGL::addBullet (float x, float y, float fade)
 	mBulletCol[cOffset + 11] = fade;
 	mBulletCol[cOffset + 15] = fade;
 
-	mNumBullets ++;
+	mNumBullets++;
 }
 // --------------------------------------------------------------------------------
-void RendererGL::renderBatch()
+void RendererGL::addQuadArea(Area* a)
 {
-	glBindTexture (GL_TEXTURE_2D, mTextureId);
-	glColor4f(1, 1, 1, 1);
+	if (mNumQuads >= (MAX_QUADS - 1))
+	{
+		renderQuadBatch();
+		mNumQuads = 0;
+	}
+
+	float sinAngle = sin((a->angle - 180) * BS::DEG_TO_RAD);
+	float cosAngle = cos((a->angle - 180) * BS::DEG_TO_RAD);
+
+	float w2 = a->w / 2;
+	float h2 = a->h / 2;
+
+	int bOffset = mNumQuads * 8;
+	int cOffset = mNumQuads * 16;
+	if (a->type == AT_QuadCentred)
+	{
+		mQuadPos[bOffset + 0] = a->x - w2 * cosAngle - h2 * sinAngle;
+		mQuadPos[bOffset + 1] = a->y + h2 * cosAngle - w2 * sinAngle;
+		mQuadPos[bOffset + 2] = a->x + w2 * cosAngle - h2 * sinAngle;
+		mQuadPos[bOffset + 3] = a->y + h2 * cosAngle + w2 * sinAngle;
+		mQuadPos[bOffset + 4] = a->x + w2 * cosAngle + h2 * sinAngle;
+		mQuadPos[bOffset + 5] = a->y - h2 * cosAngle + w2 * sinAngle;
+		mQuadPos[bOffset + 6] = a->x - w2 * cosAngle + h2 * sinAngle;
+		mQuadPos[bOffset + 7] = a->y - h2 * cosAngle - w2 * sinAngle;
+	}
+	else if (a->type == AT_QuadBased)
+	{
+		mQuadPos[bOffset + 0] = a->x - w2 * cosAngle;
+		mQuadPos[bOffset + 1] = a->y - w2 * sinAngle;
+		mQuadPos[bOffset + 2] = a->x + w2 * cosAngle;
+		mQuadPos[bOffset + 3] = a->y + w2 * sinAngle;
+		mQuadPos[bOffset + 4] = a->x + w2 * cosAngle + a->h * sinAngle;
+		mQuadPos[bOffset + 5] = a->y - a->h * cosAngle + w2 * sinAngle;
+		mQuadPos[bOffset + 6] = a->x - w2 * cosAngle + a->h * sinAngle;
+		mQuadPos[bOffset + 7] = a->y - a->h * cosAngle - w2 * sinAngle;
+	}
+
+	mQuadCol[cOffset + 3] = a->fade;
+	mQuadCol[cOffset + 7] = a->fade;
+	mQuadCol[cOffset + 11] = a->fade;
+	mQuadCol[cOffset + 15] = a->fade;
+
+	mNumQuads += 2;
+}
+// --------------------------------------------------------------------------------
+void RendererGL::addEllipseArea(Area* a)
+{
+	// Work out how many points to use based on its size
+	int size = a->w + a->h;
+	int numPoints = size / 4;
+
+	// +1 for the central vertex
+	if ((numPoints + 1) >= MAX_ELLIPSE_POINTS)
+		return;
+
+	float w2 = a->w / 2;
+	float h2 = a->h / 2;
+
+	mEllipsePos[0] = a->x;
+	mEllipsePos[1] = a->y;
+	mEllipseTex[0] = 0.5f;
+	mEllipseTex[1] = 0.5f;
+	mEllipseCol[3] = a->fade;
+
+	for (int i = 0, j = 0; i < numPoints * 2; i += 2)
+	{
+		float angle = (a->angle - 180) + 360 * ((float) j / (numPoints - 1)) * BS::DEG_TO_RAD;
+
+		float sinAngle = sin(angle);
+		float cosAngle = cos(angle);
+		// Pos
+		mEllipsePos[2 + i + 0] = a->x + sinAngle * w2;
+		mEllipsePos[2 + i + 1] = a->y + cosAngle * h2;
+		// UVs
+		mEllipseTex[2 + i + 0] = sinAngle / 2.0f + 0.5;
+		mEllipseTex[2 + i + 1] = cosAngle / 2.0f + 0.5;
+		// Colour
+		mEllipseCol[7 + j * 4] = a->fade;
+
+		j++;
+	}
+
+	// Render
+	glBindTexture (GL_TEXTURE_2D, 0);
+
+	glEnableClientState (GL_VERTEX_ARRAY);
+	glEnableClientState (GL_TEXTURE_COORD_ARRAY);
+	glEnableClientState (GL_COLOR_ARRAY);
+
+	glVertexPointer(2, GL_FLOAT, 0, mEllipsePos);
+	glTexCoordPointer(2, GL_FLOAT, 0, mEllipseTex);
+	glColorPointer(4, GL_FLOAT, 0, mEllipseCol);
+
+	glDrawElements(GL_TRIANGLE_FAN, numPoints + 1, GL_UNSIGNED_SHORT, mEllipseIndices);
+
+	glDisableClientState (GL_COLOR_ARRAY);
+	glDisableClientState (GL_TEXTURE_COORD_ARRAY);
+	glDisableClientState (GL_VERTEX_ARRAY);
+}
+// --------------------------------------------------------------------------------
+void RendererGL::renderBulletBatch()
+{
+	glBindTexture (GL_TEXTURE_2D, mBulletTexture);
 
 	glEnableClientState (GL_VERTEX_ARRAY);
 	glEnableClientState (GL_TEXTURE_COORD_ARRAY);
@@ -184,93 +333,48 @@ void RendererGL::renderBatch()
 	glTexCoordPointer (2, GL_FLOAT, 0, mBulletTex);
 	glColorPointer (4, GL_FLOAT, 0, mBulletCol);
 
-	glDrawElements (GL_QUADS, 4 * mNumBullets, GL_UNSIGNED_SHORT, mIndices);
+	glDrawElements (GL_QUADS, 4 * mNumBullets, GL_UNSIGNED_SHORT, mBulletIndices);
 
 	glDisableClientState (GL_COLOR_ARRAY);
 	glDisableClientState (GL_TEXTURE_COORD_ARRAY);
 	glDisableClientState (GL_VERTEX_ARRAY);
 }
 // --------------------------------------------------------------------------------
-void RendererGL::renderQuickQuad(float x0, float y0, float x1, float y1, GLuint texture)
+void RendererGL::renderQuadBatch()
 {
-	glBindTexture(GL_TEXTURE_2D, texture);
-	glColor4f(1, 1, 1, 1);
-	glBegin(GL_QUADS);
-	{
-		glTexCoord2i(0, 0);
-		glVertex2f(x0, y0);
-		glTexCoord2i(1, 0);
-		glVertex2f(x1, y0);
-		glTexCoord2i(1, 1);
-		glVertex2f(x1, y1);
-		glTexCoord2i(0, 1);
-		glVertex2f(x0, y1);
-	}
-	glEnd();
+	glBindTexture (GL_TEXTURE_2D, mBeamTexture);
+
+	glEnableClientState (GL_VERTEX_ARRAY);
+	glEnableClientState (GL_TEXTURE_COORD_ARRAY);
+	glEnableClientState (GL_COLOR_ARRAY);
+
+	glVertexPointer (2, GL_FLOAT, 0, mQuadPos);
+	glTexCoordPointer (2, GL_FLOAT, 0, mQuadTex);
+	glColorPointer (4, GL_FLOAT, 0, mQuadCol);
+
+	glDrawElements (GL_QUADS, 4 * mNumQuads, GL_UNSIGNED_SHORT, mQuadIndices);
+
+	glDisableClientState (GL_COLOR_ARRAY);
+	glDisableClientState (GL_TEXTURE_COORD_ARRAY);
+	glDisableClientState (GL_VERTEX_ARRAY);
 }
 // --------------------------------------------------------------------------------
-void RendererGL::renderQuickQuad(float x0, float y0, float x1, float y1, 
-								 float x2, float y2, float x3, float y3, GLuint texture)
+void RendererGL::renderEllipseBatch()
 {
-	glBindTexture(GL_TEXTURE_2D, texture);
-	glColor4f(1, 1, 1, 1);
-	glBegin(GL_QUADS);
-	{
-		glTexCoord2i(0, 0);
-		glVertex2f(x0, y0);
-		glTexCoord2i(1, 0);
-		glVertex2f(x1, y1);
-		glTexCoord2i(1, 1);
-		glVertex2f(x2, y2);
-		glTexCoord2i(0, 1);
-		glVertex2f(x3, y3);
-	}
-	glEnd();
-}
-// --------------------------------------------------------------------------------
-void RendererGL::renderQuickUVQuad(float x0, float y0, float x1, float y1, 
-								   float u0, float v0, float u1, float v1, GLuint texture)
-{
-	glBindTexture(GL_TEXTURE_2D, texture);
-	glColor4f(1, 1, 1, 1);
-	glBegin(GL_QUADS);
-	{
-		glTexCoord2f(u0, v0);
-		glVertex2f(x0, y0);
-		glTexCoord2f(u1, v0);
-		glVertex2f(x1, y0);
-		glTexCoord2f(u1, v1);
-		glVertex2f(x1, y1);
-		glTexCoord2f(u0, v1);
-		glVertex2f(x0, y1);
-	}
-	glEnd();
-}
-// --------------------------------------------------------------------------------
-void RendererGL::renderQuickTriangle(float x0, float y0, float x1, float y1, float x2, 
-									 float y2, float alpha, GLuint texture)
-{
-	glBindTexture(GL_TEXTURE_2D, texture);
-	glColor4f(1, 1, 1, alpha);
-	glBegin(GL_TRIANGLES);
-	{
-		glTexCoord2i(0, 0);
-		glVertex2f(x0, y0);
-		glTexCoord2i(1, 0);
-		glVertex2f(x1, y1);
-		glTexCoord2i(1, 1);
-		glVertex2f(x2, y2);
-	}
-	glEnd();
-}
-// --------------------------------------------------------------------------------
-void RendererGL::renderQuickLines(const std::vector<float>& points, int numPoints, float alpha)
-{
-	glBindTexture(GL_TEXTURE_2D, 0);
-	glColor4f(1, 1, 1, alpha);
-	glBegin(GL_LINE_LOOP);
-	for (int i = 0; i < numPoints * 2; i += 2)
-		glVertex2f(points[i + 0], points[i + 1]);
-	glEnd();	
+	glBindTexture (GL_TEXTURE_2D, 0);
+
+	glEnableClientState (GL_VERTEX_ARRAY);
+	glEnableClientState (GL_TEXTURE_COORD_ARRAY);
+	glEnableClientState (GL_COLOR_ARRAY);
+
+	glVertexPointer (2, GL_FLOAT, 0, mQuadPos);
+	glTexCoordPointer (2, GL_FLOAT, 0, mQuadTex);
+	glColorPointer (4, GL_FLOAT, 0, mQuadCol);
+
+	glDrawElements (GL_TRIANGLE_FAN, 4 * mNumQuads, GL_UNSIGNED_SHORT, mQuadIndices);
+
+	glDisableClientState (GL_COLOR_ARRAY);
+	glDisableClientState (GL_TEXTURE_COORD_ARRAY);
+	glDisableClientState (GL_VERTEX_ARRAY);
 }
 // --------------------------------------------------------------------------------

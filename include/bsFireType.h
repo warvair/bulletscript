@@ -197,11 +197,12 @@ namespace BS_NMSP
 			// control type
 			uint32 controlType = 0;
 			int ftFuncIndex = -1;
+			String callName = "";
 			ParseTreeNode* tNode = node->getChild(3);
 			if (tNode)
 			{
 				ParseTreeNode* aNode = tNode->getChild(0);
-				String callName = aNode->getChild(0)->getStringData();
+				callName = aNode->getChild(0)->getStringData();
 
 				// Get function index: +1 because 0 means no function
 				ParseTree* tree = node->getTree();
@@ -228,7 +229,10 @@ namespace BS_NMSP
 
 			// Push number of FireType function arguments
 			if (ftFuncIndex >= 0)
-				code->push_back(def->getFunction(ftFuncIndex).numArguments);
+			{
+				int defIndex = def->getFunctionIndex(callName);
+				code->push_back(def->getFunction(defIndex).numArguments);
+			}
 			else
 				code->push_back(0);
 			

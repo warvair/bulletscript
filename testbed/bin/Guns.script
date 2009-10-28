@@ -1,4 +1,4 @@
-gun Test
+gun Abstract
 {
 	m_speed = 60;
 
@@ -30,5 +30,37 @@ gun Test
 		fireA bullet(170, m_speed) : Func1(1.2, m_speed, 120);
 		fireA bullet(190, m_speed) : Func2(1.2, m_speed, 120);
 		wait(0.2);
+	}
+}
+
+gun Beam
+{
+	Wobble = function()
+	{
+		wait(1);
+		while(1)
+		{
+//			$angle = {90, 2};
+			$width = {$width / 2, 2};
+			$height = {$height * 1.5, 2};
+			wait(2);
+//			$angle = {180, 2};
+			$fade = {0, 2};
+			$width = {$width * 2, 2};
+			$height = {$height * 0.666, 2};
+			wait(2);
+		}
+	}
+
+	Emit = state
+	{
+//		quadB area(32, 240, 180) : Wobble();
+		ellipse area(64, 64) : Wobble();
+		goto Stable;
+	}
+
+	Stable = state
+	{
+		wait(5);
 	}
 }
