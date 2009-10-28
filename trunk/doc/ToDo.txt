@@ -1,7 +1,3 @@
-'while' language feature to complement 'loop'
-
-++ -- += -=
-
 What to do when user wants to manually control bullets from code?  Ie, when you fire a weapon,
 the bullets stop their current behaviour and get sucked towards/blown away from you, and then
 maybe resume their old behaviour when you stop firing.  This is an edge case but it must be considered.

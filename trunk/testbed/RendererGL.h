@@ -30,46 +30,61 @@ public:
 	GLuint loadToVRAM (int& width, int& height);
 };
 
+struct Area;
+
 class RendererGL
 {
+	// Bullets
 	static const int MAX_BULLETS = 2048;
 	static const int BULLET_RADIUS = 4;
-
 	float mBulletPos[MAX_BULLETS * 8];
 	float mBulletTex[MAX_BULLETS * 8];
 	float mBulletCol[MAX_BULLETS * 16];
-	unsigned short mIndices[MAX_BULLETS * 4];
-
+	unsigned short mBulletIndices[MAX_BULLETS * 4];
 	int mNumBullets;
+	GLuint mBulletTexture;
 
-	GLuint mTextureId;
+	void renderBulletBatch();
 
-	void renderBatch();
+	// Quads
+	static const int MAX_QUADS = 128;
+	float mQuadPos[MAX_QUADS * 8];
+	float mQuadTex[MAX_QUADS * 8];
+	float mQuadCol[MAX_QUADS * 16];
+	unsigned short mQuadIndices[MAX_QUADS * 4];
+	int mNumQuads;
+	GLuint mBeamTexture, mBeamTipTexture;	
+
+	void renderQuadBatch();
+
+	// Ellipses
+	// An ellipse is a triangle fan, and how many triangles it uses depends on its size.
+	// Therefore, we must generate the indices dynamically.  
+	static const int MAX_ELLIPSE_POINTS = 512;
+	float mEllipsePos[MAX_ELLIPSE_POINTS * 2];
+	float mEllipseTex[MAX_ELLIPSE_POINTS * 2];
+	float mEllipseCol[MAX_ELLIPSE_POINTS * 4];
+	unsigned short mEllipseIndices[MAX_ELLIPSE_POINTS];
+	int mNumEllipsePoints;
+//	GLuint mBeamTexture, mBeamTipTexture;	
+
+	void renderEllipseBatch();
 
 public:
 
 	RendererGL ();
 
-	bool initialise (int width, int height);
+	bool initialise(int width, int height);
 
-	void startRendering ();
+	void startRendering();
 
-	void finishRendering ();
+	void finishRendering();
 
-	void addBullet (float x, float y, float fade);
+	void addBullet(float x, float y, float fade);
 
-	void renderQuickQuad(float x0, float y0, float x1, float y1, GLuint texture);
+	void addQuadArea(Area* a);
 
-	void renderQuickQuad(float x0, float y0, float x1, float y1, 
-		float x2, float y2, float x3, float y3, GLuint texture);
-
-	void renderQuickUVQuad(float x0, float y0, float x1, float y1, float u0, float v0, 
-		float u1, float v1, GLuint texture);
-
-	void renderQuickTriangle(float x0, float y0, float x1, float y1, float x2, float y2, 
-		float alpha, GLuint texture);
-
-	void renderQuickLines(const std::vector<float>& points, int numPoints, float alpha);
+	void addEllipseArea(Area* a);
 
 };
 

@@ -455,8 +455,8 @@ static const unsigned short int yyrline[] =
      603,   612,   619,   627,   631,   640,   644,   653,   657,   663,
      672,   676,   682,   688,   694,   703,   707,   713,   722,   726,
      732,   738,   747,   751,   756,   764,   768,   772,   776,   780,
-     787,   796,   800,   807,   812,   824,   832,   841,   849,   853,
-     860,   869
+     787,   796,   800,   807,   812,   824,   832,   842,   850,   854,
+     861,   870
 };
 #endif
 
@@ -2353,12 +2353,13 @@ yyreduce:
 #line 833 "BulletParser.y"
     {
 			(yyval) = AST->createNode(PT_Property, yylineno);
-			(yyval)->setString(yytext);
+			(yyval)->setString((yyvsp[0])->getStringData().c_str());
+			delete (yyvsp[0]);
 		;}
     break;
 
   case 107:
-#line 842 "BulletParser.y"
+#line 843 "BulletParser.y"
     {
 			(yyval) = AST->createNode(PT_Identifier, yylineno);
 			(yyval)->setString(yytext);
@@ -2366,21 +2367,21 @@ yyreduce:
     break;
 
   case 108:
-#line 850 "BulletParser.y"
+#line 851 "BulletParser.y"
     {
 			(yyval) = (yyvsp[0]);
 		;}
     break;
 
   case 109:
-#line 854 "BulletParser.y"
+#line 855 "BulletParser.y"
     {
 			(yyval) = (yyvsp[0]);
 		;}
     break;
 
   case 110:
-#line 861 "BulletParser.y"
+#line 862 "BulletParser.y"
     {
 			// This only accepts non-negative integers
 			(yyval) = AST->createNode(PT_Constant, yylineno);
@@ -2389,7 +2390,7 @@ yyreduce:
     break;
 
   case 111:
-#line 870 "BulletParser.y"
+#line 871 "BulletParser.y"
     {
 			(yyval) = AST->createNode(PT_Constant, yylineno);
 			(yyval)->setValue(atof(yytext));
@@ -2401,7 +2402,7 @@ yyreduce:
     }
 
 /* Line 1126 of yacc.c.  */
-#line 2405 "bsBulletParser.cpp"
+#line 2406 "bsBulletParser.cpp"
 
   yyvsp -= yylen;
   yyssp -= yylen;
@@ -2669,7 +2670,7 @@ yyreturn:
 }
 
 
-#line 876 "BulletParser.y"
+#line 877 "BulletParser.y"
 
 
 	
