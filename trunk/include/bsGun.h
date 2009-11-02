@@ -17,11 +17,16 @@ namespace BS_NMSP
 
 		GunScriptRecord* mRecord;
 
+		float mLastX, mLastY, mLastAngle;
+
 	public:
 
 		explicit Gun(ScriptMachine* scriptMachine) :
 			mScriptMachine(scriptMachine),
-			mRecord(0)
+			mRecord(0),
+			mLastX(0),
+			mLastY(0),
+			mLastAngle(0)
 		{
 		}
 
@@ -38,16 +43,40 @@ namespace BS_NMSP
 			mRecord = def->createGunScriptRecord(mScriptMachine);
 		}
 		
-		void setMemberVariable(int index, bstype value)
+		void setX(bstype x)
 		{
-			mRecord->members[index] = value;
+			mLastX = x - mRecord->members[Member_X];
+			mRecord->members[Member_X] = x;
+		}
+
+		void setY(bstype y)
+		{
+			mLastY = y - mRecord->members[Member_Y];
+			mRecord->members[Member_Y] = y;
+		}
+
+		void setAngle(bstype angle)
+		{
+			mLastAngle = angle - mRecord->members[Member_Angle];
+			mRecord->members[Member_Angle] = angle;
 		}
 
 		void runScript(float frameTime)
 		{
-			mScriptMachine->processGunState(mRecord);
+			mScriptMachine->processGunState(mRecord, this);
 			if (mRecord->scriptState.suspendTime > 0)
 				mRecord->scriptState.suspendTime -= frameTime;
+		}
+
+		void getLastMovement(bstype& x, bstype& y)
+		{
+			x = mLastX;
+			y = mLastY;
+		}
+
+		void getLastRotation(bstype& angle)
+		{
+			angle = mLastAngle;
 		}
 
 	};

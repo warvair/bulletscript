@@ -5,32 +5,37 @@
 #include "RendererGL.h"
 
 struct Bullet;
+struct SoundEffect;
+struct Unit;
 
 // Areas are either quads or circles.
 enum AreaType
 {
 	AT_QuadCentred,
 	AT_QuadBased,
-	AT_Ellipse
+	AT_Ellipse,
+	AT_Arc
 };
 
 struct Area
 {
 	int type;			// quad or ellipse
-	BS::bstype x, y;	// centre
-	BS::bstype w, h;	// width, height.  Also used for ellipse
-	BS::bstype angle;
-	BS::bstype fade;
+	bs::bstype x, y;	// centre
+	bs::bstype w, h;	// width, height.  Also used for ellipse
+	bs::bstype angle;
+	bs::bstype start, end; // generic, can be used for arcs
+	bs::bstype innerw, innerh;
+	bs::bstype fade;
 
 	// Internal variables, do not modify in affector function!
 	int __index;
 	float __time;
 
 	// For bulletscript
-	BS::FireTypeScriptRecord* __ft;
+	bs::FireTypeControl* __ft;
 
 	bool __active;
-	char padding[7]; // pad to 48 bytes
+	char padding[7]; // pad to 64 bytes
 
 	Area() : __active(false) {}
 };
@@ -45,7 +50,7 @@ class AreaBattery
 		}
 	};
 
-	static BS::Machine<Bullet, Area>* mMachine;
+	static bs::Machine<Bullet, Area, SoundEffect, Unit>* mMachine;
 
 	static const int BATTERY_SIZE = 128;
 
@@ -62,36 +67,54 @@ class AreaBattery
 	
 public:
 
-	static void initialise(BS::Machine<Bullet, Area>* machine);
+	static void initialise(bs::Machine<Bullet, Area, SoundEffect, Unit>* machine);
 
 	static int update(float frameTime);
 
 	static void render(RendererGL* renderer);
 
 	// Scripting
-	static Area* emitQuadC(BS::bstype x, BS::bstype y, const BS::bstype* args);
+	static Area* emitQuadC(bs::bstype x, bs::bstype y, const bs::bstype* args);
 
-	static Area* emitQuadB(BS::bstype x, BS::bstype y, const BS::bstype* args);
+	static Area* emitQuadB(bs::bstype x, bs::bstype y, const bs::bstype* args);
 
-	static Area* emitEllipse(BS::bstype x, BS::bstype y, const BS::bstype* args);
+	static Area* emitEllipse(bs::bstype x, bs::bstype y, const bs::bstype* args);
+
+	static Area* emitArc(bs::bstype x, bs::bstype y, const bs::bstype* args);
 
 	static void killArea(void* object);
 
-	static void setWidth(void* object, BS::bstype value);
+	static void setWidth(void* object, bs::bstype value);
 
-	static BS::bstype getWidth(void* object);
+	static bs::bstype getWidth(void* object);
 
-	static void setHeight(void* object, BS::bstype value);
+	static void setHeight(void* object, bs::bstype value);
 
-	static BS::bstype getHeight(void* object);
+	static bs::bstype getHeight(void* object);
 
-	static void setAngle(void* object, BS::bstype value);
+	static void setInnerWidth(void* object, bs::bstype value);
 
-	static BS::bstype getAngle(void* object);
+	static bs::bstype getInnerWidth(void* object);
 
-	static void setFade(void* object, BS::bstype value);
+	static void setInnerHeight(void* object, bs::bstype value);
 
-	static BS::bstype getFade(void* object);
+	static bs::bstype getInnerHeight(void* object);
+
+	static void setAngle(void* object, bs::bstype value);
+
+	static bs::bstype getAngle(void* object);
+
+	static void setStart(void* object, bs::bstype value);
+
+	static bs::bstype getStart(void* object);
+
+	static void setEnd(void* object, bs::bstype value);
+
+	static bs::bstype getEnd(void* object);
+
+	static void setFade(void* object, bs::bstype value);
+
+	static bs::bstype getFade(void* object);
 };
 
 #endif

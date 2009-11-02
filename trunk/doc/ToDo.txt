@@ -1,20 +1,38 @@
+1) Implement affectors
+
+2) Implement controllers/events
+
+3) Once public interface is done, comment with doxygen
+
+4) Optimise
+
+	Get working with Threaded Building Blocks
+
+	Check assembler output, look into SSE/2, look into compiler optimisations
+	Optimise, check assembler output.  Learn asm, sse2 instructions etc, get good at that.  Learn the types of
+optimisations that compilers do and how it affects things.
+
+stack-register machine
+
+static_cast: is casting from void* quicker than casting along a class hierarchy?
+
+A FireTypeControl is needed for every FireType which has any kind of behaviour.  This could eat up memory.
+
+Cut down the number of arguments to interpretCode
+
+need a way to release guns from memory pool, like firetypecontrols
+
+link errors with user systems when FireType is a class and not a struct?
+	FireTypes must also be default-constructible it seems.
+	
 What to do when user wants to manually control bullets from code?  Ie, when you fire a weapon,
 the bullets stop their current behaviour and get sucked towards/blown away from you, and then
 maybe resume their old behaviour when you stop firing.  This is an edge case but it must be considered.
+	Guns should be able to relinquish control of their FireTypes, by calling "yield()" or similar.  When
+	this is the case, all FireTypes do not have any special updating done (we have a pointer to the Gun
+	in the FireTypeControl for checking).
 
 avoid float-int conversions where possible
 
 affector arguments may change: do we have it so that already emitted bullets use the old arguments, or
 the current ones?
-
-Remove containers where possible
-	BulletAffector::mArguments
-	BulletGun::mAffectors
-	BulletMachine::mBulletAffectors
-	GlobalVariable::mListeners
-	
-	simple memory allocator?
-
-Homing affector
-
-Per-state affectors

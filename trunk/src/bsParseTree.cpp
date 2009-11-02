@@ -96,27 +96,27 @@ void ParseTreeNode::foldBinaryNode()
 		break;
 
 	case PT_EqualsStatement:
-		setValue(val1 == val2 ? 1 : 0);
+		setValue(val1 == val2 ? bsvalue1 : bsvalue0);
 		break;
 
 	case PT_NotEqualsStatement:
-		setValue(val1 != val2 ? 1 : 0);
+		setValue(val1 != val2 ? bsvalue1 : bsvalue0);
 		break;
 
 	case PT_LessThanStatement:
-		setValue(val1 < val2 ? 1 : 0);
+		setValue(val1 < val2 ? bsvalue1 : bsvalue0);
 		break;
 
 	case PT_GreaterThanStatement:
-		setValue(val1 > val2 ? 1 : 0);
+		setValue(val1 > val2 ? bsvalue1 : bsvalue0);
 		break;
 
 	case PT_LessThanEqStatement:
-		setValue(val1 <= val2 ? 1 : 0);
+		setValue(val1 <= val2 ? bsvalue1 : bsvalue0);
 		break;
 
 	case PT_GreaterThanEqStatement:
-		setValue(val1 >= val2 ? 1 : 0);
+		setValue(val1 >= val2 ? bsvalue1 : bsvalue0);
 		break;
 	}
 
@@ -180,11 +180,11 @@ void ParseTreeNode::foldLogicalNode ()
 	switch (mType)
 	{
 	case PT_LogicalOr:
-		setValue(val1 || val2 ? 1 : 0);
+		setValue(val1 || val2 ? bsvalue1 : bsvalue0);
 		break;
 
 	case PT_LogicalAnd:
-		setValue(val1 && val2 ? 1 : 0);
+		setValue(val1 && val2 ? bsvalue1 : bsvalue0);
 		break;
 	}
 
@@ -538,8 +538,7 @@ void ParseTree::createMemberVariableBytecode(GunDefinition* def,
 	}
 }
 // --------------------------------------------------------------------------------
-void ParseTree::countFunctionCallArguments(ParseTreeNode* node, 
-													int& numArguments)
+void ParseTree::countFunctionCallArguments(ParseTreeNode* node, int& numArguments)
 {
 	if (node->getType() == PT_FunctionCallArg)
 		numArguments++;
@@ -551,9 +550,8 @@ void ParseTree::countFunctionCallArguments(ParseTreeNode* node,
 	}
 }
 // --------------------------------------------------------------------------------
-void ParseTree::addFunctionArguments(GunDefinition* def, 
-											  ParseTreeNode* node, 
-											  GunDefinition::Function& func)
+void ParseTree::addFunctionArguments(GunDefinition* def, ParseTreeNode* node, 
+									 GunDefinition::Function& func)
 {
 	if (node->getType() == PT_Identifier)
 	{
@@ -590,11 +588,15 @@ void ParseTree::addFunctions(GunDefinition* def, ParseTreeNode* node)
 			return;
 		}
 
-		def->addFunction(funcName, node);
+		GunDefinition::Function& func = def->addFunction(funcName, node);
 		
 		// Create CodeRecord in ScriptMachine
 		int index = createCodeRecord("Gun", def->getName(), "Function", funcName);
 		mFunctionIndices.push_back(index);
+
+		// Get arguments
+		if (node->getChild(1))
+			addFunctionArguments(def, node->getChild(1), func);
 	}
 
 	for (int i = 0; i < ParseTreeNode::MAX_CHILDREN; ++ i)
@@ -613,12 +615,7 @@ void ParseTree::buildFunctions(GunDefinition* def, ParseTreeNode* node)
 	case PT_Function:
 		{
 			String funcName = node->getChild(0)->getStringData();
-
 			s_curFunc = &(def->getFunction(def->getFunctionIndex(funcName))); // dodgy but will be ok here
-
-			// Get arguments
-			if (node->getChild(1))
-				addFunctionArguments(def, node->getChild(1), *s_curFunc);
 		}
 		break;
 
@@ -703,7 +700,8 @@ void ParseTree::buildFunctions(GunDefinition* def, ParseTreeNode* node)
 					String ctrlName = funcNode->getChild(0)->getStringData();
 					
 					// Make sure ctrlName exists...
-					if (def->getFunctionIndex(ctrlName) < 0)
+					int fIndex = def->getFunctionIndex(ctrlName);
+					if (fIndex < 0)
 					{
 						addError(node->getLine(), "Function '" + ctrlName + "' is not declared.");
 						return;
@@ -714,10 +712,11 @@ void ParseTree::buildFunctions(GunDefinition* def, ParseTreeNode* node)
 					if (funcNode->getChild(1))
 						countFunctionCallArguments(funcNode->getChild(1), numArguments);
 
-					if (numArguments != s_curFunc->numArguments)
+					GunDefinition::Function& func = def->getFunction(fIndex);
+					if (numArguments != func.numArguments)
 					{
 						std::stringstream ss;
-						ss << "Function '" << ctrlName << "' expects " << s_curFunc->numArguments << " arguments.";
+						ss << "Function '" << ctrlName << "' expects " << func.numArguments << " arguments.";
 						addError(node->getLine(), ss.str());
 						return;
 					}
@@ -979,10 +978,13 @@ void ParseTree::checkFireStatements(GunDefinition* def, ParseTreeNode* node)
 			String typeName = node->getStringData();
 			FireTypeBase* ft = mScriptMachine->getFireType(typeName);
 
-			String funcName = tailNode->getChild(0)->getChild(0)->getStringData();
-			GunDefinition::Function func = def->getFunction(def->getFunctionIndex(funcName));
+			if (tailNode->getChild(0))
+			{
+				String funcName = tailNode->getChild(0)->getChild(0)->getStringData();
+				GunDefinition::Function func = def->getFunction(def->getFunctionIndex(funcName));
 
-			checkFunctionProperties(func.node, ft);
+				checkFunctionProperties(func.node, ft);
+			}
 		}
 	}
 
@@ -1123,9 +1125,12 @@ void ParseTree::generateBytecode(GunDefinition* def,
 			ParseTreeNode* tNode = node->getChild(3);
 			if (tNode)
 			{
-				ParseTreeNode* argNode = tNode->getChild(0)->getChild(1);
-				if (argNode)
-					generateBytecode(def, argNode, bytecode);
+				if (tNode->getChild(0))
+				{
+					ParseTreeNode* argNode = tNode->getChild(0)->getChild(1);
+					if (argNode)
+						generateBytecode(def, argNode, bytecode);
+				}
 			}
 
 			// Generate fire function arguments next

@@ -65,10 +65,18 @@ class RendererGL
 	float mEllipseTex[MAX_ELLIPSE_POINTS * 2];
 	float mEllipseCol[MAX_ELLIPSE_POINTS * 4];
 	unsigned short mEllipseIndices[MAX_ELLIPSE_POINTS];
-	int mNumEllipsePoints;
-//	GLuint mBeamTexture, mBeamTipTexture;	
+	GLuint mEllipseTexture;
 
-	void renderEllipseBatch();
+	// Arcs
+	static const int MAX_ARC_POINTS = 1024;
+	float mArcPos[MAX_ARC_POINTS * 2];
+	float mArcTex[MAX_ARC_POINTS * 2];
+	float mArcCol[MAX_ARC_POINTS * 4];
+	unsigned short mArcIndices[MAX_ARC_POINTS];
+	GLuint mArcTexture;
+
+	// Units
+	GLuint mUnit1Texture;
 
 public:
 
@@ -85,6 +93,10 @@ public:
 	void addQuadArea(Area* a);
 
 	void addEllipseArea(Area* a);
+
+	void addArcArea(Area* a);
+
+	void renderUnit(float x, float y);
 
 };
 

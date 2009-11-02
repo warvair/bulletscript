@@ -17,12 +17,12 @@ namespace BS_NMSP
 
 	class Gun;
 	class TypeManagerBase;
-	struct FireTypeScriptRecord;
+	struct FireTypeControl;
 	class FireTypeBase;
 
 	class _BSAPI ScriptMachine
 	{
-		template<class A, class B, class C> friend class Machine;
+		template<class A, class B, class C, class D> friend class Machine;
 		friend class ParseTree;
 
 		// TypeManager
@@ -51,7 +51,7 @@ namespace BS_NMSP
 		{
 			String name;
 			GunDefinition* def;
-			DeepMemoryPool<FireTypeScriptRecord, int>* pool;
+			DeepMemoryPool<FireTypeControl, int>* pool;
 		};
 		
 		typedef std::vector<GunRecord> GunRecordList;
@@ -96,9 +96,9 @@ namespace BS_NMSP
 		int getNumCodeRecords() const;
 
 		// FireTypeScriptRecords
-		FireTypeScriptRecord* getFireTypeRecord(int index);
+		FireTypeControl* getFireTypeRecord(int index);
 
-		void releaseFireTypeRecord(int index, FireTypeScriptRecord* rec);
+		void releaseFireTypeRecord(int index, FireTypeControl* rec);
 
 		// Native functions
 		void registerNativeFunction(const String& name, NativeFunction func);
@@ -139,9 +139,9 @@ namespace BS_NMSP
 
 		// Script state processing
 		void interpretCode(const uint32* code, size_t length, ScriptState& st, int* curState, 
-			FireTypeScriptRecord* record, bstype x, bstype y, bstype* members, bool loop);
+			FireTypeControl* record, bstype x, bstype y, bstype* members, Gun* gun, bool loop);
 
-		void processGunState(GunScriptRecord* gsr);
+		void processGunState(GunScriptRecord* gsr, Gun* gun);
 
 		void processConstantExpression(const uint32* code, size_t length, GunScriptRecord* gsr);
 

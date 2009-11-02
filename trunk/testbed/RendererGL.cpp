@@ -84,10 +84,13 @@ RendererGL::RendererGL () :
 	mBulletTexture (0),
 	mBeamTexture(0),
 	mBeamTipTexture(0),
-	mNumEllipsePoints(0)
+	mArcTexture(0),
+	mUnit1Texture(0)
 {
+	int i;
+
 	// Set up bullets
-	for (int i = 0; i < MAX_BULLETS * 8; i += 8)
+	for (i = 0; i < MAX_BULLETS * 8; i += 8)
 	{
 		mBulletTex[i + 0] = 0;
 		mBulletTex[i + 1] = 0;
@@ -99,14 +102,14 @@ RendererGL::RendererGL () :
 		mBulletTex[i + 7] = 1;
 	}
 
-	for (int i = 0; i < MAX_BULLETS * 16; ++i)
+	for (i = 0; i < MAX_BULLETS * 16; ++i)
 		mBulletCol[i] = 1;
 
-	for (int i = 0; i < MAX_BULLETS * 4; ++ i)
+	for (i = 0; i < MAX_BULLETS * 4; ++ i)
 		mBulletIndices[i] = i;
 
 	// Set up beams
-	for (int i = 0; i < MAX_QUADS * 8; i += 8)
+	for (i = 0; i < MAX_QUADS * 8; i += 8)
 	{
 		mQuadTex[i + 0] = 0;
 		mQuadTex[i + 1] = 0;
@@ -118,20 +121,34 @@ RendererGL::RendererGL () :
 		mQuadTex[i + 7] = 1;
 	}
 
-	for (int i = 0; i < MAX_QUADS * 16; ++i)
+	for (i = 0; i < MAX_QUADS * 16; ++i)
 		mQuadCol[i] = 1;
 
-	for (int i = 0; i < MAX_QUADS * 4; ++ i)
+	for (i = 0; i < MAX_QUADS * 4; ++ i)
 		mQuadIndices[i] = i;
 
 	// Set up ellipses
-	// Set indices
-	for (int i = 0; i < MAX_ELLIPSE_POINTS; ++ i)
+	for (i = 0; i < MAX_ELLIPSE_POINTS; ++ i)
 		mEllipseIndices[i] = i;
 
-	// Set colours
-	for (int i = 0; i < MAX_ELLIPSE_POINTS * 4; ++i)
+	for (i = 0; i < MAX_ELLIPSE_POINTS * 4; ++i)
 		mEllipseCol[i] = 1.0f;
+
+	// Set up arcs
+	for (i = 0; i < MAX_ARC_POINTS * 4; ++i)
+		mArcCol[i] = 1.0f;
+
+	mArcIndices[0] = 0;
+	mArcIndices[1] = 2;
+	mArcIndices[2] = 3;
+	mArcIndices[3] = 1;
+	for (i = 4; i < MAX_ARC_POINTS; i += 4)
+	{
+		mArcIndices[i + 0] = mArcIndices[i - 4] + 2;
+		mArcIndices[i + 1] = mArcIndices[i - 3] + 2;
+		mArcIndices[i + 2] = mArcIndices[i - 2] + 2;
+		mArcIndices[i + 3] = mArcIndices[i - 1] + 2;
+	}
 }
 // --------------------------------------------------------------------------------
 bool RendererGL::initialise (int width, int height)
@@ -169,6 +186,24 @@ bool RendererGL::initialise (int width, int height)
 	if (mBeamTipTexture == 0)
 		return false;
 
+	// Create beam sprite
+	TGALoader ballLoader ("ball1.tga");
+	mEllipseTexture = ballLoader.loadToVRAM (bwidth, bheight);
+	if (mEllipseTexture == 0)
+		return false;
+
+	// Create arc sprite
+	TGALoader arcLoader ("arc.tga");
+	mArcTexture = arcLoader.loadToVRAM (bwidth, bheight);
+	if (mArcTexture == 0)
+		return false;
+
+	// Create unit sprites
+	TGALoader unitLoader ("ship1.tga");
+	mUnit1Texture = unitLoader.loadToVRAM (bwidth, bheight);
+	if (mUnit1Texture == 0)
+		return false;
+
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	SDL_GL_SwapBuffers();
 
@@ -179,7 +214,6 @@ void RendererGL::startRendering ()
 {
 	mNumBullets = 0;
 	mNumQuads = 0;
-	mNumEllipsePoints = 0;
 	glClear (GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 }
 // --------------------------------------------------------------------------------
@@ -227,8 +261,8 @@ void RendererGL::addQuadArea(Area* a)
 		mNumQuads = 0;
 	}
 
-	float sinAngle = sin((a->angle - 180) * BS::DEG_TO_RAD);
-	float cosAngle = cos((a->angle - 180) * BS::DEG_TO_RAD);
+	float sinAngle = sin((a->angle - 180) * bs::DEG_TO_RAD);
+	float cosAngle = cos((a->angle - 180) * bs::DEG_TO_RAD);
 
 	float w2 = a->w / 2;
 	float h2 = a->h / 2;
@@ -270,7 +304,7 @@ void RendererGL::addEllipseArea(Area* a)
 {
 	// Work out how many points to use based on its size
 	int size = a->w + a->h;
-	int numPoints = size / 4;
+	int numPoints = size / 8;
 
 	// +1 for the central vertex
 	if ((numPoints + 1) >= MAX_ELLIPSE_POINTS)
@@ -285,12 +319,18 @@ void RendererGL::addEllipseArea(Area* a)
 	mEllipseTex[1] = 0.5f;
 	mEllipseCol[3] = a->fade;
 
+	float arcLength = a->end - a->start;
+	float delta = arcLength / (numPoints - 1);
+
+	// start angle = a->angle + a->start
+	// each loop, add delta
+
+	float angle = a->angle + a->start;
 	for (int i = 0, j = 0; i < numPoints * 2; i += 2)
 	{
-		float angle = (a->angle - 180) + 360 * ((float) j / (numPoints - 1)) * BS::DEG_TO_RAD;
+		float sinAngle = sin(angle * bs::DEG_TO_RAD);
+		float cosAngle = cos(angle * bs::DEG_TO_RAD);
 
-		float sinAngle = sin(angle);
-		float cosAngle = cos(angle);
 		// Pos
 		mEllipsePos[2 + i + 0] = a->x + sinAngle * w2;
 		mEllipsePos[2 + i + 1] = a->y + cosAngle * h2;
@@ -300,11 +340,12 @@ void RendererGL::addEllipseArea(Area* a)
 		// Colour
 		mEllipseCol[7 + j * 4] = a->fade;
 
+		angle += delta;
 		j++;
 	}
 
 	// Render
-	glBindTexture (GL_TEXTURE_2D, 0);
+	glBindTexture (GL_TEXTURE_2D, mEllipseTexture);
 
 	glEnableClientState (GL_VERTEX_ARRAY);
 	glEnableClientState (GL_TEXTURE_COORD_ARRAY);
@@ -315,6 +356,69 @@ void RendererGL::addEllipseArea(Area* a)
 	glColorPointer(4, GL_FLOAT, 0, mEllipseCol);
 
 	glDrawElements(GL_TRIANGLE_FAN, numPoints + 1, GL_UNSIGNED_SHORT, mEllipseIndices);
+
+	glDisableClientState (GL_COLOR_ARRAY);
+	glDisableClientState (GL_TEXTURE_COORD_ARRAY);
+	glDisableClientState (GL_VERTEX_ARRAY);
+}
+// --------------------------------------------------------------------------------
+void RendererGL::addArcArea(Area* a)
+{
+	// Work out how many points to use based on its size
+	int size = a->w + a->h;
+	int numPoints = size / 8;
+
+	// *2 for inner vertices
+	if ((numPoints * 2) >= MAX_ELLIPSE_POINTS)
+		return;
+
+	float w2o = a->w / 2;
+	float h2o = a->h / 2;
+
+	float w2i = w2o - a->innerw;
+	float h2i = h2o - a->innerh;
+
+	float arcLength = a->end - a->start;
+	float delta = arcLength / numPoints;
+
+	float angle = a->angle + a->start;
+	for (int i = 0; i <= numPoints; ++i)
+	{
+		float sinAngle = sin(angle * bs::DEG_TO_RAD);
+		float cosAngle = cos(angle * bs::DEG_TO_RAD);
+
+		// Outer Pos
+		mArcPos[i * 4 + 0] = a->x + sinAngle * w2o;
+		mArcPos[i * 4 + 1] = a->y + cosAngle * h2o;
+		// UVs
+		mArcTex[i * 4 + 0] = (float) i / numPoints;
+		mArcTex[i * 4 + 1] = 1.0f;
+		// Colour
+		mArcCol[i * 8 + 3] = a->fade;
+
+		// Inner Pos
+		mArcPos[i * 4 + 2] = a->x + sinAngle * w2i;
+		mArcPos[i * 4 + 3] = a->y + cosAngle * h2i;
+		// UVs
+		mArcTex[i * 4 + 2] = (float) i / numPoints;
+		mArcTex[i * 4 + 3] = 0.0f;
+		// Colour
+		mArcCol[i * 8 + 7] = a->fade;
+
+		angle += delta;
+	}
+
+	glBindTexture (GL_TEXTURE_2D, mArcTexture);
+
+	glEnableClientState (GL_VERTEX_ARRAY);
+	glEnableClientState (GL_TEXTURE_COORD_ARRAY);
+	glEnableClientState (GL_COLOR_ARRAY);
+
+	glVertexPointer (2, GL_FLOAT, 0, mArcPos);
+	glTexCoordPointer (2, GL_FLOAT, 0, mArcTex);
+	glColorPointer (4, GL_FLOAT, 0, mArcCol);
+
+	glDrawElements (GL_QUADS, 4 * numPoints, GL_UNSIGNED_SHORT, mArcIndices);
 
 	glDisableClientState (GL_COLOR_ARRAY);
 	glDisableClientState (GL_TEXTURE_COORD_ARRAY);
@@ -359,22 +463,21 @@ void RendererGL::renderQuadBatch()
 	glDisableClientState (GL_VERTEX_ARRAY);
 }
 // --------------------------------------------------------------------------------
-void RendererGL::renderEllipseBatch()
+void RendererGL::renderUnit(float x, float y)
 {
-	glBindTexture (GL_TEXTURE_2D, 0);
-
-	glEnableClientState (GL_VERTEX_ARRAY);
-	glEnableClientState (GL_TEXTURE_COORD_ARRAY);
-	glEnableClientState (GL_COLOR_ARRAY);
-
-	glVertexPointer (2, GL_FLOAT, 0, mQuadPos);
-	glTexCoordPointer (2, GL_FLOAT, 0, mQuadTex);
-	glColorPointer (4, GL_FLOAT, 0, mQuadCol);
-
-	glDrawElements (GL_TRIANGLE_FAN, 4 * mNumQuads, GL_UNSIGNED_SHORT, mQuadIndices);
-
-	glDisableClientState (GL_COLOR_ARRAY);
-	glDisableClientState (GL_TEXTURE_COORD_ARRAY);
-	glDisableClientState (GL_VERTEX_ARRAY);
+	glBindTexture(GL_TEXTURE_2D, mUnit1Texture);
+	glColor4f(1, 1, 1, 1);
+	glBegin(GL_QUADS);
+	{
+			glTexCoord2i(0, 0);
+			glVertex2f(x - 32, y - 32);
+			glTexCoord2i(1, 0);
+			glVertex2f(x + 32, y - 32);
+			glTexCoord2i(1, 1);
+			glVertex2f(x + 32, y + 32);
+			glTexCoord2i(0, 1);
+			glVertex2f(x - 32, y + 32);
+	}
+	glEnd();
 }
 // --------------------------------------------------------------------------------

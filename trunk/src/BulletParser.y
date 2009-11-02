@@ -587,18 +587,27 @@ fire_statement
 			$$->setChild(1, $3);
 			$$->setChild(3, $4);
 		}
+	| identifier identifier function_call_arguments ';'
+		{
+			$$ = AST->createNode(PT_FireStatement, yylineno);
+			$$->setString($2->getStringData().c_str());
+			delete $2;
+			
+			$$->setChild(0, $1);
+			$$->setChild(1, $3);
+		}
 	;
 	
 fire_tail
-	: 
-		{
-			// No tail
-			$$ = 0;
-		}
-	| ':' function_call
+	: ':' function_call
 		{
 			$$ = AST->createNode(PT_FunctionTail, yylineno);
 			$$->setChild(0, $2);
+		}
+	| '[' func_args ']'
+		{
+			$$ = AST->createNode(PT_FunctionTail, yylineno);
+			$$->setChild(1, $2);
 		}
 	| '[' func_args ']' ':' function_call
 		{

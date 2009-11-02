@@ -179,7 +179,7 @@ GunScriptRecord* GunDefinition::createGunScriptRecord(ScriptMachine* sm)
 	if (m_constructSize > 0)
 	{
 		sm->interpretCode(m_constructCode, m_constructSize, record->scriptState,
-			&record->curState, 0, 0, 0, record->members, false);
+			&record->curState, 0, 0, 0, record->members, 0, false);
 		record->scriptState.stackHead = 0;
 		record->scriptState.curInstruction = 0;
 	}

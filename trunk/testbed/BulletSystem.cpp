@@ -9,7 +9,7 @@ int gTotalBullets = 0;
 // --------------------------------------------------------------------------------
 // BulletBattery
 // --------------------------------------------------------------------------------
-BS::Machine<Bullet, Area>* BulletBattery::mMachine = 0;
+bs::Machine<Bullet, Area, SoundEffect, Unit>* BulletBattery::mMachine = 0;
 std::vector<Bullet> BulletBattery::mBullets;
 std::vector<unsigned int> BulletBattery::mFreeList[2];
 int BulletBattery::mStoreIndex;
@@ -17,7 +17,7 @@ int BulletBattery::mUseIndex;
 std::vector<Bullet> BulletBattery::mSpawnedBullets;
 
 // --------------------------------------------------------------------------------
-void BulletBattery::initialise(BS::Machine<Bullet, Area>* machine)
+void BulletBattery::initialise(bs::Machine<Bullet, Area, SoundEffect, Unit>* machine)
 {
 	mMachine = machine;
 	
@@ -65,7 +65,7 @@ unsigned int BulletBattery::getFreeBulletSlot()
 	return id;
 }
 // --------------------------------------------------------------------------------
-Bullet* BulletBattery::emitAngle(BS::bstype x, BS::bstype y, const BS::bstype* args)
+Bullet* BulletBattery::emitAngle(bs::bstype x, bs::bstype y, const bs::bstype* args)
 {
 	Bullet b;
 	b.__active = true;
@@ -74,8 +74,8 @@ Bullet* BulletBattery::emitAngle(BS::bstype x, BS::bstype y, const BS::bstype* a
 	b.x = x;
 	b.y = y;
 	b.speed = args[-1];
-	b.vx = (BS::bstype) sin(args[-2] * BS::DEG_TO_RAD);
-	b.vy = (BS::bstype) cos(args[-2] * BS::DEG_TO_RAD);
+	b.vx = (bs::bstype) sin(args[-2] * bs::DEG_TO_RAD);
+	b.vy = (bs::bstype) cos(args[-2] * bs::DEG_TO_RAD);
 	b.fade = 1;
 
 	size_t count = mSpawnedBullets.size();
@@ -96,19 +96,19 @@ void BulletBattery::killBullet(void* object)
 	killBullet(static_cast<Bullet*>(object));
 }
 // --------------------------------------------------------------------------------
-void BulletBattery::setAngle(void* object, BS::bstype value)
+void BulletBattery::setAngle(void* object, bs::bstype value)
 {
 	Bullet* b = static_cast<Bullet*>(object);
 
-	b->vx = (BS::bstype) sin(value * BS::DEG_TO_RAD);
-	b->vy = (BS::bstype) cos(value * BS::DEG_TO_RAD);
+	b->vx = (bs::bstype) sin(value * bs::DEG_TO_RAD);
+	b->vy = (bs::bstype) cos(value * bs::DEG_TO_RAD);
 }
 // --------------------------------------------------------------------------------
-BS::bstype BulletBattery::getAngle(void* object)
+bs::bstype BulletBattery::getAngle(void* object)
 {
 	Bullet* b = static_cast<Bullet*>(object);
 
-	BS::bstype angle = atan2(b->vy, b->vx) * BS::RAD_TO_DEG;
+	bs::bstype angle = atan2(b->vy, b->vx) * bs::RAD_TO_DEG;
 	if (angle < 0)
 		return fabs(angle) + 90;
 	else
@@ -117,13 +117,13 @@ BS::bstype BulletBattery::getAngle(void* object)
 	}
 }
 // --------------------------------------------------------------------------------
-void BulletBattery::setFade(void* object, BS::bstype value)
+void BulletBattery::setFade(void* object, bs::bstype value)
 {
 	Bullet* b = static_cast<Bullet*>(object);
 	b->fade = value;
 }
 // --------------------------------------------------------------------------------
-BS::bstype BulletBattery::getFade(void* object)
+bs::bstype BulletBattery::getFade(void* object)
 {
 	Bullet* b = static_cast<Bullet*>(object);
 	return b->fade;

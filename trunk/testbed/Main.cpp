@@ -7,6 +7,8 @@
 #include "RendererGL.h"
 #include "BulletSystem.h"
 #include "AreaSystem.h"
+#include "AudioSystem.h"
+#include "UnitSystem.h"
 
 #if BS_PLATFORM == BS_PLATFORM_WIN32
 #	include <windows.h>
@@ -15,7 +17,7 @@
 #define GUN_X	(SCREEN_WIDTH / 2)
 #define GUN_Y	(SCREEN_HEIGHT * 0.9)
 
-using namespace BS;
+using namespace bs;
 
 extern int gTotalBullets;
 
@@ -46,7 +48,7 @@ int main (int argc, char **argv)
 	srand(time(0));
 
 	// Create machine
-	Machine<Bullet, Area> machine("bullet", "area");
+	Machine<Bullet, Area, SoundEffect, Unit> machine("bullet", "area", "sound", "unit");
 
 	// Register bullet functions
 	machine.registerFireFunction<Bullet>("fireA", 2, BulletBattery::emitAngle);
@@ -58,11 +60,25 @@ int main (int argc, char **argv)
 	machine.registerFireFunction<Area>("quadC", 3, AreaBattery::emitQuadC);
 	machine.registerFireFunction<Area>("quadB", 3, AreaBattery::emitQuadB);
 	machine.registerFireFunction<Area>("ellipse", 2, AreaBattery::emitEllipse);
+	machine.registerFireFunction<Area>("arc", 5, AreaBattery::emitArc);
 	machine.setDieFunction<Area>(AreaBattery::killArea);
 	machine.registerProperty<Area>("fade", AreaBattery::setFade, AreaBattery::getFade);
 	machine.registerProperty<Area>("width", AreaBattery::setWidth, AreaBattery::getWidth);
 	machine.registerProperty<Area>("height", AreaBattery::setHeight, AreaBattery::getHeight);
+	machine.registerProperty<Area>("iwidth", AreaBattery::setInnerWidth, AreaBattery::getInnerWidth);
+	machine.registerProperty<Area>("iheight", AreaBattery::setInnerHeight, AreaBattery::getInnerHeight);
 	machine.registerProperty<Area>("angle", AreaBattery::setAngle, AreaBattery::getAngle);
+	machine.registerProperty<Area>("start", AreaBattery::setStart, AreaBattery::getStart);
+	machine.registerProperty<Area>("end", AreaBattery::setEnd, AreaBattery::getEnd);
+
+	// Register audio functions
+	machine.registerFireFunction<SoundEffect>("fx", 2, AudioSystem::emitSound);
+	machine.setDieFunction<SoundEffect>(AudioSystem::killSound);
+	machine.registerProperty<SoundEffect>("volume", AudioSystem::setVolume, AudioSystem::getVolume);
+
+	// Register unit functions
+	machine.registerFireFunction<Unit>("ship1", 0, UnitSystem::emitUnit);
+	machine.setDieFunction<Unit>(UnitSystem::killUnit);
 
 	// Register global variables
 	machine.registerGlobalVariable("Level_Time", 0);
@@ -97,9 +113,11 @@ int main (int argc, char **argv)
 
 	std::cout << "Initialising..." << std::endl;
 
-	// Initialise battery
+	// Initialise systems
 	BulletBattery::initialise(&machine);
 	AreaBattery::initialise(&machine);
+	AudioSystem::initialise(&machine);
+	UnitSystem::initialise(&machine);
 
 	// Renderer
 	RendererGL renderer;
@@ -115,16 +133,19 @@ int main (int argc, char **argv)
 	std::cout << "[Esc] Quit." << std::endl;
 	std::cout << "[Mouse, cursors] Move ship." << std::endl;
 
-	// Create a gun
-	Gun* gun = machine.createGun("Abstract");
-	gun->setMemberVariable(Member_X, GUN_X);
-	gun->setMemberVariable(Member_Y, GUN_Y);
-	gun->setMemberVariable(Member_Angle, 180);
+	Gun* gun;
 
+	// Create a gun
+/*
+	gun = machine.createGun("Abstract");
+	gun->setX(GUN_X);
+	gun->setY(GUN_Y);
+	gun->setAngle(180);
+*/
 	gun = machine.createGun("Beam");
-	gun->setMemberVariable(Member_X, GUN_X + 200);
-	gun->setMemberVariable(Member_Y, GUN_Y - 100);
-	gun->setMemberVariable(Member_Angle, 180);
+	gun->setX(GUN_X);
+	gun->setY(GUN_Y - 100);
+	gun->setAngle(180);
 
 	// Main loop
 	unsigned int curTime = SDL_GetTicks();
@@ -198,6 +219,8 @@ int main (int argc, char **argv)
 				// Update types
 				numBullets = BulletBattery::update(updateFreq);
 				AreaBattery::update(updateFreq);
+				AudioSystem::update(updateFreq);
+				UnitSystem::update(updateFreq);
 			}
 		}
 
@@ -206,9 +229,13 @@ int main (int argc, char **argv)
 
 		BulletBattery::render(&renderer);
 		AreaBattery::render(&renderer);
+		UnitSystem::render(&renderer);
 
 		renderer.finishRendering();
 	}
+
+	AudioSystem::shutdown();
+	UnitSystem::shutdown();
 
 	SDL_Quit();
 	return 0;

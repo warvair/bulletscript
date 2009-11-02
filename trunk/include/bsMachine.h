@@ -33,12 +33,12 @@ namespace BS_NMSP
 		}
 	};
 
-	template<class atype = void, class btype = void, class ctype = void>
+	template<class atype = void, class btype = void, class ctype = void, class dtype = void>
 	class Machine : public MachineBase
 	{
 		ScriptMachine* mScriptMachine;
 
-		TypeManager<atype, btype, ctype>* mTypeManager;
+		TypeManager<atype, btype, ctype, dtype>* mTypeManager;
 
 		ScriptMachine* getScriptMachine() const
 		{
@@ -50,9 +50,10 @@ namespace BS_NMSP
 		explicit Machine(const String& name1)
 		{
 #ifdef BS_USE_BOOST
-			const bool isSameB = boost::is_same<void, btype>::value;
-			const bool isSameC = boost::is_same<void, ctype>::value;
-			BOOST_STATIC_ASSERT(isSameB && isSameC);
+			const bool isVoidB = boost::is_same<void, btype>::value;
+			const bool isVoidC = boost::is_same<void, ctype>::value;
+			const bool isVoidD = boost::is_same<void, dtype>::value;
+			BOOST_STATIC_ASSERT(isVoidB && isVoidC && isVoidD);
 #endif
 
 			mScriptMachine = new ScriptMachine(&mLog);
@@ -63,9 +64,10 @@ namespace BS_NMSP
 		Machine(const String& name1, const String& name2)
 		{
 #ifdef BS_USE_BOOST
-			const bool isSameB = boost::is_same<void, btype>::value;
-			const bool isSameC = boost::is_same<void, ctype>::value;
-			BOOST_STATIC_ASSERT(!isSameB && isSameC);
+			const bool isVoidB = boost::is_same<void, btype>::value;
+			const bool isVoidC = boost::is_same<void, ctype>::value;
+			const bool isVoidD = boost::is_same<void, dtype>::value;
+			BOOST_STATIC_ASSERT(!isVoidB && isVoidC && isVoidD);
 #endif
 
 			mScriptMachine = new ScriptMachine(&mLog);
@@ -76,14 +78,30 @@ namespace BS_NMSP
 		Machine(const String& name1, const String& name2, const String& name3)
 		{
 #ifdef BS_USE_BOOST
-			const bool isSameA = boost::is_same<void, atype>::value;
-			const bool isSameB = boost::is_same<void, btype>::value;
-			const bool isSameC = boost::is_same<void, ctype>::value;
-			BOOST_STATIC_ASSERT(!isSameA && !isSameB && !isSameC);
+			const bool isVoidA = boost::is_same<void, atype>::value;
+			const bool isVoidB = boost::is_same<void, btype>::value;
+			const bool isVoidC = boost::is_same<void, ctype>::value;
+			const bool isVoidD = boost::is_same<void, dtype>::value;
+			BOOST_STATIC_ASSERT(!isVoidA && !isVoidB && !isVoidC && isVoidD);
 #endif
 
 			mScriptMachine = new ScriptMachine(&mLog);
 			mTypeManager = new TypeManager<atype, btype, ctype>(&mLog, mScriptMachine, name1, name2, name3);
+			mScriptMachine->setTypeManager(mTypeManager);
+		}
+
+		Machine(const String& name1, const String& name2, const String& name3, const String& name4)
+		{
+#ifdef BS_USE_BOOST
+			const bool isVoidA = boost::is_same<void, atype>::value;
+			const bool isVoidB = boost::is_same<void, btype>::value;
+			const bool isVoidC = boost::is_same<void, ctype>::value;
+			const bool isVoidD = boost::is_same<void, dtype>::value;
+			BOOST_STATIC_ASSERT(!isVoidA && !isVoidB && !isVoidC && !isVoidD);
+#endif
+
+			mScriptMachine = new ScriptMachine(&mLog);
+			mTypeManager = new TypeManager<atype, btype, ctype, dtype>(&mLog, mScriptMachine, name1, name2, name3, name4);
 			mScriptMachine->setTypeManager(mTypeManager);
 		}
 
@@ -93,7 +111,7 @@ namespace BS_NMSP
 			delete mTypeManager;
 		}
 
-		// Now expose all the methods we need
+		// General stuff
 		void registerGlobalVariable(const String& name, bstype initialValue)
 		{
 			mScriptMachine->registerGlobalVariable(name, initialValue);
@@ -119,10 +137,11 @@ namespace BS_NMSP
 		void releaseType(T* ft)
 		{
 #ifdef BS_USE_BOOST
-			const bool isSameA = boost::is_same<T, atype>::value;
-			const bool isSameB = boost::is_same<T, btype>::value;
-			const bool isSameC = boost::is_same<T, ctype>::value;
-			BOOST_STATIC_ASSERT(isSameA || isSameB || isSameC);
+			const bool isVoidA = boost::is_same<T, atype>::value;
+			const bool isVoidB = boost::is_same<T, btype>::value;
+			const bool isVoidC = boost::is_same<T, ctype>::value;
+			const bool isVoidD = boost::is_same<T, dtype>::value;
+			BOOST_STATIC_ASSERT(isVoidA || isVoidB || isVoidC || isVoidD);
 #endif
 
 			mTypeManager->releaseType<T>(ft);
@@ -132,10 +151,11 @@ namespace BS_NMSP
 		void updateType(T* ft, bstype x, bstype y, float frameTime)
 		{
 #ifdef BS_USE_BOOST
-			const bool isSameA = boost::is_same<T, atype>::value;
-			const bool isSameB = boost::is_same<T, btype>::value;
-			const bool isSameC = boost::is_same<T, ctype>::value;
-			BOOST_STATIC_ASSERT(isSameA || isSameB || isSameC);
+			const bool isVoidA = boost::is_same<T, atype>::value;
+			const bool isVoidB = boost::is_same<T, btype>::value;
+			const bool isVoidC = boost::is_same<T, ctype>::value;
+			const bool isVoidD = boost::is_same<T, dtype>::value;
+			BOOST_STATIC_ASSERT(isVoidA || isVoidB || isVoidC || isVoidD);
 #endif
 		
 			mTypeManager->updateType<T>(ft, x, y, frameTime);
@@ -173,9 +193,9 @@ namespace BS_NMSP
 
 		void update(float frameTime)
 		{
-			// Tie to update rate
+			// Tie to update rate?
 			// ...
-			
+
 			// Update all guns
 			mScriptMachine->updateGuns(frameTime);
 		}
