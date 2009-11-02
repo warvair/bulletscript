@@ -18,23 +18,24 @@ namespace BS_NMSP
 	{
 		FTF_AnchorPosition		= (1 << 1),
 		FTF_AnchorRotation		= (1 << 2),
+		FTF_Function			= (1 << 3),
 		FTF_FunctionOffset		= (1 << 8),
+		FTF_AffectorOffset		= (1 << 24)
 	};
 
 	class FireTypeBase;
 
-	struct FireTypeScriptRecord : public DeepMemoryPoolObject
+	struct FireTypeControl : public DeepMemoryPoolObject
 	{
+		// Fields for behaviour types
+		uint32 flags;
+
+		// Scripted behaviour
 		CodeRecord* code;
-
 		ScriptState state;
+		bstype* members; // Weak pointer to Gun members
 
-		// Pointer to the FireType instance, currently stored in ScriptMachine
-		FireTypeBase* type;
-
-		// Pointer to the current object that owns this FireTypeScriptRecord
-		void* object;
-
+		// Properties
 		struct Property
 		{
 			float time;
@@ -42,33 +43,31 @@ namespace BS_NMSP
 		};
 
 		Property properties[BS_MAX_PROPERTIES];
+		uint32 activeProperties; // Bitfield for properties set
 
-		// bitfield for set properties
-		uint32 activeProperties; 
+		// Anchors
+		Gun* owner;
 
-		// Fields for anchoring, etc, misc flags
-		uint32 flags;
+		// Internal
+		FireTypeBase* type;
+		void* object; // Pointer to the current object that owns this FireTypeControl
+		int __gunDef; // GunDefinition index, for internal management
 
-		// Weak pointer to Gun members
-		bstype* members;
-
-		// GunDefinition index, for internal management
-		int __gunDef;
-
-		FireTypeScriptRecord(int numLocals) :
+		FireTypeControl(int numLocals) :
+			flags(0),
 			code(0),
+			members(0),
+			activeProperties(0),
+			owner(0),
 			type(0),
 			object(0),
-			activeProperties(0),
-			flags(0),
-			__gunDef(-1),
-			members(0)
+			__gunDef(-1)
 		{
 			if (numLocals > 0)
 				state.locals = new bstype[numLocals];
 		}
 
-		~FireTypeScriptRecord()
+		~FireTypeControl()
 		{
 			delete[] state.locals;
 		}
@@ -80,7 +79,7 @@ namespace BS_NMSP
 	{
 	public:
 
-		template<class A, class B, class C> friend class TypeManager;
+		template<class A, class B, class C, class D> friend class TypeManager;
 
 		typedef void (*DieFunction) (void*);
 
@@ -113,7 +112,7 @@ namespace BS_NMSP
 
 		void setProperty1(void* object, const String& prop, bstype value) const;
 
-		void setProperty2(FireTypeScriptRecord* record, const String& prop, 
+		void setProperty2(FireTypeControl* record, const String& prop, 
 			bstype value, bstype time) const;
 
 		bstype getProperty(void* object, const String& prop) const;
@@ -126,7 +125,7 @@ namespace BS_NMSP
 			BytecodeBlock* code, const String& funcName) = 0;
 
 		virtual int processCode(const uint32* code, ScriptState& state, bstype x, bstype y,
-			bstype* members) = 0;
+			bstype* members, Gun* gun) = 0;
 	
 	private:
 
@@ -202,14 +201,18 @@ namespace BS_NMSP
 			if (tNode)
 			{
 				ParseTreeNode* aNode = tNode->getChild(0);
-				callName = aNode->getChild(0)->getStringData();
+				if (aNode)
+				{
+					callName = aNode->getChild(0)->getStringData();
 
-				// Get function index: +1 because 0 means no function
-				ParseTree* tree = node->getTree();
-				ftFuncIndex = tree->getCodeRecordIndex("Gun", def->getName(),
-					"Function", callName);
+					// Get function index: +1 because 0 means no function
+					ParseTree* tree = node->getTree();
+					ftFuncIndex = tree->getCodeRecordIndex("Gun", def->getName(),
+						"Function", callName);
 
-				controlType |= (ftFuncIndex + 1) * FTF_FunctionOffset;
+					controlType |= FTF_Function;
+					controlType |= (ftFuncIndex + 1) * FTF_FunctionOffset;
+				}
 
 				aNode = tNode->getChild(1);
 				if (aNode)
@@ -243,7 +246,7 @@ namespace BS_NMSP
 			code->push_back((uint32) index);
 		}
 
-		int processCode(const uint32* code, ScriptState& state, bstype x, bstype y, bstype* members)
+		int processCode(const uint32* code, ScriptState& state, bstype x, bstype y, bstype* members, Gun* gun)
 		{
 			int funcIndex = code[state.curInstruction + 2];
 			FireFunction func = mFunctions[funcIndex].func;
@@ -252,34 +255,38 @@ namespace BS_NMSP
 
 			state.stackHead -= mFunctions[funcIndex].numArguments;
 
-			// If specified, set up control stuff
-			uint32 control = code[state.curInstruction + 3];
-			if (control == 0)
+			if (type)
 			{
-				type->__ft = 0;
-			}
-			else
-			{
-				// Request a FireTypeScriptRecord from pool
-				int gunDef = code[state.curInstruction + 5];
-				type->__ft = mVM->getFireTypeRecord(gunDef);
-				type->__ft->type = this;
-				type->__ft->__gunDef = gunDef;
-				type->__ft->members = members;
-				type->__ft->flags |= control;
-
-				uint32 ftFunc = control >> 8;
-				if (ftFunc > 0)
+				// If specified, set up control stuff
+				uint32 control = code[state.curInstruction + 3];
+				if (control == 0)
 				{
-					type->__ft->code = mVM->getCodeRecord(ftFunc - 1);
+					type->__ft = 0;
+				}
+				else
+				{
+					// Request a FireTypeControl from pool
+					int gunDef = code[state.curInstruction + 5];
+					type->__ft = mVM->getFireTypeRecord(gunDef);
+					type->__ft->type = this;
+					type->__ft->owner = gun;
+					type->__ft->__gunDef = gunDef;
+					type->__ft->members = members;
+					type->__ft->flags |= control;
 
-					int numArgs = code[state.curInstruction + 4];
-					
-					state.stackHead -= numArgs;
-					memcpy(type->__ft->state.locals, state.stack + state.stackHead, numArgs * sizeof(bstype));
+					uint32 ftFunc = control >> 8;
+					if (ftFunc > 0)
+					{
+						type->__ft->code = mVM->getCodeRecord(ftFunc - 1);
+
+						int numArgs = code[state.curInstruction + 4];
+						
+						state.stackHead -= numArgs;
+						memcpy(type->__ft->state.locals, state.stack + state.stackHead, numArgs * sizeof(bstype));
+					}
 				}
 			}
-	
+
 			return 6; // this must match the number of bytecodes emitted in generateBytecode
 		}
 

@@ -26,7 +26,7 @@ unsigned int timeGetTime()
 	
 #endif
 
-using namespace BS;
+using namespace bs;
 using namespace std;
 
 extern int gBulletsEmitted;
@@ -117,9 +117,9 @@ int main(int argc, char** argv)
 	for (int i = 0; i < numGuns; ++i)
 	{
 		gun = machine.createGun("Test");
-		gun->setMemberVariable(Member_X, 400);
-		gun->setMemberVariable(Member_Y, 540);
-		gun->setMemberVariable(Member_Angle, 180);
+		gun->setX(400);
+		gun->setY(540);
+		gun->setAngle(180);
 	}
 
 	// Timing

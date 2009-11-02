@@ -6,16 +6,16 @@
 
 struct Bullet
 {
-	BS::bstype x, y;
-	BS::bstype vx, vy;
-	BS::bstype speed;
+	bs::bstype x, y;
+	bs::bstype vx, vy;
+	bs::bstype speed;
 
 	// Internal variables, do not modify in affector function!
 	int __index;
 	float __time;
 
 	// For bulletscript
-	BS::FireTypeScriptRecord* __ft;
+	bs::FireTypeControl* __ft;
 
 	bool __active;
 	char padding[15]; // pad to 48 bytes
@@ -37,7 +37,7 @@ class BulletBattery
 		}
 	};
 
-	static BS::Machine<Bullet>* mMachine;
+	static bs::Machine<Bullet>* mMachine;
 
 	static const int BATTERY_SIZE = 2048;
 
@@ -56,20 +56,20 @@ class BulletBattery
 
 public:
 
-	static void initialise(BS::Machine<Bullet>* machine);
+	static void initialise(bs::Machine<Bullet>* machine);
 
 	static void update(float frameTime);
 
 	static void getStats(int& active, int& spawned, int& killed);
 
 	// Scripting
-	static Bullet* emitAngle(BS::bstype x, BS::bstype y, const BS::bstype* args);
+	static Bullet* emitAngle(bs::bstype x, bs::bstype y, const bs::bstype* args);
 
 	static void killBullet(void* object);
 
-	static void setAngle(void* object, BS::bstype value);
+	static void setAngle(void* object, bs::bstype value);
 
-	static BS::bstype getAngle(void* object);
+	static bs::bstype getAngle(void* object);
 
 };
 

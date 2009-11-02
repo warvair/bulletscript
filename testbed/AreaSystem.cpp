@@ -6,7 +6,7 @@
 // --------------------------------------------------------------------------------
 // AreaBattery
 // --------------------------------------------------------------------------------
-BS::Machine<Bullet, Area>* AreaBattery::mMachine = 0;
+bs::Machine<Bullet, Area, SoundEffect, Unit>* AreaBattery::mMachine = 0;
 std::vector<Area> AreaBattery::mAreas;
 std::vector<unsigned int> AreaBattery::mFreeList[2];
 int AreaBattery::mStoreIndex;
@@ -14,7 +14,7 @@ int AreaBattery::mUseIndex;
 std::vector<Area> AreaBattery::mSpawnedAreas;
 
 // --------------------------------------------------------------------------------
-void AreaBattery::initialise(BS::Machine<Bullet, Area>* machine)
+void AreaBattery::initialise(bs::Machine<Bullet, Area, SoundEffect, Unit>* machine)
 {
 	mMachine = machine;
 	
@@ -62,7 +62,7 @@ unsigned int AreaBattery::getFreeAreaSlot()
 	return id;
 }
 // --------------------------------------------------------------------------------
-Area* AreaBattery::emitQuadC(BS::bstype x, BS::bstype y, const BS::bstype* args)
+Area* AreaBattery::emitQuadC(bs::bstype x, bs::bstype y, const bs::bstype* args)
 {
 	Area a;
 	a.__active = true;
@@ -74,6 +74,8 @@ Area* AreaBattery::emitQuadC(BS::bstype x, BS::bstype y, const BS::bstype* args)
 	a.w = args[-3];
 	a.h = args[-2];
 	a.angle = args[-1];
+	a.start = 0.0f;
+	a.end = 0.0f;
 	a.fade = 1;
 
 	size_t count = mSpawnedAreas.size();
@@ -82,7 +84,7 @@ Area* AreaBattery::emitQuadC(BS::bstype x, BS::bstype y, const BS::bstype* args)
 	return &(mSpawnedAreas[count]);
 }
 // --------------------------------------------------------------------------------
-Area* AreaBattery::emitQuadB(BS::bstype x, BS::bstype y, const BS::bstype* args)
+Area* AreaBattery::emitQuadB(bs::bstype x, bs::bstype y, const bs::bstype* args)
 {
 	Area a;
 	a.__active = true;
@@ -94,6 +96,8 @@ Area* AreaBattery::emitQuadB(BS::bstype x, BS::bstype y, const BS::bstype* args)
 	a.w = args[-3];
 	a.h = args[-2];
 	a.angle = args[-1];
+	a.start = 0.0f;
+	a.end = 0.0f;
 	a.fade = 1;
 
 	size_t count = mSpawnedAreas.size();
@@ -102,7 +106,7 @@ Area* AreaBattery::emitQuadB(BS::bstype x, BS::bstype y, const BS::bstype* args)
 	return &(mSpawnedAreas[count]);
 }
 // --------------------------------------------------------------------------------
-Area* AreaBattery::emitEllipse(BS::bstype x, BS::bstype y, const BS::bstype* args)
+Area* AreaBattery::emitEllipse(bs::bstype x, bs::bstype y, const bs::bstype* args)
 {
 	Area a;
 	a.__active = true;
@@ -113,6 +117,32 @@ Area* AreaBattery::emitEllipse(BS::bstype x, BS::bstype y, const BS::bstype* arg
 	a.y = y;
 	a.w = args[-2];
 	a.h = args[-1];
+	a.angle = 0.0f;
+	a.start = 0.0f;
+	a.end = 360.0f;
+	a.fade = 1;
+
+	size_t count = mSpawnedAreas.size();
+	mSpawnedAreas.push_back(a);
+
+	return &(mSpawnedAreas[count]);
+}
+// --------------------------------------------------------------------------------
+Area* AreaBattery::emitArc(bs::bstype x, bs::bstype y, const bs::bstype* args)
+{
+	Area a;
+	a.__active = true;
+	a.__time = 0;
+	a.type = AT_Arc;
+
+	a.x = x;
+	a.y = y;
+	a.w = args[-5];
+	a.h = args[-4];
+	a.angle = 0.0f;
+	a.start = args[-3];
+	a.end = args[-2];
+	a.innerh = a.innerw = args[-1];
 	a.fade = 1;
 
 	size_t count = mSpawnedAreas.size();
@@ -133,52 +163,100 @@ void AreaBattery::killArea(void* object)
 	killArea(static_cast<Area*>(object));
 }
 // --------------------------------------------------------------------------------
-void AreaBattery::setWidth(void* object, BS::bstype value)
+void AreaBattery::setWidth(void* object, bs::bstype value)
 {
 	Area* a = static_cast<Area*>(object);
 	a->w = value;
 }
 // --------------------------------------------------------------------------------
-BS::bstype AreaBattery::getWidth(void* object)
+bs::bstype AreaBattery::getWidth(void* object)
 {
 	Area* a = static_cast<Area*>(object);
 	return a->w;
 }
 // --------------------------------------------------------------------------------
-void AreaBattery::setHeight(void* object, BS::bstype value)
+void AreaBattery::setHeight(void* object, bs::bstype value)
 {
 	Area* a = static_cast<Area*>(object);
 	a->h = value;
 }
 // --------------------------------------------------------------------------------
-BS::bstype AreaBattery::getHeight(void* object)
+bs::bstype AreaBattery::getHeight(void* object)
 {
 	Area* a = static_cast<Area*>(object);
 	return a->h;
 }
 // --------------------------------------------------------------------------------
-void AreaBattery::setAngle(void* object, BS::bstype value)
+void AreaBattery::setInnerWidth(void* object, bs::bstype value)
+{
+	Area* a = static_cast<Area*>(object);
+	a->innerw = value;
+}
+// --------------------------------------------------------------------------------
+bs::bstype AreaBattery::getInnerWidth(void* object)
+{
+	Area* a = static_cast<Area*>(object);
+	return a->innerw;
+}
+// --------------------------------------------------------------------------------
+void AreaBattery::setInnerHeight(void* object, bs::bstype value)
+{
+	Area* a = static_cast<Area*>(object);
+	a->innerh = value;
+}
+// --------------------------------------------------------------------------------
+bs::bstype AreaBattery::getInnerHeight(void* object)
+{
+	Area* a = static_cast<Area*>(object);
+	return a->innerh;
+}
+// --------------------------------------------------------------------------------
+void AreaBattery::setAngle(void* object, bs::bstype value)
 {
 	Area* a = static_cast<Area*>(object);
 	a->angle = value;
 }
 // --------------------------------------------------------------------------------
-BS::bstype AreaBattery::getAngle(void* object)
+bs::bstype AreaBattery::getAngle(void* object)
 {
 	Area* a = static_cast<Area*>(object);
 	return a->angle;
 }
 // --------------------------------------------------------------------------------
-void AreaBattery::setFade(void* object, BS::bstype value)
+void AreaBattery::setFade(void* object, bs::bstype value)
 {
 	Area* a = static_cast<Area*>(object);
 	a->fade = value;
 }
 // --------------------------------------------------------------------------------
-BS::bstype AreaBattery::getFade(void* object)
+bs::bstype AreaBattery::getFade(void* object)
 {
 	Area* a = static_cast<Area*>(object);
 	return a->fade;
+}
+// --------------------------------------------------------------------------------
+void AreaBattery::setStart(void* object, bs::bstype value)
+{
+	Area* a = static_cast<Area*>(object);
+	a->start = value;
+}
+// --------------------------------------------------------------------------------
+bs::bstype AreaBattery::getStart(void* object)
+{
+	Area* a = static_cast<Area*>(object);
+	return a->start;
+}
+// --------------------------------------------------------------------------------
+void AreaBattery::setEnd(void* object, bs::bstype value)
+{
+	Area* a = static_cast<Area*>(object);
+	a->end = value;
+}
+// --------------------------------------------------------------------------------
+bs::bstype AreaBattery::getEnd(void* object)
+{
+	Area* a = static_cast<Area*>(object);
+	return a->end;
 }
 // --------------------------------------------------------------------------------
 int AreaBattery::update(float frameTime)
@@ -206,7 +284,7 @@ int AreaBattery::update(float frameTime)
 			// No special movement for areas
 			// ...
 
-			// Areascript: apply affectors and control functions
+			// Bulletscript: apply affectors and control functions
 			mMachine->updateType(&a, a.x, a.y, frameTime);
 
 			// Check for death
@@ -233,6 +311,8 @@ void AreaBattery::render(RendererGL *renderer)
 		{
 			if (a.type == AT_Ellipse)
 				renderer->addEllipseArea(&a);
+			else if (a.type == AT_Arc)
+				renderer->addArcArea(&a);
 			else
 				renderer->addQuadArea(&a);
 		}

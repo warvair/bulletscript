@@ -26,10 +26,10 @@ namespace BS_NMSP
 		virtual bool fireFunctionExists(int type, const String& name) const = 0;
 	};
 
-	template<class atype = void, class btype = void, class ctype = void>
+	template<class atype = void, class btype = void, class ctype = void, class dtype = void>
 	class TypeManager : public TypeManagerBase
 	{
-		template<class A, class B, class C> friend class Machine;
+		template<class A, class B, class C, class D> friend class Machine;
 
 		int mNumTypes;
 
@@ -41,7 +41,20 @@ namespace BS_NMSP
 
 	protected:
 
-		TypeManager(Log* _log, ScriptMachine* vm, const String& name1, const String& name2, const String& name3) :
+		TypeManager(Log* _log, ScriptMachine* vm, const String& name1, const String& name2, const String& name3,
+					const String& name4) :
+			mNumTypes(4),
+			mLog(_log),
+			mVM(vm)
+		{
+			mTypes = new FireTypeBase*[mNumTypes];
+			mTypes[0] = new FireType<atype>(name1, 0, this, mVM);
+			mTypes[1] = new FireType<btype>(name2, 1, this, mVM);
+			mTypes[2] = new FireType<ctype>(name3, 2, this, mVM);
+			mTypes[3] = new FireType<ctype>(name4, 3, this, mVM);
+		}
+
+			TypeManager(Log* _log, ScriptMachine* vm, const String& name1, const String& name2, const String& name3) :
 			mNumTypes(3),
 			mLog(_log),
 			mVM(vm)
@@ -131,15 +144,30 @@ namespace BS_NMSP
 		template<class T>
 		void updateType(T* ft, bstype x, bstype y, float frameTime)
 		{
-			// First apply function: high level control goes first
 			if (ft->__ft)
 			{
-				FireTypeScriptRecord* rec = ft->__ft;
+				FireTypeControl* rec = ft->__ft;
 
 				// Update pointer to the user object
 				rec->object = ft;
 
-				// Update changing properties first, because they are independent of script status
+				// Anchors are the most high-level control, so update first
+				if (rec->flags & FTF_AnchorPosition)
+				{
+					bstype dx, dy;
+					rec->owner->getLastMovement(dx, dy);
+					// How to set position and angle?  User-supplied function?
+//					ft->x += dx;
+//					ft->y += dy;
+				}
+				if (rec->flags & FTF_AnchorRotation)
+				{
+					bstype da;
+					rec->owner->getLastRotation(da);
+//					ft->angle += da;
+				}
+
+				// Update changing properties before script, because they are independent of script status
 				int numProperties = rec->type->mNumProperties;
 				for (int i = 0; i < numProperties; ++i)
 				{
@@ -157,35 +185,24 @@ namespace BS_NMSP
 					}
 				}
 
-				if (rec->state.suspendTime <= 0)
+				// Then functions
+				if (rec->flags & FTF_Function)
 				{
-					// Need to get the Gun that this bullet was spawned by, and get its member variables
-					mVM->interpretCode(rec->code->byteCode, rec->code->byteCodeSize, 
-									   rec->state, 0, rec, x, y, rec->members, false);
-
-
-					// At this point, ft->__ft may have already been released by die()
-					if (rec)
+					if (rec->state.suspendTime <= 0)
 					{
-						// Check to see if we're at the end of the script and have no properties left to do
-						if (rec->state.curInstruction >= rec->code->byteCodeSize &&
-							rec->activeProperties == 0)
-							releaseType(ft);
+						// Need to get the Gun that this bullet was spawned by, and get its member variables
+						mVM->interpretCode(rec->code->byteCode, rec->code->byteCodeSize, 
+							rec->state, 0, rec, x, y, rec->members, rec->owner, false);
 					}
-
-				}
-				else
-				{
-					rec->state.suspendTime -= frameTime;
+					else
+					{
+						rec->state.suspendTime -= frameTime;
+					}
 				}
 			}
 
 			// Then affectors
 			// ...
-
-			// Then anchors
-			// ...
-
 		}
 
 		template<class T>
@@ -199,6 +216,8 @@ namespace BS_NMSP
 				type = static_cast<FireType<T>*>(mTypes[1]);
 			else if (boost::is_same<T, ctype>::value && !boost::is_same<T, void>::value)
 				type = static_cast<FireType<T>*>(mTypes[2]);
+			else if (boost::is_same<T, dtype>::value && !boost::is_same<T, void>::value)
+				type = static_cast<FireType<T>*>(mTypes[3]);
 			
 			assert(type != 0 && "TypeManager::registerFireFunction wrong template type");
 			type->registerFireFunction(name, numArgs, func);
@@ -215,6 +234,8 @@ namespace BS_NMSP
 				type = static_cast<FireType<T>*>(mTypes[1]);
 			else if (boost::is_same<T, ctype>::value && !boost::is_same<T, void>::value)
 				type = static_cast<FireType<T>*>(mTypes[2]);
+			else if (boost::is_same<T, dtype>::value && !boost::is_same<T, void>::value)
+				type = static_cast<FireType<T>*>(mTypes[3]);
 			
 			assert(type != 0 && "TypeManager::setDieFunction wrong template type");
 			type->setDieFunction(func);
@@ -231,6 +252,8 @@ namespace BS_NMSP
 			else if (boost::is_same<T, btype>::value && !boost::is_same<T, void>::value)
 				type = static_cast<FireType<T>*>(mTypes[1]);
 			else if (boost::is_same<T, ctype>::value && !boost::is_same<T, void>::value)
+				type = static_cast<FireType<T>*>(mTypes[2]);
+			else if (boost::is_same<T, dtype>::value && !boost::is_same<T, void>::value)
 				type = static_cast<FireType<T>*>(mTypes[2]);
 			
 			assert(type != 0 && "TypeManager::registerProperty wrong template type");

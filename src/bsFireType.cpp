@@ -48,7 +48,7 @@ void FireTypeBase::setProperty1(void* object, const String& prop, bstype value) 
 	mProperties[index].setter(object, value);
 }
 // --------------------------------------------------------------------------------
-void FireTypeBase::setProperty2(FireTypeScriptRecord* record, const String& prop, 
+void FireTypeBase::setProperty2(FireTypeControl* record, const String& prop, 
 								bstype value, bstype time) const
 {
 	int index = getPropertyIndex(prop);

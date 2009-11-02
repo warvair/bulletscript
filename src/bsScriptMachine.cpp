@@ -145,12 +145,12 @@ int ScriptMachine::getNumCodeRecords() const
 	return (int) mCodeRecords.size();
 }
 // --------------------------------------------------------------------------------
-FireTypeScriptRecord* ScriptMachine::getFireTypeRecord(int index)
+FireTypeControl* ScriptMachine::getFireTypeRecord(int index)
 {
 	assert(index >= 0 && index < mGunRecords.size() && 
 		"ScriptMachine::getFireTypeRecord: out of bounds.");
 
-	FireTypeScriptRecord* rec = mGunRecords[index].pool->acquire();
+	FireTypeControl* rec = mGunRecords[index].pool->acquire();
 	rec->activeProperties = 0;
 	rec->state.curInstruction = 0;
 	rec->state.stackHead = 0;
@@ -159,7 +159,7 @@ FireTypeScriptRecord* ScriptMachine::getFireTypeRecord(int index)
 	return rec;
 }
 // --------------------------------------------------------------------------------
-void ScriptMachine::releaseFireTypeRecord(int index, FireTypeScriptRecord* rec)
+void ScriptMachine::releaseFireTypeRecord(int index, FireTypeControl* rec)
 {
 	assert(index >= 0 && index < mGunRecords.size() && 
 		"ScriptMachine::releaseFireTypeRecord: out of bounds.");
@@ -293,7 +293,7 @@ bool ScriptMachine::addGunDefinition(const String& name, GunDefinition* def)
 
 	// Create pool
 	int maxLocals = def->getMaxLocalVariables();
-	rec.pool = new DeepMemoryPool<FireTypeScriptRecord, int>(128, maxLocals);
+	rec.pool = new DeepMemoryPool<FireTypeControl, int>(128, maxLocals);
 
 	mGunRecords.push_back(rec);
 
@@ -433,8 +433,8 @@ bool ScriptMachine::checkInstructionPosition(ScriptState& st, size_t length, boo
 }
 // --------------------------------------------------------------------------------
 void ScriptMachine::interpretCode(const uint32* code, size_t length, ScriptState& st, 
-								  int* curState, FireTypeScriptRecord* record, 
-								  bstype x, bstype y, bstype* members, bool loop)
+								  int* curState, FireTypeControl* record, 
+								  bstype x, bstype y, bstype* members, Gun* gun, bool loop)
 {
 	if (st.curInstruction >= length)
 		return;
@@ -631,7 +631,7 @@ void ScriptMachine::interpretCode(const uint32* code, size_t length, ScriptState
 				bstype val1 = st.stack[st.stackHead - 2];
 				bstype val2 = st.stack[st.stackHead - 1];
 
-				st.stack[st.stackHead - 2] = (val1 == val2) ? 1 : 0;
+				st.stack[st.stackHead - 2] = (val1 == val2) ? bsvalue1 : bsvalue0;
 				st.stackHead--;
 				st.curInstruction++;
 			}
@@ -642,7 +642,7 @@ void ScriptMachine::interpretCode(const uint32* code, size_t length, ScriptState
 				bstype val1 = st.stack[st.stackHead - 2];
 				bstype val2 = st.stack[st.stackHead - 1];
 
-				st.stack[st.stackHead - 2] = (val1 != val2) ? 1 : 0;
+				st.stack[st.stackHead - 2] = (val1 != val2) ? bsvalue1 : bsvalue0;
 				st.stackHead--;
 				st.curInstruction++;
 			}
@@ -653,7 +653,7 @@ void ScriptMachine::interpretCode(const uint32* code, size_t length, ScriptState
 				bstype val1 = st.stack[st.stackHead - 2];
 				bstype val2 = st.stack[st.stackHead - 1];
 
-				st.stack[st.stackHead - 2] = (val1 < val2) ? 1 : 0;
+				st.stack[st.stackHead - 2] = (val1 < val2) ? bsvalue1 : bsvalue0;
 				st.stackHead--;
 				st.curInstruction++;
 			}
@@ -664,7 +664,7 @@ void ScriptMachine::interpretCode(const uint32* code, size_t length, ScriptState
 				bstype val1 = st.stack[st.stackHead - 2];
 				bstype val2 = st.stack[st.stackHead - 1];
 
-				st.stack[st.stackHead - 2] = (val1 <= val2) ? 1 : 0;
+				st.stack[st.stackHead - 2] = (val1 <= val2) ? bsvalue1 : bsvalue0;
 				st.stackHead--;
 				st.curInstruction++;
 			}
@@ -675,7 +675,7 @@ void ScriptMachine::interpretCode(const uint32* code, size_t length, ScriptState
 				bstype val1 = st.stack[st.stackHead - 2];
 				bstype val2 = st.stack[st.stackHead - 1];
 
-				st.stack[st.stackHead - 2] = (val1 > val2) ? 1 : 0;
+				st.stack[st.stackHead - 2] = (val1 > val2) ? bsvalue1 : bsvalue0;
 				st.stackHead--;
 				st.curInstruction++;
 			}
@@ -686,7 +686,7 @@ void ScriptMachine::interpretCode(const uint32* code, size_t length, ScriptState
 				bstype val1 = st.stack[st.stackHead - 2];
 				bstype val2 = st.stack[st.stackHead - 1];
 
-				st.stack[st.stackHead - 2] = (val1 >= val2) ? 1 : 0;
+				st.stack[st.stackHead - 2] = (val1 >= val2) ? bsvalue1 : bsvalue0;
 				st.stackHead--;
 				st.curInstruction++;
 			}
@@ -697,7 +697,7 @@ void ScriptMachine::interpretCode(const uint32* code, size_t length, ScriptState
 				bstype val1 = st.stack[st.stackHead - 2];
 				bstype val2 = st.stack[st.stackHead - 1];
 
-				st.stack[st.stackHead - 2] = (val1 && val2) ? 1 : 0;
+				st.stack[st.stackHead - 2] = (val1 && val2) ? bsvalue1 : bsvalue0;
 				st.stackHead--;
 				st.curInstruction++;
 			}
@@ -708,7 +708,7 @@ void ScriptMachine::interpretCode(const uint32* code, size_t length, ScriptState
 				bstype val1 = st.stack[st.stackHead - 2];
 				bstype val2 = st.stack[st.stackHead - 1];
 
-				st.stack[st.stackHead - 2] = (val1 || val2) ? 1 : 0;
+				st.stack[st.stackHead - 2] = (val1 || val2) ? bsvalue1 : bsvalue0;
 				st.stackHead--;
 				st.curInstruction++;
 			}
@@ -718,7 +718,7 @@ void ScriptMachine::interpretCode(const uint32* code, size_t length, ScriptState
 			{
 				int fireType = code[st.curInstruction + 1];
 				FireTypeBase* ft = mTypeManager->getType(fireType);
-				st.curInstruction += ft->processCode(code, st, x, y, members);
+				st.curInstruction += ft->processCode(code, st, x, y, members, gun);
 			}
 			break;
 
@@ -831,7 +831,7 @@ void ScriptMachine::interpretCode(const uint32* code, size_t length, ScriptState
 	return;
 }
 // --------------------------------------------------------------------------------
-void ScriptMachine::processGunState(GunScriptRecord* gsr)
+void ScriptMachine::processGunState(GunScriptRecord* gsr, Gun* gun)
 {
 	if (gsr->scriptState.suspendTime > 0)
 		return;
@@ -841,7 +841,7 @@ void ScriptMachine::processGunState(GunScriptRecord* gsr)
 	size_t bytecodeLen = rec->byteCodeSize;
 
 	interpretCode(bytecode, bytecodeLen, gsr->scriptState, &gsr->curState, 0,
-		gsr->members[Member_X], gsr->members[Member_Y], gsr->members, true);
+		gsr->members[Member_X], gsr->members[Member_Y], gsr->members, gun, true);
 }
 // --------------------------------------------------------------------------------
 void ScriptMachine::processConstantExpression(const uint32* code, 
@@ -849,7 +849,7 @@ void ScriptMachine::processConstantExpression(const uint32* code,
 											  GunScriptRecord* gsr)
 {
 	interpretCode(code, length, gsr->scriptState, &gsr->curState, 0,
-		gsr->members[Member_X], gsr->members[Member_Y], gsr->members, false);
+		gsr->members[Member_X], gsr->members[Member_Y], gsr->members, 0, false);
 }
 // --------------------------------------------------------------------------------
 }

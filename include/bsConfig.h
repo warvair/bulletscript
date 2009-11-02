@@ -1,7 +1,7 @@
 #ifndef __BS_CONFIG_H__
 #define __BS_CONFIG_H__
 
-#define BS_NMSP							BS
+#define BS_NMSP							bs
 
 #define BS_USE_BOOST
 
@@ -9,7 +9,11 @@
 namespace BS_NMSP
 {
 	typedef float bstype;
+
 	const bstype bsepsilon = 0.001f;
+
+	const bstype bsvalue1 = 1.0f;
+	const bstype bsvalue0 = 0.0f;
 }
 
 #define TYPE_TO_UINT32(x)				(*((BS_NMSP::uint32*) ((void*) (&x))))
