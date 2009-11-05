@@ -62,7 +62,7 @@ unsigned int AreaBattery::getFreeAreaSlot()
 	return id;
 }
 // --------------------------------------------------------------------------------
-Area* AreaBattery::emitQuadC(bs::bstype x, bs::bstype y, const bs::bstype* args)
+bs::UserTypeBase* AreaBattery::emitQuadC(bs::bstype x, bs::bstype y, const bs::bstype* args)
 {
 	Area a;
 	a.__active = true;
@@ -84,7 +84,7 @@ Area* AreaBattery::emitQuadC(bs::bstype x, bs::bstype y, const bs::bstype* args)
 	return &(mSpawnedAreas[count]);
 }
 // --------------------------------------------------------------------------------
-Area* AreaBattery::emitQuadB(bs::bstype x, bs::bstype y, const bs::bstype* args)
+bs::UserTypeBase* AreaBattery::emitQuadB(bs::bstype x, bs::bstype y, const bs::bstype* args)
 {
 	Area a;
 	a.__active = true;
@@ -106,7 +106,7 @@ Area* AreaBattery::emitQuadB(bs::bstype x, bs::bstype y, const bs::bstype* args)
 	return &(mSpawnedAreas[count]);
 }
 // --------------------------------------------------------------------------------
-Area* AreaBattery::emitEllipse(bs::bstype x, bs::bstype y, const bs::bstype* args)
+bs::UserTypeBase* AreaBattery::emitEllipse(bs::bstype x, bs::bstype y, const bs::bstype* args)
 {
 	Area a;
 	a.__active = true;
@@ -128,7 +128,7 @@ Area* AreaBattery::emitEllipse(bs::bstype x, bs::bstype y, const bs::bstype* arg
 	return &(mSpawnedAreas[count]);
 }
 // --------------------------------------------------------------------------------
-Area* AreaBattery::emitArc(bs::bstype x, bs::bstype y, const bs::bstype* args)
+bs::UserTypeBase* AreaBattery::emitArc(bs::bstype x, bs::bstype y, const bs::bstype* args)
 {
 	Area a;
 	a.__active = true;
@@ -158,102 +158,102 @@ void AreaBattery::killArea(Area* a)
 	mMachine->releaseType(a);
 }
 // --------------------------------------------------------------------------------
-void AreaBattery::killArea(void* object)
+void AreaBattery::killArea(bs::UserTypeBase* object)
 {
 	killArea(static_cast<Area*>(object));
 }
 // --------------------------------------------------------------------------------
-void AreaBattery::setWidth(void* object, bs::bstype value)
+void AreaBattery::setWidth(bs::UserTypeBase* object, bs::bstype value)
 {
 	Area* a = static_cast<Area*>(object);
 	a->w = value;
 }
 // --------------------------------------------------------------------------------
-bs::bstype AreaBattery::getWidth(void* object)
+bs::bstype AreaBattery::getWidth(bs::UserTypeBase* object)
 {
 	Area* a = static_cast<Area*>(object);
 	return a->w;
 }
 // --------------------------------------------------------------------------------
-void AreaBattery::setHeight(void* object, bs::bstype value)
+void AreaBattery::setHeight(bs::UserTypeBase* object, bs::bstype value)
 {
 	Area* a = static_cast<Area*>(object);
 	a->h = value;
 }
 // --------------------------------------------------------------------------------
-bs::bstype AreaBattery::getHeight(void* object)
+bs::bstype AreaBattery::getHeight(bs::UserTypeBase* object)
 {
 	Area* a = static_cast<Area*>(object);
 	return a->h;
 }
 // --------------------------------------------------------------------------------
-void AreaBattery::setInnerWidth(void* object, bs::bstype value)
+void AreaBattery::setInnerWidth(bs::UserTypeBase* object, bs::bstype value)
 {
 	Area* a = static_cast<Area*>(object);
 	a->innerw = value;
 }
 // --------------------------------------------------------------------------------
-bs::bstype AreaBattery::getInnerWidth(void* object)
+bs::bstype AreaBattery::getInnerWidth(bs::UserTypeBase* object)
 {
 	Area* a = static_cast<Area*>(object);
 	return a->innerw;
 }
 // --------------------------------------------------------------------------------
-void AreaBattery::setInnerHeight(void* object, bs::bstype value)
+void AreaBattery::setInnerHeight(bs::UserTypeBase* object, bs::bstype value)
 {
 	Area* a = static_cast<Area*>(object);
 	a->innerh = value;
 }
 // --------------------------------------------------------------------------------
-bs::bstype AreaBattery::getInnerHeight(void* object)
+bs::bstype AreaBattery::getInnerHeight(bs::UserTypeBase* object)
 {
 	Area* a = static_cast<Area*>(object);
 	return a->innerh;
 }
 // --------------------------------------------------------------------------------
-void AreaBattery::setAngle(void* object, bs::bstype value)
+void AreaBattery::setAngle(bs::UserTypeBase* object, bs::bstype value)
 {
 	Area* a = static_cast<Area*>(object);
 	a->angle = value;
 }
 // --------------------------------------------------------------------------------
-bs::bstype AreaBattery::getAngle(void* object)
+bs::bstype AreaBattery::getAngle(bs::UserTypeBase* object)
 {
 	Area* a = static_cast<Area*>(object);
 	return a->angle;
 }
 // --------------------------------------------------------------------------------
-void AreaBattery::setFade(void* object, bs::bstype value)
+void AreaBattery::setFade(bs::UserTypeBase* object, bs::bstype value)
 {
 	Area* a = static_cast<Area*>(object);
 	a->alpha = value;
 }
 // --------------------------------------------------------------------------------
-bs::bstype AreaBattery::getFade(void* object)
+bs::bstype AreaBattery::getFade(bs::UserTypeBase* object)
 {
 	Area* a = static_cast<Area*>(object);
 	return a->alpha;
 }
 // --------------------------------------------------------------------------------
-void AreaBattery::setStart(void* object, bs::bstype value)
+void AreaBattery::setStart(bs::UserTypeBase* object, bs::bstype value)
 {
 	Area* a = static_cast<Area*>(object);
 	a->start = value;
 }
 // --------------------------------------------------------------------------------
-bs::bstype AreaBattery::getStart(void* object)
+bs::bstype AreaBattery::getStart(bs::UserTypeBase* object)
 {
 	Area* a = static_cast<Area*>(object);
 	return a->start;
 }
 // --------------------------------------------------------------------------------
-void AreaBattery::setEnd(void* object, bs::bstype value)
+void AreaBattery::setEnd(bs::UserTypeBase* object, bs::bstype value)
 {
 	Area* a = static_cast<Area*>(object);
 	a->end = value;
 }
 // --------------------------------------------------------------------------------
-bs::bstype AreaBattery::getEnd(void* object)
+bs::bstype AreaBattery::getEnd(bs::UserTypeBase* object)
 {
 	Area* a = static_cast<Area*>(object);
 	return a->end;

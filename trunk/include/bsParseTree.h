@@ -141,7 +141,7 @@ namespace BS_NMSP
 		const String& getStringData() const;
 	};
 
-	class FireTypeBase;
+	class FireType;
 
 	class _BSAPI ParseTree
 	{
@@ -181,7 +181,7 @@ namespace BS_NMSP
 
 		void checkFireControllers(GunDefinition* def, ParseTreeNode* node, int& ctrls, int& affectors);
 
-		void checkFunctionProperties(ParseTreeNode* node, FireTypeBase* type);
+		void checkFunctionProperties(ParseTreeNode* node, FireType* type);
 
 		// Code generation
 		void createMemberVariableBytecode(GunDefinition* def, ParseTreeNode* node, bool first);

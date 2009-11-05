@@ -714,7 +714,7 @@ void ParseTree::buildFunctions(GunDefinition* def, ParseTreeNode* node)
 			String funcName = node->getChild(0)->getStringData();
 			String funcType = node->getStringData();
 
-			FireTypeBase* ft = mScriptMachine->getFireType(funcType);
+			FireType* ft = mScriptMachine->getFireType(funcType);
 			if (!ft)
 			{
 				addError(node->getLine(), "Unknown fire type ' " + funcType + "'.");
@@ -870,7 +870,7 @@ void ParseTree::createStates(GunDefinition* def, ParseTreeNode* node)
 			String funcName = node->getChild(0)->getStringData();
 			String funcType = node->getStringData();
 
-			FireTypeBase* ft = mScriptMachine->getFireType(funcType);
+			FireType* ft = mScriptMachine->getFireType(funcType);
 			if (!ft)
 			{
 				addError(node->getLine(), "Unknown fire type ' " + funcType + "'.");
@@ -963,7 +963,7 @@ void ParseTree::checkFireStatements(GunDefinition* def, ParseTreeNode* node)
 		if (tailNode)
 		{
 			String typeName = node->getStringData();
-			FireTypeBase* ft = mScriptMachine->getFireType(typeName);
+			FireType* ft = mScriptMachine->getFireType(typeName);
 
 			// Make sure that any control function it uses has the correct properties,
 			// and that there is no affector registered for this type with the same name
@@ -981,7 +981,7 @@ void ParseTree::checkFireStatements(GunDefinition* def, ParseTreeNode* node)
 	}
 }
 // --------------------------------------------------------------------------------
-void ParseTree::checkFunctionProperties(ParseTreeNode* node, FireTypeBase* type)
+void ParseTree::checkFunctionProperties(ParseTreeNode* node, FireType* type)
 {
 	if (node->getType() == PT_Property)
 	{
@@ -1129,7 +1129,7 @@ void ParseTree::generateBytecode(GunDefinition* def,
 			String funcType = node->getStringData();
 
 			// Should probably pass node into generateBytecode, because for areas, need extra args
-			FireTypeBase* ft = mScriptMachine->getFireType(funcType);
+			FireType* ft = mScriptMachine->getFireType(funcType);
 			ft->generateBytecode(def, node, bytecode, funcName);
 		}
 		return;

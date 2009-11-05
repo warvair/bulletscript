@@ -7,15 +7,6 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "BulletScript-VC8", "BulletS
 		Release.AspNetCompiler.Debug = "False"
 	EndProjectSection
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "minimal", "..\minimal\minimal.vcproj", "{ED26A41D-6D67-4E6E-B628-BC0D576D16FA}"
-	ProjectSection(WebsiteProperties) = preProject
-		Debug.AspNetCompiler.Debug = "True"
-		Release.AspNetCompiler.Debug = "False"
-	EndProjectSection
-	ProjectSection(ProjectDependencies) = postProject
-		{ACD37C06-E4E3-41B1-B0FA-C9F09217036A} = {ACD37C06-E4E3-41B1-B0FA-C9F09217036A}
-	EndProjectSection
-EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "TestBed", "..\testbed\TestBed.vcproj", "{2FBF55CB-7C5B-4EE2-9637-AC858F7F733A}"
 	ProjectSection(WebsiteProperties) = preProject
 		Debug.AspNetCompiler.Debug = "True"
@@ -35,10 +26,6 @@ Global
 		{ACD37C06-E4E3-41B1-B0FA-C9F09217036A}.Debug|Win32.Build.0 = Debug|Win32
 		{ACD37C06-E4E3-41B1-B0FA-C9F09217036A}.Release|Win32.ActiveCfg = Release|Win32
 		{ACD37C06-E4E3-41B1-B0FA-C9F09217036A}.Release|Win32.Build.0 = Release|Win32
-		{ED26A41D-6D67-4E6E-B628-BC0D576D16FA}.Debug|Win32.ActiveCfg = Debug|Win32
-		{ED26A41D-6D67-4E6E-B628-BC0D576D16FA}.Debug|Win32.Build.0 = Debug|Win32
-		{ED26A41D-6D67-4E6E-B628-BC0D576D16FA}.Release|Win32.ActiveCfg = Release|Win32
-		{ED26A41D-6D67-4E6E-B628-BC0D576D16FA}.Release|Win32.Build.0 = Release|Win32
 		{2FBF55CB-7C5B-4EE2-9637-AC858F7F733A}.Debug|Win32.ActiveCfg = Debug|Win32
 		{2FBF55CB-7C5B-4EE2-9637-AC858F7F733A}.Debug|Win32.Build.0 = Debug|Win32
 		{2FBF55CB-7C5B-4EE2-9637-AC858F7F733A}.Release|Win32.ActiveCfg = Release|Win32

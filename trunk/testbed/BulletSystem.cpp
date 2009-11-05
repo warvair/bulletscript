@@ -66,7 +66,7 @@ unsigned int BulletBattery::getFreeBulletSlot()
 	return id;
 }
 // --------------------------------------------------------------------------------
-Bullet* BulletBattery::emitAngle(bs::bstype x, bs::bstype y, const bs::bstype* args)
+bs::UserTypeBase* BulletBattery::emitAngle(bs::bstype x, bs::bstype y, const bs::bstype* args)
 {
 	Bullet b;
 	b.__active = true;
@@ -95,12 +95,12 @@ void BulletBattery::killBullet(Bullet* b)
 	mMachine->releaseType(b);
 }
 // --------------------------------------------------------------------------------
-void BulletBattery::killBullet(void* object)
+void BulletBattery::killBullet(bs::UserTypeBase* object)
 {
 	killBullet(static_cast<Bullet*>(object));
 }
 // --------------------------------------------------------------------------------
-void BulletBattery::setAngle(void* object, bs::bstype value)
+void BulletBattery::setAngle(bs::UserTypeBase* object, bs::bstype value)
 {
 	Bullet* b = static_cast<Bullet*>(object);
 
@@ -108,7 +108,7 @@ void BulletBattery::setAngle(void* object, bs::bstype value)
 	b->vy = (bs::bstype) cos(value * bs::DEG_TO_RAD);
 }
 // --------------------------------------------------------------------------------
-bs::bstype BulletBattery::getAngle(void* object)
+bs::bstype BulletBattery::getAngle(bs::UserTypeBase* object)
 {
 	Bullet* b = static_cast<Bullet*>(object);
 
@@ -121,55 +121,55 @@ bs::bstype BulletBattery::getAngle(void* object)
 	}
 }
 // --------------------------------------------------------------------------------
-void BulletBattery::setFade(void* object, bs::bstype value)
+void BulletBattery::setFade(bs::UserTypeBase* object, bs::bstype value)
 {
 	Bullet* b = static_cast<Bullet*>(object);
 	b->alpha = value;
 }
 // --------------------------------------------------------------------------------
-bs::bstype BulletBattery::getFade(void* object)
+bs::bstype BulletBattery::getFade(bs::UserTypeBase* object)
 {
 	Bullet* b = static_cast<Bullet*>(object);
 	return b->alpha;
 }
 // --------------------------------------------------------------------------------
-void BulletBattery::setRed(void* object, bs::bstype value)
+void BulletBattery::setRed(bs::UserTypeBase* object, bs::bstype value)
 {
 	Bullet* b = static_cast<Bullet*>(object);
 	b->red = value;
 }
 // --------------------------------------------------------------------------------
-bs::bstype BulletBattery::getRed(void* object)
+bs::bstype BulletBattery::getRed(bs::UserTypeBase* object)
 {
 	Bullet* b = static_cast<Bullet*>(object);
 	return b->red;
 }
 // --------------------------------------------------------------------------------
-void BulletBattery::setGreen(void* object, bs::bstype value)
+void BulletBattery::setGreen(bs::UserTypeBase* object, bs::bstype value)
 {
 	Bullet* b = static_cast<Bullet*>(object);
 	b->green = value;
 }
 // --------------------------------------------------------------------------------
-bs::bstype BulletBattery::getGreen(void* object)
+bs::bstype BulletBattery::getGreen(bs::UserTypeBase* object)
 {
 	Bullet* b = static_cast<Bullet*>(object);
 	return b->green;
 }
 // --------------------------------------------------------------------------------
-void BulletBattery::setBlue(void* object, bs::bstype value)
+void BulletBattery::setBlue(bs::UserTypeBase* object, bs::bstype value)
 {
 	Bullet* b = static_cast<Bullet*>(object);
 	b->blue = value;
 }
 // --------------------------------------------------------------------------------
-bs::bstype BulletBattery::getBlue(void* object)
+bs::bstype BulletBattery::getBlue(bs::UserTypeBase* object)
 {
 	Bullet* b = static_cast<Bullet*>(object);
 	return b->blue;
 }
 // --------------------------------------------------------------------------------
-void BulletBattery::gravity(void* object, float frameTime, const bs::bstype* args)
+void BulletBattery::gravity(bs::UserTypeBase* object, float frameTime, const bs::bstype* args)
 {
 	Bullet* b = static_cast<Bullet*>(object);
 //	b->y -= args[-1] * frameTime;

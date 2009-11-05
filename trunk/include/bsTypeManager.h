@@ -19,9 +19,9 @@ namespace BS_NMSP
 	{
 	public:
 
-		virtual FireTypeBase* getType(const String& type) const = 0;
+		virtual FireType* getType(const String& type) const = 0;
 
-		virtual FireTypeBase* getType(int type) const = 0;
+		virtual FireType* getType(int type) const = 0;
 
 		virtual bool fireFunctionExists(int type, const String& name) const = 0;
 
@@ -35,7 +35,7 @@ namespace BS_NMSP
 
 		int mNumTypes;
 
-		FireTypeBase** mTypes;
+		FireType** mTypes;
 
 		Log* mLog;
 
@@ -49,11 +49,11 @@ namespace BS_NMSP
 			mLog(_log),
 			mVM(vm)
 		{
-			mTypes = new FireTypeBase*[mNumTypes];
-			mTypes[0] = new FireType<atype>(name1, 0, this, mVM);
-			mTypes[1] = new FireType<btype>(name2, 1, this, mVM);
-			mTypes[2] = new FireType<ctype>(name3, 2, this, mVM);
-			mTypes[3] = new FireType<ctype>(name4, 3, this, mVM);
+			mTypes = new FireType*[mNumTypes];
+			mTypes[0] = new FireType(name1, 0, this, mVM);
+			mTypes[1] = new FireType(name2, 1, this, mVM);
+			mTypes[2] = new FireType(name3, 2, this, mVM);
+			mTypes[3] = new FireType(name4, 3, this, mVM);
 		}
 
 			TypeManager(Log* _log, ScriptMachine* vm, const String& name1, const String& name2, const String& name3) :
@@ -61,10 +61,10 @@ namespace BS_NMSP
 			mLog(_log),
 			mVM(vm)
 		{
-			mTypes = new FireTypeBase*[mNumTypes];
-			mTypes[0] = new FireType<atype>(name1, 0, this, mVM);
-			mTypes[1] = new FireType<btype>(name2, 1, this, mVM);
-			mTypes[2] = new FireType<ctype>(name3, 2, this, mVM);
+			mTypes = new FireType*[mNumTypes];
+			mTypes[0] = new FireType(name1, 0, this, mVM);
+			mTypes[1] = new FireType(name2, 1, this, mVM);
+			mTypes[2] = new FireType(name3, 2, this, mVM);
 		}
 
 		TypeManager(Log* _log, ScriptMachine* vm, const String& name1, const String& name2) :
@@ -72,9 +72,9 @@ namespace BS_NMSP
 			mLog(_log),
 			mVM(vm)
 		{
-			mTypes = new FireTypeBase*[mNumTypes];
-			mTypes[0] = new FireType<atype>(name1, 0, this, mVM);
-			mTypes[1] = new FireType<btype>(name2, 1, this, mVM);
+			mTypes = new FireType*[mNumTypes];
+			mTypes[0] = new FireType(name1, 0, this, mVM);
+			mTypes[1] = new FireType(name2, 1, this, mVM);
 		}
 
 		TypeManager(Log* _log, ScriptMachine* vm, const String& name1) :
@@ -82,8 +82,8 @@ namespace BS_NMSP
 			mLog(_log),
 			mVM(vm)
 		{
-			mTypes = new FireTypeBase*[mNumTypes];
-			mTypes[0] = new FireType<atype>(name1, 0, this, mVM);
+			mTypes = new FireType*[mNumTypes];
+			mTypes[0] = new FireType(name1, 0, this, mVM);
 		}
 
 	public:
@@ -101,7 +101,7 @@ namespace BS_NMSP
 			mLog->addEntry(msg);
 		}
 
-		FireTypeBase* getType(const String& name) const
+		FireType* getType(const String& name) const
 		{
 			for (int i = 0; i < mNumTypes; ++i)
 				if (mTypes[i]->getName() == name)
@@ -110,7 +110,7 @@ namespace BS_NMSP
 			return 0;
 		}
 
-		FireTypeBase* getType(int type) const
+		FireType* getType(int type) const
 		{
 			return mTypes[type];
 		}
@@ -200,18 +200,18 @@ namespace BS_NMSP
 		}
 
 		template<class T>
-		void registerFireFunction(const String& name, int numArgs, typename FireType<T>::FireFunction func)
+		void registerFireFunction(const String& name, int numArgs, FireFunction func)
 		{
-			FireType<T>* type = 0;
+			FireType* type = 0;
 
 			if (boost::is_same<T, atype>::value && !boost::is_same<T, void>::value)
-				type = static_cast<FireType<T>*>(mTypes[0]);
+				type = static_cast<FireType*>(mTypes[0]);
 			else if (boost::is_same<T, btype>::value && !boost::is_same<T, void>::value)
-				type = static_cast<FireType<T>*>(mTypes[1]);
+				type = static_cast<FireType*>(mTypes[1]);
 			else if (boost::is_same<T, ctype>::value && !boost::is_same<T, void>::value)
-				type = static_cast<FireType<T>*>(mTypes[2]);
+				type = static_cast<FireType*>(mTypes[2]);
 			else if (boost::is_same<T, dtype>::value && !boost::is_same<T, void>::value)
-				type = static_cast<FireType<T>*>(mTypes[3]);
+				type = static_cast<FireType*>(mTypes[3]);
 			
 			assert(type != 0 && "TypeManager::registerFireFunction wrong template type");
 			type->registerFireFunction(name, numArgs, func);
@@ -220,16 +220,16 @@ namespace BS_NMSP
 		template<class T>
 		void setDieFunction(DieFunction func)
 		{
-			FireType<T>* type = 0;
+			FireType* type = 0;
 
 			if (boost::is_same<T, atype>::value && !boost::is_same<T, void>::value)
-				type = static_cast<FireType<T>*>(mTypes[0]);
+				type = static_cast<FireType*>(mTypes[0]);
 			else if (boost::is_same<T, btype>::value && !boost::is_same<T, void>::value)
-				type = static_cast<FireType<T>*>(mTypes[1]);
+				type = static_cast<FireType*>(mTypes[1]);
 			else if (boost::is_same<T, ctype>::value && !boost::is_same<T, void>::value)
-				type = static_cast<FireType<T>*>(mTypes[2]);
+				type = static_cast<FireType*>(mTypes[2]);
 			else if (boost::is_same<T, dtype>::value && !boost::is_same<T, void>::value)
-				type = static_cast<FireType<T>*>(mTypes[3]);
+				type = static_cast<FireType*>(mTypes[3]);
 			
 			assert(type != 0 && "TypeManager::setDieFunction wrong template type");
 			type->setDieFunction(func);
@@ -238,16 +238,16 @@ namespace BS_NMSP
 		template<class T>
 		void registerProperty(const String& name, SetFunction set, GetFunction get)
 		{
-			FireType<T>* type = 0;
+			FireType* type = 0;
 
 			if (boost::is_same<T, atype>::value && !boost::is_same<T, void>::value)
-				type = static_cast<FireType<T>*>(mTypes[0]);
+				type = static_cast<FireType*>(mTypes[0]);
 			else if (boost::is_same<T, btype>::value && !boost::is_same<T, void>::value)
-				type = static_cast<FireType<T>*>(mTypes[1]);
+				type = static_cast<FireType*>(mTypes[1]);
 			else if (boost::is_same<T, ctype>::value && !boost::is_same<T, void>::value)
-				type = static_cast<FireType<T>*>(mTypes[2]);
+				type = static_cast<FireType*>(mTypes[2]);
 			else if (boost::is_same<T, dtype>::value && !boost::is_same<T, void>::value)
-				type = static_cast<FireType<T>*>(mTypes[3]);
+				type = static_cast<FireType*>(mTypes[3]);
 			
 			assert(type != 0 && "TypeManager::registerProperty wrong template type");
 			if (!type->registerProperty(name, set, get))
@@ -260,16 +260,16 @@ namespace BS_NMSP
 		template<class T>
 		void registerAffector(const String& name, AffectorFunction func)
 		{
-			FireType<T>* type = 0;
+			FireType* type = 0;
 
 			if (boost::is_same<T, atype>::value && !boost::is_same<T, void>::value)
-				type = static_cast<FireType<T>*>(mTypes[0]);
+				type = static_cast<FireType*>(mTypes[0]);
 			else if (boost::is_same<T, btype>::value && !boost::is_same<T, void>::value)
-				type = static_cast<FireType<T>*>(mTypes[1]);
+				type = static_cast<FireType*>(mTypes[1]);
 			else if (boost::is_same<T, ctype>::value && !boost::is_same<T, void>::value)
-				type = static_cast<FireType<T>*>(mTypes[2]);
+				type = static_cast<FireType*>(mTypes[2]);
 			else if (boost::is_same<T, dtype>::value && !boost::is_same<T, void>::value)
-				type = static_cast<FireType<T>*>(mTypes[3]);
+				type = static_cast<FireType*>(mTypes[3]);
 			
 			assert(type != 0 && "TypeManager::registerAffector wrong template type");
 			type->registerAffector(name, func);

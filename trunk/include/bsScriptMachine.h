@@ -18,7 +18,7 @@ namespace BS_NMSP
 	class Gun;
 	class TypeManagerBase;
 	struct FireTypeControl;
-	class FireTypeBase;
+	class FireType;
 
 	class _BSAPI ScriptMachine
 	{
@@ -108,7 +108,7 @@ namespace BS_NMSP
 		NativeFunction getNativeFunction(int index) const;
 
 		// Fire types
-		FireTypeBase* getFireType(const String& name) const;
+		FireType* getFireType(const String& name) const;
 
 		// Properties
 		void addProperty(const String& prop);

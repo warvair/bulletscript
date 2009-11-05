@@ -7,6 +7,8 @@
 namespace BS_NMSP
 {
 
+	class ScriptMachine;
+
 	class Affector
 	{
 		AffectorFunction mFunction;
@@ -17,13 +19,15 @@ namespace BS_NMSP
 
 		bool mbVolatileArguments;
 
+		ScriptMachine* mScriptMachine;
+
 		void recalculateArguments(GunScriptRecord* record);
 
 	public:
 
-		Affector(AffectorFunction func, int numArgs, bool volatileArgs);
+		Affector(ScriptMachine* machine, AffectorFunction func, int numArgs, bool volatileArgs);
 
-		void execute(void* object, float frameTime, GunScriptRecord* record);
+		void execute(UserTypeBase* object, float frameTime, GunScriptRecord* record);
 	};
 
 }

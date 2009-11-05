@@ -8,7 +8,7 @@ struct SoundEffect;
 struct Unit;
 class RendererGL;
 
-struct Bullet
+struct Bullet : public bs::UserTypeBase
 {
 	bs::bstype x, y;
 	bs::bstype vx, vy;
@@ -19,9 +19,6 @@ struct Bullet
 	// Internal variables, do not modify in affector function!
 	int __index;
 	float __time;
-
-	// For bulletscript
-	bs::FireTypeControl* __ft;
 
 	bool __active;
 	char padding[15]; // pad to 64 bytes
@@ -71,31 +68,31 @@ public:
 	static int getNumBullets();
 
 	// Scripting
-	static Bullet* emitAngle(bs::bstype x, bs::bstype y, const bs::bstype* args);
+	static bs::UserTypeBase* emitAngle(bs::bstype x, bs::bstype y, const bs::bstype* args);
 
-	static void killBullet(void* object);
+	static void killBullet(bs::UserTypeBase* object);
 
-	static void setAngle(void* object, bs::bstype value);
+	static void setAngle(bs::UserTypeBase* object, bs::bstype value);
 
-	static bs::bstype getAngle(void* object);
+	static bs::bstype getAngle(bs::UserTypeBase* object);
 
-	static void setFade(void* object, bs::bstype value);
+	static void setFade(bs::UserTypeBase* object, bs::bstype value);
 
-	static bs::bstype getFade(void* object);
+	static bs::bstype getFade(bs::UserTypeBase* object);
 
-	static void setRed(void* object, bs::bstype value);
+	static void setRed(bs::UserTypeBase* object, bs::bstype value);
 
-	static bs::bstype getRed(void* object);
+	static bs::bstype getRed(bs::UserTypeBase* object);
 
-	static void setGreen(void* object, bs::bstype value);
+	static void setGreen(bs::UserTypeBase* object, bs::bstype value);
 
-	static bs::bstype getGreen(void* object);
+	static bs::bstype getGreen(bs::UserTypeBase* object);
 
-	static void setBlue(void* object, bs::bstype value);
+	static void setBlue(bs::UserTypeBase* object, bs::bstype value);
 
-	static bs::bstype getBlue(void* object);
+	static bs::bstype getBlue(bs::UserTypeBase* object);
 
-	static void gravity(void* object, float frameTime, const bs::bstype* args);
+	static void gravity(bs::UserTypeBase* object, float frameTime, const bs::bstype* args);
 };
 
 #endif

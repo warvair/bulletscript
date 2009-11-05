@@ -1,21 +1,24 @@
 #include "bsAffector.h"
+#include "bsScriptMachine.h"
 
 namespace BS_NMSP
 {
 
 // --------------------------------------------------------------------------------
-Affector::Affector(AffectorFunction func, int numArgs, bool volatileArgs) : 
+Affector::Affector(ScriptMachine* machine, AffectorFunction func, int numArgs, bool volatileArgs) : 
 	mFunction(func),
 	mbRecalculate(true),
-	mbVolatileArguments(false)
+	mbVolatileArguments(false),
+	mScriptMachine(machine)
 {
 }
 // --------------------------------------------------------------------------------
 void Affector::recalculateArguments(GunScriptRecord* record)
 {
+//	mScriptMachine->processConstantExpression(?, ?, record);
 }
 // --------------------------------------------------------------------------------
-void Affector::execute(void* object, float frameTime, GunScriptRecord* record)
+void Affector::execute(UserTypeBase* object, float frameTime, GunScriptRecord* record)
 {
 	if (mbRecalculate)
 	{

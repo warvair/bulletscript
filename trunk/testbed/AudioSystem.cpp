@@ -56,7 +56,7 @@ void AudioSystem::update(float frameTime)
 	}
 }
 // --------------------------------------------------------------------------------
-SoundEffect* AudioSystem::emitSound(bs::bstype x, bs::bstype y, const bs::bstype* args)
+bs::UserTypeBase* AudioSystem::emitSound(bs::bstype x, bs::bstype y, const bs::bstype* args)
 {
 	if (mFreeList.empty())
 	{
@@ -79,7 +79,7 @@ SoundEffect* AudioSystem::emitSound(bs::bstype x, bs::bstype y, const bs::bstype
 	return &(mEffects[slot]);
 }
 // --------------------------------------------------------------------------------
-void AudioSystem::killSound(void* object)
+void AudioSystem::killSound(bs::UserTypeBase* object)
 {
 	killSound(static_cast<SoundEffect*>(object), true);
 }
@@ -96,7 +96,7 @@ void AudioSystem::killSound(SoundEffect* fx, bool stop)
 	mFreeList.push_back(fx->__index);
 }
 // --------------------------------------------------------------------------------
-void AudioSystem::setVolume(void* object, bs::bstype value)
+void AudioSystem::setVolume(bs::UserTypeBase* object, bs::bstype value)
 {
 	SoundEffect* fx = static_cast<SoundEffect*>(object);
 	
@@ -104,7 +104,7 @@ void AudioSystem::setVolume(void* object, bs::bstype value)
 	int x = FSOUND_SetVolume(fx->channel, value * 255.0f);
 }
 // --------------------------------------------------------------------------------
-bs::bstype AudioSystem::getVolume(void* object)
+bs::bstype AudioSystem::getVolume(bs::UserTypeBase* object)
 {
 	SoundEffect* fx = static_cast<SoundEffect*>(object);
 

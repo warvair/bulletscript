@@ -98,7 +98,7 @@ void UnitSystem::update(float frameTime)
 			mUnits[i]->update(frameTime);
 }
 // --------------------------------------------------------------------------------
-Unit* UnitSystem::emitUnit(bs::bstype x, bs::bstype y, const bs::bstype* args)
+bs::UserTypeBase* UnitSystem::emitUnit(bs::bstype x, bs::bstype y, const bs::bstype* args)
 {
 	if (mFreeList.empty())
 	{
@@ -123,7 +123,7 @@ Unit* UnitSystem::emitUnit(bs::bstype x, bs::bstype y, const bs::bstype* args)
 	return mUnits[slot];
 }
 // --------------------------------------------------------------------------------
-void UnitSystem::killUnit(void* object)
+void UnitSystem::killUnit(bs::UserTypeBase* object)
 {
 	Unit* unit = static_cast<Unit*>(object);
 	killUnit(unit);

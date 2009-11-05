@@ -196,7 +196,7 @@ NativeFunction ScriptMachine::getNativeFunction(int index) const
 	return mNativeFunctions[index].function;
 }
 // --------------------------------------------------------------------------------
-FireTypeBase* ScriptMachine::getFireType(const String& name) const
+FireType* ScriptMachine::getFireType(const String& name) const
 {
 	return mTypeManager->getType(name);
 }
@@ -720,7 +720,7 @@ void ScriptMachine::interpretCode(const uint32* code, size_t length, ScriptState
 		case BC_FIRE:
 			{
 				int fireType = code[st.curInstruction + 1];
-				FireTypeBase* ft = mTypeManager->getType(fireType);
+				FireType* ft = mTypeManager->getType(fireType);
 				st.curInstruction += ft->processCode(code, st, gun, x, y, members);
 			}
 			break;
