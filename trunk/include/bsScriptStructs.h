@@ -9,6 +9,15 @@
 namespace BS_NMSP
 {
 
+	// Function types
+	typedef void (*DieFunction) (void*);
+
+	typedef void (*SetFunction) (void*, bstype);
+
+	typedef bstype (*GetFunction) (void*);
+
+	typedef void (*AffectorFunction) (void*, float, const bstype*);
+
 	// Structure for declaring member variables
 	struct _BSAPI MemberVariableDeclaration
 	{
@@ -67,9 +76,6 @@ namespace BS_NMSP
 		// Functions
 		ScriptState();
 	};
-
-	// Declaration for GunScriptRecord
-	class GunDefinition;
 
 	// Instance classes
 	struct _BSAPI GunScriptRecord

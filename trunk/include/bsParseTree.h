@@ -26,7 +26,7 @@ namespace BS_NMSP
 		PT_Function,
 		PT_FunctionArg,
 		PT_FunctionArgList,
-		PT_FunctionTail,
+		PT_ControllerList,
 		PT_StateList,
 		PT_State,
 		PT_StatementList,
@@ -179,6 +179,8 @@ namespace BS_NMSP
 
 		void checkFireStatements(GunDefinition* def, ParseTreeNode* node);
 
+		void checkFireControllers(GunDefinition* def, ParseTreeNode* node, int& ctrls, int& affectors);
+
 		void checkFunctionProperties(ParseTreeNode* node, FireTypeBase* type);
 
 		// Code generation
@@ -227,6 +229,8 @@ namespace BS_NMSP
 
 		int getCodeRecordIndex(const String& type, const String& typeName,
 			const String& blockType, const String& blockName);
+
+		void print(ParseTreeNode* node, int indent);
 
 	private:
 

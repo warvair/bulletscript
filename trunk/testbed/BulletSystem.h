@@ -2,18 +2,19 @@
 #define __BULLETSYSTEM_H__
 
 #include "bsBulletScript.h"
-#include "RendererGL.h"
 
 struct Area;
 struct SoundEffect;
 struct Unit;
+class RendererGL;
 
 struct Bullet
 {
 	bs::bstype x, y;
 	bs::bstype vx, vy;
 	bs::bstype speed;
-	bs::bstype fade;
+	bs::bstype alpha;
+	bs::bstype red, green, blue;
 
 	// Internal variables, do not modify in affector function!
 	int __index;
@@ -23,7 +24,7 @@ struct Bullet
 	bs::FireTypeControl* __ft;
 
 	bool __active;
-	char padding[11]; // pad to 48 bytes
+	char padding[15]; // pad to 64 bytes
 
 	Bullet() : __active(false) {}
 };
@@ -82,6 +83,19 @@ public:
 
 	static bs::bstype getFade(void* object);
 
+	static void setRed(void* object, bs::bstype value);
+
+	static bs::bstype getRed(void* object);
+
+	static void setGreen(void* object, bs::bstype value);
+
+	static bs::bstype getGreen(void* object);
+
+	static void setBlue(void* object, bs::bstype value);
+
+	static bs::bstype getBlue(void* object);
+
+	static void gravity(void* object, float frameTime, const bs::bstype* args);
 };
 
 #endif

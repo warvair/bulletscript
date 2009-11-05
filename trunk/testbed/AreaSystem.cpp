@@ -76,7 +76,7 @@ Area* AreaBattery::emitQuadC(bs::bstype x, bs::bstype y, const bs::bstype* args)
 	a.angle = args[-1];
 	a.start = 0.0f;
 	a.end = 0.0f;
-	a.fade = 1;
+	a.alpha = 1;
 
 	size_t count = mSpawnedAreas.size();
 	mSpawnedAreas.push_back(a);
@@ -98,7 +98,7 @@ Area* AreaBattery::emitQuadB(bs::bstype x, bs::bstype y, const bs::bstype* args)
 	a.angle = args[-1];
 	a.start = 0.0f;
 	a.end = 0.0f;
-	a.fade = 1;
+	a.alpha = 1;
 
 	size_t count = mSpawnedAreas.size();
 	mSpawnedAreas.push_back(a);
@@ -120,7 +120,7 @@ Area* AreaBattery::emitEllipse(bs::bstype x, bs::bstype y, const bs::bstype* arg
 	a.angle = 0.0f;
 	a.start = 0.0f;
 	a.end = 360.0f;
-	a.fade = 1;
+	a.alpha = 1;
 
 	size_t count = mSpawnedAreas.size();
 	mSpawnedAreas.push_back(a);
@@ -143,7 +143,7 @@ Area* AreaBattery::emitArc(bs::bstype x, bs::bstype y, const bs::bstype* args)
 	a.start = args[-3];
 	a.end = args[-2];
 	a.innerh = a.innerw = args[-1];
-	a.fade = 1;
+	a.alpha = 1;
 
 	size_t count = mSpawnedAreas.size();
 	mSpawnedAreas.push_back(a);
@@ -226,13 +226,13 @@ bs::bstype AreaBattery::getAngle(void* object)
 void AreaBattery::setFade(void* object, bs::bstype value)
 {
 	Area* a = static_cast<Area*>(object);
-	a->fade = value;
+	a->alpha = value;
 }
 // --------------------------------------------------------------------------------
 bs::bstype AreaBattery::getFade(void* object)
 {
 	Area* a = static_cast<Area*>(object);
-	return a->fade;
+	return a->alpha;
 }
 // --------------------------------------------------------------------------------
 void AreaBattery::setStart(void* object, bs::bstype value)

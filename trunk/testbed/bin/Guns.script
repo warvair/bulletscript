@@ -1,98 +1,156 @@
-gun Abstract
+gun Flower
 {
-	m_speed = 60;
+	fl_angle = 0;
+	fl_speed = 2;
+	fl_dir = 1;
 
-	Func1 = function(time, speed, angle)
+	death = function(time)
 	{
-		wait(time);
-		$angle = {$angle + angle, 2};
-		wait(2);
-		fireA bullet(-angle, speed) : Func2(2, speed, angle + 50);
-		$fade = {0, 2};
-		wait(2);
-		die();
-
+		$blue = 0.2;
+		$alpha = {0, time};
 	}
 
-	Func2 = function(time, speed, angle)
+	petal_o = function(dir)
 	{
-		wait(time);
-		$angle = {$angle - angle, 2};
-		wait(2);
-		fireA bullet(angle, speed) : Func1(2, speed, angle - 50);
-		$fade = {0, 2};
-		wait(2);
-		die();
-	}
+		fireA bullet($angle + 5 * dir, 70) : petal_i(dir);
+		$blue = 0.2;
+		wait(0.4);
+		$angle = {$angle + 60 * dir, 2};
+		wait(1.7);
 
-	Main = state
-	{
-		fireA bullet(170, m_speed) : Func1(1.2, m_speed, 120);
-		fireA bullet(190, m_speed) : Func2(1.2, m_speed, 120);
-		wait(0.2);
-	}
-}
-
-gun Beam
-{
-	time = 0.5;
-
-	debris = function()
-	{
-		wait(0.3);
-		$fade = {0, 0.6};
-		wait(0.6);
-		die();
-	}
-
-	grow = function(dir, time)
-	{
-		$start = {180 + 180 * dir, 0.3};
-		$end = {180, 0.3};
-		wait(time);
-
-		a = 0;
-		loop (10)
-		{
-			fireA bullet(a * 36, 80) : debris();
-			a++;
-		}
-
-		$fade = {0, 0.3};
-		$width = {300, 0.1};
-		$height = {300, 0.1};
-		$iwidth = {$iwidth + 100, 0.1};
-		$iheight = {$iheight + 100, 0.1};
-	}
-
-	// States
-	Emit = state
-	{
-		arc area(64, 64, 90, 90, 32) : grow(-1, time);
-		arc area(64, 64, 270, 270, 32) : grow(1, time);
-
-		wait(time);
-		ship1 unit();
-
-		goto Stable;
-	}
-
-	Stable = state
-	{
-		wait(10);
-	}
-}
-
-gun Blaster
-{
-	Main = state
-	{
 		i = 0;
-		loop(11)
+		loop(6)
 		{
-			fireA bullet(160 + i * 4, 200);
+			fireA bullet(rand(360), 100) : death(0.5);
 			i++;
 		}
+
+		die();
+	}
+
+	petal_i = function(dir)
+	{
+		$blue = 0.6;
+		$green = 0.2;
+		wait(0.2);
+		$angle = {$angle + 60 * dir, 2};
+		wait(1.2);
+		die();
+	}
+
+	Grow = state
+	{
+		fireA bullet(fl_angle + 40, 70) : petal_o(1);
+		fireA bullet(fl_angle + 80, 70) : petal_o(-1);
+
+		fireA bullet(fl_angle + 100, 70) : petal_o(1);
+		fireA bullet(fl_angle + 140, 70) : petal_o(-1);
+
+		fireA bullet(fl_angle + 160, 70) : petal_o(1);
+		fireA bullet(fl_angle + 200, 70) : petal_o(-1);
+
+		fireA bullet(fl_angle + 220, 70) : petal_o(1);
+		fireA bullet(fl_angle + 260, 70) : petal_o(-1);
+
+		fireA bullet(fl_angle + 280, 70) : petal_o(1);
+		fireA bullet(fl_angle + 320, 70) : petal_o(-1);
+
+		fireA bullet(fl_angle + 340, 70) : petal_o(1);
+		fireA bullet(fl_angle + 20, 70) : petal_o(-1);
+
+		wait(0.1);
+
+		fl_speed += 0.2 * fl_dir;
+		if (fl_speed < 1 || fl_speed > 10)
+		{
+			dir *= -1;
+		}
+
+		fl_angle += fl_speed;
+		if (fl_angle >= 360)
+		{
+			fl_angle -= 360;
+		}
+	}
+
+}
+/*
+gun Stalk
+{
+
+	twirl = function()
+	{
 		wait(1);
+		$angle = {90, 1.2};
+		wait(1.2);
+		$angle = {-180, 4.2};
+		wait(4.2);
+		$angle = 180;
+
+		wait(1.5);
+		$angle = {90, 0.8};
+		wait(0.8);
+		$angle = {-180, 2.8};
+		wait(2.8);
+		$angle = 180;
+
+		wait(1);
+		$angle = {90, 0.4};
+		wait(0.4);
+		$angle = {-180, 1.6};
+		wait(1.6);
+		$angle = 180;
+	}
+
+	Emit = state
+	{
+		fireA bullet(180, 80) : twirl();
+		wait(0.1);
 	}
 }
+
+
+gun Float
+{
+	wind = 1.5;
+
+	breeze = function()
+	{
+		$angle = {90, wind};
+		$red = {0, wind};
+		wait(wind);
+
+		while (1)
+		{
+			$green = {0, wind};
+			$red = {1, wind};
+			$angle = 270;
+			$angle = {180, wind};
+			wait(wind);
+
+			$green = {1, wind};
+			$blue = {0, wind};
+			$angle = 90;
+			$angle = {180, wind};
+			wait(wind);
+
+			$blue = {1, wind};
+			$angle = 270;
+			$angle = {180, wind};
+			wait(wind);
+
+			$green = {0, wind};
+			$red = {0, wind};
+			$angle = 90;
+			$angle = {180, wind};
+			wait(wind);
+		}
+	}
+
+	Main = state
+	{
+		fireA bullet(180, 70) : breeze();
+		wait(0.1);
+	}
+}
+*/

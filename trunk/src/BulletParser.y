@@ -35,7 +35,6 @@ void yyerror (char *a_msg)
 %token KEYWORD_DIE
 %token INTEGER
 %token REAL
-%token FUNC_ARGS
 %token IDENTIFIER
 %token SYMBOL_LTE
 %token SYMBOL_GTE
@@ -577,7 +576,7 @@ wait_statement
 	;
 	
 fire_statement
-	: identifier identifier function_call_arguments fire_tail ';'
+	: identifier identifier function_call_arguments ':' controller_list ';'
 		{
 			$$ = AST->createNode(PT_FireStatement, yylineno);
 			$$->setString($2->getStringData().c_str());
@@ -585,7 +584,7 @@ fire_statement
 			
 			$$->setChild(0, $1);
 			$$->setChild(1, $3);
-			$$->setChild(3, $4);
+			$$->setChild(3, $5);
 		}
 	| identifier identifier function_call_arguments ';'
 		{
@@ -598,22 +597,27 @@ fire_statement
 		}
 	;
 	
-fire_tail
-	: ':' function_call
+controller_list
+	: controller_entry
 		{
-			$$ = AST->createNode(PT_FunctionTail, yylineno);
-			$$->setChild(0, $2);
+			$$ = $1;
 		}
-	| '[' func_args ']'
+	| controller_list ',' controller_entry
 		{
-			$$ = AST->createNode(PT_FunctionTail, yylineno);
-			$$->setChild(1, $2);
+			$$ = AST->createNode(PT_ControllerList, yylineno);
+			$$->setChild(0, $1);
+			$$->setChild(1, $3);
 		}
-	| '[' func_args ']' ':' function_call
+	;
+	
+controller_entry
+	: function_call
 		{
-			$$ = AST->createNode(PT_FunctionTail, yylineno);
-			$$->setChild(0, $5);
-			$$->setChild(1, $2);
+			$$ = $1;
+		}
+	| identifier
+		{
+			$$ = $1;
 		}
 	;
 	
@@ -843,15 +847,6 @@ property
 			$$ = AST->createNode(PT_Property, yylineno);
 			$$->setString($2->getStringData().c_str());
 			delete $2;
-		}
-	;
-			
-	
-func_args
-	: FUNC_ARGS
-		{
-			$$ = AST->createNode(PT_Identifier, yylineno);
-			$$->setString(yytext);
 		}
 	;
 

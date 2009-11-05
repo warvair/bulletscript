@@ -5,7 +5,6 @@ DIGIT     	[0-9]
 LETTER    	[a-zA-Z_]
 HEX       	[a-fA-F0-9]
 BINARY    	[0-1]
-FUNC_ARGS	[RP]
 
 %{
 
@@ -53,7 +52,6 @@ FUNC_ARGS	[RP]
 {DIGIT}*"."{DIGIT}+				{ return (REAL); }
 {DIGIT}+"."{DIGIT}*				{ return (REAL); }
 
-{FUNC_ARGS}+					{ return (FUNC_ARGS); }
 {LETTER}({LETTER}|{DIGIT})*     { return (IDENTIFIER); }
 
 "<="							{ return (SYMBOL_LTE); }

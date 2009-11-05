@@ -9,27 +9,16 @@
 #include "bsScriptMachine.h"
 
 #if BS_PLATFORM == BS_PLATFORM_LINUX
-#include <string.h> // for memcpy
+#	include <string.h> // for memcpy
 #endif
 
 namespace BS_NMSP
 {
-	enum
-	{
-		FTF_AnchorPosition		= (1 << 1),
-		FTF_AnchorRotation		= (1 << 2),
-		FTF_Function			= (1 << 3),
-		FTF_FunctionOffset		= (1 << 8),
-		FTF_AffectorOffset		= (1 << 24)
-	};
 
 	class FireTypeBase;
 
 	struct FireTypeControl : public DeepMemoryPoolObject
 	{
-		// Fields for behaviour types
-		uint32 flags;
-
 		// Scripted behaviour
 		CodeRecord* code;
 		ScriptState state;
@@ -45,22 +34,24 @@ namespace BS_NMSP
 		Property properties[BS_MAX_PROPERTIES];
 		uint32 activeProperties; // Bitfield for properties set
 
-		// Anchors
-		Gun* owner;
+		// Affectors
+		int numAffectors;
+		int affectors[BS_MAX_FIRETYPE_AFFECTORS];
 
 		// Internal
-		FireTypeBase* type;
-		void* object; // Pointer to the current object that owns this FireTypeControl
-		int __gunDef; // GunDefinition index, for internal management
+		FireTypeBase* __type;
+		void* __object;			// Pointer to the current object that owns this FireTypeControl
+		Gun* __gun;
+		int __gunDef;			// GunDefinition index, for internal management
 
 		FireTypeControl(int numLocals) :
-			flags(0),
 			code(0),
 			members(0),
 			activeProperties(0),
-			owner(0),
-			type(0),
-			object(0),
+			numAffectors(0),
+			__type(0),
+			__object(0),
+			__gun(0),
 			__gunDef(-1)
 		{
 			if (numLocals > 0)
@@ -81,15 +72,20 @@ namespace BS_NMSP
 
 		template<class A, class B, class C, class D> friend class TypeManager;
 
-		typedef void (*DieFunction) (void*);
-
-		typedef void (*SetFunction) (void*, bstype);
-
-		typedef bstype (*GetFunction) (void*);
-
 		DieFunction mDieFunction;
 
+		// Member functions
 		FireTypeBase(const String& name, int type, TypeManagerBase* typeMan, ScriptMachine* vm);
+
+		virtual ~FireTypeBase()
+		{
+			mAffectors.clear();
+
+			for (size_t i = 0; i < mAffectorInstances.size(); ++i)
+				delete mAffectorInstances[i];
+
+			mAffectorInstances.clear();
+		}
 
 		const String& getName() const;
 
@@ -119,13 +115,58 @@ namespace BS_NMSP
 
 		virtual bool fireFunctionExists(const String& name) const = 0;
 
+		bool affectorFunctionExists(const String& name) const
+		{
+			for (size_t i = 0; i < mAffectors.size(); ++i)
+				if (mAffectors[i].name == name)
+					return true;
+
+			return false;
+		}
+
 		virtual int getNumFireFunctionArguments(const String& name) const = 0;
 
 		virtual void generateBytecode(GunDefinition* def, ParseTreeNode* node,
 			BytecodeBlock* code, const String& funcName) = 0;
 
-		virtual int processCode(const uint32* code, ScriptState& state, bstype x, bstype y,
-			bstype* members, Gun* gun) = 0;
+		virtual int processCode(const uint32* code, ScriptState& state, Gun *gun, bstype x, 
+			bstype y, bstype* members) = 0;
+
+		void registerAffector(const String& name, AffectorFunction func)
+		{
+			AffectorEntry ae;
+			ae.name = name;
+			ae.func = func;
+
+			mAffectors.push_back(ae);
+		}
+
+		AffectorFunction getAffectorFunction(const String& name)
+		{
+			for (size_t i = 0; i < mAffectors.size(); ++i)
+			{
+				if (mAffectors[i].name == name)
+					return mAffectors[i].func;
+			}
+
+			return 0;
+		}
+
+		void createAffectorInstance(AffectorFunction func)
+		{
+			Affector* aff = new Affector(func, 1, false);
+			// Set up
+			// ...
+
+			mAffectorInstances.push_back(aff);
+		}
+
+		void applyAffector(void* object, int index, float frameTime)
+		{
+			// should be object->__ft->__gun instead of 0
+			// ...
+			mAffectorInstances[index]->execute(object, frameTime, 0);
+		}
 	
 	private:
 
@@ -139,6 +180,7 @@ namespace BS_NMSP
 
 		ScriptMachine* mVM;
 		
+		// Properties
 		struct Property
 		{
 			String name;
@@ -151,6 +193,17 @@ namespace BS_NMSP
 		Property mProperties[BS_MAX_PROPERTIES];
 
 		int mNumProperties;
+
+		// Affectors
+		struct AffectorEntry
+		{
+			String name;
+			AffectorFunction func;
+		};
+
+		std::vector<AffectorEntry> mAffectors;
+
+		std::vector<Affector*> mAffectorInstances;
 	};
 
 	template<class T>
@@ -179,6 +232,18 @@ namespace BS_NMSP
 			return false;
 		}
 
+		/*
+			[control function args]
+			[emit function args]
+			BC_FIRE
+			FireType id
+			FireType emit function id
+			control function id + 1
+			control function number of arguments
+			number of affectors
+			[affectors]
+			GunDefinition id
+		*/
 		void generateBytecode(GunDefinition* def, ParseTreeNode* node,
 							  BytecodeBlock* code, const String& funcName)
 		{
@@ -200,34 +265,21 @@ namespace BS_NMSP
 			ParseTreeNode* tNode = node->getChild(3);
 			if (tNode)
 			{
-				ParseTreeNode* aNode = tNode->getChild(0);
-				if (aNode)
+				// See if we have controller function or affectors
+				// ...
+
+				if (tNode->getChild(0))
 				{
-					callName = aNode->getChild(0)->getStringData();
+					callName = tNode->getChild(0)->getStringData();
 
 					// Get function index: +1 because 0 means no function
 					ParseTree* tree = node->getTree();
 					ftFuncIndex = tree->getCodeRecordIndex("Gun", def->getName(),
 						"Function", callName);
-
-					controlType |= FTF_Function;
-					controlType |= (ftFuncIndex + 1) * FTF_FunctionOffset;
-				}
-
-				aNode = tNode->getChild(1);
-				if (aNode)
-				{
-					String anchors = aNode->getStringData();
-					for (size_t i = 0; i < anchors.length(); ++i)
-					{
-						if (anchors[i] == 'R')
-							controlType |= FTF_AnchorRotation;
-						else if (anchors[i] == 'P')
-							controlType |= FTF_AnchorPosition;
-					}
 				}
 			}
 
+			controlType = ftFuncIndex + 1;
 			code->push_back(controlType);
 
 			// Push number of FireType function arguments
@@ -238,56 +290,70 @@ namespace BS_NMSP
 			}
 			else
 				code->push_back(0);
+
+			// Push number of affectors: in this case we will hardcode it to 1
+			int numAffectors = 1;
+			code->push_back(numAffectors);
+			for (int i = 0; i < numAffectors; ++i)
+				code->push_back(0);
 			
 			// This is very hacky, but works.  This is because, at the point that this function is
-			// called, the gun that is calling it will be the next to be added, and will therefore
-			// have this index.  Terrible, I know.
+			// called, the GunDefinition that is calling it will be the next to be added, and will
+			// therefore have this index.  Terrible, I know.
 			int index = mVM->getNumGunDefinitions(); 
 			code->push_back((uint32) index);
 		}
 
-		int processCode(const uint32* code, ScriptState& state, bstype x, bstype y, bstype* members, Gun* gun)
+		int processCode(const uint32* code, ScriptState& state, Gun *gun, bstype x, bstype y, bstype* members)
 		{
 			int funcIndex = code[state.curInstruction + 2];
+			uint32 numAffectors = 0;
+
 			FireFunction func = mFunctions[funcIndex].func;
 
 			T* type = func(x, y, &state.stack[state.stackHead]);
-
 			state.stackHead -= mFunctions[funcIndex].numArguments;
 
 			if (type)
 			{
 				// If specified, set up control stuff
-				uint32 control = code[state.curInstruction + 3];
-				if (control == 0)
+				uint32 controlFunc = code[state.curInstruction + 3];
+				numAffectors = code[state.curInstruction + 5];
+
+				// Should create FireTypeControl if it uses a controller function,
+				// or affectors.
+				if (controlFunc == 0 && numAffectors == 0)
 				{
 					type->__ft = 0;
 				}
 				else
 				{
 					// Request a FireTypeControl from pool
-					int gunDef = code[state.curInstruction + 5];
+					int gunDef = code[state.curInstruction + 6 + numAffectors];
 					type->__ft = mVM->getFireTypeRecord(gunDef);
-					type->__ft->type = this;
-					type->__ft->owner = gun;
-					type->__ft->__gunDef = gunDef;
-					type->__ft->members = members;
-					type->__ft->flags |= control;
+					type->__ft->__type = this;
+					type->__ft->__gun = gun;
 
-					uint32 ftFunc = control >> 8;
-					if (ftFunc > 0)
+					// Set up control function
+					if (controlFunc != 0)
 					{
-						type->__ft->code = mVM->getCodeRecord(ftFunc - 1);
-
 						int numArgs = code[state.curInstruction + 4];
+
+						type->__ft->code = mVM->getCodeRecord(controlFunc - 1);
+						type->__ft->members = members;
 						
 						state.stackHead -= numArgs;
 						memcpy(type->__ft->state.locals, state.stack + state.stackHead, numArgs * sizeof(bstype));
 					}
+					
+					// Set up affectors
+					type->__ft->numAffectors = numAffectors;
+					for (uint32 i = 0; i < numAffectors; ++i)
+						type->__ft->affectors[i] = (int) code[state.curInstruction + 6 + i];
 				}
 			}
 
-			return 6; // this must match the number of bytecodes emitted in generateBytecode
+			return 7 + numAffectors; // this must match the number of bytecodes emitted in generateBytecode
 		}
 
 		void registerFireFunction(const String& name, int numArgs, FireFunction func)
@@ -311,6 +377,7 @@ namespace BS_NMSP
 
 	private:
 
+		// Functions
 		struct FunctionEntry
 		{
 			String name;
@@ -319,6 +386,7 @@ namespace BS_NMSP
 		};
 
 		std::vector<FunctionEntry> mFunctions;
+
 	};
 
 }

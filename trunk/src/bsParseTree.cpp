@@ -460,7 +460,7 @@ void ParseTree::createMemberVariables(GunDefinition* def,
 }
 // --------------------------------------------------------------------------------
 void ParseTree::addMemberVariables(GunDefinition* def, 
-											const MemberVariableDeclarationMap& memberDecls)
+								   const MemberVariableDeclarationMap& memberDecls)
 {
 	// Add special members
 	def->addMemberVariable("Gun_X", true);
@@ -540,13 +540,74 @@ void ParseTree::createMemberVariableBytecode(GunDefinition* def,
 // --------------------------------------------------------------------------------
 void ParseTree::countFunctionCallArguments(ParseTreeNode* node, int& numArguments)
 {
-	if (node->getType() == PT_FunctionCallArg)
+	int nodeType = node->getType();
+	if (nodeType == PT_FunctionCall)
+		return;
+
+	if (nodeType == PT_FunctionCallArg)
 		numArguments++;
 
 	for (int i = 0; i < ParseTreeNode::MAX_CHILDREN; ++ i)
 	{
 		if (node->getChild(i))
 			countFunctionCallArguments(node->getChild(i), numArguments);
+	}
+}
+// --------------------------------------------------------------------------------
+void ParseTree::checkFireControllers(GunDefinition* def, ParseTreeNode* node,
+									 int& ctrls, int& affectors)
+{
+	int nodeType = node->getType();
+	if (nodeType == PT_FunctionCall)
+	{
+		// Function is either an affector or a control function.  We can have at max 1 control function,
+		// and BS_MAX_FIRETYPE_AFFECTORS affectors
+		
+		String ctrlName = node->getChild(0)->getStringData();
+		
+		// Make sure ctrlName exists...
+		int fIndex = def->getFunctionIndex(ctrlName);
+		if (fIndex < 0)
+		{
+			// If it's not a control function, see if it's an affector
+			// ...
+
+			addError(node->getLine(), "Function '" + ctrlName + "' is not declared.");
+			return;
+		}
+
+		if (ctrls != 0)
+		{
+			addError(node->getLine(), "Fire functions can only take one control function.");
+			return;
+		}
+		
+		ctrls++;
+
+		// ...and that we're passing the correct number of arguments to it
+		int numArguments = 0;
+		if (node->getChild(1))
+			countFunctionCallArguments(node->getChild(1), numArguments);
+
+		GunDefinition::Function& func = def->getFunction(fIndex);
+		if (numArguments != func.numArguments)
+		{
+			std::stringstream ss;
+			ss << "Function '" << ctrlName << "' expects " << func.numArguments << " arguments.";
+			addError(node->getLine(), ss.str());
+			return;
+		}
+	}
+	else if (nodeType == PT_Identifier)
+	{
+		// Named affectors
+		// ...
+	}
+
+	for (int i = 0; i < ParseTreeNode::MAX_CHILDREN; ++ i)
+	{
+		if (node->getChild(i))
+			checkFireControllers(def, node->getChild(i), ctrls, affectors);
 	}
 }
 // --------------------------------------------------------------------------------
@@ -679,49 +740,12 @@ void ParseTree::buildFunctions(GunDefinition* def, ParseTreeNode* node)
 			// FireType parameters
 			if (node->getChild(3))
 			{
-				// Make sure that the anchor types are correct
-				ParseTreeNode* typeNode = node->getChild(3);
-				if (typeNode->getChild(1))
-				{
-					String args = typeNode->getChild(1)->getStringData();
-					for (size_t i = 0; i < args.length(); ++i)
-					{
-						if (args[i] != 'R' && args[i] != 'P')
-						{
-							addError(node->getLine(), "Fire parameter not recognised.");
-						}
-					}
-				}
-
-				// Make sure that function does not use properties that this FireType does not have
-				if (typeNode->getChild(0))
-				{
-					ParseTreeNode* funcNode = typeNode->getChild(0);
-					String ctrlName = funcNode->getChild(0)->getStringData();
-					
-					// Make sure ctrlName exists...
-					int fIndex = def->getFunctionIndex(ctrlName);
-					if (fIndex < 0)
-					{
-						addError(node->getLine(), "Function '" + ctrlName + "' is not declared.");
-						return;
-					}
-
-					// ...and that we're passing the correct number of arguments to it
-					int numArguments = 0;
-					if (funcNode->getChild(1))
-						countFunctionCallArguments(funcNode->getChild(1), numArguments);
-
-					GunDefinition::Function& func = def->getFunction(fIndex);
-					if (numArguments != func.numArguments)
-					{
-						std::stringstream ss;
-						ss << "Function '" << ctrlName << "' expects " << func.numArguments << " arguments.";
-						addError(node->getLine(), ss.str());
-						return;
-					}
-				}
+				int numCtrls = 0, numAffectors = 0;
+				checkFireControllers(def, node->getChild(3), numCtrls, numAffectors);
 			}
+
+			// Add an affector instance here for testing
+			ft->createAffectorInstance(ft->getAffectorFunction("gravity"));
 		}
 		break;
 
@@ -873,49 +897,12 @@ void ParseTree::createStates(GunDefinition* def, ParseTreeNode* node)
 			// FireType parameters
 			if (node->getChild(3))
 			{
-				// Make sure that the anchor types are correct
-				ParseTreeNode* typeNode = node->getChild(3);
-				if (typeNode->getChild(1))
-				{
-					String args = typeNode->getChild(1)->getStringData();
-					for (size_t i = 0; i < args.length(); ++i)
-					{
-						if (args[i] != 'R' && args[i] != 'P')
-						{
-							addError(node->getLine(), "Fire parameter not recognised.");
-						}
-					}
-				}
-
-				// Make sure that function does not use properties that this FireType does not have
-				if (typeNode->getChild(0))
-				{
-					ParseTreeNode* funcNode = typeNode->getChild(0);
-					String ctrlName = funcNode->getChild(0)->getStringData();
-					
-					// Make sure ctrlName exists...
-					if (def->getFunctionIndex(ctrlName) < 0)
-					{
-						addError(node->getLine(), "Function '" + ctrlName + "' is not declared.");
-						return;
-					}
-
-					// ...and that we're passing the correct number of arguments to it
-					int numArguments = 0;
-					if (funcNode->getChild(1))
-						countFunctionCallArguments(funcNode->getChild(1), numArguments);
-
-					const GunDefinition::Function& func = def->getFunction(def->getFunctionIndex(ctrlName));
-
-					if (numArguments != func.numArguments)
-					{
-						std::stringstream ss;
-						ss << "Function '" << ctrlName << "' expects " << func.numArguments << " arguments.";
-						addError(node->getLine(), ss.str());
-						return;
-					}
-				}
+				int numCtrls = 0, numAffectors = 0;
+				checkFireControllers(def, node->getChild(3), numCtrls, numAffectors);
 			}
+
+			// Add an affector instance here for testing
+			ft->createAffectorInstance(ft->getAffectorFunction("gravity"));
 		}
 		break;
 
@@ -978,13 +965,12 @@ void ParseTree::checkFireStatements(GunDefinition* def, ParseTreeNode* node)
 			String typeName = node->getStringData();
 			FireTypeBase* ft = mScriptMachine->getFireType(typeName);
 
-			if (tailNode->getChild(0))
-			{
-				String funcName = tailNode->getChild(0)->getChild(0)->getStringData();
-				GunDefinition::Function func = def->getFunction(def->getFunctionIndex(funcName));
+			// Make sure that any control function it uses has the correct properties,
+			// and that there is no affector registered for this type with the same name
 
-				checkFunctionProperties(func.node, ft);
-			}
+			String funcName = tailNode->getChild(0)->getStringData();
+			GunDefinition::Function func = def->getFunction(def->getFunctionIndex(funcName));
+			checkFunctionProperties(func.node, ft);
 		}
 	}
 
@@ -1125,12 +1111,13 @@ void ParseTree::generateBytecode(GunDefinition* def,
 			ParseTreeNode* tNode = node->getChild(3);
 			if (tNode)
 			{
-				if (tNode->getChild(0))
-				{
-					ParseTreeNode* argNode = tNode->getChild(0)->getChild(1);
-					if (argNode)
-						generateBytecode(def, argNode, bytecode);
-				}
+				// If we have a controller function, generate bytecode for its arguments
+				// What do do about affectors?
+				// ...
+
+				ParseTreeNode* argNode = tNode->getChild(1);
+				if (argNode)
+					generateBytecode(def, argNode, bytecode);
 			}
 
 			// Generate fire function arguments next
@@ -1308,7 +1295,7 @@ void ParseTree::generateBytecode(GunDefinition* def,
 			// Push value
 			bstype val = node->getValueData();
 			bytecode->push_back(BC_PUSH);
-			bytecode->push_back(TYPE_TO_UINT32(val));
+			bytecode->push_back(BS_TYPE_TO_UINT32(val));
 		}
 		break;
 
@@ -1439,7 +1426,7 @@ void ParseTree::generateBytecode(GunDefinition* def,
 }
 // --------------------------------------------------------------------------------
 GunDefinition* ParseTree::createGunDefinition(ParseTreeNode* node,
-													   const MemberVariableDeclarationMap& memberDecls)
+											  const MemberVariableDeclarationMap& memberDecls)
 {
 	String name = node->getChild(NameNode)->getStringData();
 
@@ -1493,7 +1480,8 @@ GunDefinition* ParseTree::createGunDefinition(ParseTreeNode* node,
 	}
 
 	// This is a bit of a hack, but now we have to check fire statements to make sure that
-	// the functions they use do not contain invalid properties.  This is because we do not
+	// the functions they use do not contain invalid properties, and that they do not use a
+	// function that has the same name as an affector. This is because we do not
 	// know what type a function has been given from the function itself.
 	checkFireStatements(def, node);
 
@@ -1564,7 +1552,7 @@ GunDefinition* ParseTree::createGunDefinition(ParseTreeNode* node,
 }
 // --------------------------------------------------------------------------------
 void ParseTree::createGunDefinitions(ParseTreeNode* node,
-											  const MemberVariableDeclarationMap& memberDecls)
+									 const MemberVariableDeclarationMap& memberDecls)
 {
 	if (node->getType() == PT_GunDefinition)
 	{
@@ -1621,6 +1609,43 @@ int ParseTree::getCodeRecordIndex(const String& type, const String& typeName,
 			return (int) i;
 	
 	return -1;
+}
+// --------------------------------------------------------------------------------
+void ParseTree::print(ParseTreeNode* node, int indent)
+{
+	for (int i = 0; i < indent; ++i)
+		std::cout << " ";
+
+	switch(node->getType())
+	{
+	case PT_GunDefinition:
+		std::cout << "Gun Definition: " << node->getChild(0)->getStringData();
+		break;
+
+	case PT_FunctionCall:
+		std::cout << "Function Call: " << node->getChild(0)->getStringData();
+		break;
+
+	case PT_FunctionCallArg:
+		std::cout << "Function Call Arg: ";
+		break;
+
+	case PT_FunctionCallArgList:
+		std::cout << "Function Call Arg List: ";
+		break;
+
+	default:
+		break;
+	}
+
+	std::cout << std::endl;
+
+	for (int i = 0; i < ParseTreeNode::MAX_CHILDREN; ++ i)
+	{
+		ParseTreeNode* child = node->getChild(i);
+		if (child)
+			print(child, indent + 2);
+	}
 }
 // --------------------------------------------------------------------------------
 

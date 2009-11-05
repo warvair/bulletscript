@@ -24,6 +24,8 @@ namespace BS_NMSP
 		virtual FireTypeBase* getType(int type) const = 0;
 
 		virtual bool fireFunctionExists(int type, const String& name) const = 0;
+
+		virtual bool affectorFunctionExists(int type, const String& name) const = 0;
 	};
 
 	template<class atype = void, class btype = void, class ctype = void, class dtype = void>
@@ -130,6 +132,14 @@ namespace BS_NMSP
 			return mTypes[type]->fireFunctionExists(name);
 		}
 
+		bool affectorFunctionExists(int type, const String& name) const
+		{
+			assert(type >= 0 && type < mNumTypes && 
+				"TypeManager::affectorFunctionExists out of range");
+
+			return mTypes[type]->affectorFunctionExists(name);
+		}
+
 		template<class T>
 		void releaseType(T* ft)
 		{
@@ -149,35 +159,19 @@ namespace BS_NMSP
 				FireTypeControl* rec = ft->__ft;
 
 				// Update pointer to the user object
-				rec->object = ft;
-
-				// Anchors are the most high-level control, so update first
-				if (rec->flags & FTF_AnchorPosition)
-				{
-					bstype dx, dy;
-					rec->owner->getLastMovement(dx, dy);
-					// How to set position and angle?  User-supplied function?
-//					ft->x += dx;
-//					ft->y += dy;
-				}
-				if (rec->flags & FTF_AnchorRotation)
-				{
-					bstype da;
-					rec->owner->getLastRotation(da);
-//					ft->angle += da;
-				}
+				rec->__object = ft;
 
 				// Update changing properties before script, because they are independent of script status
-				int numProperties = rec->type->mNumProperties;
+				int numProperties = rec->__type->mNumProperties;
 				for (int i = 0; i < numProperties; ++i)
 				{
 					int mask = 1 << i;
 					if (rec->activeProperties & mask)
 					{
-						bstype curValue = rec->type->mProperties[i].getter(rec->object);
+						bstype curValue = rec->__type->mProperties[i].getter(rec->__object);
 						bstype newValue = curValue + rec->properties[i].speed * frameTime;
 
-						rec->type->mProperties[i].setter(rec->object, newValue);
+						rec->__type->mProperties[i].setter(rec->__object, newValue);
 
 						rec->properties[i].time -= frameTime;
 						if (rec->properties[i].time <= 0)
@@ -186,23 +180,23 @@ namespace BS_NMSP
 				}
 
 				// Then functions
-				if (rec->flags & FTF_Function)
+				if (rec->code)
 				{
 					if (rec->state.suspendTime <= 0)
 					{
-						// Need to get the Gun that this bullet was spawned by, and get its member variables
 						mVM->interpretCode(rec->code->byteCode, rec->code->byteCodeSize, 
-							rec->state, 0, rec, x, y, rec->members, rec->owner, false);
+							rec->state, 0, rec, x, y, rec->members, rec->__gun, false);
 					}
 					else
 					{
 						rec->state.suspendTime -= frameTime;
 					}
 				}
-			}
 
-			// Then affectors
-			// ...
+				// Then affectors
+				for (int i = 0; i < rec->numAffectors; ++i)
+					rec->__type->applyAffector(ft, rec->affectors[i], frameTime);
+			}
 		}
 
 		template<class T>
@@ -224,7 +218,7 @@ namespace BS_NMSP
 		}
 
 		template<class T>
-		void setDieFunction(typename FireType<T>::DieFunction func)
+		void setDieFunction(DieFunction func)
 		{
 			FireType<T>* type = 0;
 
@@ -242,8 +236,7 @@ namespace BS_NMSP
 		}
 
 		template<class T>
-		void registerProperty(const String& name, FireTypeBase::SetFunction set,
-							  FireTypeBase::GetFunction get)
+		void registerProperty(const String& name, SetFunction set, GetFunction get)
 		{
 			FireType<T>* type = 0;
 
@@ -254,7 +247,7 @@ namespace BS_NMSP
 			else if (boost::is_same<T, ctype>::value && !boost::is_same<T, void>::value)
 				type = static_cast<FireType<T>*>(mTypes[2]);
 			else if (boost::is_same<T, dtype>::value && !boost::is_same<T, void>::value)
-				type = static_cast<FireType<T>*>(mTypes[2]);
+				type = static_cast<FireType<T>*>(mTypes[3]);
 			
 			assert(type != 0 && "TypeManager::registerProperty wrong template type");
 			if (!type->registerProperty(name, set, get))
@@ -262,6 +255,24 @@ namespace BS_NMSP
 				// Error
 				// ...
 			}
+		}
+
+		template<class T>
+		void registerAffector(const String& name, AffectorFunction func)
+		{
+			FireType<T>* type = 0;
+
+			if (boost::is_same<T, atype>::value && !boost::is_same<T, void>::value)
+				type = static_cast<FireType<T>*>(mTypes[0]);
+			else if (boost::is_same<T, btype>::value && !boost::is_same<T, void>::value)
+				type = static_cast<FireType<T>*>(mTypes[1]);
+			else if (boost::is_same<T, ctype>::value && !boost::is_same<T, void>::value)
+				type = static_cast<FireType<T>*>(mTypes[2]);
+			else if (boost::is_same<T, dtype>::value && !boost::is_same<T, void>::value)
+				type = static_cast<FireType<T>*>(mTypes[3]);
+			
+			assert(type != 0 && "TypeManager::registerAffector wrong template type");
+			type->registerAffector(name, func);
 		}
 
 	};

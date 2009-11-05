@@ -169,7 +169,7 @@ bool RendererGL::initialise (int width, int height)
 	glEnable (GL_BLEND);
 
 	// Create bullet sprite
-	TGALoader bulletLoader ("bullet1.tga");
+	TGALoader bulletLoader ("bullet2.tga");
 	int bwidth, bheight;
 	mBulletTexture = bulletLoader.loadToVRAM (bwidth, bheight);
 	if (mBulletTexture == 0)
@@ -225,13 +225,20 @@ void RendererGL::finishRendering ()
 	SDL_GL_SwapBuffers ();
 }
 // --------------------------------------------------------------------------------
-void RendererGL::addBullet (float x, float y, float fade)
+void RendererGL::addBullet (const Bullet& b)
 {
 	if (mNumBullets >= MAX_BULLETS)
 	{
 		renderBulletBatch();
 		mNumBullets = 0;
 	}
+
+	float x = b.x;
+	float y = b.y;
+	float rd = b.red;
+	float gr = b.green;
+	float bl = b.blue;
+	float alpha = b.alpha;
 
 	int bOffset = mNumBullets * 8;
 	int cOffset = mNumBullets * 16;
@@ -245,10 +252,22 @@ void RendererGL::addBullet (float x, float y, float fade)
 	mBulletPos[bOffset + 6] = x - BULLET_RADIUS;
 	mBulletPos[bOffset + 7] = y + BULLET_RADIUS;
 
-	mBulletCol[cOffset + 3] = fade;
-	mBulletCol[cOffset + 7] = fade;
-	mBulletCol[cOffset + 11] = fade;
-	mBulletCol[cOffset + 15] = fade;
+	mBulletCol[cOffset + 0] = rd;
+	mBulletCol[cOffset + 1] = gr;
+	mBulletCol[cOffset + 2] = bl;
+	mBulletCol[cOffset + 3] = alpha;
+	mBulletCol[cOffset + 4] = rd;
+	mBulletCol[cOffset + 5] = gr;
+	mBulletCol[cOffset + 6] = bl;
+	mBulletCol[cOffset + 7] = alpha;
+	mBulletCol[cOffset + 8] = rd;
+	mBulletCol[cOffset + 9] = gr;
+	mBulletCol[cOffset + 10] = bl;
+	mBulletCol[cOffset + 11] = alpha;
+	mBulletCol[cOffset + 12] = rd;
+	mBulletCol[cOffset + 13] = gr;
+	mBulletCol[cOffset + 14] = bl;
+	mBulletCol[cOffset + 15] = alpha;
 
 	mNumBullets++;
 }
@@ -292,10 +311,10 @@ void RendererGL::addQuadArea(Area* a)
 		mQuadPos[bOffset + 7] = a->y - a->h * cosAngle - w2 * sinAngle;
 	}
 
-	mQuadCol[cOffset + 3] = a->fade;
-	mQuadCol[cOffset + 7] = a->fade;
-	mQuadCol[cOffset + 11] = a->fade;
-	mQuadCol[cOffset + 15] = a->fade;
+	mQuadCol[cOffset + 3] = a->alpha;
+	mQuadCol[cOffset + 7] = a->alpha;
+	mQuadCol[cOffset + 11] = a->alpha;
+	mQuadCol[cOffset + 15] = a->alpha;
 
 	mNumQuads += 2;
 }
@@ -317,7 +336,7 @@ void RendererGL::addEllipseArea(Area* a)
 	mEllipsePos[1] = a->y;
 	mEllipseTex[0] = 0.5f;
 	mEllipseTex[1] = 0.5f;
-	mEllipseCol[3] = a->fade;
+	mEllipseCol[3] = a->alpha;
 
 	float arcLength = a->end - a->start;
 	float delta = arcLength / (numPoints - 1);
@@ -338,7 +357,7 @@ void RendererGL::addEllipseArea(Area* a)
 		mEllipseTex[2 + i + 0] = sinAngle / 2.0f + 0.5;
 		mEllipseTex[2 + i + 1] = cosAngle / 2.0f + 0.5;
 		// Colour
-		mEllipseCol[7 + j * 4] = a->fade;
+		mEllipseCol[7 + j * 4] = a->alpha;
 
 		angle += delta;
 		j++;
@@ -394,7 +413,7 @@ void RendererGL::addArcArea(Area* a)
 		mArcTex[i * 4 + 0] = (float) i / numPoints;
 		mArcTex[i * 4 + 1] = 1.0f;
 		// Colour
-		mArcCol[i * 8 + 3] = a->fade;
+		mArcCol[i * 8 + 3] = a->alpha;
 
 		// Inner Pos
 		mArcPos[i * 4 + 2] = a->x + sinAngle * w2i;
@@ -403,7 +422,7 @@ void RendererGL::addArcArea(Area* a)
 		mArcTex[i * 4 + 2] = (float) i / numPoints;
 		mArcTex[i * 4 + 3] = 0.0f;
 		// Colour
-		mArcCol[i * 8 + 7] = a->fade;
+		mArcCol[i * 8 + 7] = a->alpha;
 
 		angle += delta;
 	}

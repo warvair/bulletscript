@@ -3,6 +3,7 @@
 #include <algorithm>
 #include "Main.h"
 #include "BulletSystem.h"
+#include "RendererGL.h"
 
 int gTotalBullets = 0;
 
@@ -76,7 +77,10 @@ Bullet* BulletBattery::emitAngle(bs::bstype x, bs::bstype y, const bs::bstype* a
 	b.speed = args[-1];
 	b.vx = (bs::bstype) sin(args[-2] * bs::DEG_TO_RAD);
 	b.vy = (bs::bstype) cos(args[-2] * bs::DEG_TO_RAD);
-	b.fade = 1;
+	b.alpha = 1;
+	b.red = 1;
+	b.green = 1;
+	b.blue = 1;
 
 	size_t count = mSpawnedBullets.size();
 	mSpawnedBullets.push_back(b);
@@ -120,13 +124,55 @@ bs::bstype BulletBattery::getAngle(void* object)
 void BulletBattery::setFade(void* object, bs::bstype value)
 {
 	Bullet* b = static_cast<Bullet*>(object);
-	b->fade = value;
+	b->alpha = value;
 }
 // --------------------------------------------------------------------------------
 bs::bstype BulletBattery::getFade(void* object)
 {
 	Bullet* b = static_cast<Bullet*>(object);
-	return b->fade;
+	return b->alpha;
+}
+// --------------------------------------------------------------------------------
+void BulletBattery::setRed(void* object, bs::bstype value)
+{
+	Bullet* b = static_cast<Bullet*>(object);
+	b->red = value;
+}
+// --------------------------------------------------------------------------------
+bs::bstype BulletBattery::getRed(void* object)
+{
+	Bullet* b = static_cast<Bullet*>(object);
+	return b->red;
+}
+// --------------------------------------------------------------------------------
+void BulletBattery::setGreen(void* object, bs::bstype value)
+{
+	Bullet* b = static_cast<Bullet*>(object);
+	b->green = value;
+}
+// --------------------------------------------------------------------------------
+bs::bstype BulletBattery::getGreen(void* object)
+{
+	Bullet* b = static_cast<Bullet*>(object);
+	return b->green;
+}
+// --------------------------------------------------------------------------------
+void BulletBattery::setBlue(void* object, bs::bstype value)
+{
+	Bullet* b = static_cast<Bullet*>(object);
+	b->blue = value;
+}
+// --------------------------------------------------------------------------------
+bs::bstype BulletBattery::getBlue(void* object)
+{
+	Bullet* b = static_cast<Bullet*>(object);
+	return b->blue;
+}
+// --------------------------------------------------------------------------------
+void BulletBattery::gravity(void* object, float frameTime, const bs::bstype* args)
+{
+	Bullet* b = static_cast<Bullet*>(object);
+//	b->y -= args[-1] * frameTime;
 }
 // --------------------------------------------------------------------------------
 int BulletBattery::update(float frameTime)
@@ -180,7 +226,7 @@ void BulletBattery::render(RendererGL *renderer)
 	{
 		Bullet &b = *it;
 		if (b.__active)
-			renderer->addBullet(b.x, b.y, b.fade);
+			renderer->addBullet(b);
 
 		++ it;
 	}

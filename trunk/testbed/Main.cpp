@@ -51,33 +51,37 @@ int main (int argc, char **argv)
 	Machine<Bullet, Area, SoundEffect, Unit> machine("bullet", "area", "sound", "unit");
 
 	// Register bullet functions
-	machine.registerFireFunction<Bullet>("fireA", 2, BulletBattery::emitAngle);
+	machine.registerFireFunction<Bullet>("fireA", 2,	BulletBattery::emitAngle);
 	machine.setDieFunction<Bullet>(BulletBattery::killBullet);
-	machine.registerProperty<Bullet>("angle", BulletBattery::setAngle, BulletBattery::getAngle);
-	machine.registerProperty<Bullet>("fade", BulletBattery::setFade, BulletBattery::getFade);
+	machine.registerProperty<Bullet>("angle",	BulletBattery::setAngle,		BulletBattery::getAngle);
+	machine.registerProperty<Bullet>("red",		BulletBattery::setRed,			BulletBattery::getRed);
+	machine.registerProperty<Bullet>("green",	BulletBattery::setGreen,		BulletBattery::getGreen);
+	machine.registerProperty<Bullet>("blue",	BulletBattery::setBlue,			BulletBattery::getBlue);
+	machine.registerProperty<Bullet>("alpha",	BulletBattery::setFade,			BulletBattery::getFade);
+	machine.registerAffector<Bullet>("gravity", BulletBattery::gravity);
 
 	// Register area functions
-	machine.registerFireFunction<Area>("quadC", 3, AreaBattery::emitQuadC);
-	machine.registerFireFunction<Area>("quadB", 3, AreaBattery::emitQuadB);
-	machine.registerFireFunction<Area>("ellipse", 2, AreaBattery::emitEllipse);
-	machine.registerFireFunction<Area>("arc", 5, AreaBattery::emitArc);
+	machine.registerFireFunction<Area>("quadC", 3,		AreaBattery::emitQuadC);
+	machine.registerFireFunction<Area>("quadB", 3,		AreaBattery::emitQuadB);
+	machine.registerFireFunction<Area>("ellipse", 2,	AreaBattery::emitEllipse);
+	machine.registerFireFunction<Area>("arc", 5,		AreaBattery::emitArc);
 	machine.setDieFunction<Area>(AreaBattery::killArea);
-	machine.registerProperty<Area>("fade", AreaBattery::setFade, AreaBattery::getFade);
-	machine.registerProperty<Area>("width", AreaBattery::setWidth, AreaBattery::getWidth);
-	machine.registerProperty<Area>("height", AreaBattery::setHeight, AreaBattery::getHeight);
-	machine.registerProperty<Area>("iwidth", AreaBattery::setInnerWidth, AreaBattery::getInnerWidth);
-	machine.registerProperty<Area>("iheight", AreaBattery::setInnerHeight, AreaBattery::getInnerHeight);
-	machine.registerProperty<Area>("angle", AreaBattery::setAngle, AreaBattery::getAngle);
-	machine.registerProperty<Area>("start", AreaBattery::setStart, AreaBattery::getStart);
-	machine.registerProperty<Area>("end", AreaBattery::setEnd, AreaBattery::getEnd);
+	machine.registerProperty<Area>("alpha",		AreaBattery::setFade,			AreaBattery::getFade);
+	machine.registerProperty<Area>("width",		AreaBattery::setWidth,			AreaBattery::getWidth);
+	machine.registerProperty<Area>("height",	AreaBattery::setHeight,			AreaBattery::getHeight);
+	machine.registerProperty<Area>("iwidth",	AreaBattery::setInnerWidth,		AreaBattery::getInnerWidth);
+	machine.registerProperty<Area>("iheight",	AreaBattery::setInnerHeight,	AreaBattery::getInnerHeight);
+	machine.registerProperty<Area>("angle",		AreaBattery::setAngle,			AreaBattery::getAngle);
+	machine.registerProperty<Area>("start",		AreaBattery::setStart,			AreaBattery::getStart);
+	machine.registerProperty<Area>("end",		AreaBattery::setEnd,			AreaBattery::getEnd);
 
 	// Register audio functions
-	machine.registerFireFunction<SoundEffect>("fx", 2, AudioSystem::emitSound);
+	machine.registerFireFunction<SoundEffect>("fx", 2,	AudioSystem::emitSound);
 	machine.setDieFunction<SoundEffect>(AudioSystem::killSound);
-	machine.registerProperty<SoundEffect>("volume", AudioSystem::setVolume, AudioSystem::getVolume);
+	machine.registerProperty<SoundEffect>("volume", AudioSystem::setVolume,		AudioSystem::getVolume);
 
 	// Register unit functions
-	machine.registerFireFunction<Unit>("ship1", 0, UnitSystem::emitUnit);
+	machine.registerFireFunction<Unit>("ship1", 0,		UnitSystem::emitUnit);
 	machine.setDieFunction<Unit>(UnitSystem::killUnit);
 
 	// Register global variables
@@ -136,17 +140,20 @@ int main (int argc, char **argv)
 	Gun* gun;
 
 	// Create a gun
+
+	for (int i = 0; i < 1; ++i)
+	{
+		gun = machine.createGun("Flower");
+		gun->setX(400);
+		gun->setY(300);
+		gun->setAngle(180);
+	}
 /*
-	gun = machine.createGun("Abstract");
-	gun->setX(GUN_X);
-	gun->setY(GUN_Y);
-	gun->setAngle(180);
-*/
 	gun = machine.createGun("Beam");
 	gun->setX(GUN_X);
 	gun->setY(GUN_Y - 100);
 	gun->setAngle(180);
-
+*/
 	// Main loop
 	unsigned int curTime = SDL_GetTicks();
 	unsigned int totalTime = 0;

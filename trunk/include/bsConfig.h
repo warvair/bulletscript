@@ -9,20 +9,18 @@
 namespace BS_NMSP
 {
 	typedef float bstype;
-
 	const bstype bsepsilon = 0.001f;
-
 	const bstype bsvalue1 = 1.0f;
 	const bstype bsvalue0 = 0.0f;
 }
 
-#define TYPE_TO_UINT32(x)				(*((BS_NMSP::uint32*) ((void*) (&x))))
-#define UINT32_TO_TYPE(x)				(*((bstype*) ((void*) (&x))))
+#define BS_TYPE_TO_UINT32(x)				(*((BS_NMSP::uint32*) ((void*) (&x))))
+#define BS_UINT32_TO_TYPE(x)				(*((bstype*) ((void*) (&x))))
 
 // runtime behaviour
 #define BS_MAX_AFFECTOR_ARGS			8
 
-#define BS_MAX_AFFECTORS_PER_GUN		4
+#define BS_MAX_FIRETYPE_AFFECTORS		4
 
 #define BS_SCRIPT_STACK_SIZE			32
 
