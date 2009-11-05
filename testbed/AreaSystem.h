@@ -25,7 +25,7 @@ struct Area
 	bs::bstype angle;
 	bs::bstype start, end; // generic, can be used for arcs
 	bs::bstype innerw, innerh;
-	bs::bstype fade;
+	bs::bstype alpha;
 
 	// Internal variables, do not modify in affector function!
 	int __index;

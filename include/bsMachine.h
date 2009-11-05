@@ -168,16 +168,21 @@ namespace BS_NMSP
 		}
 
 		template<class T>
-		void setDieFunction(typename FireType<T>::DieFunction func)
+		void setDieFunction(DieFunction func)
 		{
 			mTypeManager->setDieFunction<T>(func);
 		}
 
 		template<class T>
-		void registerProperty(const String& name, FireTypeBase::SetFunction set,
-							  FireTypeBase::GetFunction get)
+		void registerProperty(const String& name, SetFunction set, GetFunction get)
 		{
 			mTypeManager->registerProperty<T>(name, set, get);
+		}
+
+		template<class T>
+		void registerAffector(const String& name, AffectorFunction func)
+		{
+			mTypeManager->registerAffector<T>(name, func);
 		}
 
 		// Gun management

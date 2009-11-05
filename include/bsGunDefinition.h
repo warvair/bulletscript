@@ -5,6 +5,7 @@
 #include "bsPrerequisites.h"
 #include "bsScriptStructs.h"
 #include "bsScriptVariables.h"
+#include "bsAffector.h"
 #include "bsBytecode.h"
 
 namespace BS_NMSP
@@ -91,27 +92,30 @@ namespace BS_NMSP
 
 	private:
 
+		String mName;
+
+		// Constructor for setting member variables
 		BytecodeBlock m_constructor;
 
 		uint32* m_constructCode;
 
 		size_t m_constructSize;
 		
+		// Member variables
 		std::vector<MemberVariable> mVariables;
 
 		int mNumUserMembers;
 
+		// General info for setting up Gun
 		int mMaxLocals;
 
 		int mInitialState;
 
+		// Functions, states and affectors
 		std::vector<Function> mFunctions;
 
 		std::vector<State> mStates;
 
-	private:
-
-		String mName;
 	};
 
 }

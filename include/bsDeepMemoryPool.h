@@ -9,7 +9,7 @@
 namespace BS_NMSP
 {
 
-	class DeepMemoryPoolObject
+	class _BSAPI DeepMemoryPoolObject
 	{
 		template<class T, typename A1> friend class DeepMemoryPool;
 		int __dmpoIndex;

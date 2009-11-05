@@ -57,7 +57,7 @@ void FireTypeBase::setProperty2(FireTypeControl* record, const String& prop,
 	record->activeProperties |= (1 << index);
 	record->properties[index].time = time;
 
-	bstype curValue = mProperties[index].getter(record->object);
+	bstype curValue = mProperties[index].getter(record->__object);
 	record->properties[index].speed = (value - curValue) / time;
 }
 // --------------------------------------------------------------------------------

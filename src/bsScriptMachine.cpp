@@ -41,7 +41,7 @@ ScriptMachine::ScriptMachine(Log* _log) :
 	mLog(_log)
 {
 	// Register functions
-//	registerNativeFunction("rand", bm_rand);
+	registerNativeFunction("rand", bm_rand);
 
 	mGuns = new DeepMemoryPool<Gun, ScriptMachine*>(32, this);
 
@@ -151,6 +151,7 @@ FireTypeControl* ScriptMachine::getFireTypeRecord(int index)
 		"ScriptMachine::getFireTypeRecord: out of bounds.");
 
 	FireTypeControl* rec = mGunRecords[index].pool->acquire();
+	rec->__gunDef = index;
 	rec->activeProperties = 0;
 	rec->state.curInstruction = 0;
 	rec->state.stackHead = 0;
@@ -345,6 +346,8 @@ int ScriptMachine::compileScript(uint8* buffer, size_t bufferSize)
 
 	ast->foldConstants();
 
+//	ast->print(ast->getRootNode(), 0);
+
 	// Create the GunScriptDefinitions
 	ast->createGunDefinitions(ast->getRootNode(), mMemberVariableDeclarations);
 
@@ -433,8 +436,8 @@ bool ScriptMachine::checkInstructionPosition(ScriptState& st, size_t length, boo
 }
 // --------------------------------------------------------------------------------
 void ScriptMachine::interpretCode(const uint32* code, size_t length, ScriptState& st, 
-								  int* curState, FireTypeControl* record, 
-								  bstype x, bstype y, bstype* members, Gun* gun, bool loop)
+								  int* curState, FireTypeControl* record, bstype x, 
+								  bstype y, bstype* members, Gun* gun, bool loop)
 {
 	if (st.curInstruction >= length)
 		return;
@@ -445,7 +448,7 @@ void ScriptMachine::interpretCode(const uint32* code, size_t length, ScriptState
 		{
 		case BC_PUSH:
 			{
-				st.stack[st.stackHead] = UINT32_TO_TYPE(code[st.curInstruction + 1]);
+				st.stack[st.stackHead] = BS_UINT32_TO_TYPE(code[st.curInstruction + 1]);
 				st.stackHead++;
 				st.curInstruction += 2;
 
@@ -512,21 +515,21 @@ void ScriptMachine::interpretCode(const uint32* code, size_t length, ScriptState
 
 		case BC_SETPROPERTY1:
 			{
-				assert(record->object != 0 && "ScriptMachine::interpretCode record->object is null");
+				assert(record->__object != 0 && "ScriptMachine::interpretCode record->object is null");
 
 				int index = code[st.curInstruction + 1];
 				bstype value = st.stack[--st.stackHead];
 
 				const String& propName = getProperty(index);
 
-				record->type->setProperty1(record->object, propName, value);
+				record->__type->setProperty1(record->__object, propName, value);
 				st.curInstruction += 2;
 			}
 			break;
 
 		case BC_SETPROPERTY2:
 			{
-				assert(record->object != 0 && "ScriptMachine::interpretCode record->object is null");
+				assert(record->__object != 0 && "ScriptMachine::interpretCode record->object is null");
 
 				int index = code[st.curInstruction + 1];
 				bstype time = st.stack[st.stackHead - 1];
@@ -535,19 +538,19 @@ void ScriptMachine::interpretCode(const uint32* code, size_t length, ScriptState
 
 				const String& propName = getProperty(index);
 
-				record->type->setProperty2(record, propName, value, time);
+				record->__type->setProperty2(record, propName, value, time);
 				st.curInstruction += 2;
 			}
 			break;
 
 		case BC_GETPROPERTY:
 			{
-				assert(record->object != 0 && "ScriptMachine::interpretCode record->object is null");
+				assert(record->__object != 0 && "ScriptMachine::interpretCode record->object is null");
 
 				int index = code[st.curInstruction + 1];
 				const String& propName = getProperty(index);
 
-				st.stack[st.stackHead] = record->type->getProperty(record->object, propName);
+				st.stack[st.stackHead] = record->__type->getProperty(record->__object, propName);
 				st.stackHead++;
 				st.curInstruction += 2;
 
@@ -718,7 +721,7 @@ void ScriptMachine::interpretCode(const uint32* code, size_t length, ScriptState
 			{
 				int fireType = code[st.curInstruction + 1];
 				FireTypeBase* ft = mTypeManager->getType(fireType);
-				st.curInstruction += ft->processCode(code, st, x, y, members, gun);
+				st.curInstruction += ft->processCode(code, st, gun, x, y, members);
 			}
 			break;
 
@@ -732,13 +735,13 @@ void ScriptMachine::interpretCode(const uint32* code, size_t length, ScriptState
 
 		case BC_DIE:
 			{
-				assert(record->type->mDieFunction != 0 &&
+				assert(record->__type->mDieFunction != 0 &&
 					"ScriptMachine::interpretCode no die() function provided.");
 
-				assert(record->object != 0 &&
+				assert(record->__object != 0 &&
 					"ScriptMachine::interpretCode record->object is null");
 
-				record->type->mDieFunction(record->object);
+				record->__type->mDieFunction(record->__object);
 				st.curInstruction++;
 			}
 			break;
@@ -804,7 +807,7 @@ void ScriptMachine::interpretCode(const uint32* code, size_t length, ScriptState
 
 		case BC_JZ:
 			{
-				if (TYPE_TO_UINT32 (st.stack[st.stackHead - 1]) == 0)
+				if (BS_TYPE_TO_UINT32 (st.stack[st.stackHead - 1]) == 0)
 				{
 					int address = code[st.curInstruction + 1];
 					st.stackHead--;

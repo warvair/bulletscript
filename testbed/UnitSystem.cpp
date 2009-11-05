@@ -87,13 +87,13 @@ void UnitSystem::initialise(bs::Machine<Bullet, Area, SoundEffect, Unit>* machin
 // --------------------------------------------------------------------------------
 void UnitSystem::shutdown()
 {
-	for (int i = 0; i < mUnits.size(); ++i)
+	for (size_t i = 0; i < mUnits.size(); ++i)
 		delete mUnits[i];
 }
 // --------------------------------------------------------------------------------
 void UnitSystem::update(float frameTime)
 {
-	for (int i = 0; i < mUnits.size(); ++i)
+	for (size_t i = 0; i < mUnits.size(); ++i)
 		if (mUnits[i]->__active)
 			mUnits[i]->update(frameTime);
 }
@@ -137,7 +137,7 @@ void UnitSystem::killUnit(Unit* unit)
 // --------------------------------------------------------------------------------
 void UnitSystem::render(RendererGL* renderer)
 {
-	for (int i = 0; i < mUnits.size(); ++i)
+	for (size_t i = 0; i < mUnits.size(); ++i)
 		if (mUnits[i]->__active)
 			mUnits[i]->render(renderer);
 }

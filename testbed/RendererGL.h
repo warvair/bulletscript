@@ -3,6 +3,7 @@
 
 #include <vector>
 #include "bsPrerequisites.h"
+#include "BulletSystem.h"
 
 #if BS_PLATFORM == BS_PLATFORM_WIN32
 #	include <windows.h>
@@ -88,7 +89,7 @@ public:
 
 	void finishRendering();
 
-	void addBullet(float x, float y, float fade);
+	void addBullet(const Bullet& b);
 
 	void addQuadArea(Area* a);
 
