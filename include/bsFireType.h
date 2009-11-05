@@ -64,18 +64,16 @@ namespace BS_NMSP
 		}
 	};
 
-	class TypeManagerBase;
-
 	class _BSAPI FireType
 	{
 	public:
 
-		template<class A, class B, class C, class D> friend class TypeManager;
+		friend class TypeManager;
 
 		DieFunction mDieFunction;
 
 		// Member functions
-		FireType(const String& name, int type, TypeManagerBase* typeMan, ScriptMachine* vm);
+		FireType(const String& name, int type, TypeManager* typeMan, ScriptMachine* vm);
 
 		~FireType();
 
@@ -133,7 +131,7 @@ namespace BS_NMSP
 
 		int mType;
 
-		TypeManagerBase* mTypeManager;
+		TypeManager* mTypeManager;
 
 		ScriptMachine* mVM;
 		

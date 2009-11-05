@@ -1,6 +1,6 @@
 #include "UnitSystem.h"
 
-bs::Machine<Bullet, Area, SoundEffect, Unit>* UnitSystem::mMachine = 0;
+bs::Machine* UnitSystem::mMachine = 0;
 std::vector<Unit*> UnitSystem::mUnits;
 std::list<int> UnitSystem::mFreeList;
 
@@ -73,7 +73,7 @@ void Unit::__deactivate()
 // UnitSystem
 // --------------------------------------------------------------------------------
 // --------------------------------------------------------------------------------
-void UnitSystem::initialise(bs::Machine<Bullet, Area, SoundEffect, Unit>* machine)
+void UnitSystem::initialise(bs::Machine* machine)
 {
 	mMachine = machine;
 

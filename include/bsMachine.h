@@ -7,38 +7,18 @@
 #include "bsGun.h"
 #include "bsLog.h"
 
-#ifdef BS_USE_BOOST
-#	include <boost/static_assert.hpp>
-#	include <boost/type_traits/is_same.hpp>
-#endif
-
 namespace BS_NMSP
 {
-	class MachineBase
+
+	class _BSAPI Machine
 	{
 		friend class GunController;
 
-		virtual ScriptMachine* getScriptMachine() const = 0;
-
-	protected:
-
-		// Log
 		Log mLog;
 
-	public:
-
-		const Log& getLog() const
-		{
-			return mLog;
-		}
-	};
-
-	template<class atype = void, class btype = void, class ctype = void, class dtype = void>
-	class Machine : public MachineBase
-	{
 		ScriptMachine* mScriptMachine;
 
-		TypeManager<atype, btype, ctype, dtype>* mTypeManager;
+		TypeManager* mTypeManager;
 
 		ScriptMachine* getScriptMachine() const
 		{
@@ -47,163 +27,42 @@ namespace BS_NMSP
 
 	public:
 
-		explicit Machine(const String& name1)
-		{
-#ifdef BS_USE_BOOST
-			const bool isVoidB = boost::is_same<void, btype>::value;
-			const bool isVoidC = boost::is_same<void, ctype>::value;
-			const bool isVoidD = boost::is_same<void, dtype>::value;
-			BOOST_STATIC_ASSERT(isVoidB && isVoidC && isVoidD);
-#endif
+		Machine();
 
-			mScriptMachine = new ScriptMachine(&mLog);
-			mTypeManager = new TypeManager<atype>(&mLog, mScriptMachine, name1);
-			mScriptMachine->setTypeManager(mTypeManager);
-		}
+		~Machine();
 
-		Machine(const String& name1, const String& name2)
-		{
-#ifdef BS_USE_BOOST
-			const bool isVoidB = boost::is_same<void, btype>::value;
-			const bool isVoidC = boost::is_same<void, ctype>::value;
-			const bool isVoidD = boost::is_same<void, dtype>::value;
-			BOOST_STATIC_ASSERT(!isVoidB && isVoidC && isVoidD);
-#endif
-
-			mScriptMachine = new ScriptMachine(&mLog);
-			mTypeManager = new TypeManager<atype, btype>(&mLog, mScriptMachine, name1, name2);
-			mScriptMachine->setTypeManager(mTypeManager);
-		}
-
-		Machine(const String& name1, const String& name2, const String& name3)
-		{
-#ifdef BS_USE_BOOST
-			const bool isVoidA = boost::is_same<void, atype>::value;
-			const bool isVoidB = boost::is_same<void, btype>::value;
-			const bool isVoidC = boost::is_same<void, ctype>::value;
-			const bool isVoidD = boost::is_same<void, dtype>::value;
-			BOOST_STATIC_ASSERT(!isVoidA && !isVoidB && !isVoidC && isVoidD);
-#endif
-
-			mScriptMachine = new ScriptMachine(&mLog);
-			mTypeManager = new TypeManager<atype, btype, ctype>(&mLog, mScriptMachine, name1, name2, name3);
-			mScriptMachine->setTypeManager(mTypeManager);
-		}
-
-		Machine(const String& name1, const String& name2, const String& name3, const String& name4)
-		{
-#ifdef BS_USE_BOOST
-			const bool isVoidA = boost::is_same<void, atype>::value;
-			const bool isVoidB = boost::is_same<void, btype>::value;
-			const bool isVoidC = boost::is_same<void, ctype>::value;
-			const bool isVoidD = boost::is_same<void, dtype>::value;
-			BOOST_STATIC_ASSERT(!isVoidA && !isVoidB && !isVoidC && !isVoidD);
-#endif
-
-			mScriptMachine = new ScriptMachine(&mLog);
-			mTypeManager = new TypeManager<atype, btype, ctype, dtype>(&mLog, mScriptMachine, name1, name2, name3, name4);
-			mScriptMachine->setTypeManager(mTypeManager);
-		}
-
-		~Machine()
-		{
-			delete mScriptMachine;
-			delete mTypeManager;
-		}
+		const Log& getLog() const;
 
 		// General stuff
-		void registerGlobalVariable(const String& name, bstype initialValue)
-		{
-			mScriptMachine->registerGlobalVariable(name, initialValue);
-		}
+		void registerGlobalVariable(const String& name, bstype initialValue);
 
-		void setGlobalVariableValue(const String& name, bstype value)
-		{
-			mScriptMachine->setGlobalVariableValue(name, value);
-		}
+		void setGlobalVariableValue(const String& name, bstype value);
 
-		int compileScript(uint8* buffer, size_t bufferSize)
-		{
-			return mScriptMachine->compileScript(buffer, bufferSize);
-		}
+		int compileScript(uint8* buffer, size_t bufferSize);
 
 		// Type management
-		int getTypeId(const String& name) const
-		{
-			return mTypeManager->getTypeId(name);
-		}
+		void createType(const String& type);
 
-		template<class T>
-		void releaseType(T* ft)
-		{
-#ifdef BS_USE_BOOST
-			const bool isVoidA = boost::is_same<T, atype>::value;
-			const bool isVoidB = boost::is_same<T, btype>::value;
-			const bool isVoidC = boost::is_same<T, ctype>::value;
-			const bool isVoidD = boost::is_same<T, dtype>::value;
-			BOOST_STATIC_ASSERT(isVoidA || isVoidB || isVoidC || isVoidD);
-#endif
+		int getTypeId(const String& name) const;
 
-			mTypeManager->releaseType<T>(ft);
-		}
+		void releaseType(UserTypeBase* ft);
 
-		template<class T>
-		void updateType(T* ft, bstype x, bstype y, float frameTime)
-		{
-#ifdef BS_USE_BOOST
-			const bool isVoidA = boost::is_same<T, atype>::value;
-			const bool isVoidB = boost::is_same<T, btype>::value;
-			const bool isVoidC = boost::is_same<T, ctype>::value;
-			const bool isVoidD = boost::is_same<T, dtype>::value;
-			BOOST_STATIC_ASSERT(isVoidA || isVoidB || isVoidC || isVoidD);
-#endif
-		
-			mTypeManager->updateType<T>(ft, x, y, frameTime);
-		}
+		void updateType(UserTypeBase* ft, bstype x, bstype y, float frameTime);
 
-		template<class T>
-		void registerFireFunction(const String& name, int numArgs, FireFunction func)
-		{
-			mTypeManager->registerFireFunction<T>(name, numArgs, func);
-		}
+		void registerFireFunction(const String& type, const String& name, int numArgs, FireFunction func);
 
-		template<class T>
-		void setDieFunction(DieFunction func)
-		{
-			mTypeManager->setDieFunction<T>(func);
-		}
+		void setDieFunction(const String& type, DieFunction func);
 
-		template<class T>
-		void registerProperty(const String& name, SetFunction set, GetFunction get)
-		{
-			mTypeManager->registerProperty<T>(name, set, get);
-		}
+		void registerProperty(const String& type, const String& name, SetFunction set, GetFunction get);
 
-		template<class T>
-		void registerAffector(const String& name, AffectorFunction func)
-		{
-			mTypeManager->registerAffector<T>(name, func);
-		}
+		void registerAffector(const String& type, const String& name, AffectorFunction func);
 
 		// Gun management
-		Gun* createGun(const String& definition)
-		{
-			return mScriptMachine->createGun(definition);
-		}
+		Gun* createGun(const String& definition);
 
-		void destroyGun(Gun* gun)
-		{
-			mScriptMachine->destroyGun(gun);
-		}
+		void destroyGun(Gun* gun);
 
-		void update(float frameTime)
-		{
-			// Tie to update rate?
-			// ...
-
-			// Update all guns
-			mScriptMachine->updateGuns(frameTime);
-		}
+		void update(float frameTime);
 
 	};
 

@@ -10,7 +10,7 @@ int gTotalBullets = 0;
 // --------------------------------------------------------------------------------
 // BulletBattery
 // --------------------------------------------------------------------------------
-bs::Machine<Bullet, Area, SoundEffect, Unit>* BulletBattery::mMachine = 0;
+bs::Machine* BulletBattery::mMachine = 0;
 std::vector<Bullet> BulletBattery::mBullets;
 std::vector<unsigned int> BulletBattery::mFreeList[2];
 int BulletBattery::mStoreIndex;
@@ -18,7 +18,7 @@ int BulletBattery::mUseIndex;
 std::vector<Bullet> BulletBattery::mSpawnedBullets;
 
 // --------------------------------------------------------------------------------
-void BulletBattery::initialise(bs::Machine<Bullet, Area, SoundEffect, Unit>* machine)
+void BulletBattery::initialise(bs::Machine* machine)
 {
 	mMachine = machine;
 	
