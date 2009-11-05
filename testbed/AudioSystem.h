@@ -8,14 +8,11 @@ struct Bullet;
 struct Area;
 struct Unit;
 
-struct SoundEffect
+struct SoundEffect : public bs::UserTypeBase
 {
 	int channel;
 
 	int __index;
-
-	// For bulletscript
-	bs::FireTypeControl* __ft;
 };
 
 class AudioSystem
@@ -41,13 +38,13 @@ public:
 	static void update(float frameTime);
 
 	// Scripting
-	static SoundEffect* emitSound(bs::bstype x, bs::bstype y, const bs::bstype* args);
+	static bs::UserTypeBase* emitSound(bs::bstype x, bs::bstype y, const bs::bstype* args);
 
-	static void killSound(void* object);
+	static void killSound(bs::UserTypeBase* object);
 
-	static void setVolume(void* object, bs::bstype value);
+	static void setVolume(bs::UserTypeBase* object, bs::bstype value);
 
-	static bs::bstype getVolume(void* object);
+	static bs::bstype getVolume(bs::UserTypeBase* object);
 };
 
 #endif

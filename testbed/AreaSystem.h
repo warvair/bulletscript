@@ -17,7 +17,7 @@ enum AreaType
 	AT_Arc
 };
 
-struct Area
+struct Area : public bs::UserTypeBase
 {
 	int type;			// quad or ellipse
 	bs::bstype x, y;	// centre
@@ -30,9 +30,6 @@ struct Area
 	// Internal variables, do not modify in affector function!
 	int __index;
 	float __time;
-
-	// For bulletscript
-	bs::FireTypeControl* __ft;
 
 	bool __active;
 	char padding[7]; // pad to 64 bytes
@@ -74,47 +71,47 @@ public:
 	static void render(RendererGL* renderer);
 
 	// Scripting
-	static Area* emitQuadC(bs::bstype x, bs::bstype y, const bs::bstype* args);
+	static bs::UserTypeBase* emitQuadC(bs::bstype x, bs::bstype y, const bs::bstype* args);
 
-	static Area* emitQuadB(bs::bstype x, bs::bstype y, const bs::bstype* args);
+	static bs::UserTypeBase* emitQuadB(bs::bstype x, bs::bstype y, const bs::bstype* args);
 
-	static Area* emitEllipse(bs::bstype x, bs::bstype y, const bs::bstype* args);
+	static bs::UserTypeBase* emitEllipse(bs::bstype x, bs::bstype y, const bs::bstype* args);
 
-	static Area* emitArc(bs::bstype x, bs::bstype y, const bs::bstype* args);
+	static bs::UserTypeBase* emitArc(bs::bstype x, bs::bstype y, const bs::bstype* args);
 
-	static void killArea(void* object);
+	static void killArea(bs::UserTypeBase* object);
 
-	static void setWidth(void* object, bs::bstype value);
+	static void setWidth(bs::UserTypeBase* object, bs::bstype value);
 
-	static bs::bstype getWidth(void* object);
+	static bs::bstype getWidth(bs::UserTypeBase* object);
 
-	static void setHeight(void* object, bs::bstype value);
+	static void setHeight(bs::UserTypeBase* object, bs::bstype value);
 
-	static bs::bstype getHeight(void* object);
+	static bs::bstype getHeight(bs::UserTypeBase* object);
 
-	static void setInnerWidth(void* object, bs::bstype value);
+	static void setInnerWidth(bs::UserTypeBase* object, bs::bstype value);
 
-	static bs::bstype getInnerWidth(void* object);
+	static bs::bstype getInnerWidth(bs::UserTypeBase* object);
 
-	static void setInnerHeight(void* object, bs::bstype value);
+	static void setInnerHeight(bs::UserTypeBase* object, bs::bstype value);
 
-	static bs::bstype getInnerHeight(void* object);
+	static bs::bstype getInnerHeight(bs::UserTypeBase* object);
 
-	static void setAngle(void* object, bs::bstype value);
+	static void setAngle(bs::UserTypeBase* object, bs::bstype value);
 
-	static bs::bstype getAngle(void* object);
+	static bs::bstype getAngle(bs::UserTypeBase* object);
 
-	static void setStart(void* object, bs::bstype value);
+	static void setStart(bs::UserTypeBase* object, bs::bstype value);
 
-	static bs::bstype getStart(void* object);
+	static bs::bstype getStart(bs::UserTypeBase* object);
 
-	static void setEnd(void* object, bs::bstype value);
+	static void setEnd(bs::UserTypeBase* object, bs::bstype value);
 
-	static bs::bstype getEnd(void* object);
+	static bs::bstype getEnd(bs::UserTypeBase* object);
 
-	static void setFade(void* object, bs::bstype value);
+	static void setFade(bs::UserTypeBase* object, bs::bstype value);
 
-	static bs::bstype getFade(void* object);
+	static bs::bstype getFade(bs::UserTypeBase* object);
 };
 
 #endif

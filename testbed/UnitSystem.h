@@ -9,7 +9,7 @@ struct Bullet;
 struct Area;
 struct SoundEffect;
 
-struct Unit
+struct Unit : public bs::UserTypeBase
 {
 private:
 
@@ -34,9 +34,6 @@ public:
 	int __index;
 
 	void __deactivate();
-
-	// For bulletscript
-	bs::FireTypeControl* __ft;
 };
 
 class UnitSystem
@@ -59,9 +56,9 @@ public:
 	static void update(float frameTime);
 
 	// Scripting
-	static Unit* emitUnit(bs::bstype x, bs::bstype y, const bs::bstype* args);
+	static bs::UserTypeBase* emitUnit(bs::bstype x, bs::bstype y, const bs::bstype* args);
 
-	static void killUnit(void* object);
+	static void killUnit(bs::UserTypeBase* object);
 
 	static void render(RendererGL* renderer);
 

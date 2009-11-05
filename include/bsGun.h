@@ -14,6 +14,8 @@ namespace BS_NMSP
 
 		ScriptMachine* mScriptMachine;
 
+	public:
+
 		GunScriptRecord* mRecord;
 
 	public:

@@ -162,7 +162,7 @@ namespace BS_NMSP
 		}
 
 		template<class T>
-		void registerFireFunction(const String& name, int numArgs, typename FireType<T>::FireFunction func)
+		void registerFireFunction(const String& name, int numArgs, FireFunction func)
 		{
 			mTypeManager->registerFireFunction<T>(name, numArgs, func);
 		}

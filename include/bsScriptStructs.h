@@ -8,15 +8,24 @@
 
 namespace BS_NMSP
 {
+	struct FireTypeControl;
+
+	// Base type for users to subclass from
+	struct UserTypeBase
+	{
+		FireTypeControl* __ft;		
+	};
 
 	// Function types
-	typedef void (*DieFunction) (void*);
+	typedef UserTypeBase* (*FireFunction) (bstype, bstype, const bstype*);
 
-	typedef void (*SetFunction) (void*, bstype);
+	typedef void (*DieFunction) (UserTypeBase*);
 
-	typedef bstype (*GetFunction) (void*);
+	typedef void (*SetFunction) (UserTypeBase*, bstype);
 
-	typedef void (*AffectorFunction) (void*, float, const bstype*);
+	typedef bstype (*GetFunction) (UserTypeBase*);
+
+	typedef void (*AffectorFunction) (UserTypeBase*, float, const bstype*);
 
 	// Structure for declaring member variables
 	struct _BSAPI MemberVariableDeclaration
