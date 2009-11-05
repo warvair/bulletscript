@@ -6,7 +6,7 @@
 // --------------------------------------------------------------------------------
 // AreaBattery
 // --------------------------------------------------------------------------------
-bs::Machine<Bullet, Area, SoundEffect, Unit>* AreaBattery::mMachine = 0;
+bs::Machine* AreaBattery::mMachine = 0;
 std::vector<Area> AreaBattery::mAreas;
 std::vector<unsigned int> AreaBattery::mFreeList[2];
 int AreaBattery::mStoreIndex;
@@ -14,7 +14,7 @@ int AreaBattery::mUseIndex;
 std::vector<Area> AreaBattery::mSpawnedAreas;
 
 // --------------------------------------------------------------------------------
-void AreaBattery::initialise(bs::Machine<Bullet, Area, SoundEffect, Unit>* machine)
+void AreaBattery::initialise(bs::Machine* machine)
 {
 	mMachine = machine;
 	

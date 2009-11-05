@@ -5,10 +5,6 @@
 #include "bsBulletScript.h"
 #include "RendererGL.h"
 
-struct Bullet;
-struct Area;
-struct SoundEffect;
-
 struct Unit : public bs::UserTypeBase
 {
 private:
@@ -40,7 +36,7 @@ class UnitSystem
 {
 	friend struct Unit;
 
-	static bs::Machine<Bullet, Area, SoundEffect, Unit>* mMachine;
+	static bs::Machine* mMachine;
 
 	static std::vector<Unit*> mUnits;
 	static std::list<int> mFreeList;	
@@ -49,7 +45,7 @@ class UnitSystem
 
 public:
 
-	static void initialise(bs::Machine<Bullet, Area, SoundEffect, Unit>* machine);
+	static void initialise(bs::Machine* machine);
 
 	static void shutdown();
 

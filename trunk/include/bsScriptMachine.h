@@ -16,17 +16,17 @@ namespace BS_NMSP
 	typedef void (*NativeFunction)(ScriptState&);
 
 	class Gun;
-	class TypeManagerBase;
+	class TypeManager;
 	struct FireTypeControl;
 	class FireType;
 
 	class _BSAPI ScriptMachine
 	{
-		template<class A, class B, class C, class D> friend class Machine;
+		friend class Machine;
 		friend class ParseTree;
 
 		// TypeManager
-		TypeManagerBase* mTypeManager;
+		TypeManager* mTypeManager;
 
 		// Log
 		Log* mLog;
@@ -70,7 +70,7 @@ namespace BS_NMSP
 
 		bool checkInstructionPosition(ScriptState& st, size_t length, bool loop);
 
-		void setTypeManager(TypeManagerBase* typeMan);
+		void setTypeManager(TypeManager* typeMan);
 
 	protected:
 

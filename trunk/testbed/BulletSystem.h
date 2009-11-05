@@ -3,9 +3,6 @@
 
 #include "bsBulletScript.h"
 
-struct Area;
-struct SoundEffect;
-struct Unit;
 class RendererGL;
 
 struct Bullet : public bs::UserTypeBase
@@ -40,7 +37,7 @@ class BulletBattery
 		}
 	};
 
-	static bs::Machine<Bullet, Area, SoundEffect, Unit>* mMachine;
+	static bs::Machine* mMachine;
 
 	static const int BATTERY_SIZE = 2048;
 
@@ -57,7 +54,7 @@ class BulletBattery
 
 public:
 
-	static void initialise(bs::Machine<Bullet, Area, SoundEffect, Unit>* machine);
+	static void initialise(bs::Machine* machine);
 
 	static int update(float frameTime);
 

@@ -5,8 +5,8 @@ namespace BS_NMSP
 {
 
 // --------------------------------------------------------------------------------
-FireType::FireType(const String& name, int type, TypeManagerBase* typeMan,
-						   ScriptMachine* vm) :
+FireType::FireType(const String& name, int type, TypeManager* typeMan,
+				   ScriptMachine* vm) :
 	mName(name),
 	mType(type),
 	mNumProperties(0),

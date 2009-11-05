@@ -48,41 +48,49 @@ int main (int argc, char **argv)
 	srand(time(0));
 
 	// Create machine
-	Machine<Bullet, Area, SoundEffect, Unit> machine("bullet", "area", "sound", "unit");
+	Machine machine;
 
 	// Register bullet functions
-	machine.registerFireFunction<Bullet>("fireA", 2,	BulletBattery::emitAngle);
-	machine.setDieFunction<Bullet>(BulletBattery::killBullet);
-	machine.registerProperty<Bullet>("angle",	BulletBattery::setAngle,		BulletBattery::getAngle);
-	machine.registerProperty<Bullet>("red",		BulletBattery::setRed,			BulletBattery::getRed);
-	machine.registerProperty<Bullet>("green",	BulletBattery::setGreen,		BulletBattery::getGreen);
-	machine.registerProperty<Bullet>("blue",	BulletBattery::setBlue,			BulletBattery::getBlue);
-	machine.registerProperty<Bullet>("alpha",	BulletBattery::setFade,			BulletBattery::getFade);
-	machine.registerAffector<Bullet>("gravity", BulletBattery::gravity);
+	machine.createType("bullet");
+
+	machine.registerFireFunction("bullet", "fireA", 2, BulletBattery::emitAngle);
+	machine.setDieFunction("bullet", BulletBattery::killBullet);
+	machine.registerProperty("bullet", "angle",	BulletBattery::setAngle, BulletBattery::getAngle);
+	machine.registerProperty("bullet", "red", BulletBattery::setRed, BulletBattery::getRed);
+	machine.registerProperty("bullet", "green",	BulletBattery::setGreen, BulletBattery::getGreen);
+	machine.registerProperty("bullet", "blue", BulletBattery::setBlue, BulletBattery::getBlue);
+	machine.registerProperty("bullet", "alpha",	BulletBattery::setFade,	BulletBattery::getFade);
+	machine.registerAffector("bullet", "gravity", BulletBattery::gravity);
 
 	// Register area functions
-	machine.registerFireFunction<Area>("quadC", 3,		AreaBattery::emitQuadC);
-	machine.registerFireFunction<Area>("quadB", 3,		AreaBattery::emitQuadB);
-	machine.registerFireFunction<Area>("ellipse", 2,	AreaBattery::emitEllipse);
-	machine.registerFireFunction<Area>("arc", 5,		AreaBattery::emitArc);
-	machine.setDieFunction<Area>(AreaBattery::killArea);
-	machine.registerProperty<Area>("alpha",		AreaBattery::setFade,			AreaBattery::getFade);
-	machine.registerProperty<Area>("width",		AreaBattery::setWidth,			AreaBattery::getWidth);
-	machine.registerProperty<Area>("height",	AreaBattery::setHeight,			AreaBattery::getHeight);
-	machine.registerProperty<Area>("iwidth",	AreaBattery::setInnerWidth,		AreaBattery::getInnerWidth);
-	machine.registerProperty<Area>("iheight",	AreaBattery::setInnerHeight,	AreaBattery::getInnerHeight);
-	machine.registerProperty<Area>("angle",		AreaBattery::setAngle,			AreaBattery::getAngle);
-	machine.registerProperty<Area>("start",		AreaBattery::setStart,			AreaBattery::getStart);
-	machine.registerProperty<Area>("end",		AreaBattery::setEnd,			AreaBattery::getEnd);
+	machine.createType("area");
+
+	machine.registerFireFunction("area", "quadC", 3, AreaBattery::emitQuadC);
+	machine.registerFireFunction("area", "quadB", 3, AreaBattery::emitQuadB);
+	machine.registerFireFunction("area", "ellipse", 2, AreaBattery::emitEllipse);
+	machine.registerFireFunction("area", "arc", 5, AreaBattery::emitArc);
+	machine.setDieFunction("area", AreaBattery::killArea);
+	machine.registerProperty("area", "alpha", AreaBattery::setFade,	AreaBattery::getFade);
+	machine.registerProperty("area", "width", AreaBattery::setWidth, AreaBattery::getWidth);
+	machine.registerProperty("area", "height", AreaBattery::setHeight, AreaBattery::getHeight);
+	machine.registerProperty("area", "iwidth", AreaBattery::setInnerWidth, AreaBattery::getInnerWidth);
+	machine.registerProperty("area", "iheight",	AreaBattery::setInnerHeight, AreaBattery::getInnerHeight);
+	machine.registerProperty("area", "angle", AreaBattery::setAngle, AreaBattery::getAngle);
+	machine.registerProperty("area", "start", AreaBattery::setStart, AreaBattery::getStart);
+	machine.registerProperty("area", "end", AreaBattery::setEnd, AreaBattery::getEnd);
 
 	// Register audio functions
-	machine.registerFireFunction<SoundEffect>("fx", 2,	AudioSystem::emitSound);
-	machine.setDieFunction<SoundEffect>(AudioSystem::killSound);
-	machine.registerProperty<SoundEffect>("volume", AudioSystem::setVolume,		AudioSystem::getVolume);
+	machine.createType("sound");
+
+	machine.registerFireFunction("sound", "fx", 2, AudioSystem::emitSound);
+	machine.setDieFunction("sound", AudioSystem::killSound);
+	machine.registerProperty("sound", "volume", AudioSystem::setVolume,	AudioSystem::getVolume);
 
 	// Register unit functions
-	machine.registerFireFunction<Unit>("ship1", 0,		UnitSystem::emitUnit);
-	machine.setDieFunction<Unit>(UnitSystem::killUnit);
+	machine.createType("unit");
+
+	machine.registerFireFunction("unit", "ship1", 0, UnitSystem::emitUnit);
+	machine.setDieFunction("unit", UnitSystem::killUnit);
 
 	// Register global variables
 	machine.registerGlobalVariable("Level_Time", 0);

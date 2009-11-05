@@ -4,10 +4,6 @@
 #include "bsBulletScript.h"
 #include "RendererGL.h"
 
-struct Bullet;
-struct SoundEffect;
-struct Unit;
-
 // Areas are either quads or circles.
 enum AreaType
 {
@@ -47,7 +43,7 @@ class AreaBattery
 		}
 	};
 
-	static bs::Machine<Bullet, Area, SoundEffect, Unit>* mMachine;
+	static bs::Machine* mMachine;
 
 	static const int BATTERY_SIZE = 128;
 
@@ -64,7 +60,7 @@ class AreaBattery
 	
 public:
 
-	static void initialise(bs::Machine<Bullet, Area, SoundEffect, Unit>* machine);
+	static void initialise(bs::Machine* machine);
 
 	static int update(float frameTime);
 

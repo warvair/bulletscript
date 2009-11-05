@@ -1,13 +1,13 @@
 #include <iostream>
 #include "AudioSystem.h"
 
-bs::Machine<Bullet, Area, SoundEffect, Unit>* AudioSystem::mMachine = 0;
+bs::Machine* AudioSystem::mMachine = 0;
 FSOUND_SAMPLE* AudioSystem::mSamples[AudioSystem::NUM_SAMPLES];
 SoundEffect AudioSystem::mEffects[AudioSystem::NUM_FX];
 std::list<int> AudioSystem::mFreeList;
 
 // --------------------------------------------------------------------------------
-void AudioSystem::initialise(bs::Machine<Bullet, Area, SoundEffect, Unit>* machine)
+void AudioSystem::initialise(bs::Machine* machine)
 {
 	mMachine = machine;
 	FSOUND_Init(44100, 32, 0);

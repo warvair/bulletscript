@@ -211,6 +211,10 @@
 				>
 			</File>
 			<File
+				RelativePath="..\src\bsMachine.cpp"
+				>
+			</File>
+			<File
 				RelativePath="..\src\bsParseTree.cpp"
 				>
 			</File>
@@ -224,6 +228,10 @@
 			</File>
 			<File
 				RelativePath="..\src\bsScriptVariables.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\src\bsTypeManager.cpp"
 				>
 			</File>
 			<File

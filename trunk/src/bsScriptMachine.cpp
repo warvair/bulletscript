@@ -88,7 +88,7 @@ ScriptMachine::~ScriptMachine()
 	}
 }
 // --------------------------------------------------------------------------------
-void ScriptMachine::setTypeManager(TypeManagerBase* typeMan)
+void ScriptMachine::setTypeManager(TypeManager* typeMan)
 {
 	mTypeManager = typeMan;
 }

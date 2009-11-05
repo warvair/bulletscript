@@ -4,10 +4,6 @@
 #include <fmod.h>
 #include "bsBulletScript.h"
 
-struct Bullet;
-struct Area;
-struct Unit;
-
 struct SoundEffect : public bs::UserTypeBase
 {
 	int channel;
@@ -17,7 +13,7 @@ struct SoundEffect : public bs::UserTypeBase
 
 class AudioSystem
 {
-	static bs::Machine<Bullet, Area, SoundEffect, Unit>* mMachine;
+	static bs::Machine* mMachine;
 
 	static const int NUM_SAMPLES = 13;
 	static FSOUND_SAMPLE* mSamples[NUM_SAMPLES];
@@ -31,7 +27,7 @@ class AudioSystem
 
 public:
 
-	static void initialise(bs::Machine<Bullet, Area, SoundEffect, Unit>* machine);
+	static void initialise(bs::Machine* machine);
 
 	static void shutdown();
 
