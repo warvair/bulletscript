@@ -172,7 +172,7 @@ bs::bstype BulletBattery::getBlue(bs::UserTypeBase* object)
 void BulletBattery::gravity(bs::UserTypeBase* object, float frameTime, const bs::bstype* args)
 {
 	Bullet* b = static_cast<Bullet*>(object);
-//	b->y -= args[-1] * frameTime;
+	b->y -= args[-1] * frameTime;
 }
 // --------------------------------------------------------------------------------
 int BulletBattery::update(float frameTime)

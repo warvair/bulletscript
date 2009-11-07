@@ -4,10 +4,14 @@ gun Flower
 	fl_speed = 2;
 	fl_dir = 1;
 
+	gravity = affector Gravity(98);
+
 	death = function(time)
 	{
 		$blue = 0.2;
 		$alpha = {0, time};
+		wait(time);
+		die();
 	}
 
 	petal_o = function(dir)
@@ -21,7 +25,7 @@ gun Flower
 		i = 0;
 		loop(6)
 		{
-			fireA bullet(rand(360), 100) : death(0.5);
+			fireA bullet(rand(360), 100) : death(0.5), gravity;
 			i++;
 		}
 

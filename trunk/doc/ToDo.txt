@@ -16,8 +16,6 @@ affector with the same name as a function.  Otherwise it is ambiguous.
 
 	Stack-register machine: abstract out all codegen/processing to a base VM class
 
-	static_cast: is casting from void* quicker than casting along a class hierarchy?
-
 	A FireTypeControl is needed for every FireType which has any kind of behaviour.  This could eat up memory.
 
 	Cut down the number of arguments to interpretCode
@@ -26,16 +24,9 @@ affector with the same name as a function.  Otherwise it is ambiguous.
 	
 	FireTypeBase::getPropertyIndex is bad, find a way round it (used in FireTypeBase set/get properties)
 	
-It seems like all the templating is hanging on the return type of FireFunction: firing is not that common
-so we can afford one static_cast, and this means inheriting from a base class with FireTypeControl rather
-than including it as a member.  So FireFunction returns a TypeBase*.  And then templating is gone.
-	
 need to calculate memory usage if we're not going to allow custom allocators
 	
 need a way to release guns from memory pool, like firetypecontrols
-
-link errors with user systems when FireType is a class and not a struct?
-	FireTypes must also be default-constructible it seems.
 	
 What to do when user wants to manually control bullets from code?  Ie, when you fire a weapon,
 the bullets stop their current behaviour and get sucked towards/blown away from you, and then

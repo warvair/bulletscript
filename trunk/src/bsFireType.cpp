@@ -1,5 +1,6 @@
 #include "bsFireType.h"
 #include "bsGun.h"
+#include "bsScriptMachine.h"
 
 namespace BS_NMSP
 {
@@ -135,13 +136,23 @@ AffectorFunction FireType::getAffectorFunction(const String& name)
 	return 0;
 }
 // --------------------------------------------------------------------------------
-void FireType::createAffectorInstance(AffectorFunction func)
+int FireType::addAffectorInstance(const String& name, AffectorFunction func, 
+								  const BytecodeBlock& code)
 {
-	Affector* aff = new Affector(0, func, 1, false);
-	// Set up
-	// ...
-
+	Affector* aff = new Affector(name, 0, func, 1, false, code);
 	mAffectorInstances.push_back(aff);
+	return (int) (mAffectorInstances.size() - 1);
+}
+// --------------------------------------------------------------------------------
+int FireType::getAffectorInstanceIndex(const String& name) const
+{
+	for (size_t i = 0; i < mAffectorInstances.size(); ++i)
+	{
+		if (mAffectorInstances[i]->getName() == name)
+			return i;
+	}
+
+	return -1;
 }
 // --------------------------------------------------------------------------------
 void FireType::applyAffector(UserTypeBase* object, int index, float frameTime)
@@ -149,8 +160,34 @@ void FireType::applyAffector(UserTypeBase* object, int index, float frameTime)
 	mAffectorInstances[index]->execute(object, frameTime, object->__ft->__gun->mRecord);
 }
 // --------------------------------------------------------------------------------
+void FireType::getControllers(GunDefinition* def, ParseTreeNode* node, String& callName, 
+							  int& funcIndex, std::vector<int>& affectors)
+{
+	int nodeType = node->getType();
+	if (nodeType == PT_FunctionCall)
+	{
+		callName = node->getChild(0)->getStringData();
+
+		ParseTree* tree = node->getTree();
+		funcIndex = tree->getCodeRecordIndex("Gun", def->getName(),	"Function", callName);
+	}
+	else if (nodeType == PT_AffectorCall)
+	{
+		// See ParseTree::generateFireTail
+		String instanceName = def->getName() + "-" + node->getStringData();
+		int index = getAffectorInstanceIndex(instanceName);
+		affectors.push_back(index);
+	}
+
+	for (int i = 0; i < ParseTreeNode::MAX_CHILDREN; ++ i)
+	{
+		if (node->getChild(i))
+			getControllers(def, node->getChild(i), callName, funcIndex, affectors);
+	}
+}
+// --------------------------------------------------------------------------------
 void FireType::generateBytecode(GunDefinition* def, ParseTreeNode* node,
-									BytecodeBlock* code, const String& funcName)
+								BytecodeBlock* code, const String& funcName)
 {
 /*
 	[control function args]
@@ -176,27 +213,17 @@ void FireType::generateBytecode(GunDefinition* def, ParseTreeNode* node,
 		if (mFunctions[i].name == funcName)
 			code->push_back((uint32) i);
 
-	// control type
+	// control parameters
 	uint32 controlType = 0;
 	int ftFuncIndex = -1;
+	std::vector<int> affectors;
 	String callName = "";
 	ParseTreeNode* tNode = node->getChild(3);
 	if (tNode)
-	{
-		// See if we have controller function or affectors
-		// ...
+		getControllers(def, tNode, callName, ftFuncIndex, affectors);
 
-		if (tNode->getChild(0))
-		{
-			callName = tNode->getChild(0)->getStringData();
 
-			// Get function index: +1 because 0 means no function
-			ParseTree* tree = node->getTree();
-			ftFuncIndex = tree->getCodeRecordIndex("Gun", def->getName(),
-				"Function", callName);
-		}
-	}
-
+	// +1 because 0 means no function
 	controlType = ftFuncIndex + 1;
 	code->push_back(controlType);
 
@@ -209,11 +236,11 @@ void FireType::generateBytecode(GunDefinition* def, ParseTreeNode* node,
 	else
 		code->push_back(0);
 
-	// Push number of affectors: in this case we will hardcode it to 1
-	int numAffectors = 1;
+	// Push number of affectors
+	int numAffectors = (int) affectors.size();
 	code->push_back(numAffectors);
 	for (int i = 0; i < numAffectors; ++i)
-		code->push_back(0);
+		code->push_back(affectors[i]);
 	
 	// This is very hacky, but works.  This is because, at the point that this function is
 	// called, the GunDefinition that is calling it will be the next to be added, and will

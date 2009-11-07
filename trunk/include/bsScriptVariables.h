@@ -6,13 +6,6 @@
 
 namespace BS_NMSP
 {
-	enum
-	{
-		Member_X,
-		Member_Y,
-		Member_Angle,
-		NUM_SPECIAL_MEMBERS
-	};
 
 	class _BSAPI VariableListener
 	{

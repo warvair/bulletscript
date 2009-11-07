@@ -2,7 +2,8 @@
 #define __BS_AFFECTOR_H__
 
 #include "bsPrerequisites.h"
-#include "bsScriptStructs.h"
+#include "bsCore.h"
+#include "bsBytecode.h"
 
 namespace BS_NMSP
 {
@@ -11,6 +12,8 @@ namespace BS_NMSP
 
 	class Affector
 	{
+		String mName;
+
 		AffectorFunction mFunction;
 
 		ScriptState mState;
@@ -21,11 +24,20 @@ namespace BS_NMSP
 
 		ScriptMachine* mScriptMachine;
 
+		uint32* mBytecode;
+
+		size_t mBytecodeSize;
+
 		void recalculateArguments(GunScriptRecord* record);
 
 	public:
 
-		Affector(ScriptMachine* machine, AffectorFunction func, int numArgs, bool volatileArgs);
+		Affector(const String& name, ScriptMachine* machine, AffectorFunction func, 
+			int numArgs, bool volatileArgs, const BytecodeBlock& code);
+
+		~Affector();
+
+		const String& getName() const;
 
 		void execute(UserTypeBase* object, float frameTime, GunScriptRecord* record);
 	};

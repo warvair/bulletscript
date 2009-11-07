@@ -1,5 +1,5 @@
 #include "bsGun.h"
-#include "bsScriptVariables.h"
+#include "bsScriptMachine.h"
 
 namespace BS_NMSP
 {

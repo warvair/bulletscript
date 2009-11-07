@@ -1,21 +1,15 @@
 #ifndef __BS_TYPEMANAGER_H__
 #define __BS_TYPEMANAGER_H__
 
-#include <assert.h>
 #include "bsPrerequisites.h"
 #include "bsFireType.h"
 #include "bsLog.h"
 #include "bsScriptMachine.h"
 
-#ifdef BS_USE_BOOST
-#	include <boost/static_assert.hpp>
-#	include <boost/type_traits/is_same.hpp>
-#endif
-
 namespace BS_NMSP
 {
 
-	class _BSAPI TypeManager
+	class TypeManager
 	{
 		friend class Machine;
 

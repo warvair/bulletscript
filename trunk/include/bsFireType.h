@@ -3,10 +3,10 @@
 
 #include "bsPrerequisites.h"
 #include "bsBytecode.h"
-#include "bsScriptStructs.h"
+#include "bsCore.h"
+#include "bsGun.h"
 #include "bsParseTree.h"
 #include "bsDeepMemoryPool.h"
-#include "bsScriptMachine.h"
 
 #if BS_PLATFORM == BS_PLATFORM_LINUX
 #	include <string.h> // for memcpy
@@ -64,6 +64,8 @@ namespace BS_NMSP
 		}
 	};
 
+	class ScriptMachine;
+
 	class _BSAPI FireType
 	{
 	public:
@@ -111,6 +113,9 @@ namespace BS_NMSP
 
 		int getNumFireFunctionArguments(const String& name) const;
 
+		void getControllers(GunDefinition* def, ParseTreeNode* node,
+			String& callName, int& funcIndex, std::vector<int>& affectors);
+
 		void generateBytecode(GunDefinition* def, ParseTreeNode* node,
 			BytecodeBlock* code, const String& funcName);
 
@@ -121,7 +126,9 @@ namespace BS_NMSP
 
 		AffectorFunction getAffectorFunction(const String& name);
 
-		void createAffectorInstance(AffectorFunction func);
+		int addAffectorInstance(const String& name, AffectorFunction func, const BytecodeBlock& code);
+
+		int getAffectorInstanceIndex(const String& name) const;
 
 		void applyAffector(UserTypeBase* object, int index, float frameTime);
 	
@@ -168,6 +175,7 @@ namespace BS_NMSP
 
 		std::vector<AffectorEntry> mAffectors;
 
+		// Affector Instances
 		std::vector<Affector*> mAffectorInstances;
 	};
 

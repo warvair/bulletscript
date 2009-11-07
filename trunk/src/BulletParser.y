@@ -24,6 +24,7 @@ void yyerror (char *a_msg)
 %}
 
 %token KEYWORD_GUN
+%token KEYWORD_AFFECTOR
 %token KEYWORD_FUNCTION
 %token KEYWORD_STATE
 %token KEYWORD_LOOP
@@ -75,51 +76,101 @@ gun_definition_list
 gun_definition
 	: KEYWORD_GUN identifier '{' state_list '}'
 		{
-			// Guns have the following nodes:
-			// 0: name
-			// 1: member variables
-			// 2: functions
-			// 3: states
 			// members must be declared first, then functions, then events
 			$$ = AST->createNode(PT_GunDefinition, yylineno);
-			$$->setChild(NameNode, $2);
-			$$->setChild(MemberNode, 0);
-			$$->setChild(FunctionNode, 0);
-			$$->setChild(StateNode, $4);
-		}		
-	| KEYWORD_GUN identifier '{' member_list state_list '}'
-		{
-			$$ = AST->createNode(PT_GunDefinition, yylineno);
-			$$->setChild(NameNode, $2);
-			
-			// member list
-			if ($4->getType() == PT_AssignStatement)
-			{
-				// Create a PT_MemberList and make $4 the child of it.
-				YYSTYPE newChild = AST->createNode(PT_MemberList, $4->getLine());
-				newChild->setChild(0, $4);
-				$$->setChild(MemberNode, newChild);
-			}
-			else
-			{
-				$$->setChild(MemberNode, $4);
-			}
-			
-			$$->setChild(FunctionNode, 0);
-			$$->setChild(StateNode, $5);
+			$$->setString($2->getStringData().c_str());
+			delete $2;
+
+			$$->setChild(PT_MemberNode, 0);
+			$$->setChild(PT_AffectorNode, 0);
+			$$->setChild(PT_FunctionNode, 0);
+			$$->setChild(PT_StateNode, $4);
 		}		
 	| KEYWORD_GUN identifier '{' function_list state_list '}'
 		{
 			$$ = AST->createNode(PT_GunDefinition, yylineno);
-			$$->setChild(NameNode, $2);
-			$$->setChild(MemberNode, 0);
-			$$->setChild(FunctionNode, $4);
-			$$->setChild(StateNode, $5);
+			$$->setString($2->getStringData().c_str());			
+			delete $2;
+			
+			$$->setChild(PT_MemberNode, 0);
+			$$->setChild(PT_AffectorNode, 0);
+			$$->setChild(PT_FunctionNode, $4);
+			$$->setChild(PT_StateNode, $5);
+		}		
+	| KEYWORD_GUN identifier '{' affector_list state_list '}'
+		{
+			$$ = AST->createNode(PT_GunDefinition, yylineno);
+			$$->setString($2->getStringData().c_str());			
+			delete $2;
+			
+			// affector list
+			if ($4->getType() == PT_AffectorDecl)
+			{
+				// Create a PT_AffectorDeclList and make $4 the child of it.
+				YYSTYPE newChild = AST->createNode(PT_AffectorDeclList, $4->getLine());
+				newChild->setChild(0, $4);
+				$$->setChild(PT_AffectorNode, newChild);
+			}
+			else
+			{
+				$$->setChild(PT_AffectorNode, $4);
+			}
+
+			$$->setChild(PT_MemberNode, 0);
+			$$->setChild(PT_FunctionNode, 0);
+			$$->setChild(PT_StateNode, $5);
+		}		
+	| KEYWORD_GUN identifier '{' affector_list function_list state_list '}'
+		{
+			$$ = AST->createNode(PT_GunDefinition, yylineno);
+			$$->setString($2->getStringData().c_str());			
+			delete $2;
+			
+			// affector list
+			if ($4->getType() == PT_AffectorDecl)
+			{
+				// Create a PT_AffectorDeclList and make $4 the child of it.
+				YYSTYPE newChild = AST->createNode(PT_AffectorDeclList, $4->getLine());
+				newChild->setChild(0, $4);
+				$$->setChild(PT_AffectorNode, newChild);
+			}
+			else
+			{
+				$$->setChild(PT_AffectorNode, $4);
+			}
+
+			$$->setChild(PT_MemberNode, 0);
+			$$->setChild(PT_FunctionNode, $5);
+			$$->setChild(PT_StateNode, $6);
+		}		
+	| KEYWORD_GUN identifier '{' member_list state_list '}'
+		{
+			$$ = AST->createNode(PT_GunDefinition, yylineno);
+			$$->setString($2->getStringData().c_str());			
+			delete $2;
+			
+			// member list
+			if ($4->getType() == PT_AssignStatement)
+			{
+				// Create a PT_MemberList and make $4 the child of it.
+				YYSTYPE newChild = AST->createNode(PT_MemberList, $4->getLine());
+				newChild->setChild(0, $4);
+				$$->setChild(PT_MemberNode, newChild);
+			}
+			else
+			{
+				$$->setChild(PT_MemberNode, $4);
+			}
+			
+			$$->setChild(PT_AffectorNode, 0);
+			$$->setChild(PT_FunctionNode, 0);
+			$$->setChild(PT_StateNode, $5);
 		}		
 	| KEYWORD_GUN identifier '{' member_list function_list state_list '}'
 		{
 			$$ = AST->createNode(PT_GunDefinition, yylineno);
-			$$->setChild(NameNode, $2);
+			$$->setString($2->getStringData().c_str());			
+			delete $2;
 
 			// member list
 			if ($4->getType() == PT_AssignStatement)
@@ -127,15 +178,86 @@ gun_definition
 				// Create a PT_MemberList and make $4 the child of it.
 				YYSTYPE newChild = AST->createNode(PT_MemberList, $4->getLine());
 				newChild->setChild(0, $4);
-				$$->setChild(MemberNode, newChild);
+				$$->setChild(PT_MemberNode, newChild);
 			}
 			else
 			{
-				$$->setChild(MemberNode, $4);
+				$$->setChild(PT_MemberNode, $4);
 			}
 
-			$$->setChild(FunctionNode, $5);
-			$$->setChild(StateNode, $6);
+			$$->setChild(PT_AffectorNode, 0);
+			$$->setChild(PT_FunctionNode, $5);
+			$$->setChild(PT_StateNode, $6);
+		}		
+	| KEYWORD_GUN identifier '{' member_list affector_list state_list '}'
+		{
+			$$ = AST->createNode(PT_GunDefinition, yylineno);
+			$$->setString($2->getStringData().c_str());			
+			delete $2;
+			
+			// member list
+			if ($4->getType() == PT_AssignStatement)
+			{
+				// Create a PT_MemberList and make $4 the child of it.
+				YYSTYPE newChild = AST->createNode(PT_MemberList, $4->getLine());
+				newChild->setChild(0, $4);
+				$$->setChild(PT_MemberNode, newChild);
+			}
+			else
+			{
+				$$->setChild(PT_MemberNode, $4);
+			}
+			
+			// affector list
+			if ($5->getType() == PT_AffectorDecl)
+			{
+				// Create a PT_AffectorDeclList and make $5 the child of it.
+				YYSTYPE newChild = AST->createNode(PT_AffectorDeclList, $5->getLine());
+				newChild->setChild(0, $5);
+				$$->setChild(PT_AffectorNode, newChild);
+			}
+			else
+			{
+				$$->setChild(PT_AffectorNode, $5);
+			}
+
+			$$->setChild(PT_FunctionNode, 0);
+			$$->setChild(PT_StateNode, $6);
+		}		
+	| KEYWORD_GUN identifier '{' member_list affector_list function_list state_list '}'
+		{
+			$$ = AST->createNode(PT_GunDefinition, yylineno);
+			$$->setString($2->getStringData().c_str());			
+			delete $2;
+
+			// member list
+			if ($4->getType() == PT_AssignStatement)
+			{
+				// Create a PT_MemberList and make $4 the child of it.
+				YYSTYPE newChild = AST->createNode(PT_MemberList, $4->getLine());
+				newChild->setChild(0, $4);
+				$$->setChild(PT_MemberNode, newChild);
+			}
+			else
+			{
+				$$->setChild(PT_MemberNode, $4);
+			}
+
+			// affector list
+			if ($5->getType() == PT_AffectorDecl)
+			{
+				// Create a PT_AffectorDeclList and make $5 the child of it.
+				YYSTYPE newChild = AST->createNode(PT_AffectorDeclList, $5->getLine());
+				newChild->setChild(0, $5);
+				$$->setChild(PT_AffectorNode, newChild);
+			}
+			else
+			{
+				$$->setChild(PT_AffectorNode, $5);
+			}
+
+			$$->setChild(PT_FunctionNode, $6);
+			$$->setChild(PT_StateNode, $7);
 		}		
 	;
 	
@@ -149,6 +271,28 @@ member_list
 			$$ = AST->createNode(PT_MemberList, yylineno);
 			$$->setChild(0, $1);
 			$$->setChild(1, $2);
+		}
+	;
+	
+affector_list
+	: affector_declaration
+		{
+			$$ = $1;
+		}
+	| affector_list affector_declaration
+		{
+			$$ = AST->createNode(PT_AffectorDeclList, yylineno);
+			$$->setChild(0, $1);
+			$$->setChild(1, $2);
+		}
+	;
+	
+affector_declaration
+	: identifier '=' KEYWORD_AFFECTOR function_call ';'
+		{
+			$$ = AST->createNode(PT_AffectorDecl, yylineno);
+			$$->setChild(0, $1);
+			$$->setChild(1, $4);
 		}
 	;
 	
@@ -618,6 +762,7 @@ controller_entry
 	| identifier
 		{
 			$$ = $1;
+			$$->_setType(PT_AffectorCall);
 		}
 	;
 	

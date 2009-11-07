@@ -30,6 +30,11 @@ ParseTreeNode::~ParseTreeNode()
 		delete mChildren[i];
 }
 // --------------------------------------------------------------------------------
+void ParseTreeNode::_setType(int type)
+{
+	mType = type;
+}
+// --------------------------------------------------------------------------------
 void ParseTreeNode::setChild(int index, ParseTreeNode *node)
 {
 	mChildren[index] = node;
@@ -342,8 +347,7 @@ int ParseTree::getNumErrors() const
 	return mNumErrors;
 }
 // --------------------------------------------------------------------------------
-bool ParseTree::checkConstantExpression(GunDefinition* def, 
-												 ParseTreeNode* node)
+bool ParseTree::checkConstantExpression(GunDefinition* def, ParseTreeNode* node)
 {
 	int nodeType = node->getType();
 	if (nodeType == PT_FunctionCall)
@@ -493,48 +497,35 @@ void ParseTree::addMemberVariables(GunDefinition* def,
 	def->setNumUserMembers(members);
 }
 // --------------------------------------------------------------------------------
-void ParseTree::createMemberVariableBytecode(GunDefinition* def,
-													  ParseTreeNode* node,
-													  bool first)
+void ParseTree::createAffectors(GunDefinition* def, ParseTreeNode* node)
 {
-	static int s_index = 0;
-	if (first)
-		s_index = NUM_SPECIAL_MEMBERS + def->getNumUserMembers();
-
-	if (node->getType() == PT_AssignStatement)
+	if (node->getType() == PT_AffectorDecl)
 	{
-		// Create 'constructor' code for this gun.  We only need to do this if member 
-		// variables are not constants.  If they are, then we can just set the constants here.
-		GunDefinition::MemberVariable& memVar = def->getMemberVariable(s_index);
-		
-		int exprType = node->getChild(1)->getType();
-		if (exprType == PT_ConstantExpression)
+		// Create temporary structure with the node.  We don't actually want to
+		// create any instances yet because we don't know which FireTypes are
+		// going to use them.
+		String affName = node->getChild(0)->getStringData();
+		for (size_t i = 0; i < mAffectors.size(); ++i)
 		{
-			memVar.value = 0;
-
-			// Add to 'construction code'
-			BytecodeBlock constructCode;
-			generateBytecode(def, node->getChild(1), &constructCode);
-			
-			int index = def->getMemberVariableIndex(memVar.name);
-			constructCode.push_back(BC_SETM);
-			constructCode.push_back((uint32) index);
-
-			def->appendConstructionCode(constructCode);
-		}
-		else
-		{
-			// Constant - just set the variable now
-			memVar.value = node->getChild(1)->getValueData(); 
+			if (mAffectors[i].name == affName)
+			{
+				addError(node->getLine(), "Affector '" + affName + "' already declared.");
+				return;
+			}
 		}
 
-		++s_index;
+		AffectorInfo info;
+		info.name = affName;
+		info.function = node->getChild(1)->getChild(0)->getStringData();
+		info.node = node;
+
+		mAffectors.push_back(info);
 	}
 
 	for (int i = 0; i < ParseTreeNode::MAX_CHILDREN; ++ i)
 	{
 		if (node->getChild(i))
-			createMemberVariableBytecode(def, node->getChild(i), false);
+			createAffectors(def, node->getChild(i));
 	}
 }
 // --------------------------------------------------------------------------------
@@ -554,29 +545,23 @@ void ParseTree::countFunctionCallArguments(ParseTreeNode* node, int& numArgument
 	}
 }
 // --------------------------------------------------------------------------------
-void ParseTree::checkFireControllers(GunDefinition* def, ParseTreeNode* node,
-									 int& ctrls, int& affectors)
+void ParseTree::checkFireControllers(GunDefinition* def, ParseTreeNode* node, 
+									 int& ctrls, FireType* ft)
 {
 	int nodeType = node->getType();
 	if (nodeType == PT_FunctionCall)
 	{
-		// Function is either an affector or a control function.  We can have at max 1 control function,
-		// and BS_MAX_FIRETYPE_AFFECTORS affectors
-		
 		String ctrlName = node->getChild(0)->getStringData();
 		
 		// Make sure ctrlName exists...
 		int fIndex = def->getFunctionIndex(ctrlName);
 		if (fIndex < 0)
 		{
-			// If it's not a control function, see if it's an affector
-			// ...
-
 			addError(node->getLine(), "Function '" + ctrlName + "' is not declared.");
 			return;
 		}
 
-		if (ctrls != 0)
+		if (ctrls > 0)
 		{
 			addError(node->getLine(), "Fire functions can only take one control function.");
 			return;
@@ -598,16 +583,39 @@ void ParseTree::checkFireControllers(GunDefinition* def, ParseTreeNode* node,
 			return;
 		}
 	}
-	else if (nodeType == PT_Identifier)
+	else if (nodeType == PT_AffectorCall)
 	{
 		// Named affectors
-		// ...
+		String affector = node->getStringData();
+
+		int index = -1;
+		for (size_t i = 0; i < mAffectors.size(); ++i)
+		{
+			if (mAffectors[i].name == affector)
+			{
+				index = (int) i;
+				break;
+			}
+		}
+
+		if (index < 0)
+		{
+			addError(node->getLine(), "Affector '" + affector + "' is not declared.");
+			return;
+		}
+
+		if (!ft->affectorFunctionExists(mAffectors[index].function))
+		{
+			addError(node->getLine(), "Affector function '" + mAffectors[index].function + "' is not"
+				" registered with type '" + ft->getName() + "'.");
+			return;
+		}
 	}
 
 	for (int i = 0; i < ParseTreeNode::MAX_CHILDREN; ++ i)
 	{
 		if (node->getChild(i))
-			checkFireControllers(def, node->getChild(i), ctrls, affectors);
+			checkFireControllers(def, node->getChild(i), ctrls, ft);
 	}
 }
 // --------------------------------------------------------------------------------
@@ -718,10 +726,12 @@ void ParseTree::buildFunctions(GunDefinition* def, ParseTreeNode* node)
 			if (!ft)
 			{
 				addError(node->getLine(), "Unknown fire type ' " + funcType + "'.");
+				return;
 			}
 			else if (!ft->fireFunctionExists(funcName))
 			{
 				addError(node->getLine(), "Fire function '" + funcName + "' is not registered.");
+				return;
 			}
 
 			// Arguments
@@ -740,12 +750,9 @@ void ParseTree::buildFunctions(GunDefinition* def, ParseTreeNode* node)
 			// FireType parameters
 			if (node->getChild(3))
 			{
-				int numCtrls = 0, numAffectors = 0;
-				checkFireControllers(def, node->getChild(3), numCtrls, numAffectors);
+				int numCtrls = 0;
+				checkFireControllers(def, node->getChild(3), numCtrls, ft);
 			}
-
-			// Add an affector instance here for testing
-			ft->createAffectorInstance(ft->getAffectorFunction("gravity"));
 		}
 		break;
 
@@ -874,10 +881,12 @@ void ParseTree::createStates(GunDefinition* def, ParseTreeNode* node)
 			if (!ft)
 			{
 				addError(node->getLine(), "Unknown fire type ' " + funcType + "'.");
+				return;
 			}
 			else if (!ft->fireFunctionExists(funcName))
 			{
 				addError(node->getLine(), "Fire function '" + funcName + "' is not registered.");
+				return;
 			}
 
 			// Arguments
@@ -897,12 +906,9 @@ void ParseTree::createStates(GunDefinition* def, ParseTreeNode* node)
 			// FireType parameters
 			if (node->getChild(3))
 			{
-				int numCtrls = 0, numAffectors = 0;
-				checkFireControllers(def, node->getChild(3), numCtrls, numAffectors);
+				int numCtrls = 0;
+				checkFireControllers(def, node->getChild(3), numCtrls, ft);
 			}
-
-			// Add an affector instance here for testing
-			ft->createAffectorInstance(ft->getAffectorFunction("gravity"));
 		}
 		break;
 
@@ -955,6 +961,26 @@ void ParseTree::createStates(GunDefinition* def, ParseTreeNode* node)
 	}
 }
 // --------------------------------------------------------------------------------
+void ParseTree::_checkFireStatements(GunDefinition* def, ParseTreeNode* node, const String& type)
+{
+	int nodeType = node->getType();
+	if (nodeType == PT_FunctionCall)
+	{
+		FireType* ft = mScriptMachine->getFireType(type);
+
+		// Make sure that any control function used has the correct properties
+		String funcName = node->getChild(0)->getStringData();
+		GunDefinition::Function func = def->getFunction(def->getFunctionIndex(funcName));
+		checkFunctionProperties(func.node, ft);
+	}
+
+	for (int i = 0; i < ParseTreeNode::MAX_CHILDREN; ++ i)
+	{
+		if (node->getChild(i))
+			_checkFireStatements(def, node->getChild(i), type);
+	}
+}
+// -------------------------------------------------------------------------
 void ParseTree::checkFireStatements(GunDefinition* def, ParseTreeNode* node)
 {
 	if (node->getType() == PT_FireStatement)
@@ -962,15 +988,9 @@ void ParseTree::checkFireStatements(GunDefinition* def, ParseTreeNode* node)
 		ParseTreeNode* tailNode = node->getChild(3);
 		if (tailNode)
 		{
+			// Loop through list
 			String typeName = node->getStringData();
-			FireType* ft = mScriptMachine->getFireType(typeName);
-
-			// Make sure that any control function it uses has the correct properties,
-			// and that there is no affector registered for this type with the same name
-
-			String funcName = tailNode->getChild(0)->getStringData();
-			GunDefinition::Function func = def->getFunction(def->getFunctionIndex(funcName));
-			checkFunctionProperties(func.node, ft);
+			_checkFireStatements(def, tailNode, typeName);
 		}
 	}
 
@@ -997,10 +1017,104 @@ void ParseTree::checkFunctionProperties(ParseTreeNode* node, FireType* type)
 	}
 }
 // --------------------------------------------------------------------------------
-void ParseTree::generateBytecode(GunDefinition* def,
-										  ParseTreeNode* node,
-										  BytecodeBlock* bytecode,
-										  bool reset)
+void ParseTree::createMemberVariableBytecode(GunDefinition* def, ParseTreeNode* node, bool first)
+{
+	static int s_index = 0;
+	if (first)
+		s_index = NUM_SPECIAL_MEMBERS + def->getNumUserMembers();
+
+	if (node->getType() == PT_AssignStatement)
+	{
+		// Create 'constructor' code for this gun.  We only need to do this if member 
+		// variables are not constants.  If they are, then we can just set the constants here.
+		GunDefinition::MemberVariable& memVar = def->getMemberVariable(s_index);
+		
+		int exprType = node->getChild(1)->getType();
+		if (exprType == PT_ConstantExpression)
+		{
+			memVar.value = 0;
+
+			// Add to 'construction code'
+			BytecodeBlock constructCode;
+			generateBytecode(def, node->getChild(1), &constructCode);
+			
+			int index = def->getMemberVariableIndex(memVar.name);
+			constructCode.push_back(BC_SETM);
+			constructCode.push_back((uint32) index);
+
+			def->appendConstructionCode(constructCode);
+		}
+		else
+		{
+			// Constant - just set the variable now
+			memVar.value = node->getChild(1)->getValueData(); 
+		}
+
+		++s_index;
+	}
+
+	for (int i = 0; i < ParseTreeNode::MAX_CHILDREN; ++ i)
+	{
+		if (node->getChild(i))
+			createMemberVariableBytecode(def, node->getChild(i), false);
+	}
+}
+// --------------------------------------------------------------------------------
+void ParseTree::generateFireTail(GunDefinition* def, ParseTreeNode* node, 
+								 BytecodeBlock* bytecode, FireType* ft)
+{
+	int nodeType = node->getType();
+	if (nodeType == PT_FunctionCall)
+	{
+		ParseTreeNode* argNode = node->getChild(1);
+		if (argNode)
+			generateBytecode(def, argNode, bytecode);
+	}
+	else if (nodeType == PT_AffectorCall)
+	{
+
+		// See if affector instance has been created in FireType, and if it has, use 
+		// its index, otherwise add it and use its index.
+		String affector = node->getStringData();
+		int affIndex = -1;
+		for (size_t i = 0; i < mAffectors.size(); ++i)
+		{
+			if (mAffectors[i].name == affector)
+			{
+				affIndex = (int) i;
+				break;
+			}
+		}
+
+		// See FireType::getControllers
+		String instanceName = def->getName() + "-" + affector;
+
+		int instanceIndex = ft->getAffectorInstanceIndex(instanceName);
+		if (instanceIndex < 0)
+		{
+			// Generate CodeRecord and give to FireType
+			BytecodeBlock argCode;
+			generateBytecode(def, mAffectors[affIndex].node->getChild(1)->getChild(1), &argCode);
+
+			String affFunction = mAffectors[affIndex].function;
+			instanceIndex = ft->addAffectorInstance(instanceName, 
+													ft->getAffectorFunction(affFunction), 
+													argCode);
+		}
+
+		// Generate bytecode to use instanceIndex with this emission
+		// ...
+	}
+
+	for (int i = 0; i < ParseTreeNode::MAX_CHILDREN; ++ i)
+	{
+		if (node->getChild(i))
+			generateFireTail(def, node->getChild(i), bytecode, ft);
+	}
+}
+// --------------------------------------------------------------------------------
+void ParseTree::generateBytecode(GunDefinition* def, ParseTreeNode* node,
+								 BytecodeBlock* bytecode, bool reset)
 {
 	static GunDefinition::State* s_curState = 0;
 	static GunDefinition::Function* s_curFunction = 0;
@@ -1107,29 +1221,21 @@ void ParseTree::generateBytecode(GunDefinition* def,
 
 	case PT_FireStatement:
 		{
-			// Generate FireType function arguments, if a function is specified
+			String funcType = node->getStringData();
+			FireType* ft = mScriptMachine->getFireType(funcType);
+
+			// Generate FireType function arguments and create affector instances,
+			// to be used by FireType::generateBytecode
 			ParseTreeNode* tNode = node->getChild(3);
 			if (tNode)
-			{
-				// If we have a controller function, generate bytecode for its arguments
-				// What do do about affectors?
-				// ...
-
-				ParseTreeNode* argNode = tNode->getChild(1);
-				if (argNode)
-					generateBytecode(def, argNode, bytecode);
-			}
+				generateFireTail(def, tNode, bytecode, ft);
 
 			// Generate fire function arguments next
 			if (node->getChild(1))
 				generateBytecode(def, node->getChild(1), bytecode);
 
-			// Then get function index
+			// Then generate actual BC_FIRE code
 			String funcName = node->getChild(0)->getStringData();
-			String funcType = node->getStringData();
-
-			// Should probably pass node into generateBytecode, because for areas, need extra args
-			FireType* ft = mScriptMachine->getFireType(funcType);
 			ft->generateBytecode(def, node, bytecode, funcName);
 		}
 		return;
@@ -1428,7 +1534,7 @@ void ParseTree::generateBytecode(GunDefinition* def,
 GunDefinition* ParseTree::createGunDefinition(ParseTreeNode* node,
 											  const MemberVariableDeclarationMap& memberDecls)
 {
-	String name = node->getChild(NameNode)->getStringData();
+	String name = node->getStringData();
 
 	// Create definition
 	GunDefinition* def = new GunDefinition(name);
@@ -1437,9 +1543,9 @@ GunDefinition* ParseTree::createGunDefinition(ParseTreeNode* node,
 	addMemberVariables(def, memberDecls);
 
 	// Create script-declared member variables
-	bool hasMembers = node->getChild(MemberNode) ? true : false;
+	bool hasMembers = node->getChild(PT_MemberNode) ? true : false;
 	if (hasMembers)
-		createMemberVariables(def, node->getChild(MemberNode));
+		createMemberVariables(def, node->getChild(PT_MemberNode));
 
 	if (mNumErrors > 0)
 	{
@@ -1447,12 +1553,26 @@ GunDefinition* ParseTree::createGunDefinition(ParseTreeNode* node,
 		return 0;
 	}
 
+	// Now check affectors
+	mAffectors.clear();
+	bool hasAffectors = node->getChild(PT_AffectorNode) ? true : false;
+	if (hasAffectors)
+	{
+		createAffectors(def, node->getChild(PT_AffectorNode));
+
+		if (mNumErrors > 0)
+		{
+			delete def;
+			return 0;
+		}
+	}
+
 	// Create functions
 	mFunctionIndices.clear();
-	bool hasFunctions = node->getChild(FunctionNode) ? true : false;
+	bool hasFunctions = node->getChild(PT_FunctionNode) ? true : false;
 	if (hasFunctions)
 	{
-		addFunctions(def, node->getChild(FunctionNode));
+		addFunctions(def, node->getChild(PT_FunctionNode));
 
 		if (mNumErrors > 0)
 		{
@@ -1460,7 +1580,7 @@ GunDefinition* ParseTree::createGunDefinition(ParseTreeNode* node,
 			return 0;
 		}
 
-		buildFunctions(def, node->getChild(FunctionNode));
+		buildFunctions(def, node->getChild(PT_FunctionNode));
 
 		if (mNumErrors > 0)
 		{
@@ -1471,7 +1591,7 @@ GunDefinition* ParseTree::createGunDefinition(ParseTreeNode* node,
 
 	// Create the states
 	mStateIndices.clear();
-	createStates(def, node->getChild(StateNode));
+	createStates(def, node->getChild(PT_StateNode));
 	
 	if (mNumErrors > 0)
 	{
@@ -1518,17 +1638,17 @@ GunDefinition* ParseTree::createGunDefinition(ParseTreeNode* node,
 
 	// Initialise member vars
 	if (hasMembers)
-		generateBytecode(def, node->getChild(MemberNode), 0, true);
+		generateBytecode(def, node->getChild(PT_MemberNode), 0, true);
 
 	// Finish constructor here
 	def->finaliseConstructor();
 
 	// Create function bytecode
 	if (hasFunctions)
-		generateBytecode(def, node->getChild(FunctionNode), 0, true);
+		generateBytecode(def, node->getChild(PT_FunctionNode), 0, true);
 
 	// Create state bytecode
-	generateBytecode(def, node->getChild(StateNode), 0, true);
+	generateBytecode(def, node->getChild(PT_StateNode), 0, true);
 
 	if (mNumErrors > 0)
 	{
@@ -1571,14 +1691,14 @@ void ParseTree::createGunDefinitions(ParseTreeNode* node,
 }
 // --------------------------------------------------------------------------------
 String ParseTree::getCodeRecordName(const String& type, const String& typeName,
-											 const String& blockType, const String& blockName)
+									const String& blockType, const String& blockName) const
 {
 	String name = type + "-" + typeName + "-" + blockType + "-" + blockName;
 	return name;
 }
 // --------------------------------------------------------------------------------
 int ParseTree::createCodeRecord(const String& type, const String& typeName,
-										  const String& blockType, const String& blockName)
+								const String& blockType, const String& blockName)
 {
 	String name = getCodeRecordName(type, typeName, blockType, blockName);
 
@@ -1590,7 +1710,7 @@ int ParseTree::createCodeRecord(const String& type, const String& typeName,
 }
 // --------------------------------------------------------------------------------
 CodeRecord* ParseTree::getCodeRecord(const String& type, const String& typeName,
-											  const String& blockType, const String& blockName)
+									 const String& blockType, const String& blockName) const
 {
 	String name = getCodeRecordName(type, typeName, blockType, blockName);
 	for (size_t i = 0; i < mCodeblockNames.size(); ++i)
@@ -1601,7 +1721,7 @@ CodeRecord* ParseTree::getCodeRecord(const String& type, const String& typeName,
 }
 // --------------------------------------------------------------------------------
 int ParseTree::getCodeRecordIndex(const String& type, const String& typeName,
-										   const String& blockType, const String& blockName)
+								 const String& blockType, const String& blockName) const
 {
 	String name = getCodeRecordName(type, typeName, blockType, blockName);
 	for (size_t i = 0; i < mCodeblockNames.size(); ++i)

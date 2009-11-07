@@ -37,6 +37,7 @@ BINARY    	[0-1]
 "//"[^\n]*                      { /* process comments */ }
 
 "gun"							{ return (KEYWORD_GUN); }
+"affector"						{ return (KEYWORD_AFFECTOR); }
 "function"						{ return (KEYWORD_FUNCTION); }
 "state"							{ return (KEYWORD_STATE); }
 "loop"							{ return (KEYWORD_LOOP); }
