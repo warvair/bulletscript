@@ -2,11 +2,12 @@
 #define __BS_GUN_H__
 
 #include "bsPrerequisites.h"
-#include "bsScriptStructs.h"
-#include "bsScriptMachine.h"
+#include "bsCore.h"
+#include "bsGunDefinition.h"
 
 namespace BS_NMSP
 {
+	class ScriptMachine;
 
 	class _BSAPI Gun : public DeepMemoryPoolObject
 	{

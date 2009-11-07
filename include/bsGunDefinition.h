@@ -3,8 +3,7 @@
 
 #include <vector>
 #include "bsPrerequisites.h"
-#include "bsScriptStructs.h"
-#include "bsScriptVariables.h"
+#include "bsCore.h"
 #include "bsAffector.h"
 #include "bsBytecode.h"
 

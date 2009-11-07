@@ -3,8 +3,6 @@
 
 #define BS_NMSP							bs
 
-#define BS_USE_BOOST
-
 // value type
 namespace BS_NMSP
 {

@@ -60,7 +60,7 @@ int main (int argc, char **argv)
 	machine.registerProperty("bullet", "green",	BulletBattery::setGreen, BulletBattery::getGreen);
 	machine.registerProperty("bullet", "blue", BulletBattery::setBlue, BulletBattery::getBlue);
 	machine.registerProperty("bullet", "alpha",	BulletBattery::setFade,	BulletBattery::getFade);
-	machine.registerAffector("bullet", "gravity", BulletBattery::gravity);
+	machine.registerAffector("bullet", "Gravity", BulletBattery::gravity);
 
 	// Register area functions
 	machine.createType("area");

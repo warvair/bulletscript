@@ -4,7 +4,7 @@
 #include <vector>
 #include <list>
 #include "bsPrerequisites.h"
-#include "bsScriptStructs.h"
+#include "bsCore.h"
 
 namespace BS_NMSP
 {

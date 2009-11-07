@@ -195,6 +195,10 @@
 				>
 			</File>
 			<File
+				RelativePath="..\src\bsCore.cpp"
+				>
+			</File>
+			<File
 				RelativePath="..\src\bsFireType.cpp"
 				>
 			</File>
@@ -220,10 +224,6 @@
 			</File>
 			<File
 				RelativePath="..\src\bsScriptMachine.cpp"
-				>
-			</File>
-			<File
-				RelativePath="..\src\bsScriptStructs.cpp"
 				>
 			</File>
 			<File
@@ -269,6 +269,10 @@
 				>
 			</File>
 			<File
+				RelativePath="..\include\bsCore.h"
+				>
+			</File>
+			<File
 				RelativePath="..\include\bsDeepMemoryPool.h"
 				>
 			</File>
@@ -302,10 +306,6 @@
 			</File>
 			<File
 				RelativePath="..\include\bsScriptMachine.h"
-				>
-			</File>
-			<File
-				RelativePath="..\include\bsScriptStructs.h"
 				>
 			</File>
 			<File

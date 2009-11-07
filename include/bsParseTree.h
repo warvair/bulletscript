@@ -2,26 +2,29 @@
 #define __BS_PARSETREE_H__
 
 #include "bsPrerequisites.h"
-#include "bsScriptStructs.h"
+#include "bsCore.h"
 #include "bsGunDefinition.h"
 
 namespace BS_NMSP
 {
 	enum
 	{
-		NameNode,
-		MemberNode,
-		FunctionNode,
-		StateNode
+		PT_MemberNode,
+		PT_AffectorNode,
+		PT_FunctionNode,
+		PT_StateNode
 	};
 
 	// Node types
-	enum PTodeType
+	enum PT_NodeType
 	{
 		PT_Null,
 		PT_GunDefinitionList,
 		PT_GunDefinition,
 		PT_MemberList,
+		PT_AffectorDeclList,
+		PT_AffectorDecl,
+		PT_AffectorCall,
 		PT_FunctionList,
 		PT_Function,
 		PT_FunctionArg,
@@ -67,7 +70,7 @@ namespace BS_NMSP
 	class ScriptMachine;
 	class ParseTree;
 
-	class _BSAPI ParseTreeNode
+	class ParseTreeNode
 	{
 	public:
 
@@ -116,6 +119,8 @@ namespace BS_NMSP
 
 		~ParseTreeNode();
 
+		void _setType(int type);
+
 		void setChild(int index, ParseTreeNode* node);
 
 		ParseTreeNode* getChild(int index) const;
@@ -143,7 +148,7 @@ namespace BS_NMSP
 
 	class FireType;
 
-	class _BSAPI ParseTree
+	class ParseTree
 	{
 		static ScriptMachine* mScriptMachine;
 
@@ -166,6 +171,8 @@ namespace BS_NMSP
 
 		void addMemberVariables(GunDefinition* def, const MemberVariableDeclarationMap& memberDecls);
 
+		void createAffectors(GunDefinition* def, ParseTreeNode* node);
+
 		void countFunctionCallArguments(ParseTreeNode* node, int& numArguments);
 
 		void addFunctionArguments(GunDefinition* def, ParseTreeNode* node, 
@@ -177,14 +184,20 @@ namespace BS_NMSP
 
 		void createStates(GunDefinition* def, ParseTreeNode* node);
 
+		void _checkFireStatements(GunDefinition* def, ParseTreeNode* node, const String& type);
+
 		void checkFireStatements(GunDefinition* def, ParseTreeNode* node);
 
-		void checkFireControllers(GunDefinition* def, ParseTreeNode* node, int& ctrls, int& affectors);
+		void checkFireControllers(GunDefinition* def, ParseTreeNode* node, int& ctrls, 
+			FireType* ft);
 
 		void checkFunctionProperties(ParseTreeNode* node, FireType* type);
 
 		// Code generation
 		void createMemberVariableBytecode(GunDefinition* def, ParseTreeNode* node, bool first);
+
+		void generateFireTail(GunDefinition* def, ParseTreeNode* node, BytecodeBlock* bytecode, 
+			FireType* ft);
 
 		void generateBytecode(GunDefinition* def, ParseTreeNode* node, BytecodeBlock* bytecode,
 			bool reset = false);
@@ -225,10 +238,10 @@ namespace BS_NMSP
 			const String& blockType, const String& blockName);
 
 		CodeRecord* getCodeRecord(const String& type, const String& typeName,
-			const String& blockType, const String& blockName);
+			const String& blockType, const String& blockName) const;
 
 		int getCodeRecordIndex(const String& type, const String& typeName,
-			const String& blockType, const String& blockName);
+			const String& blockType, const String& blockName) const;
 
 		void print(ParseTreeNode* node, int indent);
 
@@ -237,12 +250,21 @@ namespace BS_NMSP
 		// Helpers for building
 		std::vector<String> mCodeblockNames;
 
+		struct AffectorInfo
+		{
+			String name;
+			String function;
+			ParseTreeNode* node;
+		};
+
+		std::vector<AffectorInfo> mAffectors;
+
 		std::list<int> mStateIndices;
 
 		std::list<int> mFunctionIndices;
 
 		String getCodeRecordName(const String& type, const String& typeName,
-			const String& blockType, const String& blockName);
+			const String& blockType, const String& blockName) const;
 	};
 
 }

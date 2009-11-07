@@ -5,22 +5,19 @@
 #include <map>
 #include <list>
 #include "bsPrerequisites.h"
+#include "bsCore.h"
 #include "bsScriptVariables.h"
-#include "bsScriptStructs.h"
+#include "bsFireType.h"
+#include "bsGun.h"
 #include "bsGunDefinition.h"
 #include "bsDeepMemoryPool.h"
 #include "bsLog.h"
 
 namespace BS_NMSP
 {
-	typedef void (*NativeFunction)(ScriptState&);
-
-	class Gun;
 	class TypeManager;
-	struct FireTypeControl;
-	class FireType;
 
-	class _BSAPI ScriptMachine
+	class ScriptMachine
 	{
 		friend class Machine;
 		friend class ParseTree;
