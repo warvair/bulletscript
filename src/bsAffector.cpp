@@ -35,12 +35,12 @@ const String& Affector::getName() const
 	return mName;
 }
 // --------------------------------------------------------------------------------
-void Affector::recalculateArguments(GunScriptRecord* record)
+void Affector::recalculateArguments()
 {
 	mState.curInstruction = 0;
 	mState.stackHead = 0;
 	mScriptMachine->interpretCode(mBytecode, mBytecodeSize, mState, 0, 0,
-		record->members[Member_X], record->members[Member_Y], record->members, 0, false);
+		bsvalue0, bsvalue0, 0, false);
 
 	if (!mbRecalculateAlways)
 		mbRecalculate = false;
@@ -54,7 +54,7 @@ void Affector::recalculateAlways(bool always)
 void Affector::execute(UserTypeBase* object, float frameTime)
 {
 	if (mbRecalculate)
-		recalculateArguments(object->__ft->__gun->mRecord);
+		recalculateArguments();
 
 	mFunction(object, frameTime, mState.stack + mState.stackHead);
 }

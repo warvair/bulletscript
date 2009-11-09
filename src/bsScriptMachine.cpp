@@ -437,7 +437,7 @@ bool ScriptMachine::checkInstructionPosition(ScriptState& st, size_t length, boo
 // --------------------------------------------------------------------------------
 void ScriptMachine::interpretCode(const uint32* code, size_t length, ScriptState& st, 
 								  int* curState, FireTypeControl* record, bstype x, 
-								  bstype y, bstype* members, Gun* gun, bool loop)
+								  bstype y, bstype* members, bool loop)
 {
 	if (st.curInstruction >= length)
 		return;
@@ -483,8 +483,7 @@ void ScriptMachine::interpretCode(const uint32* code, size_t length, ScriptState
 			{
 				bstype value = st.stack[st.stackHead - 1];
 				int index = code[st.curInstruction + 1];
-
-				gun->setMember(index, value);
+				members[index] = value;
 				st.stackHead--;
 				st.curInstruction += 2;
 			}			
@@ -722,7 +721,7 @@ void ScriptMachine::interpretCode(const uint32* code, size_t length, ScriptState
 			{
 				int fireType = code[st.curInstruction + 1];
 				FireType* ft = mTypeManager->getType(fireType);
-				st.curInstruction += ft->processCode(code, st, gun, x, y, members);
+				st.curInstruction += ft->processCode(code, st, x, y, members);
 			}
 			break;
 
@@ -845,7 +844,7 @@ void ScriptMachine::processGunState(GunScriptRecord* gsr, Gun* gun)
 	size_t bytecodeLen = rec->byteCodeSize;
 
 	interpretCode(bytecode, bytecodeLen, gsr->scriptState, &gsr->curState, 0,
-		gsr->members[Member_X], gsr->members[Member_Y], gsr->members, gun, true);
+		gsr->members[Member_X], gsr->members[Member_Y], gsr->members, true);
 }
 // --------------------------------------------------------------------------------
 void ScriptMachine::processConstantExpression(const uint32* code, 
@@ -853,7 +852,7 @@ void ScriptMachine::processConstantExpression(const uint32* code,
 											  GunScriptRecord* gsr)
 {
 	interpretCode(code, length, gsr->scriptState, &gsr->curState, 0,
-		gsr->members[Member_X], gsr->members[Member_Y], gsr->members, 0, false);
+		bsvalue0, bsvalue0, gsr->members, false);
 }
 // --------------------------------------------------------------------------------
 }
