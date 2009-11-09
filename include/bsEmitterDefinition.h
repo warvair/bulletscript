@@ -1,5 +1,5 @@
-#ifndef __BS_GUNDEFINITION_H__
-#define __BS_GUNDEFINITION_H__
+#ifndef __BS_EMITTERDEFINITION_H__
+#define __BS_EMITTERDEFINITION_H__
 
 #include <vector>
 #include "bsPrerequisites.h"
@@ -14,7 +14,7 @@ namespace BS_NMSP
 
 	class ParseTreeNode;
 
-	class _BSAPI GunDefinition
+	class _BSAPI EmitterDefinition
 	{
 	public:
 
@@ -37,9 +37,9 @@ namespace BS_NMSP
 			String name;
 		};
 
-		explicit GunDefinition(const String& name);
+		explicit EmitterDefinition(const String& name);
 
-		virtual ~GunDefinition();
+		virtual ~EmitterDefinition();
 
 		const String& getName() const;
 
@@ -87,7 +87,7 @@ namespace BS_NMSP
 		void finaliseConstructor();
 
 		// Core
-		GunScriptRecord* createGunScriptRecord(ScriptMachine* sm);
+		EmitterScriptRecord* createEmitterScriptRecord(ScriptMachine* sm);
 
 	private:
 
@@ -105,7 +105,7 @@ namespace BS_NMSP
 
 		int mNumUserMembers;
 
-		// General info for setting up Gun
+		// General info for setting up Emitter
 		int mMaxLocals;
 
 		int mInitialState;

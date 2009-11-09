@@ -4,7 +4,7 @@
 #include "bsPrerequisites.h"
 #include "bsBytecode.h"
 #include "bsCore.h"
-#include "bsGun.h"
+#include "bsEmitter.h"
 #include "bsParseTree.h"
 #include "bsDeepMemoryPool.h"
 
@@ -40,7 +40,7 @@ namespace BS_NMSP
 		// Internal
 		FireType* __type;
 		UserTypeBase* __object;	// Pointer to the current object that owns this FireTypeControl
-		int __gunDef;			// GunDefinition index
+		int __emitterDefinition;			// EmitterDefinition index
 
 		FireTypeControl(int numLocals) :
 			code(0),
@@ -48,7 +48,7 @@ namespace BS_NMSP
 			numAffectors(0),
 			__type(0),
 			__object(0),
-			__gunDef(-1)
+			__emitterDefinition(-1)
 		{
 			if (numLocals > 0)
 				state.locals = new bstype[numLocals];
@@ -109,10 +109,10 @@ namespace BS_NMSP
 
 		int getNumFireFunctionArguments(const String& name) const;
 
-		void getControllers(GunDefinition* def, ParseTreeNode* node,
+		void getControllers(EmitterDefinition* def, ParseTreeNode* node,
 			String& callName, int& funcIndex, std::vector<int>& affectors);
 
-		void generateBytecode(GunDefinition* def, ParseTreeNode* node,
+		void generateBytecode(EmitterDefinition* def, ParseTreeNode* node,
 			BytecodeBlock* code, const String& funcName);
 
 		int processCode(const uint32* code, ScriptState& state, bstype x, 

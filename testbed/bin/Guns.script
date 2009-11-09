@@ -1,4 +1,4 @@
-gun Flower
+emitter Flower
 {
 	fl_angle = 0;
 	fl_speed = 2;
@@ -79,7 +79,7 @@ gun Flower
 
 }
 /*
-gun Stalk
+emitter Stalk
 {
 
 	twirl = function()
@@ -114,7 +114,7 @@ gun Stalk
 }
 
 
-gun Float
+emitter Float
 {
 	wind = 1.5;
 

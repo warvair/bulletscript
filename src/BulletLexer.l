@@ -36,10 +36,12 @@ BINARY    	[0-1]
 
 "//"[^\n]*                      { /* process comments */ }
 
-"gun"							{ return (KEYWORD_GUN); }
+"controller"					{ return (KEYWORD_CONTROLLER); }
+"emitter"						{ return (KEYWORD_EMITTER); }
 "affector"						{ return (KEYWORD_AFFECTOR); }
 "function"						{ return (KEYWORD_FUNCTION); }
 "state"							{ return (KEYWORD_STATE); }
+"event"							{ return (KEYWORD_EVENT); }
 "loop"							{ return (KEYWORD_LOOP); }
 "while"							{ return (KEYWORD_WHILE); }
 "if"							{ return (KEYWORD_IF); }

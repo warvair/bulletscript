@@ -1,12 +1,12 @@
 #include <iostream>
-#include "bsGunDefinition.h"
+#include "bsEmitterDefinition.h"
 #include "bsScriptMachine.h"
 
 namespace BS_NMSP
 {
 
 // --------------------------------------------------------------------------------
-GunDefinition::GunDefinition(const String& name) :
+EmitterDefinition::EmitterDefinition(const String& name) :
 	mName(name),
 	m_constructCode(0),
 	m_constructSize(0),
@@ -16,27 +16,27 @@ GunDefinition::GunDefinition(const String& name) :
 {
 }
 // --------------------------------------------------------------------------------
-GunDefinition::~GunDefinition()
+EmitterDefinition::~EmitterDefinition()
 {
 	delete[] m_constructCode;
 }
 // --------------------------------------------------------------------------------
-const String& GunDefinition::getName() const
+const String& EmitterDefinition::getName() const
 {
 	return mName;
 }
 // --------------------------------------------------------------------------------
-void GunDefinition::setMaxLocalVariables(int count)
+void EmitterDefinition::setMaxLocalVariables(int count)
 {
 	mMaxLocals = count;
 }
 // --------------------------------------------------------------------------------
-int GunDefinition::getMaxLocalVariables() const
+int EmitterDefinition::getMaxLocalVariables() const
 {
 	return mMaxLocals;
 }
 // --------------------------------------------------------------------------------
-void GunDefinition::addMemberVariable(const String& name, bool readonly, bstype value)
+void EmitterDefinition::addMemberVariable(const String& name, bool readonly, bstype value)
 {
 	MemberVariable var;
 	var.name = name;
@@ -46,12 +46,12 @@ void GunDefinition::addMemberVariable(const String& name, bool readonly, bstype 
 	mVariables.push_back(var);
 }
 // --------------------------------------------------------------------------------
-GunDefinition::MemberVariable& GunDefinition::getMemberVariable(int index)
+EmitterDefinition::MemberVariable& EmitterDefinition::getMemberVariable(int index)
 {
 	return mVariables[index];
 }
 // --------------------------------------------------------------------------------
-int GunDefinition::getMemberVariableIndex(const String& name) const
+int EmitterDefinition::getMemberVariableIndex(const String& name) const
 {
 	for (int i = 0; i < getNumMemberVariables(); ++i)
 	{
@@ -62,22 +62,22 @@ int GunDefinition::getMemberVariableIndex(const String& name) const
 	return -1;
 }
 // --------------------------------------------------------------------------------
-int GunDefinition::getNumMemberVariables() const
+int EmitterDefinition::getNumMemberVariables() const
 {
 	return (int) mVariables.size();
 }
 // --------------------------------------------------------------------------------
-void GunDefinition::setNumUserMembers(int count)
+void EmitterDefinition::setNumUserMembers(int count)
 {
 	mNumUserMembers = count;
 }
 // --------------------------------------------------------------------------------
-int GunDefinition::getNumUserMembers() const
+int EmitterDefinition::getNumUserMembers() const
 {
 	return mNumUserMembers;
 }
 // --------------------------------------------------------------------------------
-GunDefinition::Function& GunDefinition::addFunction(const String& name, ParseTreeNode* node)
+EmitterDefinition::Function& EmitterDefinition::addFunction(const String& name, ParseTreeNode* node)
 {
 	Function func;
 	func.name = name;
@@ -89,12 +89,12 @@ GunDefinition::Function& GunDefinition::addFunction(const String& name, ParseTre
 	return mFunctions[getNumFunctions() - 1];
 }
 // --------------------------------------------------------------------------------
-GunDefinition::Function& GunDefinition::getFunction(int index)
+EmitterDefinition::Function& EmitterDefinition::getFunction(int index)
 {
 	return mFunctions[index];
 }
 // --------------------------------------------------------------------------------
-int GunDefinition::getFunctionIndex(const String& name) const
+int EmitterDefinition::getFunctionIndex(const String& name) const
 {
 	for (int i = 0; i < getNumFunctions(); ++i)
 	{
@@ -105,12 +105,12 @@ int GunDefinition::getFunctionIndex(const String& name) const
 	return -1;
 }
 // --------------------------------------------------------------------------------
-int GunDefinition::getNumFunctions() const
+int EmitterDefinition::getNumFunctions() const
 {
 	return (int) mFunctions.size();
 }
 // --------------------------------------------------------------------------------
-GunDefinition::State& GunDefinition::addState(const String& name)
+EmitterDefinition::State& EmitterDefinition::addState(const String& name)
 {
 	State state;
 	state.name = name;
@@ -120,12 +120,12 @@ GunDefinition::State& GunDefinition::addState(const String& name)
 	return mStates[getNumStates() - 1];
 }
 // --------------------------------------------------------------------------------
-GunDefinition::State& GunDefinition::getState(int index)
+EmitterDefinition::State& EmitterDefinition::getState(int index)
 {
 	return mStates[index];
 }
 // --------------------------------------------------------------------------------
-int GunDefinition::getStateIndex(const String& name) const
+int EmitterDefinition::getStateIndex(const String& name) const
 {
 	for (int i = 0; i < getNumStates(); ++i)
 	{
@@ -136,22 +136,22 @@ int GunDefinition::getStateIndex(const String& name) const
 	return -1;
 }
 // --------------------------------------------------------------------------------
-int GunDefinition::getNumStates() const
+int EmitterDefinition::getNumStates() const
 {
 	return (int) mStates.size();
 }
 // --------------------------------------------------------------------------------
-void GunDefinition::setInitialState(int state)
+void EmitterDefinition::setInitialState(int state)
 {
 	mInitialState = state;
 }
 // --------------------------------------------------------------------------------
-void GunDefinition::appendConstructionCode(const BytecodeBlock& code)
+void EmitterDefinition::appendConstructionCode(const BytecodeBlock& code)
 {
 	m_constructor.insert(m_constructor.end(), code.begin(), code.end());
 }
 // --------------------------------------------------------------------------------
-void GunDefinition::finaliseConstructor()
+void EmitterDefinition::finaliseConstructor()
 {
 	m_constructSize = m_constructor.size();
 	if (m_constructSize > 0)
@@ -162,9 +162,9 @@ void GunDefinition::finaliseConstructor()
 	}
 }
 // --------------------------------------------------------------------------------
-GunScriptRecord* GunDefinition::createGunScriptRecord(ScriptMachine* sm)
+EmitterScriptRecord* EmitterDefinition::createEmitterScriptRecord(ScriptMachine* sm)
 {
-	GunScriptRecord* record = new GunScriptRecord(mMaxLocals);
+	EmitterScriptRecord* record = new EmitterScriptRecord(mMaxLocals);
 
 	// Allocate space for member vars, and set where possible
 	int numMembers = getNumMemberVariables();

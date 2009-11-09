@@ -11,7 +11,7 @@ private:
 
 	float mX, mY;
 
-	bs::Gun* mGun;
+	bs::Emitter* mGun;
 
 public:
 

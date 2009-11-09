@@ -1,52 +1,52 @@
-#include "bsGun.h"
+#include "bsEmitter.h"
 #include "bsScriptMachine.h"
 
 namespace BS_NMSP
 {
 
 // --------------------------------------------------------------------------------
-Gun::Gun(ScriptMachine* scriptMachine) :
+Emitter::Emitter(ScriptMachine* scriptMachine) :
 	mScriptMachine(scriptMachine),
 	mRecord(0)
 {
 }
 // --------------------------------------------------------------------------------
-Gun::~Gun()
+Emitter::~Emitter()
 {
 	delete mRecord;
 }
 // --------------------------------------------------------------------------------
-void Gun::setDefinition(GunDefinition* def)
+void Emitter::setDefinition(EmitterDefinition* def)
 {
 	if (mRecord)
 		delete mRecord;
 
-	mRecord = def->createGunScriptRecord(mScriptMachine);
+	mRecord = def->createEmitterScriptRecord(mScriptMachine);
 }
 // --------------------------------------------------------------------------------
-void Gun::setX(bstype x)
+void Emitter::setX(bstype x)
 {
 	setMember(Member_X, x);
 }
 // --------------------------------------------------------------------------------
-void Gun::setY(bstype y)
+void Emitter::setY(bstype y)
 {
 	setMember(Member_Y, y);
 }
 // --------------------------------------------------------------------------------
-void Gun::setAngle(bstype angle)
+void Emitter::setAngle(bstype angle)
 {
 	setMember(Member_Angle, angle);
 }
 // --------------------------------------------------------------------------------
-void Gun::setMember(int member, bstype value)
+void Emitter::setMember(int member, bstype value)
 {
 	mRecord->members[member] = value;
 }
 // --------------------------------------------------------------------------------
-void Gun::runScript(float frameTime)
+void Emitter::runScript(float frameTime)
 {
-	mScriptMachine->processGunState(mRecord, this);
+	mScriptMachine->processEmitterState(mRecord);
 	if (mRecord->scriptState.suspendTime > 0)
 		mRecord->scriptState.suspendTime -= frameTime;
 }

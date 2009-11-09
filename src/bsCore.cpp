@@ -49,7 +49,7 @@ ScriptState::ScriptState() :
 {
 }
 // --------------------------------------------------------------------------------
-GunScriptRecord::GunScriptRecord(int numLocals) :
+EmitterScriptRecord::EmitterScriptRecord(int numLocals) :
 	curState(0),
 	members(0)
 {
@@ -62,7 +62,7 @@ GunScriptRecord::GunScriptRecord(int numLocals) :
 		scriptState.locals = new bstype[numLocals];
 }
 // --------------------------------------------------------------------------------
-GunScriptRecord::~GunScriptRecord()
+EmitterScriptRecord::~EmitterScriptRecord()
 {
 	delete[] members;
 	delete[] scriptState.locals;

@@ -145,13 +145,13 @@ int main (int argc, char **argv)
 	std::cout << "[Esc] Quit." << std::endl;
 	std::cout << "[Mouse, cursors] Move ship." << std::endl;
 
-	Gun* gun;
+	Emitter* gun;
 
 	// Create a gun
 
 	for (int i = 0; i < 1; ++i)
 	{
-		gun = machine.createGun("Flower");
+		gun = machine.createEmitter("Flower");
 		gun->setX(400);
 		gun->setY(300);
 		gun->setAngle(180);

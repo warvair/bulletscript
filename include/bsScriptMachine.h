@@ -8,8 +8,8 @@
 #include "bsCore.h"
 #include "bsScriptVariables.h"
 #include "bsFireType.h"
-#include "bsGun.h"
-#include "bsGunDefinition.h"
+#include "bsEmitter.h"
+#include "bsEmitterDefinition.h"
 #include "bsDeepMemoryPool.h"
 #include "bsLog.h"
 
@@ -43,18 +43,18 @@ namespace BS_NMSP
 		// Member variable declarations
 		MemberVariableDeclarationMap mMemberVariableDeclarations;
 
-		// Gun Definitions and pools
-		struct GunRecord
+		// Emitter Definitions and pools
+		struct EmitterRecord
 		{
 			String name;
-			GunDefinition* def;
+			EmitterDefinition* def;
 			DeepMemoryPool<FireTypeControl, int>* pool;
 		};
 		
-		typedef std::vector<GunRecord> GunRecordList;
-		GunRecordList mGunRecords;
+		typedef std::vector<EmitterRecord> EmitterRecordList;
+		EmitterRecordList mEmitterRecords;
 
-		DeepMemoryPool<Gun, ScriptMachine*>* mGuns;
+		DeepMemoryPool<Emitter, ScriptMachine*>* mEmitters;
 
 		// Global property list
 		std::vector<String> mProperties;
@@ -78,12 +78,12 @@ namespace BS_NMSP
 
 		~ScriptMachine();
 
-		// Guns
-		Gun* createGun(const String& definition);
+		// Emitters
+		Emitter* createEmitter(const String& definition);
 
-		void destroyGun(Gun* gun);
+		void destroyEmitter(Emitter* emit);
 
-		void updateGuns(float frameTime);
+		void updateEmitters(float frameTime);
 
 		// CodeRecords
 		void createCodeRecord();
@@ -127,25 +127,25 @@ namespace BS_NMSP
 
 		GlobalVariable *getGlobalVariable(int index);
 
-		// Gun Definitions
-		bool addGunDefinition(const String &name, GunDefinition* def);
+		// Emitter Definitions
+		bool addEmitterDefinition(const String &name, EmitterDefinition* def);
 
-		GunDefinition* getGunDefinition(const String &name) const;
+		EmitterDefinition* getEmitterDefinition(const String &name) const;
 
-		int getNumGunDefinitions() const;
+		int getNumEmitterDefinitions() const;
 
 		// Script state processing
 		void interpretCode(const uint32* code, size_t length, ScriptState& st, int* curState, 
 			FireTypeControl* record, bstype x, bstype y, bstype* members, bool loop);
 
-		void processGunState(GunScriptRecord* gsr, Gun* gun);
+		void processEmitterState(EmitterScriptRecord* gsr);
 
-		void processConstantExpression(const uint32* code, size_t length, GunScriptRecord* gsr);
+		void processConstantExpression(const uint32* code, size_t length, EmitterScriptRecord* gsr);
 
 		// Compilation
 		int compileScript(uint8* buffer, size_t bufferSize);
 
-		void declareMemberVariable(const String& gun, const String& var, bstype value);
+		void declareMemberVariable(const String& emit, const String& var, bstype value);
 
 		// Errors
 		void addErrorMsg (const String& msg);

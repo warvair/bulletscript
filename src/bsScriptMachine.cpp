@@ -6,7 +6,7 @@
 #include "bsParseTree.h"
 #include "bsBytecode.h"
 #include "bsTypeManager.h"
-#include "bsGun.h"
+#include "bsEmitter.h"
 
 #if BS_PLATFORM == BS_PLATFORM_LINUX
 #	include <stdlib.h> // for rand()
@@ -43,7 +43,7 @@ ScriptMachine::ScriptMachine(Log* _log) :
 	// Register functions
 	registerNativeFunction("rand", bm_rand);
 
-	mGuns = new DeepMemoryPool<Gun, ScriptMachine*>(32, this);
+	mEmitters = new DeepMemoryPool<Emitter, ScriptMachine*>(32, this);
 
 	// Set up AST
 	ParseTree::setMachines(this);
@@ -51,8 +51,8 @@ ScriptMachine::ScriptMachine(Log* _log) :
 // --------------------------------------------------------------------------------
 ScriptMachine::~ScriptMachine()
 {
-	// Delete Guns
-	delete mGuns;
+	// Delete Emitters
+	delete mEmitters;
 
 	delete ParseTree::instancePtr();
 
@@ -66,10 +66,10 @@ ScriptMachine::~ScriptMachine()
 		}
 	}
 
-	// Delete GunDefinitions
+	// Delete EmitterDefinitions
 	{
-		GunRecordList::iterator it = mGunRecords.begin();
-		while (it != mGunRecords.end())
+		EmitterRecordList::iterator it = mEmitterRecords.begin();
+		while (it != mEmitterRecords.end())
 		{
 			delete (*it).def;
 			delete (*it).pool;
@@ -93,37 +93,37 @@ void ScriptMachine::setTypeManager(TypeManager* typeMan)
 	mTypeManager = typeMan;
 }
 // --------------------------------------------------------------------------------
-Gun* ScriptMachine::createGun(const String& definition)
+Emitter* ScriptMachine::createEmitter(const String& definition)
 {
-	GunDefinition* def = getGunDefinition(definition);
+	EmitterDefinition* def = getEmitterDefinition(definition);
 
-	Gun* gun = 0;
+	Emitter* emit = 0;
 	if (def)
 	{
-		gun = mGuns->acquire();
-		gun->setDefinition(def);
+		emit = mEmitters->acquire();
+		emit->setDefinition(def);
 	}
 	else
 	{
 		// Error
-		mLog->addEntry("Could not find Gun definition '" + definition + "'.");
+		mLog->addEntry("Could not find Emitter definition '" + definition + "'.");
 	}
 
-	return gun;
+	return emit;
 }
 // --------------------------------------------------------------------------------
-void ScriptMachine::destroyGun(Gun* gun)
+void ScriptMachine::destroyEmitter(Emitter* emit)
 {
-	mGuns->release(gun);
+	mEmitters->release(emit);
 }
 // --------------------------------------------------------------------------------
-void ScriptMachine::updateGuns(float frameTime)
+void ScriptMachine::updateEmitters(float frameTime)
 {
-	Gun* gun = mGuns->getFirst();
-	while (gun)
+	Emitter* emit = mEmitters->getFirst();
+	while (emit)
 	{
-		gun->runScript(frameTime);
-		gun = mGuns->getNext(gun);
+		emit->runScript(frameTime);
+		emit = mEmitters->getNext(emit);
 	}
 }
 // --------------------------------------------------------------------------------
@@ -147,11 +147,11 @@ int ScriptMachine::getNumCodeRecords() const
 // --------------------------------------------------------------------------------
 FireTypeControl* ScriptMachine::getFireTypeRecord(int index)
 {
-	assert(index >= 0 && index < mGunRecords.size() && 
+	assert(index >= 0 && index < mEmitterRecords.size() && 
 		"ScriptMachine::getFireTypeRecord: out of bounds.");
 
-	FireTypeControl* rec = mGunRecords[index].pool->acquire();
-	rec->__gunDef = index;
+	FireTypeControl* rec = mEmitterRecords[index].pool->acquire();
+	rec->__emitterDefinition = index;
 	rec->activeProperties = 0;
 	rec->state.curInstruction = 0;
 	rec->state.stackHead = 0;
@@ -162,10 +162,10 @@ FireTypeControl* ScriptMachine::getFireTypeRecord(int index)
 // --------------------------------------------------------------------------------
 void ScriptMachine::releaseFireTypeRecord(int index, FireTypeControl* rec)
 {
-	assert(index >= 0 && index < mGunRecords.size() && 
+	assert(index >= 0 && index < mEmitterRecords.size() && 
 		"ScriptMachine::releaseFireTypeRecord: out of bounds.");
 
-	mGunRecords[index].pool->release(rec);
+	mEmitterRecords[index].pool->release(rec);
 }
 // --------------------------------------------------------------------------------
 void ScriptMachine::registerNativeFunction(const String& name, NativeFunction func)
@@ -278,17 +278,17 @@ GlobalVariable* ScriptMachine::getGlobalVariable(int index)
 	return mGlobals[index];
 }
 // --------------------------------------------------------------------------------
-bool ScriptMachine::addGunDefinition(const String& name, GunDefinition* def)
+bool ScriptMachine::addEmitterDefinition(const String& name, EmitterDefinition* def)
 {
-	GunRecordList::iterator it = mGunRecords.begin();
-	while (it != mGunRecords.end())
+	EmitterRecordList::iterator it = mEmitterRecords.begin();
+	while (it != mEmitterRecords.end())
 	{
 		if ((*it).name == def->getName())
 			return false;
 		++it;
 	}
 
-	GunRecord rec;
+	EmitterRecord rec;
 	rec.name = def->getName();
 	rec.def = def;
 
@@ -296,15 +296,15 @@ bool ScriptMachine::addGunDefinition(const String& name, GunDefinition* def)
 	int maxLocals = def->getMaxLocalVariables();
 	rec.pool = new DeepMemoryPool<FireTypeControl, int>(128, maxLocals);
 
-	mGunRecords.push_back(rec);
+	mEmitterRecords.push_back(rec);
 
 	return true;
 }
 // --------------------------------------------------------------------------------
-GunDefinition* ScriptMachine::getGunDefinition(const String& name) const
+EmitterDefinition* ScriptMachine::getEmitterDefinition(const String& name) const
 {
-	GunRecordList::const_iterator it = mGunRecords.begin();
-	while (it != mGunRecords.end())
+	EmitterRecordList::const_iterator it = mEmitterRecords.begin();
+	while (it != mEmitterRecords.end())
 	{
 		if ((*it).name == name)
 			return (*it).def;
@@ -314,9 +314,9 @@ GunDefinition* ScriptMachine::getGunDefinition(const String& name) const
 	return 0;
 }
 // --------------------------------------------------------------------------------
-int ScriptMachine::getNumGunDefinitions() const
+int ScriptMachine::getNumEmitterDefinitions() const
 {
-	return (int) mGunRecords.size();
+	return (int) mEmitterRecords.size();
 }
 // --------------------------------------------------------------------------------
 int ScriptMachine::compileScript(uint8* buffer, size_t bufferSize)
@@ -348,8 +348,8 @@ int ScriptMachine::compileScript(uint8* buffer, size_t bufferSize)
 
 //	ast->print(ast->getRootNode(), 0);
 
-	// Create the GunScriptDefinitions
-	ast->createGunDefinitions(ast->getRootNode(), mMemberVariableDeclarations);
+	// Create the EmitterScriptDefinitions
+	ast->createEmitterDefinitions(ast->getRootNode(), mMemberVariableDeclarations);
 
 	numParseErrors = ast->getNumErrors();
 	if (numParseErrors > 0)
@@ -358,30 +358,30 @@ int ScriptMachine::compileScript(uint8* buffer, size_t bufferSize)
 	return 0;
 }
 // --------------------------------------------------------------------------------
-void ScriptMachine::declareMemberVariable(const String& gun, const String& var, bstype value)
+void ScriptMachine::declareMemberVariable(const String& emit, const String& var, bstype value)
 {
-	// Add a declaration to the named gun
-	MemberVariableDeclarationMap::iterator it = mMemberVariableDeclarations.find(gun);
+	// Add a declaration to the named emitter
+	MemberVariableDeclarationMap::iterator it = mMemberVariableDeclarations.find(emit);
 	if (it == mMemberVariableDeclarations.end())
 	{
 		// The key doesn't exist, so we can safely add the variable
 		MemberVariableDeclaration decl;
 		decl.name = var;
 		decl.value = value;
-		mMemberVariableDeclarations.insert(std::pair<String, MemberVariableDeclaration>(gun, decl));
+		mMemberVariableDeclarations.insert(std::pair<String, MemberVariableDeclaration>(emit, decl));
 	}
 	else
 	{
 		// Key exists, so see if the variable already exists.
 		typedef MemberVariableDeclarationMap::iterator declIt;
-		std::pair<declIt, declIt> range = mMemberVariableDeclarations.equal_range(gun);
+		std::pair<declIt, declIt> range = mMemberVariableDeclarations.equal_range(emit);
 
 		while (range.first != range.second)
 		{
 			if (range.first->second.name == var)
 			{
 				// Print to error log
-				addErrorMsg("Member variable '" + var + "' already declared in '" + gun + "'.");
+				addErrorMsg("Member variable '" + var + "' already declared in '" + emit + "'.");
 				return;
 			}
 
@@ -391,7 +391,7 @@ void ScriptMachine::declareMemberVariable(const String& gun, const String& var, 
 		MemberVariableDeclaration decl;
 		decl.name = var;
 		decl.value = value;
-		mMemberVariableDeclarations.insert(std::pair<String, MemberVariableDeclaration>(gun, decl));
+		mMemberVariableDeclarations.insert(std::pair<String, MemberVariableDeclaration>(emit, decl));
 	}	
 }
 // --------------------------------------------------------------------------------
@@ -834,7 +834,7 @@ void ScriptMachine::interpretCode(const uint32* code, size_t length, ScriptState
 	return;
 }
 // --------------------------------------------------------------------------------
-void ScriptMachine::processGunState(GunScriptRecord* gsr, Gun* gun)
+void ScriptMachine::processEmitterState(EmitterScriptRecord* gsr)
 {
 	if (gsr->scriptState.suspendTime > 0)
 		return;
@@ -849,7 +849,7 @@ void ScriptMachine::processGunState(GunScriptRecord* gsr, Gun* gun)
 // --------------------------------------------------------------------------------
 void ScriptMachine::processConstantExpression(const uint32* code, 
 											  size_t length, 
-											  GunScriptRecord* gsr)
+											  EmitterScriptRecord* gsr)
 {
 	interpretCode(code, length, gsr->scriptState, &gsr->curState, 0,
 		bsvalue0, bsvalue0, gsr->members, false);

@@ -1,5 +1,5 @@
 #include "bsFireType.h"
-#include "bsGun.h"
+#include "bsEmitter.h"
 #include "bsScriptMachine.h"
 
 namespace BS_NMSP
@@ -165,7 +165,7 @@ void FireType::applyAffector(UserTypeBase* object, int index, float frameTime)
 	mAffectorInstances[index]->execute(object, frameTime);
 }
 // --------------------------------------------------------------------------------
-void FireType::getControllers(GunDefinition* def, ParseTreeNode* node, String& callName, 
+void FireType::getControllers(EmitterDefinition* def, ParseTreeNode* node, String& callName, 
 							  int& funcIndex, std::vector<int>& affectors)
 {
 	int nodeType = node->getType();
@@ -174,7 +174,7 @@ void FireType::getControllers(GunDefinition* def, ParseTreeNode* node, String& c
 		callName = node->getChild(0)->getStringData();
 
 		ParseTree* tree = node->getTree();
-		funcIndex = tree->getCodeRecordIndex("Gun", def->getName(),	"Function", callName);
+		funcIndex = tree->getCodeRecordIndex("Emitter", def->getName(),	"Function", callName);
 	}
 	else if (nodeType == PT_AffectorCall)
 	{
@@ -191,7 +191,7 @@ void FireType::getControllers(GunDefinition* def, ParseTreeNode* node, String& c
 	}
 }
 // --------------------------------------------------------------------------------
-void FireType::generateBytecode(GunDefinition* def, ParseTreeNode* node,
+void FireType::generateBytecode(EmitterDefinition* def, ParseTreeNode* node,
 								BytecodeBlock* code, const String& funcName)
 {
 /*
@@ -204,7 +204,7 @@ void FireType::generateBytecode(GunDefinition* def, ParseTreeNode* node,
 	control function number of arguments
 	number of affectors
 	[affectors]
-	GunDefinition id
+	EmitterDefinition id
 */
 
 	// opcode
@@ -248,9 +248,9 @@ void FireType::generateBytecode(GunDefinition* def, ParseTreeNode* node,
 		code->push_back(affectors[i]);
 	
 	// This is very hacky, but works.  This is because, at the point that this function is
-	// called, the GunDefinition that is calling it will be the next to be added, and will
+	// called, the EmitterDefinition that is calling it will be the next to be added, and will
 	// therefore have this index.  Terrible, I know.
-	int index = mVM->getNumGunDefinitions(); 
+	int index = mVM->getNumEmitterDefinitions(); 
 	code->push_back((uint32) index);
 }
 // --------------------------------------------------------------------------------
@@ -280,8 +280,8 @@ int FireType::processCode(const uint32* code, ScriptState& state, bstype x,
 		else
 		{
 			// Request a FireTypeControl from pool
-			int gunDef = code[state.curInstruction + 6 + numAffectors];
-			type->__ft = mVM->getFireTypeRecord(gunDef);
+			int emitDef = code[state.curInstruction + 6 + numAffectors];
+			type->__ft = mVM->getFireTypeRecord(emitDef);
 			type->__ft->__type = this;
 
 			// Set up control function
