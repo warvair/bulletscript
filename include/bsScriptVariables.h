@@ -31,7 +31,7 @@ namespace BS_NMSP
 
 		bstype getValue() const;
 
-		void registerAffectorArgument(VariableListener* listener);
+		void registerListener(VariableListener* listener);
 	};
 
 }

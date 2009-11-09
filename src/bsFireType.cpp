@@ -136,10 +136,10 @@ AffectorFunction FireType::getAffectorFunction(const String& name)
 	return 0;
 }
 // --------------------------------------------------------------------------------
-int FireType::addAffectorInstance(const String& name, AffectorFunction func, 
-								  const BytecodeBlock& code)
+int FireType::addAffectorInstance(const String& name, AffectorFunction func, int numArgs,
+								  const BytecodeBlock& code, ScriptMachine* machine)
 {
-	Affector* aff = new Affector(name, 0, func, 1, false, code);
+	Affector* aff = new Affector(name, machine, func, numArgs, code);
 	mAffectorInstances.push_back(aff);
 	return (int) (mAffectorInstances.size() - 1);
 }
@@ -149,15 +149,20 @@ int FireType::getAffectorInstanceIndex(const String& name) const
 	for (size_t i = 0; i < mAffectorInstances.size(); ++i)
 	{
 		if (mAffectorInstances[i]->getName() == name)
-			return i;
+			return (int) i;
 	}
 
 	return -1;
 }
 // --------------------------------------------------------------------------------
+Affector* FireType::getAffectorInstance(int index) const
+{
+	return mAffectorInstances[index];
+}
+// --------------------------------------------------------------------------------
 void FireType::applyAffector(UserTypeBase* object, int index, float frameTime)
 {
-	mAffectorInstances[index]->execute(object, frameTime, object->__ft->__gun->mRecord);
+	mAffectorInstances[index]->execute(object, frameTime);
 }
 // --------------------------------------------------------------------------------
 void FireType::getControllers(GunDefinition* def, ParseTreeNode* node, String& callName, 
@@ -286,7 +291,7 @@ int FireType::processCode(const uint32* code, ScriptState& state, Gun *gun, bsty
 				int numArgs = code[state.curInstruction + 4];
 
 				type->__ft->code = mVM->getCodeRecord(controlFunc - 1);
-				type->__ft->members = members;
+				type->__ft->__members = members;
 				
 				state.stackHead -= numArgs;
 				memcpy(type->__ft->state.locals, state.stack + state.stackHead, numArgs * sizeof(bstype));

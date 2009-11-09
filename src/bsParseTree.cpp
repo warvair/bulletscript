@@ -517,6 +517,7 @@ void ParseTree::createAffectors(GunDefinition* def, ParseTreeNode* node)
 		AffectorInfo info;
 		info.name = affName;
 		info.function = node->getChild(1)->getChild(0)->getStringData();
+		countFunctionCallArguments(node->getChild(1), info.numArgs);
 		info.node = node;
 
 		mAffectors.push_back(info);
@@ -1017,6 +1018,49 @@ void ParseTree::checkFunctionProperties(ParseTreeNode* node, FireType* type)
 	}
 }
 // --------------------------------------------------------------------------------
+void ParseTree::setAffectorRecalculationType(GunDefinition* def, Affector* affector, 
+											 ParseTreeNode* node)
+{
+	switch (node->getType())
+	{
+	case PT_FunctionCall:
+		// Always recalculate every single time the affector is applied.  Only use this
+		// option if you absolutely must!
+		affector->recalculateAlways(true);
+		return;
+
+	case PT_Identifier:
+		// Variable, either global or member
+		{
+			String varName = node->getStringData();
+			if (def->getMemberVariableIndex(varName) >= 0)
+			{
+				int mvIndex = def->getMemberVariableIndex(varName);
+				const GunDefinition::MemberVariable& mv = def->getMemberVariable(mvIndex);
+
+				// Different Gun instances will be using a particular Affector instance, and when
+				// a FireType runs an affector, it will need to know which Gun it was fired from,
+				// and if that Gun has been signalled as modified (by member var change) then recalc.
+
+				
+			}
+			else if (mScriptMachine->getGlobalVariableIndex(varName) >= 0)
+			{
+				// Recalculate when global variable changes value
+				GlobalVariable* gv = mScriptMachine->getGlobalVariable(varName);
+				gv->registerListener(affector);
+			}
+		}
+		break;
+	}
+
+	for (int i = 0; i < ParseTreeNode::MAX_CHILDREN; ++ i)
+	{
+		if (node->getChild(i))
+			setAffectorRecalculationType(def, affector, node->getChild(i));
+	}
+}
+// --------------------------------------------------------------------------------
 void ParseTree::createMemberVariableBytecode(GunDefinition* def, ParseTreeNode* node, bool first)
 {
 	static int s_index = 0;
@@ -1094,16 +1138,20 @@ void ParseTree::generateFireTail(GunDefinition* def, ParseTreeNode* node,
 		{
 			// Generate CodeRecord and give to FireType
 			BytecodeBlock argCode;
-			generateBytecode(def, mAffectors[affIndex].node->getChild(1)->getChild(1), &argCode);
+			ParseTreeNode* argsNode = mAffectors[affIndex].node->getChild(1)->getChild(1);
+			generateBytecode(def, argsNode, &argCode);
 
 			String affFunction = mAffectors[affIndex].function;
 			instanceIndex = ft->addAffectorInstance(instanceName, 
 													ft->getAffectorFunction(affFunction), 
-													argCode);
-		}
+													mAffectors[affIndex].numArgs,
+													argCode,
+													mScriptMachine);
 
-		// Generate bytecode to use instanceIndex with this emission
-		// ...
+			// Check if the affector arguments use functions, global or member variables.
+			Affector* affector = ft->getAffectorInstance(instanceIndex);
+			setAffectorRecalculationType(def, affector, argsNode);
+		}
 	}
 
 	for (int i = 0; i < ParseTreeNode::MAX_CHILDREN; ++ i)

@@ -26,17 +26,17 @@ void Gun::setDefinition(GunDefinition* def)
 // --------------------------------------------------------------------------------
 void Gun::setX(bstype x)
 {
-	mRecord->members[Member_X] = x;
+	setMember(Member_X, x);
 }
 // --------------------------------------------------------------------------------
 void Gun::setY(bstype y)
 {
-	mRecord->members[Member_Y] = y;
+	setMember(Member_Y, y);
 }
 // --------------------------------------------------------------------------------
 void Gun::setAngle(bstype angle)
 {
-	mRecord->members[Member_Angle] = angle;
+	setMember(Member_Angle, angle);
 }
 // --------------------------------------------------------------------------------
 void Gun::setMember(int member, bstype value)

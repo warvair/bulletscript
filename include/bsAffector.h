@@ -4,13 +4,14 @@
 #include "bsPrerequisites.h"
 #include "bsCore.h"
 #include "bsBytecode.h"
+#include "bsScriptVariables.h"
 
 namespace BS_NMSP
 {
 
 	class ScriptMachine;
 
-	class Affector
+	class Affector : public VariableListener
 	{
 		String mName;
 
@@ -19,6 +20,8 @@ namespace BS_NMSP
 		ScriptState mState;
 
 		bool mbRecalculate;
+
+		bool mbRecalculateAlways;
 
 		bool mbVolatileArguments;
 
@@ -33,13 +36,17 @@ namespace BS_NMSP
 	public:
 
 		Affector(const String& name, ScriptMachine* machine, AffectorFunction func, 
-			int numArgs, bool volatileArgs, const BytecodeBlock& code);
+			int numArgs, const BytecodeBlock& code);
 
 		~Affector();
 
 		const String& getName() const;
 
-		void execute(UserTypeBase* object, float frameTime, GunScriptRecord* record);
+		void recalculateAlways(bool always);
+
+		void execute(UserTypeBase* object, float frameTime);
+
+		void onChanged();
 	};
 
 }

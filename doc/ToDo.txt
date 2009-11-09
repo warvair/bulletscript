@@ -1,3 +1,7 @@
+What happens when a Gun instance is destroyed and it has active bullets?  The bullets have a pointer to the
+Gun instance's members, and so these are inaccessible now.  So we can't use Gun members in control functions
+or affectors!  Likewise a FireTypeControl's __gun variable may be dead.
+
 Check to make sure that functions do not have the same name as an affector.  Because affectors are registered
 per type, we must check the fire function calls to make sure that there does not exist for the fire type, an
 affector with the same name as a function.  Otherwise it is ambiguous.

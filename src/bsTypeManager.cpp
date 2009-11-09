@@ -105,7 +105,7 @@ void TypeManager::updateType(UserTypeBase* ft, bstype x, bstype y, float frameTi
 		if (rec->state.suspendTime <= 0)
 		{
 			mVM->interpretCode(rec->code->byteCode, rec->code->byteCodeSize, 
-				rec->state, 0, rec, x, y, rec->members, rec->__gun, false);
+				rec->state, 0, rec, x, y, rec->__members, rec->__gun, false);
 		}
 		else
 		{

@@ -1,3 +1,4 @@
+#include <iostream>
 #include "bsAffector.h"
 #include "bsScriptMachine.h"
 
@@ -6,11 +7,11 @@ namespace BS_NMSP
 
 // --------------------------------------------------------------------------------
 Affector::Affector(const String& name, ScriptMachine* machine, AffectorFunction func, 
-				   int numArgs, bool volatileArgs, const BytecodeBlock& code) : 
+				   int numArgs, const BytecodeBlock& code) : 
 	mName(name),
 	mFunction(func),
 	mbRecalculate(true),
-	mbVolatileArguments(false),
+	mbRecalculateAlways(false),
 	mScriptMachine(machine),
 	mBytecode(0),
 	mBytecodeSize(0)
@@ -41,16 +42,26 @@ void Affector::recalculateArguments(GunScriptRecord* record)
 	mScriptMachine->interpretCode(mBytecode, mBytecodeSize, mState, 0, 0,
 		record->members[Member_X], record->members[Member_Y], record->members, 0, false);
 
-	if (!mbVolatileArguments)
+	if (!mbRecalculateAlways)
 		mbRecalculate = false;
 }
 // --------------------------------------------------------------------------------
-void Affector::execute(UserTypeBase* object, float frameTime, GunScriptRecord* record)
+void Affector::recalculateAlways(bool always)
+{
+	mbRecalculateAlways = always;
+}
+// --------------------------------------------------------------------------------
+void Affector::execute(UserTypeBase* object, float frameTime)
 {
 	if (mbRecalculate)
-		recalculateArguments(record);
+		recalculateArguments(object->__ft->__gun->mRecord);
 
 	mFunction(object, frameTime, mState.stack + mState.stackHead);
+}
+// --------------------------------------------------------------------------------
+void Affector::onChanged()
+{
+	mbRecalculate = true;
 }
 // --------------------------------------------------------------------------------
 
