@@ -173,6 +173,8 @@ namespace BS_NMSP
 
 		void createAffectors(GunDefinition* def, ParseTreeNode* node);
 
+		void setAffectorRecalculationType(GunDefinition* def, Affector* affector, ParseTreeNode* node);
+
 		void countFunctionCallArguments(ParseTreeNode* node, int& numArguments);
 
 		void addFunctionArguments(GunDefinition* def, ParseTreeNode* node, 
@@ -254,6 +256,7 @@ namespace BS_NMSP
 		{
 			String name;
 			String function;
+			int numArgs;
 			ParseTreeNode* node;
 		};
 

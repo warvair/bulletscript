@@ -483,7 +483,8 @@ void ScriptMachine::interpretCode(const uint32* code, size_t length, ScriptState
 			{
 				bstype value = st.stack[st.stackHead - 1];
 				int index = code[st.curInstruction + 1];
-				members[index] = value;
+
+				gun->setMember(index, value);
 				st.stackHead--;
 				st.curInstruction += 2;
 			}			

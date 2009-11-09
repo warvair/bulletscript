@@ -22,7 +22,6 @@ namespace BS_NMSP
 		// Scripted behaviour
 		CodeRecord* code;
 		ScriptState state;
-		bstype* members; // Weak pointer to Gun members
 
 		// Properties
 		struct Property
@@ -42,16 +41,17 @@ namespace BS_NMSP
 		FireType* __type;
 		UserTypeBase* __object;	// Pointer to the current object that owns this FireTypeControl
 		Gun* __gun;
-		int __gunDef;			// GunDefinition index, for internal management
+		bstype* __members; // Weak pointer to Gun members
+		int __gunDef;			// GunDefinition index
 
 		FireTypeControl(int numLocals) :
 			code(0),
-			members(0),
 			activeProperties(0),
 			numAffectors(0),
 			__type(0),
 			__object(0),
 			__gun(0),
+			__members(0),
 			__gunDef(-1)
 		{
 			if (numLocals > 0)
@@ -126,9 +126,12 @@ namespace BS_NMSP
 
 		AffectorFunction getAffectorFunction(const String& name);
 
-		int addAffectorInstance(const String& name, AffectorFunction func, const BytecodeBlock& code);
+		int addAffectorInstance(const String& name, AffectorFunction func, int numArgs, 
+			const BytecodeBlock& code, ScriptMachine* machine);
 
 		int getAffectorInstanceIndex(const String& name) const;
+
+		Affector* getAffectorInstance(int index) const;
 
 		void applyAffector(UserTypeBase* object, int index, float frameTime);
 	

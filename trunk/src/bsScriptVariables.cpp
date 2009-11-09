@@ -32,7 +32,7 @@ bstype GlobalVariable::getValue() const
 	return mValue;
 }
 // --------------------------------------------------------------------------------
-void GlobalVariable::registerAffectorArgument(VariableListener* listener)
+void GlobalVariable::registerListener(VariableListener* listener)
 {
 	mListeners.push_back(listener);
 }
