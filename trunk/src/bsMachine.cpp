@@ -77,14 +77,14 @@ void Machine::registerAffector(const String& type, const String& name, AffectorF
 	mTypeManager->registerAffector(type, name, func);
 }
 // --------------------------------------------------------------------------------
-Gun* Machine::createGun(const String& definition)
+Emitter* Machine::createEmitter(const String& definition)
 {
-	return mScriptMachine->createGun(definition);
+	return mScriptMachine->createEmitter(definition);
 }
 // --------------------------------------------------------------------------------
-void Machine::destroyGun(Gun* gun)
+void Machine::destroyEmitter(Emitter* emit)
 {
-	mScriptMachine->destroyGun(gun);
+	mScriptMachine->destroyEmitter(emit);
 }
 // --------------------------------------------------------------------------------
 void Machine::update(float frameTime)
@@ -92,8 +92,7 @@ void Machine::update(float frameTime)
 	// Tie to update rate?
 	// ...
 
-	// Update all guns
-	mScriptMachine->updateGuns(frameTime);
+	mScriptMachine->updateEmitters(frameTime);
 }
 // --------------------------------------------------------------------------------
 

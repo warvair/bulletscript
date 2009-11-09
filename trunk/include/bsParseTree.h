@@ -3,7 +3,7 @@
 
 #include "bsPrerequisites.h"
 #include "bsCore.h"
-#include "bsGunDefinition.h"
+#include "bsEmitterDefinition.h"
 
 namespace BS_NMSP
 {
@@ -19,8 +19,9 @@ namespace BS_NMSP
 	enum PT_NodeType
 	{
 		PT_Null,
-		PT_GunDefinitionList,
-		PT_GunDefinition,
+		PT_DefinitionList,
+		PT_ControllerDefinition,
+		PT_EmitterDefinition,
 		PT_MemberList,
 		PT_AffectorDeclList,
 		PT_AffectorDecl,
@@ -163,52 +164,52 @@ namespace BS_NMSP
 		void destroy();
 
 		// Parsing
-		bool checkConstantExpression(GunDefinition* def, ParseTreeNode* node);
+		bool checkConstantExpression(EmitterDefinition* def, ParseTreeNode* node);
 
 		void checkLoopDepth(ParseTreeNode *node, int& depth);
 
-		void createMemberVariables(GunDefinition* def, ParseTreeNode* node);
+		void createMemberVariables(EmitterDefinition* def, ParseTreeNode* node);
 
-		void addMemberVariables(GunDefinition* def, const MemberVariableDeclarationMap& memberDecls);
+		void addMemberVariables(EmitterDefinition* def, const MemberVariableDeclarationMap& memberDecls);
 
 		// Affectors
-		void createAffectors(GunDefinition* def, ParseTreeNode* node);
+		void createAffectors(EmitterDefinition* def, ParseTreeNode* node);
 
-		bool checkAffectorArguments(GunDefinition* def, ParseTreeNode* node);
+		bool checkAffectorArguments(EmitterDefinition* def, ParseTreeNode* node);
 
-		void setAffectorRecalculationType(GunDefinition* def, Affector* affector, ParseTreeNode* node);
+		void setAffectorRecalculationType(EmitterDefinition* def, Affector* affector, ParseTreeNode* node);
 
 		void countFunctionCallArguments(ParseTreeNode* node, int& numArguments);
 
-		void addFunctionArguments(GunDefinition* def, ParseTreeNode* node, 
-			GunDefinition::Function& func);	
+		void addFunctionArguments(EmitterDefinition* def, ParseTreeNode* node, 
+			EmitterDefinition::Function& func);	
 
-		void addFunctions(GunDefinition* def, ParseTreeNode* node);
+		void addFunctions(EmitterDefinition* def, ParseTreeNode* node);
 
-		void buildFunctions(GunDefinition* def, ParseTreeNode* node);
+		void buildFunctions(EmitterDefinition* def, ParseTreeNode* node);
 
-		void createStates(GunDefinition* def, ParseTreeNode* node);
+		void createStates(EmitterDefinition* def, ParseTreeNode* node);
 
-		void _checkFireStatements(GunDefinition* def, ParseTreeNode* node, const String& type);
+		void _checkFireStatements(EmitterDefinition* def, ParseTreeNode* node, const String& type);
 
-		void checkFireStatements(GunDefinition* def, ParseTreeNode* node);
+		void checkFireStatements(EmitterDefinition* def, ParseTreeNode* node);
 
-		void checkFireControllers(GunDefinition* def, ParseTreeNode* node, int& ctrls, 
+		void checkFireControllers(EmitterDefinition* def, ParseTreeNode* node, int& ctrls, 
 			FireType* ft);
 
 		void checkFunctionProperties(ParseTreeNode* node, FireType* type);
 
 		// Code generation
-		void createMemberVariableBytecode(GunDefinition* def, ParseTreeNode* node, bool first);
+		void createMemberVariableBytecode(EmitterDefinition* def, ParseTreeNode* node, bool first);
 
-		void generateFireTail(GunDefinition* def, ParseTreeNode* node, BytecodeBlock* bytecode, 
+		void generateFireTail(EmitterDefinition* def, ParseTreeNode* node, BytecodeBlock* bytecode, 
 			FireType* ft);
 
-		void generateBytecode(GunDefinition* def, ParseTreeNode* node, BytecodeBlock* bytecode,
+		void generateBytecode(EmitterDefinition* def, ParseTreeNode* node, BytecodeBlock* bytecode,
 			bool reset = false);
 
 		// Utility
-		GunDefinition* createGunDefinition(ParseTreeNode* node,
+		EmitterDefinition* createEmitterDefinition(ParseTreeNode* node,
 			const MemberVariableDeclarationMap& memberDecls);
 
 	protected:
@@ -236,7 +237,7 @@ namespace BS_NMSP
 
 		int getNumErrors() const;
 
-		void createGunDefinitions(ParseTreeNode* node, 
+		void createEmitterDefinitions(ParseTreeNode* node, 
 			const MemberVariableDeclarationMap& memberDecls);
 
 		int createCodeRecord(const String& type, const String& typeName,

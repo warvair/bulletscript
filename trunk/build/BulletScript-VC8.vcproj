@@ -199,15 +199,15 @@
 				>
 			</File>
 			<File
+				RelativePath="..\src\bsEmitter.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\src\bsEmitterDefinition.cpp"
+				>
+			</File>
+			<File
 				RelativePath="..\src\bsFireType.cpp"
-				>
-			</File>
-			<File
-				RelativePath="..\src\bsGun.cpp"
-				>
-			</File>
-			<File
-				RelativePath="..\src\bsGunDefinition.cpp"
 				>
 			</File>
 			<File
@@ -277,15 +277,15 @@
 				>
 			</File>
 			<File
+				RelativePath="..\include\bsEmitter.h"
+				>
+			</File>
+			<File
+				RelativePath="..\include\bsEmitterDefinition.h"
+				>
+			</File>
+			<File
 				RelativePath="..\include\bsFireType.h"
-				>
-			</File>
-			<File
-				RelativePath="..\include\bsGun.h"
-				>
-			</File>
-			<File
-				RelativePath="..\include\bsGunDefinition.h"
 				>
 			</File>
 			<File

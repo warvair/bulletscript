@@ -66,7 +66,7 @@ void TypeManager::releaseType(UserTypeBase* ft)
 {
 	if (ft->__ft)
 	{
-		mVM->releaseFireTypeRecord(ft->__ft->__gunDef, ft->__ft);
+		mVM->releaseFireTypeRecord(ft->__ft->__emitterDefinition, ft->__ft);
 		ft->__ft = 0;
 	}
 }

@@ -4,7 +4,7 @@
 #include "bsPrerequisites.h"
 #include "bsScriptMachine.h"
 #include "bsTypeManager.h"
-#include "bsGun.h"
+#include "bsEmitter.h"
 #include "bsLog.h"
 
 namespace BS_NMSP
@@ -12,8 +12,6 @@ namespace BS_NMSP
 
 	class _BSAPI Machine
 	{
-		friend class GunController;
-
 		Log mLog;
 
 		ScriptMachine* mScriptMachine;
@@ -57,10 +55,10 @@ namespace BS_NMSP
 
 		void registerAffector(const String& type, const String& name, AffectorFunction func);
 
-		// Gun management
-		Gun* createGun(const String& definition);
+		// Emitter management
+		Emitter* createEmitter(const String& definition);
 
-		void destroyGun(Gun* gun);
+		void destroyEmitter(Emitter* emit);
 
 		void update(float frameTime);
 

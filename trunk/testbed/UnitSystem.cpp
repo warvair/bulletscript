@@ -62,7 +62,7 @@ void Unit::__deactivate()
 {
 	if (mGun)
 	{
-		UnitSystem::mMachine->destroyGun(mGun);
+		UnitSystem::mMachine->destroyEmitter(mGun);
 		mGun = 0;
 	}
 

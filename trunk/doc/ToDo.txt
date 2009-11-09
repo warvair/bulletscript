@@ -1,12 +1,4 @@
-What happens when a Gun instance is destroyed and it has active bullets?  The bullets have a pointer to the
-Gun instance's members, and so these are inaccessible now.  So we can't use Gun members in control functions
-or affectors!  Likewise a FireTypeControl's __gun variable may be dead.
-
-Check to make sure that functions do not have the same name as an affector.  Because affectors are registered
-per type, we must check the fire function calls to make sure that there does not exist for the fire type, an
-affector with the same name as a function.  Otherwise it is ambiguous.
-
-1) Implement affectors
+1) Implement affectors [DONE]
 
 2) Implement controllers/events
 
@@ -38,6 +30,3 @@ maybe resume their old behaviour when you stop firing.  This is an edge case but
 	Guns should be able to relinquish control of their FireTypes, by calling "yield()" or similar.  When
 	this is the case, all FireTypes do not have any special updating done (we have a pointer to the Gun
 	in the FireTypeControl for checking).
-
-affector arguments may change: do we have it so that already emitted bullets use the old arguments, or
-the current ones?

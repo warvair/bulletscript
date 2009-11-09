@@ -68,7 +68,7 @@ namespace BS_NMSP
 		// Time to wait when the script is suspended
 		bstype suspendTime;				
 
-		// Local variables for whichever is the current gun state
+		// Local variables for whichever is the current emitter state
 		bstype* locals;					
 
 		// Functions
@@ -76,7 +76,7 @@ namespace BS_NMSP
 	};
 
 	// Instance classes
-	struct _BSAPI GunScriptRecord
+	struct _BSAPI EmitterScriptRecord
 	{
 		bstype* members;
 
@@ -86,9 +86,9 @@ namespace BS_NMSP
 		ScriptState scriptState;		
 
 		// Functions
-		GunScriptRecord(int numLocals);
+		EmitterScriptRecord(int numLocals);
 		
-		~GunScriptRecord();
+		~EmitterScriptRecord();
 	};
 
 	// Callback function types

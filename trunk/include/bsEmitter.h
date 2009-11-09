@@ -1,15 +1,15 @@
-#ifndef __BS_GUN_H__
-#define __BS_GUN_H__
+#ifndef __BS_EMITTER_H__
+#define __BS_EMITTER_H__
 
 #include "bsPrerequisites.h"
 #include "bsCore.h"
-#include "bsGunDefinition.h"
+#include "bsEmitterDefinition.h"
 
 namespace BS_NMSP
 {
 	class ScriptMachine;
 
-	class _BSAPI Gun : public DeepMemoryPoolObject
+	class _BSAPI Emitter : public DeepMemoryPoolObject
 	{
 	protected:
 
@@ -17,15 +17,15 @@ namespace BS_NMSP
 
 	public:
 
-		GunScriptRecord* mRecord;
+		EmitterScriptRecord* mRecord;
 
 	public:
 
-		explicit Gun(ScriptMachine* scriptMachine);
+		explicit Emitter(ScriptMachine* scriptMachine);
 
-		~Gun();
+		~Emitter();
 
-		void setDefinition(GunDefinition* def);
+		void setDefinition(EmitterDefinition* def);
 		
 		void setX(bstype x);
 

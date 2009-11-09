@@ -23,10 +23,12 @@ void yyerror (char *a_msg)
 
 %}
 
-%token KEYWORD_GUN
+%token KEYWORD_CONTROLLER
+%token KEYWORD_EMITTER
 %token KEYWORD_AFFECTOR
 %token KEYWORD_FUNCTION
 %token KEYWORD_STATE
+%token KEYWORD_EVENT
 %token KEYWORD_LOOP
 %token KEYWORD_WHILE
 %token KEYWORD_IF
@@ -54,30 +56,41 @@ void yyerror (char *a_msg)
 %%
 
 script_file
-	: gun_definition_list
+	: definition_list
 		{
 			AST->getRootNode()->setChild(0, $1);
 		}
 	;
 
-gun_definition_list
-	: gun_definition
+definition_list
+	: definition
 		{
 			$$ = $1;
 		}
-	| gun_definition_list gun_definition
+	| definition_list definition
 		{
-			$$ = AST->createNode(PT_GunDefinitionList, yylineno);
+			$$ = AST->createNode(PT_DefinitionList, yylineno);
 			$$->setChild(0, $1);
 			$$->setChild(1, $2);
 		}
 	;
+	
+definition
+	: emitter_definition
+		{
+			$$ = $1;
+		}
+	| controller_definition
+		{
+			$$ = $1;
+		}
+	;
 
-gun_definition
-	: KEYWORD_GUN identifier '{' state_list '}'
+emitter_definition
+	: KEYWORD_EMITTER identifier '{' state_list '}'
 		{
 			// members must be declared first, then functions, then events
-			$$ = AST->createNode(PT_GunDefinition, yylineno);
+			$$ = AST->createNode(PT_EmitterDefinition, yylineno);
 			$$->setString($2->getStringData().c_str());
 			delete $2;
 
@@ -86,9 +99,9 @@ gun_definition
 			$$->setChild(PT_FunctionNode, 0);
 			$$->setChild(PT_StateNode, $4);
 		}		
-	| KEYWORD_GUN identifier '{' function_list state_list '}'
+	| KEYWORD_EMITTER identifier '{' function_list state_list '}'
 		{
-			$$ = AST->createNode(PT_GunDefinition, yylineno);
+			$$ = AST->createNode(PT_EmitterDefinition, yylineno);
 			$$->setString($2->getStringData().c_str());			
 			delete $2;
 			
@@ -97,9 +110,9 @@ gun_definition
 			$$->setChild(PT_FunctionNode, $4);
 			$$->setChild(PT_StateNode, $5);
 		}		
-	| KEYWORD_GUN identifier '{' affector_list state_list '}'
+	| KEYWORD_EMITTER identifier '{' affector_list state_list '}'
 		{
-			$$ = AST->createNode(PT_GunDefinition, yylineno);
+			$$ = AST->createNode(PT_EmitterDefinition, yylineno);
 			$$->setString($2->getStringData().c_str());			
 			delete $2;
 			
@@ -120,9 +133,9 @@ gun_definition
 			$$->setChild(PT_FunctionNode, 0);
 			$$->setChild(PT_StateNode, $5);
 		}		
-	| KEYWORD_GUN identifier '{' affector_list function_list state_list '}'
+	| KEYWORD_EMITTER identifier '{' affector_list function_list state_list '}'
 		{
-			$$ = AST->createNode(PT_GunDefinition, yylineno);
+			$$ = AST->createNode(PT_EmitterDefinition, yylineno);
 			$$->setString($2->getStringData().c_str());			
 			delete $2;
 			
@@ -143,9 +156,9 @@ gun_definition
 			$$->setChild(PT_FunctionNode, $5);
 			$$->setChild(PT_StateNode, $6);
 		}		
-	| KEYWORD_GUN identifier '{' member_list state_list '}'
+	| KEYWORD_EMITTER identifier '{' member_list state_list '}'
 		{
-			$$ = AST->createNode(PT_GunDefinition, yylineno);
+			$$ = AST->createNode(PT_EmitterDefinition, yylineno);
 			$$->setString($2->getStringData().c_str());			
 			delete $2;
 			
@@ -166,9 +179,9 @@ gun_definition
 			$$->setChild(PT_FunctionNode, 0);
 			$$->setChild(PT_StateNode, $5);
 		}		
-	| KEYWORD_GUN identifier '{' member_list function_list state_list '}'
+	| KEYWORD_EMITTER identifier '{' member_list function_list state_list '}'
 		{
-			$$ = AST->createNode(PT_GunDefinition, yylineno);
+			$$ = AST->createNode(PT_EmitterDefinition, yylineno);
 			$$->setString($2->getStringData().c_str());			
 			delete $2;
 
@@ -189,9 +202,9 @@ gun_definition
 			$$->setChild(PT_FunctionNode, $5);
 			$$->setChild(PT_StateNode, $6);
 		}		
-	| KEYWORD_GUN identifier '{' member_list affector_list state_list '}'
+	| KEYWORD_EMITTER identifier '{' member_list affector_list state_list '}'
 		{
-			$$ = AST->createNode(PT_GunDefinition, yylineno);
+			$$ = AST->createNode(PT_EmitterDefinition, yylineno);
 			$$->setString($2->getStringData().c_str());			
 			delete $2;
 			
@@ -224,9 +237,9 @@ gun_definition
 			$$->setChild(PT_FunctionNode, 0);
 			$$->setChild(PT_StateNode, $6);
 		}		
-	| KEYWORD_GUN identifier '{' member_list affector_list function_list state_list '}'
+	| KEYWORD_EMITTER identifier '{' member_list affector_list function_list state_list '}'
 		{
-			$$ = AST->createNode(PT_GunDefinition, yylineno);
+			$$ = AST->createNode(PT_EmitterDefinition, yylineno);
 			$$->setString($2->getStringData().c_str());			
 			delete $2;
 
@@ -259,6 +272,15 @@ gun_definition
 			$$->setChild(PT_FunctionNode, $6);
 			$$->setChild(PT_StateNode, $7);
 		}		
+	;
+	
+controller_definition
+	: KEYWORD_CONTROLLER identifier '{' '}'
+		{
+			$$ = AST->createNode(PT_ControllerDefinition, yylineno);
+			$$->setString($2->getStringData().c_str());			
+			delete $2;
+		}
 	;
 	
 member_list

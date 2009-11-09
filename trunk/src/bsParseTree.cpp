@@ -347,7 +347,7 @@ int ParseTree::getNumErrors() const
 	return mNumErrors;
 }
 // --------------------------------------------------------------------------------
-bool ParseTree::checkConstantExpression(GunDefinition* def, ParseTreeNode* node)
+bool ParseTree::checkConstantExpression(EmitterDefinition* def, ParseTreeNode* node)
 {
 	int nodeType = node->getType();
 	if (nodeType == PT_FunctionCall)
@@ -370,8 +370,8 @@ bool ParseTree::checkConstantExpression(GunDefinition* def, ParseTreeNode* node)
 
 		// Check local, member, global
 		int numStates = def->getNumStates();
-		GunDefinition::State& st = def->getState(numStates - 1);
-		CodeRecord* rec = getCodeRecord("Gun", def->getName(), "State", st.name);
+		EmitterDefinition::State& st = def->getState(numStates - 1);
+		CodeRecord* rec = getCodeRecord("Emitter", def->getName(), "State", st.name);
 		if (rec->getVariableIndex(varName) < 0)
 		{
 			if (def->getMemberVariableIndex(varName) < 0)
@@ -426,7 +426,7 @@ void ParseTree::checkLoopDepth(ParseTreeNode *node, int& depth)
 		--depth;
 }
 // --------------------------------------------------------------------------------
-void ParseTree::createMemberVariables(GunDefinition* def, ParseTreeNode* node)
+void ParseTree::createMemberVariables(EmitterDefinition* def, ParseTreeNode* node)
 {
 	if (node->getType() == PT_AssignStatement)
 	{
@@ -462,13 +462,13 @@ void ParseTree::createMemberVariables(GunDefinition* def, ParseTreeNode* node)
 	}
 }
 // --------------------------------------------------------------------------------
-void ParseTree::addMemberVariables(GunDefinition* def, 
+void ParseTree::addMemberVariables(EmitterDefinition* def, 
 								   const MemberVariableDeclarationMap& memberDecls)
 {
 	// Add special members
-	def->addMemberVariable("Gun_X", true);
-	def->addMemberVariable("Gun_Y", true);
-	def->addMemberVariable("Gun_Angle", true);
+	def->addMemberVariable("Emit_X", true);
+	def->addMemberVariable("Emit_Y", true);
+	def->addMemberVariable("Emit_Angle", true);
 
 	// Add user-specified member variables (and their initial value) here.
 	// They must be added before we compile the script, predeclared essentially.
@@ -496,7 +496,7 @@ void ParseTree::addMemberVariables(GunDefinition* def,
 	def->setNumUserMembers(members);
 }
 // --------------------------------------------------------------------------------
-bool ParseTree::checkAffectorArguments(GunDefinition* def, ParseTreeNode* node)
+bool ParseTree::checkAffectorArguments(EmitterDefinition* def, ParseTreeNode* node)
 {
 	bool ok = true;
 	if (node->getType() == PT_Identifier)
@@ -534,7 +534,7 @@ bool ParseTree::checkAffectorArguments(GunDefinition* def, ParseTreeNode* node)
 	return ok;
 }
 // --------------------------------------------------------------------------------
-void ParseTree::createAffectors(GunDefinition* def, ParseTreeNode* node)
+void ParseTree::createAffectors(EmitterDefinition* def, ParseTreeNode* node)
 {
 	if (node->getType() == PT_AffectorDecl)
 	{
@@ -586,7 +586,7 @@ void ParseTree::countFunctionCallArguments(ParseTreeNode* node, int& numArgument
 	}
 }
 // --------------------------------------------------------------------------------
-void ParseTree::checkFireControllers(GunDefinition* def, ParseTreeNode* node, 
+void ParseTree::checkFireControllers(EmitterDefinition* def, ParseTreeNode* node, 
 									 int& ctrls, FireType* ft)
 {
 	int nodeType = node->getType();
@@ -615,7 +615,7 @@ void ParseTree::checkFireControllers(GunDefinition* def, ParseTreeNode* node,
 		if (node->getChild(1))
 			countFunctionCallArguments(node->getChild(1), numArguments);
 
-		GunDefinition::Function& func = def->getFunction(fIndex);
+		EmitterDefinition::Function& func = def->getFunction(fIndex);
 		if (numArguments != func.numArguments)
 		{
 			std::stringstream ss;
@@ -663,14 +663,14 @@ void ParseTree::checkFireControllers(GunDefinition* def, ParseTreeNode* node,
 	}
 }
 // --------------------------------------------------------------------------------
-void ParseTree::addFunctionArguments(GunDefinition* def, ParseTreeNode* node, 
-									 GunDefinition::Function& func)
+void ParseTree::addFunctionArguments(EmitterDefinition* def, ParseTreeNode* node, 
+									 EmitterDefinition::Function& func)
 {
 	if (node->getType() == PT_Identifier)
 	{
 		String argName = node->getStringData();
 
-		CodeRecord* rec = getCodeRecord("Gun", def->getName(), "Function", func.name);
+		CodeRecord* rec = getCodeRecord("Emitter", def->getName(), "Function", func.name);
 		if (rec->getVariableIndex(argName) >= 0)
 		{
 			addError(node->getLine(), "Argument '" + argName + "' has already been declared.");
@@ -689,7 +689,7 @@ void ParseTree::addFunctionArguments(GunDefinition* def, ParseTreeNode* node,
 	}
 }
 // --------------------------------------------------------------------------------
-void ParseTree::addFunctions(GunDefinition* def, ParseTreeNode* node)
+void ParseTree::addFunctions(EmitterDefinition* def, ParseTreeNode* node)
 {
 	if (node->getType() == PT_Function)
 	{
@@ -701,10 +701,10 @@ void ParseTree::addFunctions(GunDefinition* def, ParseTreeNode* node)
 			return;
 		}
 
-		GunDefinition::Function& func = def->addFunction(funcName, node);
+		EmitterDefinition::Function& func = def->addFunction(funcName, node);
 		
 		// Create CodeRecord in ScriptMachine
-		int index = createCodeRecord("Gun", def->getName(), "Function", funcName);
+		int index = createCodeRecord("Emitter", def->getName(), "Function", funcName);
 		mFunctionIndices.push_back(index);
 
 		// Get arguments
@@ -719,9 +719,9 @@ void ParseTree::addFunctions(GunDefinition* def, ParseTreeNode* node)
 	}
 }
 // --------------------------------------------------------------------------------
-void ParseTree::buildFunctions(GunDefinition* def, ParseTreeNode* node)
+void ParseTree::buildFunctions(EmitterDefinition* def, ParseTreeNode* node)
 {
-	static GunDefinition::Function* s_curFunc = 0;
+	static EmitterDefinition::Function* s_curFunc = 0;
 
 	switch (node->getType())
 	{
@@ -749,7 +749,7 @@ void ParseTree::buildFunctions(GunDefinition* def, ParseTreeNode* node)
 			}
 
 			// If it isn't, it's a local, so see if we need to create it.
-			CodeRecord* rec = getCodeRecord("Gun", def->getName(), "Function", s_curFunc->name);
+			CodeRecord* rec = getCodeRecord("Emitter", def->getName(), "Function", s_curFunc->name);
 			if (rec->getVariableIndex(varName) < 0)
 				rec->addVariable(varName);
 		}
@@ -811,7 +811,7 @@ void ParseTree::buildFunctions(GunDefinition* def, ParseTreeNode* node)
 			if (pType >= PT_ConstantExpression && pType <= PT_UnaryNegStatement)
 			{
 				// Local, members, globals
-				CodeRecord* rec = getCodeRecord("Gun", def->getName(), "Function", s_curFunc->name);
+				CodeRecord* rec = getCodeRecord("Emitter", def->getName(), "Function", s_curFunc->name);
 				if (rec->getVariableIndex(varName) < 0)
 				{
 					if (def->getMemberVariableIndex(varName) < 0)
@@ -853,13 +853,13 @@ void ParseTree::buildFunctions(GunDefinition* def, ParseTreeNode* node)
 	}
 }
 // --------------------------------------------------------------------------------
-void ParseTree::createStates(GunDefinition* def, ParseTreeNode* node)
+void ParseTree::createStates(EmitterDefinition* def, ParseTreeNode* node)
 {
 	switch (node->getType())
 	{
 	case PT_State:
 		{
-			GunDefinition::State st;
+			EmitterDefinition::State st;
 
 			String stateName = node->getChild(0)->getStringData();
 			if (def->getStateIndex(stateName) >= 0)
@@ -871,7 +871,7 @@ void ParseTree::createStates(GunDefinition* def, ParseTreeNode* node)
 			def->addState(stateName);
 
 			// Create CodeRecord in ScriptMachine
-			int index = createCodeRecord("Gun", def->getName(), "State", stateName);
+			int index = createCodeRecord("Emitter", def->getName(), "State", stateName);
 			mStateIndices.push_back(index);
 		}
 		break;
@@ -884,7 +884,7 @@ void ParseTree::createStates(GunDefinition* def, ParseTreeNode* node)
 			if (def->getMemberVariableIndex(varName) >= 0)
 			{
 				int mvIndex = def->getMemberVariableIndex(varName);
-				const GunDefinition::MemberVariable& mv = def->getMemberVariable(mvIndex);
+				const EmitterDefinition::MemberVariable& mv = def->getMemberVariable(mvIndex);
 				if (mv.readonly)
 				{
 					addError(node->getLine(), "'" + varName + "' is read-only.");
@@ -899,9 +899,9 @@ void ParseTree::createStates(GunDefinition* def, ParseTreeNode* node)
 
 			// If it isn't, it's a local, so see if we need to create it.
 			int numStates = (int) def->getNumStates();
-			GunDefinition::State& st = def->getState(numStates - 1);
+			EmitterDefinition::State& st = def->getState(numStates - 1);
 
-			CodeRecord* rec = getCodeRecord("Gun", def->getName(), "State", st.name);
+			CodeRecord* rec = getCodeRecord("Emitter", def->getName(), "State", st.name);
 
 			if (rec->getVariableIndex(varName) < 0)
 				rec->addVariable(varName);
@@ -971,8 +971,8 @@ void ParseTree::createStates(GunDefinition* def, ParseTreeNode* node)
 			{
 				// Local, members, globals
 				int numStates = (int) def->getNumStates();
-				GunDefinition::State& st = def->getState(numStates - 1);
-				CodeRecord* rec = getCodeRecord("Gun", def->getName(), "State", st.name);
+				EmitterDefinition::State& st = def->getState(numStates - 1);
+				CodeRecord* rec = getCodeRecord("Emitter", def->getName(), "State", st.name);
 				if (rec->getVariableIndex(varName) < 0)
 				{
 					if (def->getMemberVariableIndex(varName) < 0)
@@ -1005,7 +1005,7 @@ void ParseTree::createStates(GunDefinition* def, ParseTreeNode* node)
 	}
 }
 // --------------------------------------------------------------------------------
-void ParseTree::_checkFireStatements(GunDefinition* def, ParseTreeNode* node, const String& type)
+void ParseTree::_checkFireStatements(EmitterDefinition* def, ParseTreeNode* node, const String& type)
 {
 	int nodeType = node->getType();
 	if (nodeType == PT_FunctionCall)
@@ -1014,7 +1014,7 @@ void ParseTree::_checkFireStatements(GunDefinition* def, ParseTreeNode* node, co
 
 		// Make sure that any control function used has the correct properties
 		String funcName = node->getChild(0)->getStringData();
-		GunDefinition::Function func = def->getFunction(def->getFunctionIndex(funcName));
+		EmitterDefinition::Function func = def->getFunction(def->getFunctionIndex(funcName));
 		checkFunctionProperties(func.node, ft);
 	}
 
@@ -1025,7 +1025,7 @@ void ParseTree::_checkFireStatements(GunDefinition* def, ParseTreeNode* node, co
 	}
 }
 // -------------------------------------------------------------------------
-void ParseTree::checkFireStatements(GunDefinition* def, ParseTreeNode* node)
+void ParseTree::checkFireStatements(EmitterDefinition* def, ParseTreeNode* node)
 {
 	if (node->getType() == PT_FireStatement)
 	{
@@ -1061,7 +1061,7 @@ void ParseTree::checkFunctionProperties(ParseTreeNode* node, FireType* type)
 	}
 }
 // --------------------------------------------------------------------------------
-void ParseTree::setAffectorRecalculationType(GunDefinition* def, Affector* affector, 
+void ParseTree::setAffectorRecalculationType(EmitterDefinition* def, Affector* affector, 
 											 ParseTreeNode* node)
 {
 	switch (node->getType())
@@ -1079,11 +1079,11 @@ void ParseTree::setAffectorRecalculationType(GunDefinition* def, Affector* affec
 			if (def->getMemberVariableIndex(varName) >= 0)
 			{
 				int mvIndex = def->getMemberVariableIndex(varName);
-				const GunDefinition::MemberVariable& mv = def->getMemberVariable(mvIndex);
+				const EmitterDefinition::MemberVariable& mv = def->getMemberVariable(mvIndex);
 
-				// Different Gun instances will be using a particular Affector instance, and when
-				// a FireType runs an affector, it will need to know which Gun it was fired from,
-				// and if that Gun has been signalled as modified (by member var change) then recalc.
+				// Different Emitter instances will be using a particular Affector instance, and when
+				// a FireType runs an affector, it will need to know which Emitter it was fired from,
+				// and if that Emitter has been signalled as modified (by member var change) then recalc.
 
 				
 			}
@@ -1104,7 +1104,7 @@ void ParseTree::setAffectorRecalculationType(GunDefinition* def, Affector* affec
 	}
 }
 // --------------------------------------------------------------------------------
-void ParseTree::createMemberVariableBytecode(GunDefinition* def, ParseTreeNode* node, bool first)
+void ParseTree::createMemberVariableBytecode(EmitterDefinition* def, ParseTreeNode* node, bool first)
 {
 	static int s_index = 0;
 	if (first)
@@ -1112,9 +1112,9 @@ void ParseTree::createMemberVariableBytecode(GunDefinition* def, ParseTreeNode* 
 
 	if (node->getType() == PT_AssignStatement)
 	{
-		// Create 'constructor' code for this gun.  We only need to do this if member 
+		// Create 'constructor' code for this emitter.  We only need to do this if member 
 		// variables are not constants.  If they are, then we can just set the constants here.
-		GunDefinition::MemberVariable& memVar = def->getMemberVariable(s_index);
+		EmitterDefinition::MemberVariable& memVar = def->getMemberVariable(s_index);
 		
 		int exprType = node->getChild(1)->getType();
 		if (exprType == PT_ConstantExpression)
@@ -1147,7 +1147,7 @@ void ParseTree::createMemberVariableBytecode(GunDefinition* def, ParseTreeNode* 
 	}
 }
 // --------------------------------------------------------------------------------
-void ParseTree::generateFireTail(GunDefinition* def, ParseTreeNode* node, 
+void ParseTree::generateFireTail(EmitterDefinition* def, ParseTreeNode* node, 
 								 BytecodeBlock* bytecode, FireType* ft)
 {
 	int nodeType = node->getType();
@@ -1204,11 +1204,11 @@ void ParseTree::generateFireTail(GunDefinition* def, ParseTreeNode* node,
 	}
 }
 // --------------------------------------------------------------------------------
-void ParseTree::generateBytecode(GunDefinition* def, ParseTreeNode* node,
+void ParseTree::generateBytecode(EmitterDefinition* def, ParseTreeNode* node,
 								 BytecodeBlock* bytecode, bool reset)
 {
-	static GunDefinition::State* s_curState = 0;
-	static GunDefinition::Function* s_curFunction = 0;
+	static EmitterDefinition::State* s_curState = 0;
+	static EmitterDefinition::Function* s_curFunction = 0;
 	static bool s_stateNotFunction = true;
 
 	if (reset)
@@ -1234,7 +1234,7 @@ void ParseTree::generateBytecode(GunDefinition* def, ParseTreeNode* node,
 				generateBytecode(def, node->getChild(1), &stateByteCode);
 				
 				// Give to ScriptMachine
-				CodeRecord* rec = getCodeRecord("Gun", def->getName(), "State", stateName);
+				CodeRecord* rec = getCodeRecord("Emitter", def->getName(), "State", stateName);
 				rec->byteCodeSize = stateByteCode.size();
 				rec->byteCode = new uint32[rec->byteCodeSize];
 				for (uint32 i = 0; i < rec->byteCodeSize; ++i)
@@ -1256,7 +1256,7 @@ void ParseTree::generateBytecode(GunDefinition* def, ParseTreeNode* node,
 				generateBytecode(def, node->getChild(2), &funcByteCode);
 				
 				// Give to ScriptMachine
-				CodeRecord* rec = getCodeRecord("Gun", def->getName(), "Function", funcName);
+				CodeRecord* rec = getCodeRecord("Emitter", def->getName(), "Function", funcName);
 				rec->byteCodeSize = funcByteCode.size();
 				rec->byteCode = new uint32[rec->byteCodeSize];
 				for (uint32 i = 0; i < rec->byteCodeSize; ++i)
@@ -1298,9 +1298,9 @@ void ParseTree::generateBytecode(GunDefinition* def, ParseTreeNode* node,
 				CodeRecord* rec;
 				int index;
 				if (s_stateNotFunction)
-					rec = getCodeRecord("Gun", def->getName(), "State", s_curState->name);
+					rec = getCodeRecord("Emitter", def->getName(), "State", s_curState->name);
 				else
-					rec = getCodeRecord("Gun", def->getName(), "Function", s_curFunction->name);
+					rec = getCodeRecord("Emitter", def->getName(), "Function", s_curFunction->name);
 
 				index = rec->getVariableIndex(varName);
 
@@ -1415,7 +1415,7 @@ void ParseTree::generateBytecode(GunDefinition* def, ParseTreeNode* node,
 		{
 			String stateName = node->getChild(0)->getStringData();
 
-			int index = getCodeRecordIndex("Gun", def->getName(), "State", stateName);
+			int index = getCodeRecordIndex("Emitter", def->getName(), "State", stateName);
 			if (index >= 0)
 			{
 				bytecode->push_back(BC_GOTO);
@@ -1514,9 +1514,9 @@ void ParseTree::generateBytecode(GunDefinition* def, ParseTreeNode* node,
 			int index;
 			CodeRecord* rec;
 			if (s_stateNotFunction)
-				rec = getCodeRecord("Gun", def->getName(), "State", s_curState->name);
+				rec = getCodeRecord("Emitter", def->getName(), "State", s_curState->name);
 			else
-				rec = getCodeRecord("Gun", def->getName(), "Function", s_curFunction->name);
+				rec = getCodeRecord("Emitter", def->getName(), "Function", s_curFunction->name);
 			index = rec->getVariableIndex(varName);
 
 			if (index >= 0)
@@ -1622,13 +1622,13 @@ void ParseTree::generateBytecode(GunDefinition* def, ParseTreeNode* node,
 	}
 }
 // --------------------------------------------------------------------------------
-GunDefinition* ParseTree::createGunDefinition(ParseTreeNode* node,
+EmitterDefinition* ParseTree::createEmitterDefinition(ParseTreeNode* node,
 											  const MemberVariableDeclarationMap& memberDecls)
 {
 	String name = node->getStringData();
 
 	// Create definition
-	GunDefinition* def = new GunDefinition(name);
+	EmitterDefinition* def = new EmitterDefinition(name);
 
 	// Create pre-declared member variables first
 	addMemberVariables(def, memberDecls);
@@ -1702,7 +1702,7 @@ GunDefinition* ParseTree::createGunDefinition(ParseTreeNode* node,
 		return 0;
 	}
 
-	// Set the maximum number of locals for the GunDefinition
+	// Set the maximum number of locals for the EmitterDefinition
 	int maxLocals = -1;
 	std::list<int>::iterator sit = mStateIndices.begin();
 	while (sit != mStateIndices.end())
@@ -1762,21 +1762,21 @@ GunDefinition* ParseTree::createGunDefinition(ParseTreeNode* node,
 	}
 }
 // --------------------------------------------------------------------------------
-void ParseTree::createGunDefinitions(ParseTreeNode* node,
+void ParseTree::createEmitterDefinitions(ParseTreeNode* node,
 									 const MemberVariableDeclarationMap& memberDecls)
 {
-	if (node->getType() == PT_GunDefinition)
+	if (node->getType() == PT_EmitterDefinition)
 	{
-		GunDefinition* def = createGunDefinition(node, memberDecls);
+		EmitterDefinition* def = createEmitterDefinition(node, memberDecls);
 		if (def)
-			mScriptMachine->addGunDefinition(def->getName(), def);
+			mScriptMachine->addEmitterDefinition(def->getName(), def);
 	}
 	else
 	{
 		for (int i = 0; i < ParseTreeNode::MAX_CHILDREN; ++i)
 		{
 			if (node->getChild(i))
-				createGunDefinitions(node->getChild(i), memberDecls);
+				createEmitterDefinitions(node->getChild(i), memberDecls);
 		}
 	}
 }
@@ -1829,8 +1829,8 @@ void ParseTree::print(ParseTreeNode* node, int indent)
 
 	switch(node->getType())
 	{
-	case PT_GunDefinition:
-		std::cout << "Gun Definition: " << node->getChild(0)->getStringData();
+	case PT_EmitterDefinition:
+		std::cout << "Emitter Definition: " << node->getChild(0)->getStringData();
 		break;
 
 	case PT_FunctionCall:
