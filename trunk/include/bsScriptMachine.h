@@ -136,7 +136,7 @@ namespace BS_NMSP
 
 		// Script state processing
 		void interpretCode(const uint32* code, size_t length, ScriptState& st, int* curState, 
-			FireTypeControl* record, bstype x, bstype y, bstype* members, Gun* gun, bool loop);
+			FireTypeControl* record, bstype x, bstype y, bstype* members, bool loop);
 
 		void processGunState(GunScriptRecord* gsr, Gun* gun);
 

@@ -426,8 +426,7 @@ void ParseTree::checkLoopDepth(ParseTreeNode *node, int& depth)
 		--depth;
 }
 // --------------------------------------------------------------------------------
-void ParseTree::createMemberVariables(GunDefinition* def, 
-											   ParseTreeNode* node)
+void ParseTree::createMemberVariables(GunDefinition* def, ParseTreeNode* node)
 {
 	if (node->getType() == PT_AssignStatement)
 	{
@@ -497,6 +496,44 @@ void ParseTree::addMemberVariables(GunDefinition* def,
 	def->setNumUserMembers(members);
 }
 // --------------------------------------------------------------------------------
+bool ParseTree::checkAffectorArguments(GunDefinition* def, ParseTreeNode* node)
+{
+	bool ok = true;
+	if (node->getType() == PT_Identifier)
+	{
+		int pType = node->getParent()->getType();
+		String varName = node->getStringData();
+		
+		if (pType >= PT_ConstantExpression && pType <= PT_UnaryNegStatement)
+		{
+			if (def->getMemberVariableIndex(varName) < 0)
+			{
+				if (mScriptMachine->getGlobalVariableIndex(varName) < 0)
+				{
+					addError(node->getLine(), "Variable '" + varName + "' is not declared.");
+					ok = false;
+				}
+			}
+			else
+			{
+				addError(node->getLine(), "Cannot use member variables in affector arguments.");
+				ok = false;
+			}
+		}
+	}
+
+	for (int i = 0; i < ParseTreeNode::MAX_CHILDREN; ++ i)
+	{
+		if (node->getChild(i))
+		{
+			if (!checkAffectorArguments(def, node->getChild(i)))
+				ok = false;
+		}
+	}
+
+	return ok;
+}
+// --------------------------------------------------------------------------------
 void ParseTree::createAffectors(GunDefinition* def, ParseTreeNode* node)
 {
 	if (node->getType() == PT_AffectorDecl)
@@ -514,13 +551,16 @@ void ParseTree::createAffectors(GunDefinition* def, ParseTreeNode* node)
 			}
 		}
 
-		AffectorInfo info;
-		info.name = affName;
-		info.function = node->getChild(1)->getChild(0)->getStringData();
-		countFunctionCallArguments(node->getChild(1), info.numArgs);
-		info.node = node;
+		if(checkAffectorArguments(def, node->getChild(1)))
+		{
+			AffectorInfo info;
+			info.name = affName;
+			info.function = node->getChild(1)->getChild(0)->getStringData();
+			countFunctionCallArguments(node->getChild(1), info.numArgs);
+			info.node = node;
 
-		mAffectors.push_back(info);
+			mAffectors.push_back(info);
+		}
 	}
 
 	for (int i = 0; i < ParseTreeNode::MAX_CHILDREN; ++ i)
@@ -588,6 +628,9 @@ void ParseTree::checkFireControllers(GunDefinition* def, ParseTreeNode* node,
 	{
 		// Named affectors
 		String affector = node->getStringData();
+
+		// Make sure affector does not take member variables as arguments
+		// ...
 
 		int index = -1;
 		for (size_t i = 0; i < mAffectors.size(); ++i)
@@ -696,13 +739,8 @@ void ParseTree::buildFunctions(GunDefinition* def, ParseTreeNode* node)
 			// See if it's a member or global
 			if (def->getMemberVariableIndex(varName) >= 0)
 			{
-				int mvIndex = def->getMemberVariableIndex(varName);
-				const GunDefinition::MemberVariable& mv = def->getMemberVariable(mvIndex);
-				if (mv.readonly)
-				{
-					addError(node->getLine(), "'" + varName + "' is read-only.");
-					break;
-				}
+				addError(node->getLine(), "Cannot use member variables in control functions.");
+				break;
 			}
 			else if (mScriptMachine->getGlobalVariableIndex(varName) >= 0)
 			{
@@ -782,6 +820,11 @@ void ParseTree::buildFunctions(GunDefinition* def, ParseTreeNode* node)
 						{
 							addError(node->getLine(), "Variable '" + varName + "' is not declared.");
 						}
+					}
+					else
+					{
+						addError(node->getLine(), "Cannot use member variables in functions.");
+						break;
 					}
 				}
 			}

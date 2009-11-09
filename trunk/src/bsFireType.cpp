@@ -254,8 +254,8 @@ void FireType::generateBytecode(GunDefinition* def, ParseTreeNode* node,
 	code->push_back((uint32) index);
 }
 // --------------------------------------------------------------------------------
-int FireType::processCode(const uint32* code, ScriptState& state, Gun *gun, bstype x, 
-							  bstype y, bstype* members)
+int FireType::processCode(const uint32* code, ScriptState& state, bstype x, 
+						  bstype y, bstype* members)
 {
 	int funcIndex = code[state.curInstruction + 2];
 	uint32 numAffectors = 0;
@@ -283,7 +283,6 @@ int FireType::processCode(const uint32* code, ScriptState& state, Gun *gun, bsty
 			int gunDef = code[state.curInstruction + 6 + numAffectors];
 			type->__ft = mVM->getFireTypeRecord(gunDef);
 			type->__ft->__type = this;
-			type->__ft->__gun = gun;
 
 			// Set up control function
 			if (controlFunc != 0)
@@ -291,7 +290,6 @@ int FireType::processCode(const uint32* code, ScriptState& state, Gun *gun, bsty
 				int numArgs = code[state.curInstruction + 4];
 
 				type->__ft->code = mVM->getCodeRecord(controlFunc - 1);
-				type->__ft->__members = members;
 				
 				state.stackHead -= numArgs;
 				memcpy(type->__ft->state.locals, state.stack + state.stackHead, numArgs * sizeof(bstype));

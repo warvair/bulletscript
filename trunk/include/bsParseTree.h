@@ -171,7 +171,10 @@ namespace BS_NMSP
 
 		void addMemberVariables(GunDefinition* def, const MemberVariableDeclarationMap& memberDecls);
 
+		// Affectors
 		void createAffectors(GunDefinition* def, ParseTreeNode* node);
+
+		bool checkAffectorArguments(GunDefinition* def, ParseTreeNode* node);
 
 		void setAffectorRecalculationType(GunDefinition* def, Affector* affector, ParseTreeNode* node);
 

@@ -40,8 +40,6 @@ namespace BS_NMSP
 		// Internal
 		FireType* __type;
 		UserTypeBase* __object;	// Pointer to the current object that owns this FireTypeControl
-		Gun* __gun;
-		bstype* __members; // Weak pointer to Gun members
 		int __gunDef;			// GunDefinition index
 
 		FireTypeControl(int numLocals) :
@@ -50,8 +48,6 @@ namespace BS_NMSP
 			numAffectors(0),
 			__type(0),
 			__object(0),
-			__gun(0),
-			__members(0),
 			__gunDef(-1)
 		{
 			if (numLocals > 0)
@@ -119,7 +115,7 @@ namespace BS_NMSP
 		void generateBytecode(GunDefinition* def, ParseTreeNode* node,
 			BytecodeBlock* code, const String& funcName);
 
-		int processCode(const uint32* code, ScriptState& state, Gun *gun, bstype x, 
+		int processCode(const uint32* code, ScriptState& state, bstype x, 
 			bstype y, bstype* members);
 
 		void registerAffector(const String& name, AffectorFunction func);

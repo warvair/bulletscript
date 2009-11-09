@@ -31,7 +31,7 @@ namespace BS_NMSP
 
 		size_t mBytecodeSize;
 
-		void recalculateArguments(GunScriptRecord* record);
+		void recalculateArguments();
 
 	public:
 

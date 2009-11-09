@@ -4,7 +4,7 @@ gun Flower
 	fl_speed = 2;
 	fl_dir = 1;
 
-	gravity = affector Gravity(Level_Time * 5);
+	gravity = affector Gravity(98);
 
 	death = function(time)
 	{
