@@ -1,8 +1,13 @@
 Controller::setMember will not set emitter pos/angle correctly.
+	interpretCode also just sets the member array directly.  Maybe we should disallow people from
+	setting X/Y/Angle in script?  But let controllers set emitter x/y/angle.
+	Issue is that x/y/angle are special members, but implemented as normals ones, which can slow down
+	manipulating normal member vars.
 
 controllers should be able to change emitter member vars smoothly, like properties.  this will allow
 animation of emitters, eg moving gun position, or changing angle. $gun1.This_Angle = {45, 2};
-	other issues with this, look into it.
+	other issues with this, look into it.  also need to allow callbacks to user if driving emitters
+	with controllers.
 
 constant_expression needs to be able to take a member.var identifier, but only allow this in controller
 events/states.  Check in semantic checking.
@@ -35,8 +40,6 @@ health, etc.  But this would be better expressed using controllers and events.
 	
 	FireTypeBase::getPropertyIndex is bad, find a way round it (used in FireTypeBase set/get properties)
 	
-+= syntax for setting properties.	
-
 need to calculate memory usage if we're not going to allow custom allocators
 	
 need a way to release guns from memory pool, like firetypecontrols

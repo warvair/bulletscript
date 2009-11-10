@@ -343,10 +343,6 @@
 				>
 			</File>
 			<File
-				RelativePath="..\doc\Syntax.txt"
-				>
-			</File>
-			<File
 				RelativePath="..\Doc\ToDo.txt"
 				>
 			</File>

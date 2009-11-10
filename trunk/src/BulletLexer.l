@@ -51,7 +51,6 @@ BINARY    	[0-1]
 "die"							{ return (KEYWORD_DIE); }
 
 {DIGIT}+						{ return (INTEGER); }
-"-"{DIGIT}+						{ return (INTEGER); /* this is a bit of a hack */ }
 {DIGIT}*"."{DIGIT}+				{ return (REAL); }
 {DIGIT}+"."{DIGIT}*				{ return (REAL); }
 

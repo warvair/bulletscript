@@ -39,9 +39,9 @@ void Controller::setDefinition(ControllerDefinition* def)
 		ControllerDefinition::EmitterVariable& var = def->getEmitterVariable(i);
 		
 		EmitterInstance inst;
-		inst.x = 0;
-		inst.y = 0;
-		inst.angle = 0;
+		inst.x = var.x;
+		inst.y = var.y;
+		inst.angle = var.angle;
 
 		inst.emitter = mScriptMachine->createEmitter(var.emitter);
 		inst.emitter->setX(mRecord->members[Member_X] + inst.x);
