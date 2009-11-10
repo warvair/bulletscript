@@ -345,11 +345,11 @@ controller_definition
 	;
 	
 member_list
-	: assignment_statement
+	: simple_assignment_statement
 		{
 			$$ = $1;
 		}
-	| member_list assignment_statement
+	| member_list simple_assignment_statement
 		{
 			$$ = AST->createNode(PT_MemberList, yylineno);
 			$$->setChild(0, $1);
@@ -393,7 +393,14 @@ emitter_list
 	;
 			
 emitter
-	: identifier '=' identifier ';'
+	: identifier '=' identifier function_call_arguments ';'
+		{
+			$$ = AST->createNode(PT_Emitter, yylineno);
+			$$->setChild(0, $1);
+			$$->setChild(1, $3);
+			$$->setChild(2, $4);
+		}
+	| identifier '=' identifier ';'
 		{
 			$$ = AST->createNode(PT_Emitter, yylineno);
 			$$->setChild(0, $1);
@@ -625,7 +632,11 @@ function_statement
 		{
 			$$ = $1;
 		}
-	| assignment_statement
+	| simple_assignment_statement
+		{
+			$$ = $1;
+		}
+	| extended_assignment_statement
 		{
 			$$ = $1;
 		}
@@ -660,7 +671,11 @@ event_statement
 		{
 			$$ = $1;
 		}
-	| assignment_statement
+	| simple_assignment_statement
+		{
+			$$ = $1;
+		}
+	| extended_assignment_statement
 		{
 			$$ = $1;
 		}
@@ -687,7 +702,11 @@ emitter_state_statement
 		{
 			$$ = $1;
 		}
-	| assignment_statement
+	| simple_assignment_statement
+		{
+			$$ = $1;
+		}
+	| extended_assignment_statement
 		{
 			$$ = $1;
 		}
@@ -718,7 +737,11 @@ controller_state_statement
 		{
 			$$ = $1;
 		}
-	| assignment_statement
+	| simple_assignment_statement
+		{
+			$$ = $1;
+		}
+	| extended_assignment_statement
 		{
 			$$ = $1;
 		}
@@ -843,14 +866,17 @@ controller_state_conditional_statement
 		}
 	;	
 
-assignment_statement
+simple_assignment_statement
 	: identifier '=' constant_expression ';'
 		{
 			$$ = AST->createNode(PT_AssignStatement, yylineno);
 			$$->setChild(0, $1);
 			$$->setChild(1, $3);
 		}
-	| identifier SYMBOL_INC ';'
+	;
+		
+extended_assignment_statement		
+	: identifier SYMBOL_INC ';'
 		{
 			$$ = AST->createNode(PT_AssignStatement, yylineno);
 			$$->setChild(0, $1);
@@ -1023,7 +1049,7 @@ member_assignment_statement
 			id_node->setString($1->getStringData().c_str());
 			
 			add_node->setChild(0, id_node);
-			add_node->setChild(1, $3);
+			add_node->setChild(1, $5);
 			ce_node->setChild(0, add_node);
 			$$->setChild(1, ce_node);
 			$$->setChild(2, $3);
@@ -1041,7 +1067,7 @@ member_assignment_statement
 			id_node->setString($1->getStringData().c_str());
 			
 			add_node->setChild(0, id_node);
-			add_node->setChild(1, $3);
+			add_node->setChild(1, $5);
 			ce_node->setChild(0, add_node);
 			$$->setChild(1, ce_node);
 			$$->setChild(2, $3);
@@ -1059,7 +1085,7 @@ member_assignment_statement
 			id_node->setString($1->getStringData().c_str());
 			
 			add_node->setChild(0, id_node);
-			add_node->setChild(1, $3);
+			add_node->setChild(1, $5);
 			ce_node->setChild(0, add_node);
 			$$->setChild(1, ce_node);
 			$$->setChild(2, $3);
@@ -1077,7 +1103,7 @@ member_assignment_statement
 			id_node->setString($1->getStringData().c_str());
 			
 			add_node->setChild(0, id_node);
-			add_node->setChild(1, $3);
+			add_node->setChild(1, $5);
 			ce_node->setChild(0, add_node);
 			$$->setChild(1, ce_node);
 			$$->setChild(2, $3);
@@ -1096,6 +1122,186 @@ property_statement
 			$$ = AST->createNode(PT_SetStatement, yylineno);
 			$$->setChild(0, $1);
 			$$->setChild(1, $4);
+			$$->setChild(2, $6);
+		}
+	| property SYMBOL_INC ';'
+		{
+			$$ = AST->createNode(PT_SetStatement, yylineno);
+			$$->setChild(0, $1);
+			
+			// create 'identifier + 1' expression
+			YYSTYPE ce_node = AST->createNode(PT_ConstantExpression, yylineno);
+			YYSTYPE add_node = AST->createNode(PT_AddStatement, yylineno);
+			
+			YYSTYPE id_node = AST->createNode(PT_Property, yylineno);
+			id_node->setString($1->getStringData().c_str());
+			
+			YYSTYPE v_node = AST->createNode(PT_Constant, yylineno);
+			v_node->setValue(1);
+
+			add_node->setChild(0, id_node);
+			add_node->setChild(1, v_node);
+			ce_node->setChild(0, add_node);
+			$$->setChild(1, ce_node);
+		}
+	| property SYMBOL_DEC ';'
+		{
+			$$ = AST->createNode(PT_SetStatement, yylineno);
+			$$->setChild(0, $1);
+			
+			// create 'identifier + 1' expression
+			YYSTYPE ce_node = AST->createNode(PT_ConstantExpression, yylineno);
+			YYSTYPE add_node = AST->createNode(PT_SubtractStatement, yylineno);
+			
+			YYSTYPE id_node = AST->createNode(PT_Property, yylineno);
+			id_node->setString($1->getStringData().c_str());
+			
+			YYSTYPE v_node = AST->createNode(PT_Constant, yylineno);
+			v_node->setValue(1);
+
+			add_node->setChild(0, id_node);
+			add_node->setChild(1, v_node);
+			ce_node->setChild(0, add_node);
+			$$->setChild(1, ce_node);
+		}
+	| property SYMBOL_ADD_A constant_expression ';'
+		{
+			$$ = AST->createNode(PT_SetStatement, yylineno);
+			$$->setChild(0, $1);
+			
+			// create 'identifier +' expression
+			YYSTYPE ce_node = AST->createNode(PT_ConstantExpression, yylineno);
+			YYSTYPE add_node = AST->createNode(PT_AddStatement, yylineno);
+			
+			YYSTYPE id_node = AST->createNode(PT_Property, yylineno);
+			id_node->setString($1->getStringData().c_str());
+			
+			add_node->setChild(0, id_node);
+			add_node->setChild(1, $3);
+			ce_node->setChild(0, add_node);
+			$$->setChild(1, ce_node);
+		}
+	| property SYMBOL_SUB_A constant_expression ';'
+		{
+			$$ = AST->createNode(PT_SetStatement, yylineno);
+			$$->setChild(0, $1);
+			
+			// create 'identifier -' expression
+			YYSTYPE ce_node = AST->createNode(PT_ConstantExpression, yylineno);
+			YYSTYPE add_node = AST->createNode(PT_SubtractStatement, yylineno);
+			
+			YYSTYPE id_node = AST->createNode(PT_Property, yylineno);
+			id_node->setString($1->getStringData().c_str());
+			
+			add_node->setChild(0, id_node);
+			add_node->setChild(1, $3);
+			ce_node->setChild(0, add_node);
+			$$->setChild(1, ce_node);
+		}
+	| property SYMBOL_MUL_A constant_expression ';'
+		{
+			$$ = AST->createNode(PT_SetStatement, yylineno);
+			$$->setChild(0, $1);
+			
+			// create 'identifier *' expression
+			YYSTYPE ce_node = AST->createNode(PT_ConstantExpression, yylineno);
+			YYSTYPE add_node = AST->createNode(PT_MultiplyStatement, yylineno);
+			
+			YYSTYPE id_node = AST->createNode(PT_Property, yylineno);
+			id_node->setString($1->getStringData().c_str());
+			
+			add_node->setChild(0, id_node);
+			add_node->setChild(1, $3);
+			ce_node->setChild(0, add_node);
+			$$->setChild(1, ce_node);
+		}
+	| property SYMBOL_DIV_A constant_expression ';'
+		{
+			$$ = AST->createNode(PT_SetStatement, yylineno);
+			$$->setChild(0, $1);
+			
+			// create 'identifier /' expression
+			YYSTYPE ce_node = AST->createNode(PT_ConstantExpression, yylineno);
+			YYSTYPE add_node = AST->createNode(PT_DivideStatement, yylineno);
+			
+			YYSTYPE id_node = AST->createNode(PT_Property, yylineno);
+			id_node->setString($1->getStringData().c_str());
+			
+			add_node->setChild(0, id_node);
+			add_node->setChild(1, $3);
+			ce_node->setChild(0, add_node);
+			$$->setChild(1, ce_node);
+		}
+	| property SYMBOL_ADD_A '{' constant_expression ',' constant_expression '}' ';'
+		{
+			$$ = AST->createNode(PT_SetStatement, yylineno);
+			$$->setChild(0, $1);
+			
+			// create 'identifier +' expression
+			YYSTYPE ce_node = AST->createNode(PT_ConstantExpression, yylineno);
+			YYSTYPE add_node = AST->createNode(PT_AddStatement, yylineno);
+			
+			YYSTYPE id_node = AST->createNode(PT_Property, yylineno);
+			id_node->setString($1->getStringData().c_str());
+			
+			add_node->setChild(0, id_node);
+			add_node->setChild(1, $4);
+			ce_node->setChild(0, add_node);
+			$$->setChild(1, ce_node);
+			$$->setChild(2, $6);
+		}
+	| property SYMBOL_SUB_A '{' constant_expression ',' constant_expression '}' ';'
+		{
+			$$ = AST->createNode(PT_SetStatement, yylineno);
+			$$->setChild(0, $1);
+			
+			// create 'identifier -' expression
+			YYSTYPE ce_node = AST->createNode(PT_ConstantExpression, yylineno);
+			YYSTYPE add_node = AST->createNode(PT_SubtractStatement, yylineno);
+			
+			YYSTYPE id_node = AST->createNode(PT_Property, yylineno);
+			id_node->setString($1->getStringData().c_str());
+			
+			add_node->setChild(0, id_node);
+			add_node->setChild(1, $4);
+			ce_node->setChild(0, add_node);
+			$$->setChild(1, ce_node);
+			$$->setChild(2, $6);
+		}
+	| property SYMBOL_MUL_A '{' constant_expression ',' constant_expression '}' ';'
+		{
+			$$ = AST->createNode(PT_SetStatement, yylineno);
+			$$->setChild(0, $1);
+			
+			// create 'identifier *' expression
+			YYSTYPE ce_node = AST->createNode(PT_ConstantExpression, yylineno);
+			YYSTYPE add_node = AST->createNode(PT_MultiplyStatement, yylineno);
+			
+			YYSTYPE id_node = AST->createNode(PT_Property, yylineno);
+			id_node->setString($1->getStringData().c_str());
+			
+			add_node->setChild(0, id_node);
+			add_node->setChild(1, $4);
+			ce_node->setChild(0, add_node);
+			$$->setChild(1, ce_node);
+			$$->setChild(2, $6);
+		}
+	| property SYMBOL_DIV_A '{' constant_expression ',' constant_expression '}' ';'
+		{
+			$$ = AST->createNode(PT_SetStatement, yylineno);
+			$$->setChild(0, $1);
+			
+			// create 'identifier /' expression
+			YYSTYPE ce_node = AST->createNode(PT_ConstantExpression, yylineno);
+			YYSTYPE add_node = AST->createNode(PT_DivideStatement, yylineno);
+			
+			YYSTYPE id_node = AST->createNode(PT_Property, yylineno);
+			id_node->setString($1->getStringData().c_str());
+			
+			add_node->setChild(0, id_node);
+			add_node->setChild(1, $4);
+			ce_node->setChild(0, add_node);
+			$$->setChild(1, ce_node);
 			$$->setChild(2, $6);
 		}
 	;
@@ -1466,7 +1672,6 @@ constant
 constant_integer
 	: INTEGER
 		{
-			// This only accepts non-negative integers
 			$$ = AST->createNode(PT_Constant, yylineno);
 			$$->setValue(atof(yytext));
 		}

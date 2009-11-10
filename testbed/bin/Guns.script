@@ -3,9 +3,7 @@ controller Boss1
 	// member variables
 	// ...
 
-	// emitters - how do we set start position?
-	// could do Flower(0, 16, 180) but this would require knowing the offsets.  May be unavoidable.
-	MainGun = Flower;
+	mainGun = Flower(0, 0, 180);
 	
 	// events
 	Damaged = event(newHealth)
@@ -59,7 +57,7 @@ emitter Flower
 		fireA bullet($angle + 5 * dir, 70) : petal_i(dir);
 		$blue = 0.2;
 		wait(0.4);
-		$angle = {$angle + 60 * dir, 2};
+		$angle += {60 * dir, 2};
 		wait(1.7);
 
 		i = 0;
@@ -77,7 +75,7 @@ emitter Flower
 		$blue = 0.6;
 		$green = 0.2;
 		wait(0.2);
-		$angle = {$angle + 60 * dir, 2};
+		$angle += {60 * dir, 2};
 		wait(1.2);
 		die();
 	}

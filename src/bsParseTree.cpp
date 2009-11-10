@@ -69,11 +69,8 @@ int ParseTreeNode::getLine() const
 // --------------------------------------------------------------------------------
 void ParseTreeNode::foldBinaryNode()
 {
-	if (mChildren[0]->getType() != PT_Constant ||
-		mChildren[1]->getType() != PT_Constant)
-	{
+	if (mChildren[0]->getType() != PT_Constant || mChildren[1]->getType() != PT_Constant)
 		return;
-	}
 
 	bstype val1 = mChildren[0]->getValueData();
 	bstype val2 = mChildren[1]->getValueData();
@@ -136,12 +133,10 @@ void ParseTreeNode::foldBinaryNode()
 	}
 }
 // --------------------------------------------------------------------------------
-void ParseTreeNode::foldUnaryNode ()
+void ParseTreeNode::foldUnaryNode()
 {
-	if (mChildren[0]->getType () != PT_Constant)
-	{
+	if (mChildren[0]->getType() != PT_Constant)
 		return;
-	}
 
 	bstype val = mChildren[0]->getValueData();
 
@@ -171,13 +166,10 @@ void ParseTreeNode::foldUnaryNode ()
 	}
 }
 // --------------------------------------------------------------------------------
-void ParseTreeNode::foldLogicalNode ()
+void ParseTreeNode::foldLogicalNode()
 {
-	if (mChildren[0]->getType () != PT_Constant ||
-		mChildren[1]->getType () != PT_Constant)
-	{
+	if (mChildren[0]->getType () != PT_Constant || mChildren[1]->getType () != PT_Constant)
 		return;
-	}
 
 	bstype val1 = mChildren[0]->getValueData();
 	bstype val2 = mChildren[1]->getValueData();
@@ -590,7 +582,21 @@ void ParseTree::createEmitterVariables(ControllerDefinition* def, ParseTreeNode*
 			return;
 		}
 
-		def->addEmitterVariable(varName, emitType);
+		bstype x = bsvalue0, y = bsvalue0, angle = bsvalue0;
+		if (node->getChild(2))
+		{
+			// Member variables have been specified
+			// If there are more than 3, give a warning but compile.
+			// This will require construction code.
+			// ...
+
+			// We run constructor code for member variables, then need code which pushes
+			// x/y/angle onto stack for each emitter, then take stack.  This does mean
+			// that if we have more than 10 guns we will hit the stack limit, though.
+			// Would be reasonable to only allow constants, rather than expressions.
+		}
+
+		def->addEmitterVariable(varName, emitType, x, y, angle);
 	}
 
 	for (int i = 0; i < ParseTreeNode::MAX_CHILDREN; ++ i)

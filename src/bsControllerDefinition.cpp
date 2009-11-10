@@ -77,11 +77,17 @@ int ControllerDefinition::getNumUserMembers() const
 }
 // --------------------------------------------------------------------------------
 ControllerDefinition::EmitterVariable& ControllerDefinition::addEmitterVariable(const String& name, 
-																				const String& emitter)
+																				const String& emitter,
+																				bstype x, 
+																				bstype y, 
+																				bstype angle)
 {
 	EmitterVariable emit;
 	emit.name = name;
 	emit.emitter = emitter;
+	emit.x = x;
+	emit.y = y;
+	emit.angle = angle;
 
 	mEmitterVariables.push_back(emit);
 
