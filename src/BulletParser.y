@@ -21,6 +21,89 @@ void yyerror (char *a_msg)
 	AST->addError (yylineno, a_msg);
 }
 
+void generate_affector_list(YYSTYPE parentNode, YYSTYPE affNode)
+{
+	if (affNode->getType() == PT_AffectorDecl)
+	{
+		// Create a PT_AffectorDeclList and make affNode the child of it.
+		YYSTYPE newChild = AST->createNode(PT_AffectorDeclList, affNode->getLine());
+		newChild->setChild(0, affNode);
+		parentNode->setChild(PT_EmitterAffectorNode, newChild);
+	}
+	else
+	{
+		parentNode->setChild(PT_EmitterAffectorNode, affNode);
+	}
+}
+
+void generate_emitter_member_list(YYSTYPE parentNode, YYSTYPE memNode)
+{
+	if (memNode->getType() == PT_AssignStatement)
+	{
+		// Create a PT_MemberList and make memNode the child of it.
+		YYSTYPE newChild = AST->createNode(PT_MemberList, memNode->getLine());
+		newChild->setChild(0, memNode);
+		parentNode->setChild(PT_EmitterMemberNode, newChild);
+	}
+	else
+	{
+		parentNode->setChild(PT_EmitterMemberNode, memNode);
+	}
+}
+
+void generate_emitter_list(YYSTYPE parentNode, YYSTYPE emitNode)
+{
+	if (emitNode->getType() == PT_Emitter)
+	{
+		// Create a PT_EmitterList and make emitNode the child of it.
+		YYSTYPE newChild = AST->createNode(PT_EmitterList, emitNode->getLine());
+		newChild->setChild(0, emitNode);
+		parentNode->setChild(PT_ControllerEmitterNode, newChild);
+	}
+	else
+	{
+		parentNode->setChild(PT_EmitterAffectorNode, emitNode);
+	}
+}
+
+void generate_assignment_expr(int nodeType, int idType, YYSTYPE parentNode, YYSTYPE idNode, YYSTYPE exprNode)
+{
+	parentNode->setChild(0, idNode);
+	YYSTYPE ce_node = AST->createNode(PT_ConstantExpression, yylineno);
+	YYSTYPE expr_node = AST->createNode(nodeType, yylineno);
+				
+	YYSTYPE id_node = AST->createNode(idType, yylineno);
+	id_node->setString(idNode->getStringData().c_str());
+				
+	expr_node->setChild(0, id_node);
+	expr_node->setChild(1, exprNode);
+	ce_node->setChild(0, expr_node);
+	parentNode->setChild(1, ce_node);
+}
+
+void generate_inc_expr(int value, int nodeType, YYSTYPE parentNode, YYSTYPE idNode)
+{
+	parentNode->setChild(0, idNode);
+	YYSTYPE ce_node = AST->createNode(PT_ConstantExpression, yylineno);
+	
+	YYSTYPE inc_node = 0;
+	if (value == 1)
+		inc_node = AST->createNode(PT_AddStatement, yylineno);
+	else if (value == -1)
+		inc_node = AST->createNode(PT_SubtractStatement, yylineno);
+	
+	YYSTYPE id_node = AST->createNode(nodeType, yylineno);
+	id_node->setString(idNode->getStringData().c_str());
+	
+	YYSTYPE v_node = AST->createNode(PT_Constant, yylineno);
+	v_node->setValue(1);
+
+	inc_node->setChild(0, id_node);
+	inc_node->setChild(1, v_node);
+	ce_node->setChild(0, inc_node);
+	parentNode->setChild(1, ce_node);
+}
+
 %}
 
 %token KEYWORD_CONTROLLER
@@ -115,19 +198,7 @@ emitter_definition
 			$$->setString($2->getStringData().c_str());			
 			delete $2;
 			
-			// affector list
-			if ($4->getType() == PT_AffectorDecl)
-			{
-				// Create a PT_AffectorDeclList and make $4 the child of it.
-				YYSTYPE newChild = AST->createNode(PT_AffectorDeclList, $4->getLine());
-				newChild->setChild(0, $4);
-				$$->setChild(PT_EmitterAffectorNode, newChild);
-			}
-			else
-			{
-				$$->setChild(PT_EmitterAffectorNode, $4);
-			}
-
+			generate_affector_list($$, $4);
 			$$->setChild(PT_EmitterMemberNode, 0);
 			$$->setChild(PT_EmitterFunctionNode, 0);
 			$$->setChild(PT_EmitterStateNode, $5);
@@ -138,19 +209,7 @@ emitter_definition
 			$$->setString($2->getStringData().c_str());			
 			delete $2;
 			
-			// affector list
-			if ($4->getType() == PT_AffectorDecl)
-			{
-				// Create a PT_AffectorDeclList and make $4 the child of it.
-				YYSTYPE newChild = AST->createNode(PT_AffectorDeclList, $4->getLine());
-				newChild->setChild(0, $4);
-				$$->setChild(PT_EmitterAffectorNode, newChild);
-			}
-			else
-			{
-				$$->setChild(PT_EmitterAffectorNode, $4);
-			}
-
+			generate_affector_list($$, $4);
 			$$->setChild(PT_EmitterMemberNode, 0);
 			$$->setChild(PT_EmitterFunctionNode, $5);
 			$$->setChild(PT_EmitterStateNode, $6);
@@ -161,19 +220,7 @@ emitter_definition
 			$$->setString($2->getStringData().c_str());			
 			delete $2;
 			
-			// member list
-			if ($4->getType() == PT_AssignStatement)
-			{
-				// Create a PT_MemberList and make $4 the child of it.
-				YYSTYPE newChild = AST->createNode(PT_MemberList, $4->getLine());
-				newChild->setChild(0, $4);
-				$$->setChild(PT_EmitterMemberNode, newChild);
-			}
-			else
-			{
-				$$->setChild(PT_EmitterMemberNode, $4);
-			}
-			
+			generate_emitter_member_list($$, $4);			
 			$$->setChild(PT_EmitterAffectorNode, 0);
 			$$->setChild(PT_EmitterFunctionNode, 0);
 			$$->setChild(PT_EmitterStateNode, $5);
@@ -184,19 +231,7 @@ emitter_definition
 			$$->setString($2->getStringData().c_str());			
 			delete $2;
 
-			// member list
-			if ($4->getType() == PT_AssignStatement)
-			{
-				// Create a PT_MemberList and make $4 the child of it.
-				YYSTYPE newChild = AST->createNode(PT_MemberList, $4->getLine());
-				newChild->setChild(0, $4);
-				$$->setChild(PT_EmitterMemberNode, newChild);
-			}
-			else
-			{
-				$$->setChild(PT_EmitterMemberNode, $4);
-			}
-
+			generate_emitter_member_list($$, $4);
 			$$->setChild(PT_EmitterAffectorNode, 0);
 			$$->setChild(PT_EmitterFunctionNode, $5);
 			$$->setChild(PT_EmitterStateNode, $6);
@@ -207,32 +242,8 @@ emitter_definition
 			$$->setString($2->getStringData().c_str());			
 			delete $2;
 			
-			// member list
-			if ($4->getType() == PT_AssignStatement)
-			{
-				// Create a PT_MemberList and make $4 the child of it.
-				YYSTYPE newChild = AST->createNode(PT_MemberList, $4->getLine());
-				newChild->setChild(0, $4);
-				$$->setChild(PT_EmitterMemberNode, newChild);
-			}
-			else
-			{
-				$$->setChild(PT_EmitterMemberNode, $4);
-			}
-			
-			// affector list
-			if ($5->getType() == PT_AffectorDecl)
-			{
-				// Create a PT_AffectorDeclList and make $5 the child of it.
-				YYSTYPE newChild = AST->createNode(PT_AffectorDeclList, $5->getLine());
-				newChild->setChild(0, $5);
-				$$->setChild(PT_EmitterAffectorNode, newChild);
-			}
-			else
-			{
-				$$->setChild(PT_EmitterAffectorNode, $5);
-			}
-
+			generate_emitter_member_list($$, $4);			
+			generate_affector_list($$, $5);
 			$$->setChild(PT_EmitterFunctionNode, 0);
 			$$->setChild(PT_EmitterStateNode, $6);
 		}		
@@ -242,32 +253,8 @@ emitter_definition
 			$$->setString($2->getStringData().c_str());			
 			delete $2;
 
-			// member list
-			if ($4->getType() == PT_AssignStatement)
-			{
-				// Create a PT_MemberList and make $4 the child of it.
-				YYSTYPE newChild = AST->createNode(PT_MemberList, $4->getLine());
-				newChild->setChild(0, $4);
-				$$->setChild(PT_EmitterMemberNode, newChild);
-			}
-			else
-			{
-				$$->setChild(PT_EmitterMemberNode, $4);
-			}
-
-			// affector list
-			if ($5->getType() == PT_AffectorDecl)
-			{
-				// Create a PT_AffectorDeclList and make $5 the child of it.
-				YYSTYPE newChild = AST->createNode(PT_AffectorDeclList, $5->getLine());
-				newChild->setChild(0, $5);
-				$$->setChild(PT_EmitterAffectorNode, newChild);
-			}
-			else
-			{
-				$$->setChild(PT_EmitterAffectorNode, $5);
-			}
-
+			generate_emitter_member_list($$, $4);
+			generate_affector_list($$, $5);
 			$$->setChild(PT_EmitterFunctionNode, $6);
 			$$->setChild(PT_EmitterStateNode, $7);
 		}		
@@ -302,19 +289,7 @@ controller_definition
 			$$->setString($2->getStringData().c_str());			
 			delete $2;
 			
-			// emitter list
-			if ($4->getType() == PT_Emitter)
-			{
-				// Create a PT_EmitterList and make $4 the child of it.
-				YYSTYPE newChild = AST->createNode(PT_EmitterList, $4->getLine());
-				newChild->setChild(0, $4);
-				$$->setChild(PT_ControllerEmitterNode, newChild);
-			}
-			else
-			{
-				$$->setChild(PT_EmitterAffectorNode, $4);
-			}
-
+			generate_emitter_list($$, $4);
 			$$->setChild(PT_ControllerMemberNode, 0);
 			$$->setChild(PT_ControllerEventNode, 0);
 			$$->setChild(PT_ControllerStateNode, $5);
@@ -325,19 +300,7 @@ controller_definition
 			$$->setString($2->getStringData().c_str());			
 			delete $2;
 			
-			// emitter list
-			if ($4->getType() == PT_Emitter)
-			{
-				// Create a PT_EmitterList and make $4 the child of it.
-				YYSTYPE newChild = AST->createNode(PT_EmitterList, $4->getLine());
-				newChild->setChild(0, $4);
-				$$->setChild(PT_ControllerEmitterNode, newChild);
-			}
-			else
-			{
-				$$->setChild(PT_EmitterAffectorNode, $4);
-			}
-
+			generate_emitter_list($$, $4);
 			$$->setChild(PT_ControllerMemberNode, 0);
 			$$->setChild(PT_ControllerEventNode, $5);
 			$$->setChild(PT_ControllerStateNode, $6);
@@ -745,10 +708,6 @@ controller_state_statement
 		{
 			$$ = $1;
 		}
-	| member_assignment_statement
-		{
-			$$ = $1;
-		}
 	| controller_state_iteration_statement
 		{
 			$$ = $1;
@@ -879,237 +838,35 @@ extended_assignment_statement
 	: identifier SYMBOL_INC ';'
 		{
 			$$ = AST->createNode(PT_AssignStatement, yylineno);
-			$$->setChild(0, $1);
-			
-			// create 'identifier + 1' expression
-			YYSTYPE ce_node = AST->createNode(PT_ConstantExpression, yylineno);
-			YYSTYPE add_node = AST->createNode(PT_AddStatement, yylineno);
-			
-			YYSTYPE id_node = AST->createNode(PT_Identifier, yylineno);
-			id_node->setString($1->getStringData().c_str());
-			
-			YYSTYPE v_node = AST->createNode(PT_Constant, yylineno);
-			v_node->setValue(1);
-
-			add_node->setChild(0, id_node);
-			add_node->setChild(1, v_node);
-			ce_node->setChild(0, add_node);
-			$$->setChild(1, ce_node);
+			generate_inc_expr(1, PT_Identifier, $$, $1);
 		}
 	| identifier SYMBOL_DEC ';'
 		{
 			$$ = AST->createNode(PT_AssignStatement, yylineno);
-			$$->setChild(0, $1);
-			
-			// create 'identifier - 1' expression
-			YYSTYPE ce_node = AST->createNode(PT_ConstantExpression, yylineno);
-			YYSTYPE add_node = AST->createNode(PT_SubtractStatement, yylineno);
-			
-			YYSTYPE id_node = AST->createNode(PT_Identifier, yylineno);
-			id_node->setString($1->getStringData().c_str());
-			
-			YYSTYPE v_node = AST->createNode(PT_Constant, yylineno);
-			v_node->setValue(1);
-
-			add_node->setChild(0, id_node);
-			add_node->setChild(1, v_node);
-			ce_node->setChild(0, add_node);
-			$$->setChild(1, ce_node);
+			generate_inc_expr(-1, PT_Identifier, $$, $1);
 		}
 	| identifier SYMBOL_ADD_A constant_expression ';'
 		{
 			$$ = AST->createNode(PT_AssignStatement, yylineno);
-			$$->setChild(0, $1);
-			
-			// create 'identifier + ' expression
-			YYSTYPE ce_node = AST->createNode(PT_ConstantExpression, yylineno);
-			YYSTYPE add_node = AST->createNode(PT_AddStatement, yylineno);
-			
-			YYSTYPE id_node = AST->createNode(PT_Identifier, yylineno);
-			id_node->setString($1->getStringData().c_str());
-			
-			add_node->setChild(0, id_node);
-			add_node->setChild(1, $3);
-			ce_node->setChild(0, add_node);
-			$$->setChild(1, ce_node);
+			generate_assignment_expr(PT_AddStatement, PT_Identifier, $$, $1, $3);
 		}
 	| identifier SYMBOL_SUB_A constant_expression ';'
 		{
 			$$ = AST->createNode(PT_AssignStatement, yylineno);
-			$$->setChild(0, $1);
-			
-			// create 'identifier - ' expression
-			YYSTYPE ce_node = AST->createNode(PT_ConstantExpression, yylineno);
-			YYSTYPE add_node = AST->createNode(PT_SubtractStatement, yylineno);
-			
-			YYSTYPE id_node = AST->createNode(PT_Identifier, yylineno);
-			id_node->setString($1->getStringData().c_str());
-			
-			add_node->setChild(0, id_node);
-			add_node->setChild(1, $3);
-			ce_node->setChild(0, add_node);
-			$$->setChild(1, ce_node);
+			generate_assignment_expr(PT_SubtractStatement, PT_Identifier, $$, $1, $3);
 		}
 	| identifier SYMBOL_MUL_A constant_expression ';'
 		{
 			$$ = AST->createNode(PT_AssignStatement, yylineno);
-			$$->setChild(0, $1);
-			
-			// create 'identifier * ' expression
-			YYSTYPE ce_node = AST->createNode(PT_ConstantExpression, yylineno);
-			YYSTYPE add_node = AST->createNode(PT_MultiplyStatement, yylineno);
-			
-			YYSTYPE id_node = AST->createNode(PT_Identifier, yylineno);
-			id_node->setString($1->getStringData().c_str());
-			
-			add_node->setChild(0, id_node);
-			add_node->setChild(1, $3);
-			ce_node->setChild(0, add_node);
-			$$->setChild(1, ce_node);
+			generate_assignment_expr(PT_MultiplyStatement, PT_Identifier, $$, $1, $3);
 		}
 	| identifier SYMBOL_DIV_A constant_expression ';'
 		{
 			$$ = AST->createNode(PT_AssignStatement, yylineno);
-			$$->setChild(0, $1);
-			
-			// create 'identifier / ' expression
-			YYSTYPE ce_node = AST->createNode(PT_ConstantExpression, yylineno);
-			YYSTYPE add_node = AST->createNode(PT_DivideStatement, yylineno);
-			
-			YYSTYPE id_node = AST->createNode(PT_Identifier, yylineno);
-			id_node->setString($1->getStringData().c_str());
-			
-			add_node->setChild(0, id_node);
-			add_node->setChild(1, $3);
-			ce_node->setChild(0, add_node);
-			$$->setChild(1, ce_node);
+			generate_assignment_expr(PT_DivideStatement, PT_Identifier, $$, $1, $3);
 		}
 	;
 	
-member_assignment_statement
-	: identifier '.' identifier '=' constant_expression ';'
-		{
-			$$ = AST->createNode(PT_AssignStatement, yylineno);
-			$$->setChild(0, $1);
-			$$->setChild(1, $5);
-			$$->setChild(2, $3);
-		}
-	| identifier '.' identifier SYMBOL_INC ';'
-		{
-			$$ = AST->createNode(PT_AssignStatement, yylineno);
-			$$->setChild(0, $1);
-			
-			// create 'identifier + 1' expression
-			YYSTYPE ce_node = AST->createNode(PT_ConstantExpression, yylineno);
-			YYSTYPE add_node = AST->createNode(PT_AddStatement, yylineno);
-			
-			YYSTYPE id_node = AST->createNode(PT_Identifier, yylineno);
-			id_node->setString($1->getStringData().c_str());
-			
-			YYSTYPE v_node = AST->createNode(PT_Constant, yylineno);
-			v_node->setValue(1);
-
-			add_node->setChild(0, id_node);
-			add_node->setChild(1, v_node);
-			ce_node->setChild(0, add_node);
-			$$->setChild(1, ce_node);
-			$$->setChild(2, $3);
-		}
-	| identifier '.' identifier SYMBOL_DEC ';'
-		{
-			$$ = AST->createNode(PT_AssignStatement, yylineno);
-			$$->setChild(0, $1);
-			
-			// create 'identifier - 1' expression
-			YYSTYPE ce_node = AST->createNode(PT_ConstantExpression, yylineno);
-			YYSTYPE add_node = AST->createNode(PT_SubtractStatement, yylineno);
-			
-			YYSTYPE id_node = AST->createNode(PT_Identifier, yylineno);
-			id_node->setString($1->getStringData().c_str());
-			
-			YYSTYPE v_node = AST->createNode(PT_Constant, yylineno);
-			v_node->setValue(1);
-
-			add_node->setChild(0, id_node);
-			add_node->setChild(1, v_node);
-			ce_node->setChild(0, add_node);
-			$$->setChild(1, ce_node);
-			$$->setChild(2, $3);
-		}
-	| identifier '.' identifier SYMBOL_ADD_A constant_expression ';'
-		{
-			$$ = AST->createNode(PT_AssignStatement, yylineno);
-			$$->setChild(0, $1);
-			
-			// create 'identifier + ' expression
-			YYSTYPE ce_node = AST->createNode(PT_ConstantExpression, yylineno);
-			YYSTYPE add_node = AST->createNode(PT_AddStatement, yylineno);
-			
-			YYSTYPE id_node = AST->createNode(PT_Identifier, yylineno);
-			id_node->setString($1->getStringData().c_str());
-			
-			add_node->setChild(0, id_node);
-			add_node->setChild(1, $5);
-			ce_node->setChild(0, add_node);
-			$$->setChild(1, ce_node);
-			$$->setChild(2, $3);
-		}
-	| identifier '.' identifier SYMBOL_SUB_A constant_expression ';'
-		{
-			$$ = AST->createNode(PT_AssignStatement, yylineno);
-			$$->setChild(0, $1);
-			
-			// create 'identifier - ' expression
-			YYSTYPE ce_node = AST->createNode(PT_ConstantExpression, yylineno);
-			YYSTYPE add_node = AST->createNode(PT_SubtractStatement, yylineno);
-			
-			YYSTYPE id_node = AST->createNode(PT_Identifier, yylineno);
-			id_node->setString($1->getStringData().c_str());
-			
-			add_node->setChild(0, id_node);
-			add_node->setChild(1, $5);
-			ce_node->setChild(0, add_node);
-			$$->setChild(1, ce_node);
-			$$->setChild(2, $3);
-		}
-	| identifier '.' identifier SYMBOL_MUL_A constant_expression ';'
-		{
-			$$ = AST->createNode(PT_AssignStatement, yylineno);
-			$$->setChild(0, $1);
-			
-			// create 'identifier * ' expression
-			YYSTYPE ce_node = AST->createNode(PT_ConstantExpression, yylineno);
-			YYSTYPE add_node = AST->createNode(PT_MultiplyStatement, yylineno);
-			
-			YYSTYPE id_node = AST->createNode(PT_Identifier, yylineno);
-			id_node->setString($1->getStringData().c_str());
-			
-			add_node->setChild(0, id_node);
-			add_node->setChild(1, $5);
-			ce_node->setChild(0, add_node);
-			$$->setChild(1, ce_node);
-			$$->setChild(2, $3);
-		}
-	| identifier '.' identifier SYMBOL_DIV_A constant_expression ';'
-		{
-			$$ = AST->createNode(PT_AssignStatement, yylineno);
-			$$->setChild(0, $1);
-			
-			// create 'identifier / ' expression
-			YYSTYPE ce_node = AST->createNode(PT_ConstantExpression, yylineno);
-			YYSTYPE add_node = AST->createNode(PT_DivideStatement, yylineno);
-			
-			YYSTYPE id_node = AST->createNode(PT_Identifier, yylineno);
-			id_node->setString($1->getStringData().c_str());
-			
-			add_node->setChild(0, id_node);
-			add_node->setChild(1, $5);
-			ce_node->setChild(0, add_node);
-			$$->setChild(1, ce_node);
-			$$->setChild(2, $3);
-		}
-	;
-		
 property_statement
 	: property '=' constant_expression ';'
 		{
@@ -1127,181 +884,55 @@ property_statement
 	| property SYMBOL_INC ';'
 		{
 			$$ = AST->createNode(PT_SetStatement, yylineno);
-			$$->setChild(0, $1);
-			
-			// create 'identifier + 1' expression
-			YYSTYPE ce_node = AST->createNode(PT_ConstantExpression, yylineno);
-			YYSTYPE add_node = AST->createNode(PT_AddStatement, yylineno);
-			
-			YYSTYPE id_node = AST->createNode(PT_Property, yylineno);
-			id_node->setString($1->getStringData().c_str());
-			
-			YYSTYPE v_node = AST->createNode(PT_Constant, yylineno);
-			v_node->setValue(1);
-
-			add_node->setChild(0, id_node);
-			add_node->setChild(1, v_node);
-			ce_node->setChild(0, add_node);
-			$$->setChild(1, ce_node);
+			generate_inc_expr(1, PT_Property, $$, $1);
 		}
 	| property SYMBOL_DEC ';'
 		{
 			$$ = AST->createNode(PT_SetStatement, yylineno);
-			$$->setChild(0, $1);
-			
-			// create 'identifier + 1' expression
-			YYSTYPE ce_node = AST->createNode(PT_ConstantExpression, yylineno);
-			YYSTYPE add_node = AST->createNode(PT_SubtractStatement, yylineno);
-			
-			YYSTYPE id_node = AST->createNode(PT_Property, yylineno);
-			id_node->setString($1->getStringData().c_str());
-			
-			YYSTYPE v_node = AST->createNode(PT_Constant, yylineno);
-			v_node->setValue(1);
-
-			add_node->setChild(0, id_node);
-			add_node->setChild(1, v_node);
-			ce_node->setChild(0, add_node);
-			$$->setChild(1, ce_node);
+			generate_inc_expr(-1, PT_Property, $$, $1);
 		}
 	| property SYMBOL_ADD_A constant_expression ';'
 		{
 			$$ = AST->createNode(PT_SetStatement, yylineno);
-			$$->setChild(0, $1);
-			
-			// create 'identifier +' expression
-			YYSTYPE ce_node = AST->createNode(PT_ConstantExpression, yylineno);
-			YYSTYPE add_node = AST->createNode(PT_AddStatement, yylineno);
-			
-			YYSTYPE id_node = AST->createNode(PT_Property, yylineno);
-			id_node->setString($1->getStringData().c_str());
-			
-			add_node->setChild(0, id_node);
-			add_node->setChild(1, $3);
-			ce_node->setChild(0, add_node);
-			$$->setChild(1, ce_node);
+			generate_assignment_expr(PT_AddStatement, PT_Property, $$, $1, $3);
 		}
 	| property SYMBOL_SUB_A constant_expression ';'
 		{
 			$$ = AST->createNode(PT_SetStatement, yylineno);
-			$$->setChild(0, $1);
-			
-			// create 'identifier -' expression
-			YYSTYPE ce_node = AST->createNode(PT_ConstantExpression, yylineno);
-			YYSTYPE add_node = AST->createNode(PT_SubtractStatement, yylineno);
-			
-			YYSTYPE id_node = AST->createNode(PT_Property, yylineno);
-			id_node->setString($1->getStringData().c_str());
-			
-			add_node->setChild(0, id_node);
-			add_node->setChild(1, $3);
-			ce_node->setChild(0, add_node);
-			$$->setChild(1, ce_node);
+			generate_assignment_expr(PT_SubtractStatement, PT_Property, $$, $1, $3);
 		}
 	| property SYMBOL_MUL_A constant_expression ';'
 		{
 			$$ = AST->createNode(PT_SetStatement, yylineno);
-			$$->setChild(0, $1);
-			
-			// create 'identifier *' expression
-			YYSTYPE ce_node = AST->createNode(PT_ConstantExpression, yylineno);
-			YYSTYPE add_node = AST->createNode(PT_MultiplyStatement, yylineno);
-			
-			YYSTYPE id_node = AST->createNode(PT_Property, yylineno);
-			id_node->setString($1->getStringData().c_str());
-			
-			add_node->setChild(0, id_node);
-			add_node->setChild(1, $3);
-			ce_node->setChild(0, add_node);
-			$$->setChild(1, ce_node);
+			generate_assignment_expr(PT_MultiplyStatement, PT_Property, $$, $1, $3);
 		}
 	| property SYMBOL_DIV_A constant_expression ';'
 		{
 			$$ = AST->createNode(PT_SetStatement, yylineno);
-			$$->setChild(0, $1);
-			
-			// create 'identifier /' expression
-			YYSTYPE ce_node = AST->createNode(PT_ConstantExpression, yylineno);
-			YYSTYPE add_node = AST->createNode(PT_DivideStatement, yylineno);
-			
-			YYSTYPE id_node = AST->createNode(PT_Property, yylineno);
-			id_node->setString($1->getStringData().c_str());
-			
-			add_node->setChild(0, id_node);
-			add_node->setChild(1, $3);
-			ce_node->setChild(0, add_node);
-			$$->setChild(1, ce_node);
+			generate_assignment_expr(PT_DivideStatement, PT_Property, $$, $1, $3);
 		}
 	| property SYMBOL_ADD_A '{' constant_expression ',' constant_expression '}' ';'
 		{
 			$$ = AST->createNode(PT_SetStatement, yylineno);
-			$$->setChild(0, $1);
-			
-			// create 'identifier +' expression
-			YYSTYPE ce_node = AST->createNode(PT_ConstantExpression, yylineno);
-			YYSTYPE add_node = AST->createNode(PT_AddStatement, yylineno);
-			
-			YYSTYPE id_node = AST->createNode(PT_Property, yylineno);
-			id_node->setString($1->getStringData().c_str());
-			
-			add_node->setChild(0, id_node);
-			add_node->setChild(1, $4);
-			ce_node->setChild(0, add_node);
-			$$->setChild(1, ce_node);
+			generate_assignment_expr(PT_AddStatement, PT_Property, $$, $1, $4);
 			$$->setChild(2, $6);
 		}
 	| property SYMBOL_SUB_A '{' constant_expression ',' constant_expression '}' ';'
 		{
 			$$ = AST->createNode(PT_SetStatement, yylineno);
-			$$->setChild(0, $1);
-			
-			// create 'identifier -' expression
-			YYSTYPE ce_node = AST->createNode(PT_ConstantExpression, yylineno);
-			YYSTYPE add_node = AST->createNode(PT_SubtractStatement, yylineno);
-			
-			YYSTYPE id_node = AST->createNode(PT_Property, yylineno);
-			id_node->setString($1->getStringData().c_str());
-			
-			add_node->setChild(0, id_node);
-			add_node->setChild(1, $4);
-			ce_node->setChild(0, add_node);
-			$$->setChild(1, ce_node);
+			generate_assignment_expr(PT_SubtractStatement, PT_Property, $$, $1, $4);
 			$$->setChild(2, $6);
 		}
 	| property SYMBOL_MUL_A '{' constant_expression ',' constant_expression '}' ';'
 		{
 			$$ = AST->createNode(PT_SetStatement, yylineno);
-			$$->setChild(0, $1);
-			
-			// create 'identifier *' expression
-			YYSTYPE ce_node = AST->createNode(PT_ConstantExpression, yylineno);
-			YYSTYPE add_node = AST->createNode(PT_MultiplyStatement, yylineno);
-			
-			YYSTYPE id_node = AST->createNode(PT_Property, yylineno);
-			id_node->setString($1->getStringData().c_str());
-			
-			add_node->setChild(0, id_node);
-			add_node->setChild(1, $4);
-			ce_node->setChild(0, add_node);
-			$$->setChild(1, ce_node);
+			generate_assignment_expr(PT_MultiplyStatement, PT_Property, $$, $1, $4);
 			$$->setChild(2, $6);
 		}
 	| property SYMBOL_DIV_A '{' constant_expression ',' constant_expression '}' ';'
 		{
 			$$ = AST->createNode(PT_SetStatement, yylineno);
-			$$->setChild(0, $1);
-			
-			// create 'identifier /' expression
-			YYSTYPE ce_node = AST->createNode(PT_ConstantExpression, yylineno);
-			YYSTYPE add_node = AST->createNode(PT_DivideStatement, yylineno);
-			
-			YYSTYPE id_node = AST->createNode(PT_Property, yylineno);
-			id_node->setString($1->getStringData().c_str());
-			
-			add_node->setChild(0, id_node);
-			add_node->setChild(1, $4);
-			ce_node->setChild(0, add_node);
-			$$->setChild(1, ce_node);
+			generate_assignment_expr(PT_DivideStatement, PT_Property, $$, $1, $4);
 			$$->setChild(2, $6);
 		}
 	;

@@ -113,6 +113,8 @@ emitter Flower
 		{
 			fl_angle -= 360;
 		}
+
+		fl_angle++;
 	}
 
 }
