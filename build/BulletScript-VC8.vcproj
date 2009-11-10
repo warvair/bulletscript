@@ -195,6 +195,14 @@
 				>
 			</File>
 			<File
+				RelativePath="..\src\bsController.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\src\bsControllerDefinition.cpp"
+				>
+			</File>
+			<File
 				RelativePath="..\src\bsCore.cpp"
 				>
 			</File>
@@ -266,6 +274,14 @@
 			</File>
 			<File
 				RelativePath="..\include\bsConfig.h"
+				>
+			</File>
+			<File
+				RelativePath="..\include\bsController.h"
+				>
+			</File>
+			<File
+				RelativePath="..\include\bsControllerDefinition.h"
 				>
 			</File>
 			<File

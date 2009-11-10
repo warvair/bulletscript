@@ -1,3 +1,18 @@
+Controller::setMember will not set emitter pos/angle correctly.
+
+controllers should be able to change emitter member vars smoothly, like properties.  this will allow
+animation of emitters, eg moving gun position, or changing angle. $gun1.This_Angle = {45, 2};
+	other issues with this, look into it.
+
+constant_expression needs to be able to take a member.var identifier, but only allow this in controller
+events/states.  Check in semantic checking.
+
+controller and emitter definitions may benefit from inheriting from a base class: cuts down on code.
+
+Do we need to allow users to add member variables to guns?  The idea was to let guns know their owner's
+health, etc.  But this would be better expressed using controllers and events.
+	Move member var c++ decl from emitters to controllers.
+
 1) Implement affectors [DONE]
 
 2) Implement controllers/events
@@ -20,6 +35,8 @@
 	
 	FireTypeBase::getPropertyIndex is bad, find a way round it (used in FireTypeBase set/get properties)
 	
++= syntax for setting properties.	
+
 need to calculate memory usage if we're not going to allow custom allocators
 	
 need a way to release guns from memory pool, like firetypecontrols

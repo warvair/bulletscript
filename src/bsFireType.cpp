@@ -1,3 +1,4 @@
+#include <iostream>
 #include "bsFireType.h"
 #include "bsEmitter.h"
 #include "bsScriptMachine.h"
@@ -158,11 +159,6 @@ int FireType::getAffectorInstanceIndex(const String& name) const
 Affector* FireType::getAffectorInstance(int index) const
 {
 	return mAffectorInstances[index];
-}
-// --------------------------------------------------------------------------------
-void FireType::applyAffector(UserTypeBase* object, int index, float frameTime)
-{
-	mAffectorInstances[index]->execute(object, frameTime);
 }
 // --------------------------------------------------------------------------------
 void FireType::getControllers(EmitterDefinition* def, ParseTreeNode* node, String& callName, 

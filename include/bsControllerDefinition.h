@@ -1,10 +1,9 @@
-#ifndef __BS_EMITTERDEFINITION_H__
-#define __BS_EMITTERDEFINITION_H__
+#ifndef __BS_CONTROLLERDEFINITION_H__
+#define __BS_CONTROLLERDEFINITION_H__
 
 #include <vector>
 #include "bsPrerequisites.h"
 #include "bsCore.h"
-#include "bsAffector.h"
 #include "bsBytecode.h"
 
 namespace BS_NMSP
@@ -12,9 +11,7 @@ namespace BS_NMSP
 
 	class ScriptMachine;
 
-	class ParseTreeNode;
-
-	class _BSAPI EmitterDefinition
+	class _BSAPI ControllerDefinition
 	{
 	public:
 
@@ -25,11 +22,10 @@ namespace BS_NMSP
 			bstype value;
 		};
 
-		struct Function
+		struct EmitterVariable
 		{
 			String name;
-			int numArguments;
-			ParseTreeNode* node;
+			String emitter;
 		};
 
 		struct State
@@ -39,9 +35,9 @@ namespace BS_NMSP
 
 	public:
 
-		explicit EmitterDefinition(const String& name);
+		explicit ControllerDefinition(const String& name);
 
-		~EmitterDefinition();
+		~ControllerDefinition();
 
 		const String& getName() const;
 
@@ -63,14 +59,14 @@ namespace BS_NMSP
 
 		int getNumUserMembers() const;
 
-		// Functions
-		Function& addFunction(const String& name, ParseTreeNode* node);
+		// Emitter variables
+		EmitterVariable& addEmitterVariable(const String& name, const String& emitter);
 
-		Function& getFunction(int index);
+		EmitterVariable& getEmitterVariable(int index);
 		
-		int getFunctionIndex(const String& name) const;
+		int getEmitterVariableIndex(const String& name) const;
 
-		int getNumFunctions() const;
+		int getNumEmitterVariables() const;
 
 		// States
 		State& addState(const String& name);
@@ -101,22 +97,22 @@ namespace BS_NMSP
 		uint32* m_constructCode;
 
 		size_t m_constructSize;
-		
+
 		// Member variables
 		std::vector<MemberVariable> mMemberVariables;
 
 		int mNumUserMembers;
 
-		// General info for setting up Emitter
+		// General info for setting up Controller
 		int mMaxLocals;
 
 		int mInitialState;
 
-		// Functions, states and affectors
-		std::vector<Function> mFunctions;
+		// Emitters, events and states
+		std::vector<EmitterVariable> mEmitterVariables;
 
 		std::vector<State> mStates;
-
+		
 	};
 
 }

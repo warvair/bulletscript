@@ -129,7 +129,10 @@ namespace BS_NMSP
 
 		Affector* getAffectorInstance(int index) const;
 
-		void applyAffector(UserTypeBase* object, int index, float frameTime);
+		inline void applyAffector(UserTypeBase* object, int index, float frameTime)
+		{
+			mAffectorInstances[index]->execute(object, frameTime);
+		}
 	
 	private:
 

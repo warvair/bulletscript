@@ -17,7 +17,7 @@ namespace BS_NMSP
 
 	public:
 
-		EmitterScriptRecord* mRecord;
+		ScriptRecord* mRecord;
 
 	public:
 

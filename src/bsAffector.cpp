@@ -39,6 +39,7 @@ void Affector::recalculateArguments()
 {
 	mState.curInstruction = 0;
 	mState.stackHead = 0;
+	mState.loopDepth = 0;
 	mScriptMachine->interpretCode(mBytecode, mBytecodeSize, mState, 0, 0,
 		bsvalue0, bsvalue0, 0, false);
 

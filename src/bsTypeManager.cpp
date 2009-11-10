@@ -117,8 +117,8 @@ void TypeManager::updateType(UserTypeBase* ft, bstype x, bstype y, float frameTi
 	// than rec because rec will still be pointing at the old record.
 	if (ft->__ft)
 	{
-		for (int i = 0; i < rec->numAffectors; ++i)
-			rec->__type->applyAffector(ft, rec->affectors[i], frameTime);
+		for (int i = 0; i < ft->__ft->numAffectors; ++i)
+			ft->__ft->__type->applyAffector(ft, ft->__ft->affectors[i], frameTime);
 	}
 }
 // --------------------------------------------------------------------------------
