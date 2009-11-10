@@ -1,11 +1,11 @@
-#include "bsEmitterDefinition.h"
+#include "bsControllerDefinition.h"
 #include "bsScriptMachine.h"
 
 namespace BS_NMSP
 {
 
 // --------------------------------------------------------------------------------
-EmitterDefinition::EmitterDefinition(const String& name) :
+ControllerDefinition::ControllerDefinition(const String& name) :
 	mName(name),
 	m_constructCode(0),
 	m_constructSize(0),
@@ -15,27 +15,27 @@ EmitterDefinition::EmitterDefinition(const String& name) :
 {
 }
 // --------------------------------------------------------------------------------
-EmitterDefinition::~EmitterDefinition()
+ControllerDefinition::~ControllerDefinition()
 {
 	delete[] m_constructCode;
 }
 // --------------------------------------------------------------------------------
-const String& EmitterDefinition::getName() const
+const String& ControllerDefinition::getName() const
 {
 	return mName;
 }
 // --------------------------------------------------------------------------------
-void EmitterDefinition::setMaxLocalVariables(int count)
+void ControllerDefinition::setMaxLocalVariables(int count)
 {
 	mMaxLocals = count;
 }
 // --------------------------------------------------------------------------------
-int EmitterDefinition::getMaxLocalVariables() const
+int ControllerDefinition::getMaxLocalVariables() const
 {
 	return mMaxLocals;
 }
 // --------------------------------------------------------------------------------
-void EmitterDefinition::addMemberVariable(const String& name, bool readonly, bstype value)
+void ControllerDefinition::addMemberVariable(const String& name, bool readonly, bstype value)
 {
 	MemberVariable var;
 	var.name = name;
@@ -45,12 +45,12 @@ void EmitterDefinition::addMemberVariable(const String& name, bool readonly, bst
 	mMemberVariables.push_back(var);
 }
 // --------------------------------------------------------------------------------
-EmitterDefinition::MemberVariable& EmitterDefinition::getMemberVariable(int index)
+ControllerDefinition::MemberVariable& ControllerDefinition::getMemberVariable(int index)
 {
 	return mMemberVariables[index];
 }
 // --------------------------------------------------------------------------------
-int EmitterDefinition::getMemberVariableIndex(const String& name) const
+int ControllerDefinition::getMemberVariableIndex(const String& name) const
 {
 	for (int i = 0; i < getNumMemberVariables(); ++i)
 	{
@@ -61,55 +61,55 @@ int EmitterDefinition::getMemberVariableIndex(const String& name) const
 	return -1;
 }
 // --------------------------------------------------------------------------------
-int EmitterDefinition::getNumMemberVariables() const
+int ControllerDefinition::getNumMemberVariables() const
 {
 	return (int) mMemberVariables.size();
 }
 // --------------------------------------------------------------------------------
-void EmitterDefinition::setNumUserMembers(int count)
+void ControllerDefinition::setNumUserMembers(int count)
 {
 	mNumUserMembers = count;
 }
 // --------------------------------------------------------------------------------
-int EmitterDefinition::getNumUserMembers() const
+int ControllerDefinition::getNumUserMembers() const
 {
 	return mNumUserMembers;
 }
 // --------------------------------------------------------------------------------
-EmitterDefinition::Function& EmitterDefinition::addFunction(const String& name, ParseTreeNode* node)
+ControllerDefinition::EmitterVariable& ControllerDefinition::addEmitterVariable(const String& name, 
+																				const String& emitter)
 {
-	Function func;
-	func.name = name;
-	func.numArguments = 0;
-	func.node = node;
+	EmitterVariable emit;
+	emit.name = name;
+	emit.emitter = emitter;
 
-	mFunctions.push_back(func);
+	mEmitterVariables.push_back(emit);
 
-	return mFunctions[getNumFunctions() - 1];
+	return mEmitterVariables[getNumEmitterVariables() - 1];
 }
 // --------------------------------------------------------------------------------
-EmitterDefinition::Function& EmitterDefinition::getFunction(int index)
+ControllerDefinition::EmitterVariable& ControllerDefinition::getEmitterVariable(int index)
 {
-	return mFunctions[index];
+	return mEmitterVariables[index];
 }
 // --------------------------------------------------------------------------------
-int EmitterDefinition::getFunctionIndex(const String& name) const
+int ControllerDefinition::getEmitterVariableIndex(const String& name) const
 {
-	for (int i = 0; i < getNumFunctions(); ++i)
+	for (int i = 0; i < getNumEmitterVariables(); ++i)
 	{
-		if (mFunctions[i].name == name)
+		if (mEmitterVariables[i].name == name)
 			return i;
 	}
 
 	return -1;
 }
 // --------------------------------------------------------------------------------
-int EmitterDefinition::getNumFunctions() const
+int ControllerDefinition::getNumEmitterVariables() const
 {
-	return (int) mFunctions.size();
+	return (int) mEmitterVariables.size();
 }
 // --------------------------------------------------------------------------------
-EmitterDefinition::State& EmitterDefinition::addState(const String& name)
+ControllerDefinition::State& ControllerDefinition::addState(const String& name)
 {
 	State state;
 	state.name = name;
@@ -119,12 +119,12 @@ EmitterDefinition::State& EmitterDefinition::addState(const String& name)
 	return mStates[getNumStates() - 1];
 }
 // --------------------------------------------------------------------------------
-EmitterDefinition::State& EmitterDefinition::getState(int index)
+ControllerDefinition::State& ControllerDefinition::getState(int index)
 {
 	return mStates[index];
 }
 // --------------------------------------------------------------------------------
-int EmitterDefinition::getStateIndex(const String& name) const
+int ControllerDefinition::getStateIndex(const String& name) const
 {
 	for (int i = 0; i < getNumStates(); ++i)
 	{
@@ -135,22 +135,22 @@ int EmitterDefinition::getStateIndex(const String& name) const
 	return -1;
 }
 // --------------------------------------------------------------------------------
-int EmitterDefinition::getNumStates() const
+int ControllerDefinition::getNumStates() const
 {
 	return (int) mStates.size();
 }
 // --------------------------------------------------------------------------------
-void EmitterDefinition::setInitialState(int state)
+void ControllerDefinition::setInitialState(int state)
 {
 	mInitialState = state;
 }
 // --------------------------------------------------------------------------------
-void EmitterDefinition::appendConstructionCode(const BytecodeBlock& code)
+void ControllerDefinition::appendConstructionCode(const BytecodeBlock& code)
 {
 	m_constructor.insert(m_constructor.end(), code.begin(), code.end());
 }
 // --------------------------------------------------------------------------------
-void EmitterDefinition::finaliseConstructor()
+void ControllerDefinition::finaliseConstructor()
 {
 	m_constructSize = m_constructor.size();
 	if (m_constructSize > 0)
@@ -163,7 +163,7 @@ void EmitterDefinition::finaliseConstructor()
 	m_constructor.clear();
 }
 // --------------------------------------------------------------------------------
-ScriptRecord* EmitterDefinition::createScriptRecord(ScriptMachine* sm)
+ScriptRecord* ControllerDefinition::createScriptRecord(ScriptMachine* sm)
 {
 	ScriptRecord* record = new ScriptRecord(mMaxLocals);
 

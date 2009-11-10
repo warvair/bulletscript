@@ -14,6 +14,10 @@ namespace BS_NMSP
 		template<class T, typename A1> friend class DeepMemoryPool;
 		int __dmpoIndex;
 		bool __dmpoActive;
+	
+	public:
+
+		virtual void onRelease() {}
 	};
 
 	template<typename T, typename A1>
@@ -95,6 +99,7 @@ namespace BS_NMSP
 		{
 			mFreeList.push_back(obj->__dmpoIndex);
 			obj->__dmpoActive = false;
+			obj->onRelease();
 		}
 
 		T* getFirst() const

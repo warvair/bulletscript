@@ -4,7 +4,6 @@
 #include "bsPrerequisites.h"
 #include "bsScriptMachine.h"
 #include "bsTypeManager.h"
-#include "bsEmitter.h"
 #include "bsLog.h"
 
 namespace BS_NMSP
@@ -38,6 +37,8 @@ namespace BS_NMSP
 
 		int compileScript(uint8* buffer, size_t bufferSize);
 
+		void update(float frameTime);
+
 		// Type management
 		void createType(const String& type);
 
@@ -60,7 +61,10 @@ namespace BS_NMSP
 
 		void destroyEmitter(Emitter* emit);
 
-		void update(float frameTime);
+		// Controller management
+		Controller* createController(const String& definition);
+
+		void destroyController(Controller* ctrl);
 
 	};
 

@@ -43,7 +43,9 @@ ScriptMachine::ScriptMachine(Log* _log) :
 	// Register functions
 	registerNativeFunction("rand", bm_rand);
 
+	// Create pools for Emitters and Controllers
 	mEmitters = new DeepMemoryPool<Emitter, ScriptMachine*>(32, this);
+	mControllers = new DeepMemoryPool<Controller, ScriptMachine*>(32, this);
 
 	// Set up AST
 	ParseTree::setMachines(this);
@@ -51,7 +53,8 @@ ScriptMachine::ScriptMachine(Log* _log) :
 // --------------------------------------------------------------------------------
 ScriptMachine::~ScriptMachine()
 {
-	// Delete Emitters
+	// Delete Controllers first, because they own some emitters, and then Emitters
+	delete mControllers;
 	delete mEmitters;
 
 	delete ParseTree::instancePtr();
@@ -62,6 +65,16 @@ ScriptMachine::~ScriptMachine()
 		while (it != mGlobals.end())
 		{
 			delete (*it);
+			++it;
+		}
+	}
+
+	// Delete ControllerDefinitions
+	{
+		ControllerDefinitionMap::iterator it = mControllerDefinitions.begin();
+		while (it != mControllerDefinitions.end())
+		{
+			delete it->second;
 			++it;
 		}
 	}
@@ -124,6 +137,40 @@ void ScriptMachine::updateEmitters(float frameTime)
 	{
 		emit->runScript(frameTime);
 		emit = mEmitters->getNext(emit);
+	}
+}
+// --------------------------------------------------------------------------------
+Controller* ScriptMachine::createController(const String& definition)
+{
+	ControllerDefinition* def = getControllerDefinition(definition);
+
+	Controller* ctrl = 0;
+	if (def)
+	{
+		ctrl = mControllers->acquire();
+		ctrl->setDefinition(def);
+	}
+	else
+	{
+		// Error
+		mLog->addEntry("Could not find Controller definition '" + definition + "'.");
+	}
+
+	return ctrl;
+}
+// --------------------------------------------------------------------------------
+void ScriptMachine::destroyController(Controller* ctrl)
+{
+	mControllers->release(ctrl);
+}
+// --------------------------------------------------------------------------------
+void ScriptMachine::updateControllers(float frameTime)
+{
+	Controller* ctrl = mControllers->getFirst();
+	while (ctrl)
+	{
+		ctrl->runScript(frameTime);
+		ctrl = mControllers->getNext(ctrl);
 	}
 }
 // --------------------------------------------------------------------------------
@@ -319,6 +366,34 @@ int ScriptMachine::getNumEmitterDefinitions() const
 	return (int) mEmitterRecords.size();
 }
 // --------------------------------------------------------------------------------
+bool ScriptMachine::addControllerDefinition(const String &name, ControllerDefinition* def)
+{
+	ControllerDefinitionMap::iterator it = mControllerDefinitions.find(name);
+	if (it != mControllerDefinitions.end())
+		return false;
+
+	mControllerDefinitions[name] = def;
+	return true;
+}
+// --------------------------------------------------------------------------------
+ControllerDefinition* ScriptMachine::getControllerDefinition(const String &name) const
+{
+	ControllerDefinitionMap::const_iterator it = mControllerDefinitions.find(name);
+	if (it == mControllerDefinitions.end())
+	{
+		return 0;
+	}
+	else
+	{
+		return it->second;
+	}
+}
+// --------------------------------------------------------------------------------
+int ScriptMachine::getNumControllerDefinitions() const
+{
+	return (int) mControllerDefinitions.size();
+}
+// --------------------------------------------------------------------------------
 int ScriptMachine::compileScript(uint8* buffer, size_t bufferSize)
 {
 	String strBuf((char*) buffer, bufferSize);
@@ -348,8 +423,7 @@ int ScriptMachine::compileScript(uint8* buffer, size_t bufferSize)
 
 //	ast->print(ast->getRootNode(), 0);
 
-	// Create the EmitterScriptDefinitions
-	ast->createEmitterDefinitions(ast->getRootNode(), mMemberVariableDeclarations);
+	ast->createDefinitions(ast->getRootNode(), mMemberVariableDeclarations);
 
 	numParseErrors = ast->getNumErrors();
 	if (numParseErrors > 0)
@@ -834,7 +908,7 @@ void ScriptMachine::interpretCode(const uint32* code, size_t length, ScriptState
 	return;
 }
 // --------------------------------------------------------------------------------
-void ScriptMachine::processEmitterState(EmitterScriptRecord* gsr)
+void ScriptMachine::processScriptRecord(ScriptRecord* gsr)
 {
 	if (gsr->scriptState.suspendTime > 0)
 		return;
@@ -849,7 +923,7 @@ void ScriptMachine::processEmitterState(EmitterScriptRecord* gsr)
 // --------------------------------------------------------------------------------
 void ScriptMachine::processConstantExpression(const uint32* code, 
 											  size_t length, 
-											  EmitterScriptRecord* gsr)
+											  ScriptRecord* gsr)
 {
 	interpretCode(code, length, gsr->scriptState, &gsr->curState, 0,
 		bsvalue0, bsvalue0, gsr->members, false);

@@ -10,6 +10,8 @@
 #include "bsFireType.h"
 #include "bsEmitter.h"
 #include "bsEmitterDefinition.h"
+#include "bsController.h"
+#include "bsControllerDefinition.h"
 #include "bsDeepMemoryPool.h"
 #include "bsLog.h"
 
@@ -56,6 +58,12 @@ namespace BS_NMSP
 
 		DeepMemoryPool<Emitter, ScriptMachine*>* mEmitters;
 
+		// Controller Definitions and pools
+		typedef std::map<String, ControllerDefinition*> ControllerDefinitionMap;
+		ControllerDefinitionMap mControllerDefinitions;
+
+		DeepMemoryPool<Controller, ScriptMachine*>* mControllers;
+
 		// Global property list
 		std::vector<String> mProperties;
 
@@ -72,18 +80,39 @@ namespace BS_NMSP
 	protected:
 
 		// Can only be created by Machine
-		ScriptMachine(Log* _log);
+		explicit ScriptMachine(Log* _log);
 
 	public:
 
 		~ScriptMachine();
 
+		// Emitter Definitions
+		bool addEmitterDefinition(const String &name, EmitterDefinition* def);
+
+		EmitterDefinition* getEmitterDefinition(const String &name) const;
+
+		int getNumEmitterDefinitions() const;
+
 		// Emitters
 		Emitter* createEmitter(const String& definition);
 
-		void destroyEmitter(Emitter* emit);
+		void destroyEmitter(Emitter* ctrl);
 
 		void updateEmitters(float frameTime);
+
+		// Controller Definitions
+		bool addControllerDefinition(const String &name, ControllerDefinition* def);
+
+		ControllerDefinition* getControllerDefinition(const String &name) const;
+
+		int getNumControllerDefinitions() const;
+
+		// Controllers
+		Controller* createController(const String& definition);
+
+		void destroyController(Controller* emit);
+
+		void updateControllers(float frameTime);
 
 		// CodeRecords
 		void createCodeRecord();
@@ -127,20 +156,13 @@ namespace BS_NMSP
 
 		GlobalVariable *getGlobalVariable(int index);
 
-		// Emitter Definitions
-		bool addEmitterDefinition(const String &name, EmitterDefinition* def);
-
-		EmitterDefinition* getEmitterDefinition(const String &name) const;
-
-		int getNumEmitterDefinitions() const;
-
 		// Script state processing
 		void interpretCode(const uint32* code, size_t length, ScriptState& st, int* curState, 
 			FireTypeControl* record, bstype x, bstype y, bstype* members, bool loop);
 
-		void processEmitterState(EmitterScriptRecord* gsr);
+		void processScriptRecord(ScriptRecord* gsr);
 
-		void processConstantExpression(const uint32* code, size_t length, EmitterScriptRecord* gsr);
+		void processConstantExpression(const uint32* code, size_t length, ScriptRecord* gsr);
 
 		// Compilation
 		int compileScript(uint8* buffer, size_t bufferSize);

@@ -4,15 +4,24 @@
 #include "bsPrerequisites.h"
 #include "bsCore.h"
 #include "bsEmitterDefinition.h"
+#include "bsControllerDefinition.h"
 
 namespace BS_NMSP
 {
-	enum
+	enum ControllerNode
 	{
-		PT_MemberNode,
-		PT_AffectorNode,
-		PT_FunctionNode,
-		PT_StateNode
+		PT_ControllerMemberNode,
+		PT_ControllerEmitterNode,
+		PT_ControllerEventNode,
+		PT_ControllerStateNode
+	};
+
+	enum EmitterNode
+	{
+		PT_EmitterMemberNode,
+		PT_EmitterAffectorNode,
+		PT_EmitterFunctionNode,
+		PT_EmitterStateNode
 	};
 
 	// Node types
@@ -26,11 +35,15 @@ namespace BS_NMSP
 		PT_AffectorDeclList,
 		PT_AffectorDecl,
 		PT_AffectorCall,
+		PT_EmitterList,
+		PT_Emitter,
 		PT_FunctionList,
 		PT_Function,
 		PT_FunctionArg,
 		PT_FunctionArgList,
 		PT_ControllerList,
+		PT_EventList,
+		PT_Event,
 		PT_StateList,
 		PT_State,
 		PT_StatementList,
@@ -163,14 +176,22 @@ namespace BS_NMSP
 		
 		void destroy();
 
-		// Parsing
-		bool checkConstantExpression(EmitterDefinition* def, ParseTreeNode* node);
+		// Core definition creation
+		void createEmitterDefinitions(ParseTreeNode* node, const MemberVariableDeclarationMap& memberDecls);
 
-		void checkLoopDepth(ParseTreeNode *node, int& depth);
+		EmitterDefinition* createEmitterDefinition(ParseTreeNode* node,
+			const MemberVariableDeclarationMap& memberDecls);
 
-		void createMemberVariables(EmitterDefinition* def, ParseTreeNode* node);
+		void createControllerDefinitions(ParseTreeNode* node);
 
-		void addMemberVariables(EmitterDefinition* def, const MemberVariableDeclarationMap& memberDecls);
+		ControllerDefinition* createControllerDefinition(ParseTreeNode* node);
+
+		// Member variables
+		void createEmitterMemberVariables(EmitterDefinition* def, ParseTreeNode* node);
+
+		void addEmitterMemberVariables(EmitterDefinition* def, const MemberVariableDeclarationMap& memberDecls);
+
+		void addControllerMemberVariables(ControllerDefinition* def);
 
 		// Affectors
 		void createAffectors(EmitterDefinition* def, ParseTreeNode* node);
@@ -179,8 +200,10 @@ namespace BS_NMSP
 
 		void setAffectorRecalculationType(EmitterDefinition* def, Affector* affector, ParseTreeNode* node);
 
-		void countFunctionCallArguments(ParseTreeNode* node, int& numArguments);
+		// Emitter variables
+		void createEmitterVariables(ControllerDefinition* def, ParseTreeNode* node);
 
+		// Functions
 		void addFunctionArguments(EmitterDefinition* def, ParseTreeNode* node, 
 			EmitterDefinition::Function& func);	
 
@@ -188,16 +211,20 @@ namespace BS_NMSP
 
 		void buildFunctions(EmitterDefinition* def, ParseTreeNode* node);
 
-		void createStates(EmitterDefinition* def, ParseTreeNode* node);
+		void checkFunctionProperties(ParseTreeNode* node, FireType* type);
 
+		// States
+		void createEmitterStates(EmitterDefinition* def, ParseTreeNode* node);
+
+		void createControllerStates(ControllerDefinition* def, ParseTreeNode* node);
+
+		// Fire statements
 		void _checkFireStatements(EmitterDefinition* def, ParseTreeNode* node, const String& type);
 
 		void checkFireStatements(EmitterDefinition* def, ParseTreeNode* node);
 
 		void checkFireControllers(EmitterDefinition* def, ParseTreeNode* node, int& ctrls, 
 			FireType* ft);
-
-		void checkFunctionProperties(ParseTreeNode* node, FireType* type);
 
 		// Code generation
 		void createMemberVariableBytecode(EmitterDefinition* def, ParseTreeNode* node, bool first);
@@ -208,9 +235,15 @@ namespace BS_NMSP
 		void generateBytecode(EmitterDefinition* def, ParseTreeNode* node, BytecodeBlock* bytecode,
 			bool reset = false);
 
-		// Utility
-		EmitterDefinition* createEmitterDefinition(ParseTreeNode* node,
-			const MemberVariableDeclarationMap& memberDecls);
+		void generateBytecode(ControllerDefinition* def, ParseTreeNode* node, BytecodeBlock* bytecode,
+			bool reset = false);
+
+		// Utility functions
+		bool checkConstantExpression(EmitterDefinition* def, ParseTreeNode* node);
+
+		void checkLoopDepth(ParseTreeNode *node, int& depth);
+
+		void countFunctionCallArguments(ParseTreeNode* node, int& numArguments);
 
 	protected:
 
@@ -237,8 +270,7 @@ namespace BS_NMSP
 
 		int getNumErrors() const;
 
-		void createEmitterDefinitions(ParseTreeNode* node, 
-			const MemberVariableDeclarationMap& memberDecls);
+		void createDefinitions(ParseTreeNode* node,	const MemberVariableDeclarationMap& memberDecls);
 
 		int createCodeRecord(const String& type, const String& typeName,
 			const String& blockType, const String& blockName);

@@ -1,3 +1,43 @@
+controller Boss1
+{
+	// member variables
+	// ...
+
+	// emitters - how do we set start position?
+	// could do Flower(0, 16, 180) but this would require knowing the offsets.  May be unavoidable.
+	MainGun = Flower;
+	
+	// events
+	Damaged = event(newHealth)
+	{
+	}
+
+	// states
+	Initial = state
+	{
+		pos = 19;
+		wait(10);
+		if (pos < 20)
+		{
+			pos += Level_Time;
+		}
+
+		goto Stage2;
+	}
+
+	Stage2 = state
+	{
+		x = 10;
+		wait(x);
+		loop (5)
+		{
+			x -= 2;
+		}
+
+		goto Initial;
+	}
+}
+
 emitter Flower
 {
 	fl_angle = 0;
@@ -78,83 +118,3 @@ emitter Flower
 	}
 
 }
-/*
-emitter Stalk
-{
-
-	twirl = function()
-	{
-		wait(1);
-		$angle = {90, 1.2};
-		wait(1.2);
-		$angle = {-180, 4.2};
-		wait(4.2);
-		$angle = 180;
-
-		wait(1.5);
-		$angle = {90, 0.8};
-		wait(0.8);
-		$angle = {-180, 2.8};
-		wait(2.8);
-		$angle = 180;
-
-		wait(1);
-		$angle = {90, 0.4};
-		wait(0.4);
-		$angle = {-180, 1.6};
-		wait(1.6);
-		$angle = 180;
-	}
-
-	Emit = state
-	{
-		fireA bullet(180, 80) : twirl();
-		wait(0.1);
-	}
-}
-
-
-emitter Float
-{
-	wind = 1.5;
-
-	breeze = function()
-	{
-		$angle = {90, wind};
-		$red = {0, wind};
-		wait(wind);
-
-		while (1)
-		{
-			$green = {0, wind};
-			$red = {1, wind};
-			$angle = 270;
-			$angle = {180, wind};
-			wait(wind);
-
-			$green = {1, wind};
-			$blue = {0, wind};
-			$angle = 90;
-			$angle = {180, wind};
-			wait(wind);
-
-			$blue = {1, wind};
-			$angle = 270;
-			$angle = {180, wind};
-			wait(wind);
-
-			$green = {0, wind};
-			$red = {0, wind};
-			$angle = 90;
-			$angle = {180, wind};
-			wait(wind);
-		}
-	}
-
-	Main = state
-	{
-		fireA bullet(180, 70) : breeze();
-		wait(0.1);
-	}
-}
-*/

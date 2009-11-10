@@ -87,11 +87,22 @@ void Machine::destroyEmitter(Emitter* emit)
 	mScriptMachine->destroyEmitter(emit);
 }
 // --------------------------------------------------------------------------------
+Controller* Machine::createController(const String& definition)
+{
+	return mScriptMachine->createController(definition);
+}
+// --------------------------------------------------------------------------------
+void Machine::destroyController(Controller* ctrl)
+{
+	mScriptMachine->destroyController(ctrl);
+}
+// --------------------------------------------------------------------------------
 void Machine::update(float frameTime)
 {
 	// Tie to update rate?
 	// ...
 
+	mScriptMachine->updateControllers(frameTime);
 	mScriptMachine->updateEmitters(frameTime);
 }
 // --------------------------------------------------------------------------------

@@ -76,7 +76,7 @@ namespace BS_NMSP
 	};
 
 	// Instance classes
-	struct _BSAPI EmitterScriptRecord
+	struct _BSAPI ScriptRecord
 	{
 		bstype* members;
 
@@ -86,9 +86,9 @@ namespace BS_NMSP
 		ScriptState scriptState;		
 
 		// Functions
-		EmitterScriptRecord(int numLocals);
+		ScriptRecord(int numLocals);
 		
-		~EmitterScriptRecord();
+		~ScriptRecord();
 	};
 
 	// Callback function types

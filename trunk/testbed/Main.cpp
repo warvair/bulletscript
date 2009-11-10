@@ -145,23 +145,18 @@ int main (int argc, char **argv)
 	std::cout << "[Esc] Quit." << std::endl;
 	std::cout << "[Mouse, cursors] Move ship." << std::endl;
 
-	Emitter* gun;
-
 	// Create a gun
+//	Emitter* gun = machine.createEmitter("Flower");
+//	gun->setX(400);
+//	gun->setY(300);
+//	gun->setAngle(180);
 
-	for (int i = 0; i < 1; ++i)
-	{
-		gun = machine.createEmitter("Flower");
-		gun->setX(400);
-		gun->setY(300);
-		gun->setAngle(180);
-	}
-/*
-	gun = machine.createGun("Beam");
-	gun->setX(GUN_X);
-	gun->setY(GUN_Y - 100);
-	gun->setAngle(180);
-*/
+	// Create a controller
+	Controller* controller = machine.createController("Boss1");
+	controller->setX(400);
+	controller->setY(300);
+	controller->setAngle(180);
+
 	// Main loop
 	unsigned int curTime = SDL_GetTicks();
 	unsigned int totalTime = 0;

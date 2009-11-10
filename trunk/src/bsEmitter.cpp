@@ -21,7 +21,7 @@ void Emitter::setDefinition(EmitterDefinition* def)
 	if (mRecord)
 		delete mRecord;
 
-	mRecord = def->createEmitterScriptRecord(mScriptMachine);
+	mRecord = def->createScriptRecord(mScriptMachine);
 }
 // --------------------------------------------------------------------------------
 void Emitter::setX(bstype x)
@@ -46,7 +46,7 @@ void Emitter::setMember(int member, bstype value)
 // --------------------------------------------------------------------------------
 void Emitter::runScript(float frameTime)
 {
-	mScriptMachine->processEmitterState(mRecord);
+	mScriptMachine->processScriptRecord(mRecord);
 	if (mRecord->scriptState.suspendTime > 0)
 		mRecord->scriptState.suspendTime -= frameTime;
 }

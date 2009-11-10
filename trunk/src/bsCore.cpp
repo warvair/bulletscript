@@ -49,7 +49,7 @@ ScriptState::ScriptState() :
 {
 }
 // --------------------------------------------------------------------------------
-EmitterScriptRecord::EmitterScriptRecord(int numLocals) :
+ScriptRecord::ScriptRecord(int numLocals) :
 	curState(0),
 	members(0)
 {
@@ -62,7 +62,7 @@ EmitterScriptRecord::EmitterScriptRecord(int numLocals) :
 		scriptState.locals = new bstype[numLocals];
 }
 // --------------------------------------------------------------------------------
-EmitterScriptRecord::~EmitterScriptRecord()
+ScriptRecord::~ScriptRecord()
 {
 	delete[] members;
 	delete[] scriptState.locals;
