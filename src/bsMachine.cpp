@@ -97,6 +97,11 @@ void Machine::destroyController(Controller* ctrl)
 	mScriptMachine->destroyController(ctrl);
 }
 // --------------------------------------------------------------------------------
+void Machine::declareMemberVariable(const String& ctrl, const String& var, bstype value)
+{
+	mScriptMachine->declareMemberVariable(ctrl, var, value);
+}
+// --------------------------------------------------------------------------------
 void Machine::update(float frameTime)
 {
 	// Tie to update rate?

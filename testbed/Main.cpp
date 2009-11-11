@@ -98,7 +98,7 @@ int main (int argc, char **argv)
 	machine.registerGlobalVariable("ScreenSize_Y", SCREEN_HEIGHT);
 
 	// User member variables must be declared before compiling scripts
-//	machine.declareMemberVariable("Test", "health", 100);
+	machine.declareMemberVariable("Boss1", "health", 1); // 100%
 
 	std::cout << "Compiling..." << std::endl;
 

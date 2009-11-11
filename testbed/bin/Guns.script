@@ -1,9 +1,10 @@
 controller Boss1
 {
 	// member variables
-	// ...
+	time = 0;
 
-	mainGun = Flower(0, 0, 180);
+	// emitters
+	mainGun = emitter Flower(Level_Time + 10, 0, 180);
 	
 	// events
 	Damaged = event(newHealth)
@@ -13,8 +14,10 @@ controller Boss1
 	// states
 	Initial = state
 	{
+		time = 5;
+		wait(time + health);
+
 		pos = 19;
-		wait(10);
 		if (pos < 20)
 		{
 			pos += Level_Time;
@@ -27,23 +30,21 @@ controller Boss1
 	{
 		x = 10;
 		wait(x);
-		loop (5)
-		{
-			x -= 2;
-		}
-
 		goto Initial;
 	}
 }
 
 emitter Flower
 {
+	// member variables
 	fl_angle = 0;
 	fl_speed = 2;
 	fl_dir = 1;
 
+	// affectors
 	gravity = affector Gravity(98);
 
+	// functions
 	death = function(time)
 	{
 		$blue = 0.2;
@@ -61,10 +62,13 @@ emitter Flower
 		wait(1.7);
 
 		i = 0;
-		loop(6)
+		while(i < 20)
 		{
 			fireA bullet(rand(360), 100) : death(0.5), gravity;
 			i++;
+
+//			wait(0);
+//			break;
 		}
 
 		die();
@@ -80,6 +84,7 @@ emitter Flower
 		die();
 	}
 
+	// states
 	Grow = state
 	{
 		fireA bullet(fl_angle + 40, 70) : petal_o(1);
