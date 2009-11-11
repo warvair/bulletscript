@@ -6,7 +6,8 @@ namespace BS_NMSP
 {
 
 // --------------------------------------------------------------------------------
-CodeRecord::CodeRecord() :
+CodeRecord::CodeRecord(const String& name) :
+	mName(name),
 	byteCode(0),
 	byteCodeSize(0)
 {
@@ -15,6 +16,11 @@ CodeRecord::CodeRecord() :
 CodeRecord::~CodeRecord()
 {
 	delete[] byteCode;
+}
+// --------------------------------------------------------------------------------
+const String& CodeRecord::getName() const
+{
+	return mName;
 }
 // --------------------------------------------------------------------------------
 void CodeRecord::addVariable(const String& name)
@@ -54,7 +60,6 @@ ScriptRecord::ScriptRecord(int numLocals) :
 	members(0)
 {
 	scriptState.curInstruction = 0;
-	scriptState.loopDepth = 0;
 	scriptState.stackHead = 0;
 	scriptState.suspendTime = 0;
 

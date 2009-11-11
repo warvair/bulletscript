@@ -115,7 +115,7 @@ namespace BS_NMSP
 		void updateControllers(float frameTime);
 
 		// CodeRecords
-		void createCodeRecord();
+		void createCodeRecord(const String& name);
 
 		CodeRecord* getCodeRecord(int index);
 
@@ -167,7 +167,7 @@ namespace BS_NMSP
 		// Compilation
 		int compileScript(uint8* buffer, size_t bufferSize);
 
-		void declareMemberVariable(const String& emit, const String& var, bstype value);
+		void declareMemberVariable(const String& ctrl, const String& var, bstype value);
 
 		// Errors
 		void addErrorMsg (const String& msg);

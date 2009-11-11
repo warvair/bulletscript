@@ -66,6 +66,8 @@ namespace BS_NMSP
 
 		void destroyController(Controller* ctrl);
 
+		void declareMemberVariable(const String& ctrl, const String& var, bstype value);
+
 	};
 
 }

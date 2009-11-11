@@ -30,14 +30,18 @@ namespace BS_NMSP
 	{
 		std::vector<String> mVariables;
 
+		String mName;
+
 	public:
 
 		uint32* byteCode;
 		size_t byteCodeSize;
 
-		CodeRecord();
+		explicit CodeRecord(const String& name);
 
 		~CodeRecord();
+
+		const String& getName() const;
 
 		void addVariable(const String& name);
 
@@ -50,20 +54,10 @@ namespace BS_NMSP
 
 	struct _BSAPI ScriptState
 	{
-		struct Loop // pack into 32 bits?
-		{
-			uint16 count;
-			uint16 start;
-			uint16 end;
-		};
-
 		uint16 curInstruction;
 		uint16 stackHead;
 
 		bstype stack[BS_SCRIPT_STACK_SIZE];
-
-		Loop loops[BS_SCRIPT_LOOP_DEPTH];
-		int loopDepth;
 
 		// Time to wait when the script is suspended
 		bstype suspendTime;				

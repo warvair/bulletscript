@@ -46,7 +46,7 @@ void Controller::setDefinition(ControllerDefinition* def)
 		inst.emitter = mScriptMachine->createEmitter(var.emitter);
 		inst.emitter->setX(mRecord->members[Member_X] + inst.x);
 		inst.emitter->setY(mRecord->members[Member_Y] + inst.y);
-		inst.emitter->setAngle(mRecord->members[Member_Angle] + inst.angle);
+		inst.emitter->setAngle(inst.angle);
 
 		mEmitters.push_back(inst);
 	}
@@ -70,7 +70,7 @@ void Controller::setAngle(bstype angle)
 {
 	setMember(Member_Angle, angle);
 	for (size_t i = 0; i < mEmitters.size(); ++i)
-		mEmitters[i].emitter->setAngle(mEmitters[i].angle + angle);
+		mEmitters[i].emitter->setAngle(angle);
 }
 // --------------------------------------------------------------------------------
 void Controller::setMember(int member, bstype value)

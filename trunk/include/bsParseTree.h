@@ -50,8 +50,8 @@ namespace BS_NMSP
 		PT_Statement,
 		PT_IfStatement,
 		PT_AssignStatement,
-		PT_LoopStatement,
 		PT_WhileStatement,
+		PT_BreakStatement,
 		PT_GotoStatement,
 		PT_WaitStatement,
 		PT_SetStatement,
@@ -177,21 +177,22 @@ namespace BS_NMSP
 		void destroy();
 
 		// Core definition creation
-		void createEmitterDefinitions(ParseTreeNode* node, const MemberVariableDeclarationMap& memberDecls);
+		void createEmitterDefinitions(ParseTreeNode* node);
 
-		EmitterDefinition* createEmitterDefinition(ParseTreeNode* node,
-			const MemberVariableDeclarationMap& memberDecls);
+		EmitterDefinition* createEmitterDefinition(ParseTreeNode* node);
 
-		void createControllerDefinitions(ParseTreeNode* node);
+		void createControllerDefinitions(ParseTreeNode* node, const MemberVariableDeclarationMap& memberDecls);
 
-		ControllerDefinition* createControllerDefinition(ParseTreeNode* node);
+		ControllerDefinition* createControllerDefinition(ParseTreeNode* node, const MemberVariableDeclarationMap& memberDecls);
 
 		// Member variables
 		void createEmitterMemberVariables(EmitterDefinition* def, ParseTreeNode* node);
 
-		void addEmitterMemberVariables(EmitterDefinition* def, const MemberVariableDeclarationMap& memberDecls);
+		void addEmitterMemberVariables(EmitterDefinition* def);
 
-		void addControllerMemberVariables(ControllerDefinition* def);
+		void createControllerMemberVariables(ControllerDefinition* def, ParseTreeNode* node);
+
+		void addControllerMemberVariables(ControllerDefinition* def, const MemberVariableDeclarationMap& memberDecls);
 
 		// Affectors
 		void createAffectors(EmitterDefinition* def, ParseTreeNode* node);
@@ -241,7 +242,7 @@ namespace BS_NMSP
 		// Utility functions
 		bool checkConstantExpression(EmitterDefinition* def, ParseTreeNode* node);
 
-		void checkLoopDepth(ParseTreeNode *node, int& depth);
+		bool checkConstantExpression(ControllerDefinition* def, ParseTreeNode* node);
 
 		void countFunctionCallArguments(ParseTreeNode* node, int& numArguments);
 
@@ -301,6 +302,8 @@ namespace BS_NMSP
 		std::list<int> mStateIndices;
 
 		std::list<int> mFunctionIndices;
+
+		std::list<std::list<uint32> > mBreakLocations;
 
 		String getCodeRecordName(const String& type, const String& typeName,
 			const String& blockType, const String& blockName) const;

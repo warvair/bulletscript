@@ -22,8 +22,6 @@ namespace BS_NMSP
 
 #define BS_SCRIPT_STACK_SIZE			32
 
-#define BS_SCRIPT_LOOP_DEPTH			4
-
 #define BS_MAX_PROPERTIES				8
 
 #endif

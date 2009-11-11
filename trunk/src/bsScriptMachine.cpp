@@ -174,9 +174,9 @@ void ScriptMachine::updateControllers(float frameTime)
 	}
 }
 // --------------------------------------------------------------------------------
-void ScriptMachine::createCodeRecord()
+void ScriptMachine::createCodeRecord(const String& name)
 {
-	mCodeRecords.push_back(new CodeRecord);
+	mCodeRecords.push_back(new CodeRecord(name));
 }
 // --------------------------------------------------------------------------------
 CodeRecord* ScriptMachine::getCodeRecord(int index)
@@ -203,7 +203,6 @@ FireTypeControl* ScriptMachine::getFireTypeRecord(int index)
 	rec->state.curInstruction = 0;
 	rec->state.stackHead = 0;
 	rec->state.suspendTime = 0;
-	rec->state.loopDepth = 0;
 	return rec;
 }
 // --------------------------------------------------------------------------------
@@ -432,30 +431,30 @@ int ScriptMachine::compileScript(uint8* buffer, size_t bufferSize)
 	return 0;
 }
 // --------------------------------------------------------------------------------
-void ScriptMachine::declareMemberVariable(const String& emit, const String& var, bstype value)
+void ScriptMachine::declareMemberVariable(const String& ctrl, const String& var, bstype value)
 {
 	// Add a declaration to the named emitter
-	MemberVariableDeclarationMap::iterator it = mMemberVariableDeclarations.find(emit);
+	MemberVariableDeclarationMap::iterator it = mMemberVariableDeclarations.find(ctrl);
 	if (it == mMemberVariableDeclarations.end())
 	{
 		// The key doesn't exist, so we can safely add the variable
 		MemberVariableDeclaration decl;
 		decl.name = var;
 		decl.value = value;
-		mMemberVariableDeclarations.insert(std::pair<String, MemberVariableDeclaration>(emit, decl));
+		mMemberVariableDeclarations.insert(std::pair<String, MemberVariableDeclaration>(ctrl, decl));
 	}
 	else
 	{
 		// Key exists, so see if the variable already exists.
 		typedef MemberVariableDeclarationMap::iterator declIt;
-		std::pair<declIt, declIt> range = mMemberVariableDeclarations.equal_range(emit);
+		std::pair<declIt, declIt> range = mMemberVariableDeclarations.equal_range(ctrl);
 
 		while (range.first != range.second)
 		{
 			if (range.first->second.name == var)
 			{
 				// Print to error log
-				addErrorMsg("Member variable '" + var + "' already declared in '" + emit + "'.");
+				addErrorMsg("Member variable '" + var + "' already declared in '" + ctrl + "'.");
 				return;
 			}
 
@@ -465,7 +464,7 @@ void ScriptMachine::declareMemberVariable(const String& emit, const String& var,
 		MemberVariableDeclaration decl;
 		decl.name = var;
 		decl.value = value;
-		mMemberVariableDeclarations.insert(std::pair<String, MemberVariableDeclaration>(emit, decl));
+		mMemberVariableDeclarations.insert(std::pair<String, MemberVariableDeclaration>(ctrl, decl));
 	}	
 }
 // --------------------------------------------------------------------------------
@@ -476,26 +475,6 @@ void ScriptMachine::addErrorMsg(const String& msg)
 // --------------------------------------------------------------------------------
 bool ScriptMachine::checkInstructionPosition(ScriptState& st, size_t length, bool loop)
 {
-	int loopDepth = st.loopDepth - 1;
-	if (loopDepth >= 0)
-	{
-		if (st.loops[loopDepth].count < 0)
-		{
-			if (st.curInstruction >= st.loops[loopDepth].end)
-				st.curInstruction = st.loops[loopDepth].start;
-		}
-		else if (st.loops[loopDepth].count > 0)
-		{
-			if (st.curInstruction >= st.loops[loopDepth].end)
-			{
-				st.curInstruction = st.loops[loopDepth].start;
-				st.loops[loopDepth].count--;
-				if (st.loops[loopDepth].count == 0)
-					st.loopDepth--;
-			}
-		}
-	}
-
 	if (st.curInstruction >= (int) length)
 	{
 		if (loop)
@@ -834,41 +813,11 @@ void ScriptMachine::interpretCode(const uint32* code, size_t length, ScriptState
 			{
 				*curState = code[st.curInstruction + 1];
 				st.curInstruction = 0;
-				st.loopDepth = 0;
 				st.stackHead = 0;
 
 				CodeRecord* rec = getCodeRecord(*curState);
 				code = rec->byteCode;
 				length = rec->byteCodeSize;
-			}
-			break;
-
-		case BC_LOOP:
-			{
-				int loops = (int) st.stack[st.stackHead - 1];
-				if (loops < 1)
-				{
-					// Ignore and jump to end instruction
-					st.curInstruction = code[st.curInstruction + 1];
-					st.stackHead--;
-				}
-				else if (loops == 1)
-				{
-					// No need to set up a loop, just move to next instruction
-					st.curInstruction += 2;
-					st.stackHead--;
-				}
-				else
-				{
-					// Else, set up a loop
-					st.loops[st.loopDepth].count = loops - 1;
-					st.loops[st.loopDepth].start = st.curInstruction + 2;
-					st.loops[st.loopDepth].end = code[st.curInstruction + 1];
-					st.loopDepth++;
-					
-					st.curInstruction += 2;
-					st.stackHead--;
-				}
 			}
 			break;
 

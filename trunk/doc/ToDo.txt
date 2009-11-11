@@ -1,3 +1,8 @@
+suspend/resume for states: suspend takes up to 8(?) values, and resume must pass all these values to resume
+the state.  This way we can have combinational events.  However, this only works for controllers.  We would
+need emitters to take events as well.  Emitters shouldn't take events, however, because any logic like this
+should be done by controllers.
+
 Controller::setMember will not set emitter pos/angle correctly.
 	interpretCode also just sets the member array directly.  Maybe we should disallow people from
 	setting X/Y/Angle in script?  But let controllers set emitter x/y/angle.
@@ -8,15 +13,12 @@ controllers should be able to change emitter member vars smoothly, like properti
 animation of emitters, eg moving gun position, or changing angle. $gun1.This_Angle = {45, 2};
 	other issues with this, look into it.  also need to allow callbacks to user if driving emitters
 	with controllers.
+	Generally think about emitter member vars, how they're controlled, etc.
 
 constant_expression needs to be able to take a member.var identifier, but only allow this in controller
 events/states.  Check in semantic checking.
 
 controller and emitter definitions may benefit from inheriting from a base class: cuts down on code.
-
-Do we need to allow users to add member variables to guns?  The idea was to let guns know their owner's
-health, etc.  But this would be better expressed using controllers and events.
-	Move member var c++ decl from emitters to controllers.
 
 1) Implement affectors [DONE]
 
@@ -39,6 +41,9 @@ health, etc.  But this would be better expressed using controllers and events.
 	Avoid float-int conversions where possible
 	
 	FireTypeBase::getPropertyIndex is bad, find a way round it (used in FireTypeBase set/get properties)
+	
+	loop() may be inefficient because it requires checking and maintaining a loop struct.  It is used to
+	loop a set number of times, but there may be a quicker way of implementing this.
 	
 need to calculate memory usage if we're not going to allow custom allocators
 	
