@@ -474,6 +474,9 @@ void ParseTree::addEmitterMemberVariables(EmitterDefinition* def)
 	// Add special members
 	def->addMemberVariable("This_X", true);
 	def->addMemberVariable("This_Y", true);
+#ifdef BS_Z_DIMENSION
+	def->addMemberVariable("This_Z", true);
+#endif
 	def->addMemberVariable("This_Angle", true);
 }
 // --------------------------------------------------------------------------------
@@ -511,6 +514,9 @@ void ParseTree::addControllerMemberVariables(ControllerDefinition* def,
 	// Add special members
 	def->addMemberVariable("This_X", true);
 	def->addMemberVariable("This_Y", true);
+#ifdef BS_Z_DIMENSION
+	def->addMemberVariable("This_Z", true);
+#endif
 	def->addMemberVariable("This_Angle", true);
 
 	// Add user-specified member variables (and their initial value) here.
@@ -635,14 +641,18 @@ void ParseTree::createEmitterVariables(ControllerDefinition* def, ParseTreeNode*
 			return;
 		}
 
-		bstype x = bsvalue0, y = bsvalue0, angle = bsvalue0;
+		bstype x = bsvalue0, y = bsvalue0;
+#ifdef BS_Z_DIMENSION
+		bstype z = bsvalue0;
+#endif
+		bstype angle = bsvalue0;
 		ParseTreeNode* emitArgsNode = emitNode->getChild(1);
 		if (emitArgsNode)
 		{
 			int numArguments = 0;
 			countFunctionCallArguments(emitArgsNode, numArguments);
 
-			if (numArguments > 3)
+			if (numArguments > NUM_SPECIAL_MEMBERS)
 				addError(node->getLine(), "Too many emitter arguments given, ignoring redundant ones.");
 
 			// Member variables have been specified
@@ -661,7 +671,12 @@ void ParseTree::createEmitterVariables(ControllerDefinition* def, ParseTreeNode*
 			// emitter bytecode.
 		}
 
+#ifdef BS_Z_DIMENSION
+		def->addEmitterVariable(varName, emitType, x, y, z, angle);
+#else
 		def->addEmitterVariable(varName, emitType, x, y, angle);
+#endif
+
 	}
 
 	for (int i = 0; i < ParseTreeNode::MAX_CHILDREN; ++ i)
@@ -935,6 +950,7 @@ void ParseTree::buildFunctions(EmitterDefinition* def, ParseTreeNode* node)
 		break;
 
 	case PT_BreakStatement:
+	case PT_ContinueStatement:
 		{
 			// Make sure we're inside a while statement
 			ParseTreeNode* parentNode = node->getParent();
@@ -957,7 +973,7 @@ void ParseTree::buildFunctions(EmitterDefinition* def, ParseTreeNode* node)
 
 			if (!flowFound)
 			{
-				addError(node->getLine(), "break must be used inside a while statement.");
+				addError(node->getLine(), "break/continue must be used inside a while statement.");
 			}
 		}
 		break;
@@ -1099,6 +1115,7 @@ void ParseTree::createEmitterStates(EmitterDefinition* def, ParseTreeNode* node)
 		break;
 
 	case PT_BreakStatement:
+	case PT_ContinueStatement:
 		{
 			// Make sure we're inside a while statement
 			ParseTreeNode* parentNode = node->getParent();
@@ -1121,7 +1138,7 @@ void ParseTree::createEmitterStates(EmitterDefinition* def, ParseTreeNode* node)
 
 			if (!flowFound)
 			{
-				addError(node->getLine(), "break must be used inside a while statement.");
+				addError(node->getLine(), "break/continue must be used inside a while statement.");
 			}
 		}
 		break;
@@ -1226,6 +1243,7 @@ void ParseTree::createControllerStates(ControllerDefinition* def, ParseTreeNode*
 		break;
 
 	case PT_BreakStatement:
+	case PT_ContinueStatement:
 		{
 			// Make sure we're inside a while statement
 			ParseTreeNode* parentNode = node->getParent();
@@ -1248,7 +1266,7 @@ void ParseTree::createControllerStates(ControllerDefinition* def, ParseTreeNode*
 
 			if (!flowFound)
 			{
-				addError(node->getLine(), "break must be used inside a while statement.");
+				addError(node->getLine(), "break/continue must be used inside a while statement.");
 			}
 		}
 		break;
@@ -1639,10 +1657,23 @@ void ParseTree::generateBytecode(EmitterDefinition* def, ParseTreeNode* node,
 		}
 		return;
 
+	case PT_ContinueStatement:
+		{
+			// Find the flow structure that we want to jump back to, and find where it starts,
+			// then unconditional jump to there.
+			bytecode->push_back(BC_JUMP);
+			uint32 jumpPosition = (uint32) bytecode->size();
+			bytecode->push_back(0); // dummy
+			std::list<uint32>& continues = mContinueLocations.back();
+			continues.push_back(jumpPosition);
+		}
+		return;
+
 	case PT_WhileStatement:
 		{
-			// Start a new break list
+			// Start new break/continue lists
 			mBreakLocations.push_back(std::list<uint32>());
+			mContinueLocations.push_back(std::list<uint32>());
 
 			// Generate test expression
 			size_t startJumpPos = bytecode->size();
@@ -1662,7 +1693,7 @@ void ParseTree::generateBytecode(EmitterDefinition* def, ParseTreeNode* node,
 			uint32 endPosition = (uint32) bytecode->size();
 			(*bytecode)[endJumpPos] = endPosition;	
 
-			// Now fill in breaks
+			// Now fill in breaks and continues
 			std::list<uint32>& breaks = mBreakLocations.back();
 			while (!breaks.empty())
 			{
@@ -1671,6 +1702,15 @@ void ParseTree::generateBytecode(EmitterDefinition* def, ParseTreeNode* node,
 				(*bytecode)[location] = endPosition;
 			}
 			mBreakLocations.pop_back();
+
+			std::list<uint32>& continues = mContinueLocations.back();
+			while (!continues.empty())
+			{
+				uint32 location = continues.back();
+				continues.pop_back();
+				(*bytecode)[location] = startJumpPos;
+			}
+			mContinueLocations.pop_back();
 		}
 		return;
 
@@ -2006,10 +2046,35 @@ void ParseTree::generateBytecode(ControllerDefinition* def, ParseTreeNode* node,
 		}
 		return;
 
+	case PT_BreakStatement:
+		{
+			// Find the flow structure that we want to break out of, and find where it ends,
+			// then unconditional jump to there.
+			bytecode->push_back(BC_JUMP);
+			uint32 jumpPosition = (uint32) bytecode->size();
+			bytecode->push_back(0); // dummy
+			std::list<uint32>& breaks = mBreakLocations.back();
+			breaks.push_back(jumpPosition);
+		}
+		return;
+
+	case PT_ContinueStatement:
+		{
+			// Find the flow structure that we want to jump back to, and find where it starts,
+			// then unconditional jump to there.
+			bytecode->push_back(BC_JUMP);
+			uint32 jumpPosition = (uint32) bytecode->size();
+			bytecode->push_back(0); // dummy
+			std::list<uint32>& continues = mContinueLocations.back();
+			continues.push_back(jumpPosition);
+		}
+		return;
+
 	case PT_WhileStatement:
 		{
-			// Start a new break list
+			// Start new break/continue lists
 			mBreakLocations.push_back(std::list<uint32>());
+			mContinueLocations.push_back(std::list<uint32>());
 
 			// Generate test expression
 			size_t startJumpPos = bytecode->size();
@@ -2029,7 +2094,7 @@ void ParseTree::generateBytecode(ControllerDefinition* def, ParseTreeNode* node,
 			uint32 endPosition = (uint32) bytecode->size();
 			(*bytecode)[endJumpPos] = endPosition;	
 
-			// Now fill in breaks
+			// Now fill in breaks and continues
 			std::list<uint32>& breaks = mBreakLocations.back();
 			while (!breaks.empty())
 			{
@@ -2038,6 +2103,15 @@ void ParseTree::generateBytecode(ControllerDefinition* def, ParseTreeNode* node,
 				(*bytecode)[location] = endPosition;
 			}
 			mBreakLocations.pop_back();
+
+			std::list<uint32>& continues = mContinueLocations.back();
+			while (!continues.empty())
+			{
+				uint32 location = continues.back();
+				continues.pop_back();
+				(*bytecode)[location] = startJumpPos;
+			}
+			mContinueLocations.pop_back();
 		}
 		return;
 
@@ -2332,6 +2406,10 @@ EmitterDefinition* ParseTree::createEmitterDefinition(ParseTreeNode* node)
 	// Finish constructor here
 	def->finaliseConstructor();
 
+	// Clear codegen structures
+	mBreakLocations.clear();
+	mContinueLocations.clear();
+
 	// Create function bytecode
 	if (hasFunctions)
 		generateBytecode(def, node->getChild(PT_EmitterFunctionNode), 0, true);
@@ -2449,6 +2527,10 @@ ControllerDefinition* ParseTree::createControllerDefinition(ParseTreeNode* node,
 	// Finish constructor here
 	def->finaliseConstructor();
 
+	// Clear codegen structures
+	mBreakLocations.clear();
+	mContinueLocations.clear();
+
 	// Create state bytecode
 	generateBytecode(def, node->getChild(PT_ControllerStateNode), 0, true);
 
@@ -2460,7 +2542,7 @@ ControllerDefinition* ParseTree::createControllerDefinition(ParseTreeNode* node,
 	else
 	{
 		//def->print(std::cerr);
-
+/*
 		for (int i = 0; i < mScriptMachine->getNumCodeRecords(); ++i)
 		{
 			CodeRecord* rec = mScriptMachine->getCodeRecord(i);
@@ -2470,7 +2552,7 @@ ControllerDefinition* ParseTree::createControllerDefinition(ParseTreeNode* node,
 				std::cout << rec->byteCode[j] << std::endl;
 			std::cout << std::endl;
 		}
-
+*/
 		return def;
 	}
 }

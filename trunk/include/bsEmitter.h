@@ -31,6 +31,10 @@ namespace BS_NMSP
 
 		void setY(bstype y);
 
+#ifdef BS_Z_DIMENSION
+		void setZ(bstype z);
+#endif
+
 		void setAngle(bstype angle);
 
 		void setMember(int member, bstype value);

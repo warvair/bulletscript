@@ -26,7 +26,12 @@ namespace BS_NMSP
 		{
 			String name;
 			String emitter;
-			bstype x, y, angle;
+			bstype x;
+			bstype y;
+#ifdef BS_Z_DIMENSION
+			bstype z;
+#endif
+			bstype angle;
 		};
 
 		struct State
@@ -61,8 +66,13 @@ namespace BS_NMSP
 		int getNumUserMembers() const;
 
 		// Emitter variables
+#ifdef BS_Z_DIMENSION
+		EmitterVariable& addEmitterVariable(const String& name, const String& emitter,
+			bstype x, bstype y, bstype z, bstype angle);
+#else
 		EmitterVariable& addEmitterVariable(const String& name, const String& emitter,
 			bstype x, bstype y, bstype angle);
+#endif
 
 		EmitterVariable& getEmitterVariable(int index);
 		

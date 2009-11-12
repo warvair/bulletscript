@@ -157,8 +157,13 @@ namespace BS_NMSP
 		GlobalVariable *getGlobalVariable(int index);
 
 		// Script state processing
+#ifdef BS_Z_DIMENSION
+		void interpretCode(const uint32* code, size_t length, ScriptState& st, int* curState, 
+			FireTypeControl* record, bstype x, bstype y, bstype z, bstype* members, bool loop);
+#else
 		void interpretCode(const uint32* code, size_t length, ScriptState& st, int* curState, 
 			FireTypeControl* record, bstype x, bstype y, bstype* members, bool loop);
+#endif
 
 		void processScriptRecord(ScriptRecord* gsr);
 

@@ -35,7 +35,7 @@ namespace BS_NMSP
 
 		// Affectors
 		int numAffectors;
-		int affectors[BS_MAX_FIRETYPE_AFFECTORS];
+		int affectors[BS_MAX_EMITTER_AFFECTORS];
 
 		// Internal
 		FireType* __type;
@@ -94,7 +94,7 @@ namespace BS_NMSP
 			return -1;
 		}
 
-		void setProperty1(UserTypeBase* object, const String& prop, bstype value) const;
+		void setProperty1(FireTypeControl* record, const String& prop, bstype value) const;
 
 		void setProperty2(FireTypeControl* record, const String& prop, 
 			bstype value, bstype time) const;
@@ -115,8 +115,13 @@ namespace BS_NMSP
 		void generateBytecode(EmitterDefinition* def, ParseTreeNode* node,
 			BytecodeBlock* code, const String& funcName);
 
+#ifdef BS_Z_DIMENSION
+		int processCode(const uint32* code, ScriptState& state, bstype x, 
+			bstype y, bstype z, bstype* members);
+#else
 		int processCode(const uint32* code, ScriptState& state, bstype x, 
 			bstype y, bstype* members);
+#endif
 
 		void registerAffector(const String& name, AffectorFunction func);
 

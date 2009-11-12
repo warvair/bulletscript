@@ -86,7 +86,11 @@ namespace BS_NMSP
 	};
 
 	// Callback function types
+#ifdef BS_Z_DIMENSION
+	typedef UserTypeBase* (*FireFunction) (bstype, bstype, bstype, const bstype*);
+#else
 	typedef UserTypeBase* (*FireFunction) (bstype, bstype, const bstype*);
+#endif
 
 	typedef void (*DieFunction) (UserTypeBase*);
 
@@ -103,6 +107,9 @@ namespace BS_NMSP
 	{
 		Member_X,
 		Member_Y,
+#ifdef BS_Z_DIMENSION
+		Member_Z,
+#endif
 		Member_Angle,
 		NUM_SPECIAL_MEMBERS
 	};

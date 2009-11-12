@@ -52,6 +52,7 @@ namespace BS_NMSP
 		PT_AssignStatement,
 		PT_WhileStatement,
 		PT_BreakStatement,
+		PT_ContinueStatement,
 		PT_GotoStatement,
 		PT_WaitStatement,
 		PT_SetStatement,
@@ -304,6 +305,8 @@ namespace BS_NMSP
 		std::list<int> mFunctionIndices;
 
 		std::list<std::list<uint32> > mBreakLocations;
+
+		std::list<std::list<uint32> > mContinueLocations;
 
 		String getCodeRecordName(const String& type, const String& typeName,
 			const String& blockType, const String& blockName) const;

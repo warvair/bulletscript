@@ -1,3 +1,4 @@
+#include <assert.h>
 #include "bsController.h"
 #include "bsScriptMachine.h"
 
@@ -41,12 +42,20 @@ void Controller::setDefinition(ControllerDefinition* def)
 		EmitterInstance inst;
 		inst.x = var.x;
 		inst.y = var.y;
+#ifdef BS_Z_DIMENSION
+		inst.z = var.z;
+#endif
+
 		inst.angle = var.angle;
 
 		inst.emitter = mScriptMachine->createEmitter(var.emitter);
 		inst.emitter->setX(mRecord->members[Member_X] + inst.x);
 		inst.emitter->setY(mRecord->members[Member_Y] + inst.y);
-		inst.emitter->setAngle(inst.angle);
+#ifdef BS_Z_DIMENSION
+		inst.emitter->setZ(mRecord->members[Member_Z] + inst.z);
+#endif
+
+		inst.emitter->setAngle(mRecord->members[Member_Angle] + inst.angle);
 
 		mEmitters.push_back(inst);
 	}
@@ -54,28 +63,38 @@ void Controller::setDefinition(ControllerDefinition* def)
 // --------------------------------------------------------------------------------
 void Controller::setX(bstype x)
 {
-	setMember(Member_X, x);
+	mRecord->members[Member_X] = x;
 	for (size_t i = 0; i < mEmitters.size(); ++i)
 		mEmitters[i].emitter->setX(mEmitters[i].x + x);
 }
 // --------------------------------------------------------------------------------
 void Controller::setY(bstype y)
 {
-	setMember(Member_Y, y);
+	mRecord->members[Member_Y] = y;
 	for (size_t i = 0; i < mEmitters.size(); ++i)
 		mEmitters[i].emitter->setY(mEmitters[i].y + y);
 }
 // --------------------------------------------------------------------------------
+#ifdef BS_Z_DIMENSION
+void Controller::setZ(bstype z)
+{
+	mRecord->members[Member_Z] = z;
+	for (size_t i = 0; i < mEmitters.size(); ++i)
+		mEmitters[i].emitter->setZ(mEmitters[i].z + z);
+}
+#endif
+// --------------------------------------------------------------------------------
 void Controller::setAngle(bstype angle)
 {
-	setMember(Member_Angle, angle);
+	mRecord->members[Member_Angle] = angle;
 	for (size_t i = 0; i < mEmitters.size(); ++i)
 		mEmitters[i].emitter->setAngle(angle);
 }
 // --------------------------------------------------------------------------------
 void Controller::setMember(int member, bstype value)
 {
-	mRecord->members[member] = value;
+	assert (member >= 0 && "Controller::setMember index must be >= 0");
+	mRecord->members[member + NUM_SPECIAL_MEMBERS] = value;
 }
 // --------------------------------------------------------------------------------
 void Controller::runScript(float frameTime)

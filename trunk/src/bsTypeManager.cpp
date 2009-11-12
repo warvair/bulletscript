@@ -71,7 +71,11 @@ void TypeManager::releaseType(UserTypeBase* ft)
 	}
 }
 // --------------------------------------------------------------------------------
+#ifdef BS_Z_DIMENSION
+void TypeManager::updateType(UserTypeBase* ft, bstype x, bstype y, bstype z, float frameTime)
+#else
 void TypeManager::updateType(UserTypeBase* ft, bstype x, bstype y, float frameTime)
+#endif
 {
 	if (!ft->__ft)
 		return;
@@ -104,8 +108,13 @@ void TypeManager::updateType(UserTypeBase* ft, bstype x, bstype y, float frameTi
 	{
 		if (rec->state.suspendTime <= 0)
 		{
+#ifdef BS_Z_DIMENSION
+			mVM->interpretCode(rec->code->byteCode, rec->code->byteCodeSize, 
+				rec->state, 0, rec, x, y, z, 0, false);
+#else
 			mVM->interpretCode(rec->code->byteCode, rec->code->byteCodeSize, 
 				rec->state, 0, rec, x, y, 0, false);
+#endif
 		}
 		else
 		{
