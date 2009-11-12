@@ -1,9 +1,12 @@
-extended to 3d: should be a compile #define, will mean lots of #ifdef code but worth it.
+it may seriously be worth creating different versions of interpretCode for the different uses now.  It will
+mean duplication, but it will also mean fewer arguments, smaller jump table, etc.
 
-suspend/resume for states: suspend takes up to 8(?) values, and resume must pass all these values to resume
-the state.  This way we can have combinational events.  However, this only works for controllers.  We would
-need emitters to take events as well.  Emitters shouldn't take events, however, because any logic like this
-should be done by controllers.
+When changing emitter members smoothly over time with a controller, the emitter itself may set the member
+immediately.  This should cancel the smooth change, but doesn't, because we can't tell in interpretCode whether
+or not BC_SETM is operating on a controller or an emitter.
+
+Smoothly changing x/y/z/angle is different because controller treats them as offsets, but emitter treats them
+as absolute.
 
 Controllers can change emitter member variables (including x/y/angle) smoothly, like properties.  If a smooth
 transition is interrupted by an immediate one, then the smooth transition is stopped.  First off this means
@@ -18,7 +21,13 @@ Without having member variables in affector arguments, we can't have an 'anchor'
 weapons like this are difficult: if the Emitter is destroyed, we need to destroy its emitted objects, but the
 current system is not set up for that.  This is important because there will be other uses for anchored objects.
 
-What about other built-in member variables?  This_Z for instance.
+suspend/resume for states: suspend takes up to 8(?) values, and resume must pass all these values to resume
+the state.  This way we can have combinational events.  However, this only works for controllers.  We would
+need emitters to take events as well.  Emitters shouldn't take events, however, because any logic like this
+should be done by controllers.
+
+events: events can take arguments.  Can be called in C++ code, in by states or other events by using syntax:
+	raise Damaged(0.2); // etc
 
 Controller and Emitter definitions should inherit from a base class: cuts down on code.  There's currently a lot
 of duplication in parsing.

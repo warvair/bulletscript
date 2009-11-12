@@ -51,7 +51,7 @@ namespace BS_NMSP
 		int getMaxLocalVariables() const;
 
 		// Member variables
-		void addMemberVariable(const String& name, bool readonly, bstype value = 0);
+		bool addMemberVariable(const String& name, bool readonly, bstype value = 0);
 
 		MemberVariable& getMemberVariable(int index);
 

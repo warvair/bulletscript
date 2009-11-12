@@ -27,8 +27,6 @@ namespace BS_NMSP
 
 		std::vector<EmitterInstance> mEmitters;
 
-	public:
-
 		ScriptRecord* mRecord;
 
 	public:

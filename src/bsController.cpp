@@ -14,10 +14,10 @@ Controller::Controller(ScriptMachine* machine) :
 // --------------------------------------------------------------------------------
 Controller::~Controller()
 {
-	delete mRecord;
-
 	for (size_t i = 0; i < mEmitters.size(); ++i)
 		mScriptMachine->destroyEmitter(mEmitters[i].emitter);
+
+	delete mRecord;
 }
 // --------------------------------------------------------------------------------
 void Controller::onRelease()
@@ -88,7 +88,7 @@ void Controller::setAngle(bstype angle)
 {
 	mRecord->members[Member_Angle] = angle;
 	for (size_t i = 0; i < mEmitters.size(); ++i)
-		mEmitters[i].emitter->setAngle(angle);
+		mEmitters[i].emitter->setAngle(mEmitters[i].angle + angle);
 }
 // --------------------------------------------------------------------------------
 void Controller::setMember(int member, bstype value)
@@ -99,8 +99,9 @@ void Controller::setMember(int member, bstype value)
 // --------------------------------------------------------------------------------
 void Controller::runScript(float frameTime)
 {
-	mScriptMachine->processScriptRecord(mRecord);
-	if (mRecord->scriptState.suspendTime > 0)
+	if (mRecord->scriptState.suspendTime <= 0)
+		mScriptMachine->processScriptRecord(mRecord);
+	else
 		mRecord->scriptState.suspendTime -= frameTime;
 }
 // --------------------------------------------------------------------------------
