@@ -51,6 +51,12 @@ void Emitter::setAngle(bstype angle)
 	mRecord->members[Member_Angle] = angle;
 }
 // --------------------------------------------------------------------------------
+void Emitter::setSpecialMember(int member, bstype value)
+{
+	assert (member >= 0 && members < NUM_SPECIAL_MEMBERS && "Emitter::setMember index must be >= 0");
+	mRecord->members[member] = value;
+}
+// --------------------------------------------------------------------------------
 void Emitter::setMember(int member, bstype value)
 {
 	assert (member >= 0 && "Emitter::setMember index must be >= 0");
@@ -59,10 +65,24 @@ void Emitter::setMember(int member, bstype value)
 	mActiveControllers &= ~(1 << member);
 }
 // --------------------------------------------------------------------------------
+void Emitter::setMember(int member, bstype value, float time)
+{
+	assert (member >= 0 && "Emitter::setMember index must be >= 0");
+	mMemberControllers[member].time = time;
+	mMemberControllers[member].speed = (value - mRecord->members[member + NUM_SPECIAL_MEMBERS]) / time;
+	mActiveControllers |= (1 << member);
+}
+// --------------------------------------------------------------------------------
+bstype Emitter::getMember(int member) const
+{
+		assert (member >= 0 && "Emitter::getMember index must be >= 0");
+		return mRecord->members[member + NUM_SPECIAL_MEMBERS];
+}
+// --------------------------------------------------------------------------------
 void Emitter::runScript(float frameTime)
 {
 	if (mRecord->scriptState.suspendTime <= 0)
-		mScriptMachine->processScriptRecord(mRecord);
+		mScriptMachine->processScriptRecord(mRecord, this);
 	else
 		mRecord->scriptState.suspendTime -= frameTime;
 }
@@ -75,7 +95,7 @@ void Emitter::update(float frameTime)
 		int mask = 1 << i;
 		if (mActiveControllers & mask)
 		{
-			mRecord->members[i] += mMemberControllers[i].speed * frameTime;
+			mRecord->members[i + NUM_SPECIAL_MEMBERS] += mMemberControllers[i].speed * frameTime;
 
 			mMemberControllers[i].time -= frameTime;
 			if (mMemberControllers[i].time <= 0)

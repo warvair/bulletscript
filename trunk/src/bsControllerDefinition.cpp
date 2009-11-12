@@ -192,13 +192,8 @@ ScriptRecord* ControllerDefinition::createScriptRecord(ScriptMachine* sm)
 	// Run construction code, if there is any
 	if (m_constructSize > 0)
 	{
-#ifdef BS_Z_DIMENSION
 		sm->interpretCode(m_constructCode, m_constructSize, record->scriptState,
-			&record->curState, 0, bsvalue0, bsvalue0, bsvalue0, record->members, false);
-#else
-		sm->interpretCode(m_constructCode, m_constructSize, record->scriptState,
-			&record->curState, 0, bsvalue0, bsvalue0, record->members, false);
-#endif
+			record->members);
 
 		record->scriptState.stackHead = 0;
 		record->scriptState.curInstruction = 0;

@@ -40,13 +40,7 @@ void Affector::recalculateArguments()
 	mState.curInstruction = 0;
 	mState.stackHead = 0;
 
-#ifdef BS_Z_DIMENSION
-	mScriptMachine->interpretCode(mBytecode, mBytecodeSize, mState, 0, 0,
-		bsvalue0, bsvalue0, bsvalue0, 0, false);
-#else
-	mScriptMachine->interpretCode(mBytecode, mBytecodeSize, mState, 0, 0,
-		bsvalue0, bsvalue0, 0, false);
-#endif
+	mScriptMachine->interpretCode(mBytecode, mBytecodeSize, mState);
 
 	if (!mbRecalculateAlways)
 		mbRecalculate = false;

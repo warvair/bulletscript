@@ -14,21 +14,28 @@ namespace BS_NMSP
 	{
 		ScriptMachine* mScriptMachine;
 
+		struct MemberController
+		{
+			float time;
+			bstype speed;
+		};
+
 		struct EmitterInstance
 		{
 			Emitter* emitter;
-			bstype x;
-			bstype y;
-#ifdef BS_Z_DIMENSION
-			bstype z;
-#endif
-			bstype angle;
+			bstype special[NUM_SPECIAL_MEMBERS];
+
+			MemberController controllers[NUM_SPECIAL_MEMBERS];
+			uint32 activeControllers;
 		};
 
 		std::vector<EmitterInstance> mEmitters;
 
 		ScriptRecord* mRecord;
 
+		// Functions
+		void runScript(float frameTime);
+		
 	public:
 
 		explicit Controller(ScriptMachine* machine);
@@ -52,7 +59,13 @@ namespace BS_NMSP
 
 		void setMember(int member, bstype value);
 
-		void runScript(float frameTime);
+		void setEmitterMember(int emitter, int member, bstype value);
+
+		void setEmitterMember(int emitter, int member, bstype value, float time);
+
+		bstype getEmitterMember(int emitter, int member) const;
+
+		void update(float frameTime);
 
 	};
 

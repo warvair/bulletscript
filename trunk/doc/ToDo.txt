@@ -1,6 +1,11 @@
 it may seriously be worth creating different versions of interpretCode for the different uses now.  It will
 mean duplication, but it will also mean fewer arguments, smaller jump table, etc.
 
+	processScriptRecord (emitter state, controller state) - loops, needs curState, xyz, members
+	update FireType (functions) - doesn't loop, needs FireType, xyz
+	
+	we will also need diferent processScriptRecords for emitters and controllers
+
 When changing emitter members smoothly over time with a controller, the emitter itself may set the member
 immediately.  This should cancel the smooth change, but doesn't, because we can't tell in interpretCode whether
 or not BC_SETM is operating on a controller or an emitter.

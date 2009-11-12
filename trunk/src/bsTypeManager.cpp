@@ -110,7 +110,7 @@ void TypeManager::updateType(UserTypeBase* ft, bstype x, bstype y, float frameTi
 		{
 #ifdef BS_Z_DIMENSION
 			mVM->interpretCode(rec->code->byteCode, rec->code->byteCodeSize, 
-				rec->state, 0, rec, x, y, z, 0, false);
+				rec->state, 0, rec, ScriptMachine::VT_FireTypeControl, x, y, z, 0, false);
 #else
 			mVM->interpretCode(rec->code->byteCode, rec->code->byteCodeSize, 
 				rec->state, 0, rec, x, y, 0, false);

@@ -159,15 +159,15 @@ namespace BS_NMSP
 		// Script state processing
 #ifdef BS_Z_DIMENSION
 		void interpretCode(const uint32* code, size_t length, ScriptState& st, int* curState, 
-			FireTypeControl* record, bstype x, bstype y, bstype z, bstype* members, bool loop);
+			void* object, bstype x, bstype y, bstype z, bstype* members, bool loop);
 #else
 		void interpretCode(const uint32* code, size_t length, ScriptState& st, int* curState, 
-			FireTypeControl* record, bstype x, bstype y, bstype* members, bool loop);
+			void* object, bstype x, bstype y, bstype* members, bool loop);
 #endif
 
-		void processScriptRecord(ScriptRecord* gsr);
+		void interpretCode(const uint32* code, size_t length, ScriptState& st, bstype* members = 0);
 
-		void processConstantExpression(const uint32* code, size_t length, ScriptRecord* gsr);
+		void processScriptRecord(ScriptRecord* gsr, void* object);
 
 		// Compilation
 		int compileScript(uint8* buffer, size_t bufferSize);

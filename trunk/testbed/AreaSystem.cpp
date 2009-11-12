@@ -281,9 +281,6 @@ int AreaBattery::update(float frameTime)
 		{
 			a.__time += frameTime;
 
-			// No special movement for areas
-			// ...
-
 			// Bulletscript: apply affectors and control functions
 			mMachine->updateType(&a, a.x, a.y, frameTime);
 
