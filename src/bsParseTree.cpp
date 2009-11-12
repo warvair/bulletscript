@@ -750,9 +750,6 @@ void ParseTree::checkFireControllers(EmitterDefinition* def, ParseTreeNode* node
 		// Named affectors
 		String affector = node->getStringData();
 
-		// Make sure affector does not take member variables as arguments
-		// ...
-
 		int index = -1;
 		for (size_t i = 0; i < mAffectors.size(); ++i)
 		{
@@ -2227,6 +2224,21 @@ void ParseTree::generateBytecode(ControllerDefinition* def, ParseTreeNode* node,
 		}
 		break;
 
+	case PT_EmitterMember:
+		{
+			String emitName = node->getStringData();
+			String memName = node->getChild(0)->getStringData();
+
+			bytecode->push_back(BC_GETEM);
+			uint32 emitIndex = def->getEmitterVariableIndex(emitName);
+			const ControllerDefinition::EmitterVariable& var = def->getEmitterVariable(emitIndex);
+			EmitterDefinition* eDef = mScriptMachine->getEmitterDefinition(var.emitter);
+			bytecode->push_back(emitIndex);
+			bytecode->push_back(eDef->getMemberVariableIndex(memName));
+
+		}
+		return;
+
 	case PT_Identifier:
 		{
 			String varName = node->getStringData();
@@ -2591,7 +2603,7 @@ ControllerDefinition* ParseTree::createControllerDefinition(ParseTreeNode* node,
 	else
 	{
 		//def->print(std::cerr);
-/*
+
 		for (int i = 0; i < mScriptMachine->getNumCodeRecords(); ++i)
 		{
 			CodeRecord* rec = mScriptMachine->getCodeRecord(i);
@@ -2601,7 +2613,7 @@ ControllerDefinition* ParseTree::createControllerDefinition(ParseTreeNode* node,
 				std::cout << rec->byteCode[j] << std::endl;
 			std::cout << std::endl;
 		}
-*/
+
 		return def;
 	}
 }

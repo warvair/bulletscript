@@ -47,7 +47,13 @@ namespace BS_NMSP
 
 		void setAngle(bstype angle);
 
+		void setSpecialMember(int member, bstype value);
+
 		void setMember(int member, bstype value);
+
+		void setMember(int member, bstype value, float time);
+
+		bstype getMember(int member) const;
 
 		void update(float frameTime);
 

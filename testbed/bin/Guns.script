@@ -11,28 +11,29 @@ controller Boss1
 	{
 	}
 
+
 	// states
-	Initial = state
+	Stage1 = state
 	{
-		wait(4);
-//		$mainGun.speed = 200;
+		wait(1);
+		$mainGun.This_Angle = {-90, 5};
+		wait(5);
 		goto Stage2;
 	}
 
 	Stage2 = state
 	{
 		wait(4);
-		goto Initial;
 	}
 }
 
 emitter Test
 {
-	speed = 50;
+	time = 0.1;
 	Main = state 
 	{
-		fireA bullet(180, speed);
-		wait(0.5);
+		fireA bullet(This_Angle, 100);
+		wait(time);
 	}
 }
 

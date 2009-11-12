@@ -169,7 +169,7 @@ void ScriptMachine::updateControllers(float frameTime)
 	Controller* ctrl = mControllers->getFirst();
 	while (ctrl)
 	{
-		ctrl->runScript(frameTime);
+		ctrl->update(frameTime);
 		ctrl = mControllers->getNext(ctrl);
 	}
 }
@@ -489,7 +489,7 @@ bool ScriptMachine::checkInstructionPosition(ScriptState& st, size_t length, boo
 }
 // --------------------------------------------------------------------------------
 void ScriptMachine::interpretCode(const uint32* code, size_t length, ScriptState& st, 
-								  int* curState, FireTypeControl* record, bstype x, bstype y, 
+								  int* curState, void* object, bstype x, bstype y, 
 #ifdef BS_Z_DIMENSION
 								  bstype z, 
 #endif
@@ -579,8 +579,8 @@ void ScriptMachine::interpretCode(const uint32* code, size_t length, ScriptState
 				
 				bstype value = st.stack[--st.stackHead];
 				
-				// Set member variable
-				// ...
+				// If non-special, set member variable
+				static_cast<Controller*>(object)->setEmitterMember(emitIndex, memIndex, value);
 
 				st.curInstruction += 3;
 			}
@@ -588,48 +588,66 @@ void ScriptMachine::interpretCode(const uint32* code, size_t length, ScriptState
 
 		case BC_SETEM2:
 			{
-				// ...
+				int emitIndex = code[st.curInstruction + 1];
+				int memIndex = code[st.curInstruction + 2];
+
+				bstype time = st.stack[st.stackHead - 1];
+				bstype value = st.stack[st.stackHead - 2];
+				st.stackHead -= 2;
+
+				// If non-special, set member variable
+				static_cast<Controller*>(object)->setEmitterMember(emitIndex, memIndex, value, time);
+
+				st.curInstruction += 3;
+			}
+			break;
+
+		case BC_GETEM:
+			{
+				int emitIndex = code[st.curInstruction + 1];
+				int memIndex = code[st.curInstruction + 2];
+
+				st.stack[st.stackHead] = static_cast<Controller*>(object)->getEmitterMember(emitIndex, memIndex);
+				st.stackHead++;
+				st.curInstruction += 3;
 			}
 			break;
 
 		case BC_SETPROPERTY1:
 			{
-				assert(record->__object != 0 && "ScriptMachine::interpretCode record->object is null");
-
 				int index = code[st.curInstruction + 1];
 				bstype value = st.stack[--st.stackHead];
 
 				const String& propName = getProperty(index);
+				FireTypeControl* ftc = static_cast<FireTypeControl*>(object);
 
-				record->__type->setProperty1(record, propName, value);
+				ftc->__type->setProperty1(ftc, propName, value);
 				st.curInstruction += 2;
 			}
 			break;
 
 		case BC_SETPROPERTY2:
 			{
-				assert(record->__object != 0 && "ScriptMachine::interpretCode record->object is null");
-
 				int index = code[st.curInstruction + 1];
 				bstype time = st.stack[st.stackHead - 1];
 				bstype value = st.stack[st.stackHead - 2];
 				st.stackHead -= 2;
 
 				const String& propName = getProperty(index);
+				FireTypeControl* ftc = static_cast<FireTypeControl*>(object);
 
-				record->__type->setProperty2(record, propName, value, time);
+				ftc->__type->setProperty2(ftc, propName, value, time);
 				st.curInstruction += 2;
 			}
 			break;
 
 		case BC_GETPROPERTY:
 			{
-				assert(record->__object != 0 && "ScriptMachine::interpretCode record->object is null");
-
 				int index = code[st.curInstruction + 1];
 				const String& propName = getProperty(index);
+				FireTypeControl* ftc = static_cast<FireTypeControl*>(object);
 
-				st.stack[st.stackHead] = record->__type->getProperty(record->__object, propName);
+				st.stack[st.stackHead] = ftc->__type->getProperty(ftc->__object, propName);
 				st.stackHead++;
 				st.curInstruction += 2;
 
@@ -818,13 +836,14 @@ void ScriptMachine::interpretCode(const uint32* code, size_t length, ScriptState
 
 		case BC_DIE:
 			{
-				assert(record->__type->mDieFunction != 0 &&
+				FireTypeControl* ftc = static_cast<FireTypeControl*>(object);
+				assert(ftc->__type->mDieFunction != 0 &&
 					"ScriptMachine::interpretCode no die() function provided.");
 
-				assert(record->__object != 0 &&
-					"ScriptMachine::interpretCode record->object is null");
+				assert(ftc->__object != 0 &&
+					"ScriptMachine::interpretCode ftc->object is null");
 
-				record->__type->mDieFunction(record->__object);
+				ftc->__type->mDieFunction(ftc->__object);
 				st.curInstruction++;
 			}
 			break;
@@ -883,11 +902,238 @@ void ScriptMachine::interpretCode(const uint32* code, size_t length, ScriptState
 		if (!checkInstructionPosition(st, length, loop))
 			return;
 	}
-
-	return;
 }
 // --------------------------------------------------------------------------------
-void ScriptMachine::processScriptRecord(ScriptRecord* gsr)
+void ScriptMachine::interpretCode(const uint32* code, size_t length, ScriptState& st, bstype* members)
+{
+	while (st.curInstruction < length)
+	{
+		switch (code[st.curInstruction])
+		{
+		case BC_PUSH:
+			{
+				st.stack[st.stackHead] = BS_UINT32_TO_TYPE(code[st.curInstruction + 1]);
+				st.stackHead++;
+				st.curInstruction += 2;
+
+				assert(st.stackHead < BS_SCRIPT_STACK_SIZE && 
+					"Stack limit reached: increase BS_SCRIPT_STACK_SIZE");
+			}
+			break;
+
+		case BC_GETL:
+			{
+				int index = code[st.curInstruction + 1];
+				st.stack[st.stackHead] = st.locals[index];
+				st.stackHead++;
+				st.curInstruction += 2;
+
+				assert(st.stackHead < BS_SCRIPT_STACK_SIZE && 
+					"Stack limit reached: increase BS_SCRIPT_STACK_SIZE");
+			}
+			break;
+
+		case BC_GETM:
+			{
+				int index = code[st.curInstruction + 1];
+				st.stack[st.stackHead] = members[index];
+				st.stackHead++;
+				st.curInstruction += 2;
+
+				assert(st.stackHead < BS_SCRIPT_STACK_SIZE && 
+					"Stack limit reached: increase BS_SCRIPT_STACK_SIZE");
+			}
+			break;
+
+		case BC_GETG:
+			{
+				int index = code[st.curInstruction + 1];
+				st.stack[st.stackHead] = getGlobalVariableValue(index);
+				st.stackHead++;
+				st.curInstruction += 2;
+
+				assert(st.stackHead < BS_SCRIPT_STACK_SIZE && 
+					"Stack limit reached: increase BS_SCRIPT_STACK_SIZE");
+			}
+			break;
+
+		case BC_OP_POS:
+			{
+				// Don't actually need to do anything
+				st.curInstruction++;
+			}
+			break;
+
+		case BC_OP_NEG:
+			{
+				st.stack[st.stackHead - 1] = -st.stack[st.stackHead - 1];
+				st.curInstruction++;
+			}
+			break;
+
+		case BC_OP_ADD:
+			{
+				bstype val1 = st.stack[st.stackHead - 2];
+				bstype val2 = st.stack[st.stackHead - 1];
+
+				st.stack[st.stackHead - 2] = val1 + val2;
+				st.stackHead--;
+				st.curInstruction++;
+			}
+			break;
+
+		case BC_OP_SUBTRACT:
+			{
+				bstype val1 = st.stack[st.stackHead - 2];
+				bstype val2 = st.stack[st.stackHead - 1];
+
+				st.stack[st.stackHead - 2] = val1 - val2;
+				st.stackHead--;
+				st.curInstruction++;
+			}
+			break;
+
+		case BC_OP_MULTIPLY:
+			{
+
+				bstype val1 = st.stack[st.stackHead - 2];
+				bstype val2 = st.stack[st.stackHead - 1];
+
+				st.stack[st.stackHead - 2] = val1 * val2;
+				st.stackHead--;
+				st.curInstruction++;
+			}
+			break;
+
+		case BC_OP_DIVIDE:
+			{
+				bstype val1 = st.stack[st.stackHead - 2];
+				bstype val2 = st.stack[st.stackHead - 1];
+
+				st.stack[st.stackHead - 2] = val1 / val2;
+				st.stackHead--;
+				st.curInstruction++;
+			}
+			break;
+		
+		case BC_OP_REMAINDER:
+			{
+				bstype val1 = st.stack[st.stackHead - 2];
+				bstype val2 = st.stack[st.stackHead - 1];
+
+				st.stack[st.stackHead - 2] = (bstype) ((int) val1 % (int) val2);
+				st.stackHead--;
+				st.curInstruction++;
+			}
+			break;
+
+		case BC_OP_EQ:
+			{
+				bstype val1 = st.stack[st.stackHead - 2];
+				bstype val2 = st.stack[st.stackHead - 1];
+
+				st.stack[st.stackHead - 2] = (val1 == val2) ? bsvalue1 : bsvalue0;
+				st.stackHead--;
+				st.curInstruction++;
+			}
+			break;
+
+		case BC_OP_NEQ:
+			{
+				bstype val1 = st.stack[st.stackHead - 2];
+				bstype val2 = st.stack[st.stackHead - 1];
+
+				st.stack[st.stackHead - 2] = (val1 != val2) ? bsvalue1 : bsvalue0;
+				st.stackHead--;
+				st.curInstruction++;
+			}
+			break;
+
+		case BC_OP_LT:
+			{
+				bstype val1 = st.stack[st.stackHead - 2];
+				bstype val2 = st.stack[st.stackHead - 1];
+
+				st.stack[st.stackHead - 2] = (val1 < val2) ? bsvalue1 : bsvalue0;
+				st.stackHead--;
+				st.curInstruction++;
+			}
+			break;
+
+		case BC_OP_LTE:
+			{
+				bstype val1 = st.stack[st.stackHead - 2];
+				bstype val2 = st.stack[st.stackHead - 1];
+
+				st.stack[st.stackHead - 2] = (val1 <= val2) ? bsvalue1 : bsvalue0;
+				st.stackHead--;
+				st.curInstruction++;
+			}
+			break;
+
+		case BC_OP_GT:
+			{
+				bstype val1 = st.stack[st.stackHead - 2];
+				bstype val2 = st.stack[st.stackHead - 1];
+
+				st.stack[st.stackHead - 2] = (val1 > val2) ? bsvalue1 : bsvalue0;
+				st.stackHead--;
+				st.curInstruction++;
+			}
+			break;
+
+		case BC_OP_GTE:
+			{
+				bstype val1 = st.stack[st.stackHead - 2];
+				bstype val2 = st.stack[st.stackHead - 1];
+
+				st.stack[st.stackHead - 2] = (val1 >= val2) ? bsvalue1 : bsvalue0;
+				st.stackHead--;
+				st.curInstruction++;
+			}
+			break;
+
+		case BC_LOG_AND:
+			{
+				bstype val1 = st.stack[st.stackHead - 2];
+				bstype val2 = st.stack[st.stackHead - 1];
+
+				st.stack[st.stackHead - 2] = (val1 && val2) ? bsvalue1 : bsvalue0;
+				st.stackHead--;
+				st.curInstruction++;
+			}
+			break;
+
+		case BC_LOG_OR:
+			{
+				bstype val1 = st.stack[st.stackHead - 2];
+				bstype val2 = st.stack[st.stackHead - 1];
+
+				st.stack[st.stackHead - 2] = (val1 || val2) ? bsvalue1 : bsvalue0;
+				st.stackHead--;
+				st.curInstruction++;
+			}
+			break;
+
+		case BC_CALL:
+			{
+				int function = code[st.curInstruction + 1];
+				NativeFunction func = getNativeFunction(function);
+				func(st);
+
+				st.curInstruction += 2;
+			}
+			break;
+
+		default:
+			st.curInstruction++;
+			break;
+
+		}
+	}
+}
+// --------------------------------------------------------------------------------
+void ScriptMachine::processScriptRecord(ScriptRecord* gsr, void* object)
 {
 	// Assume that we're not suspended.
 
@@ -896,25 +1142,13 @@ void ScriptMachine::processScriptRecord(ScriptRecord* gsr)
 	size_t bytecodeLen = rec->byteCodeSize;
 
 #ifdef BS_Z_DIMENSION
-	interpretCode(bytecode, bytecodeLen, gsr->scriptState, &gsr->curState, 0,
+	interpretCode(bytecode, bytecodeLen, gsr->scriptState, &gsr->curState, object,
 		gsr->members[Member_X], gsr->members[Member_Y], gsr->members[Member_Z], gsr->members, true);
 #else
-	interpretCode(bytecode, bytecodeLen, gsr->scriptState, &gsr->curState, 0,
+	interpretCode(bytecode, bytecodeLen, gsr->scriptState, &gsr->curState, object,
 		gsr->members[Member_X], gsr->members[Member_Y], gsr->members, true);
 #endif
 }
 // --------------------------------------------------------------------------------
-void ScriptMachine::processConstantExpression(const uint32* code, 
-											  size_t length, 
-											  ScriptRecord* gsr)
-{
-#ifdef BS_Z_DIMENSION
-	interpretCode(code, length, gsr->scriptState, &gsr->curState, 0,
-		bsvalue0, bsvalue0, bsvalue0, gsr->members, false);
-#else
-	interpretCode(code, length, gsr->scriptState, &gsr->curState, 0,
-		bsvalue0, bsvalue0, gsr->members, false);
-#endif
-}
-// --------------------------------------------------------------------------------
+
 }

@@ -200,7 +200,15 @@ void generate_assignment_expr(int nodeType, int idType, YYSTYPE parentNode, YYST
 	YYSTYPE expr_node = AST->createNode(nodeType, yylineno);
 				
 	YYSTYPE id_node = AST->createNode(idType, yylineno);
-	id_node->setString(idNode->getStringData().c_str());
+	if (idType == PT_EmitterMember)
+	{
+		id_node->setString(idNode->getStringData().c_str());
+		id_node->setChild(0, idNode->getChild(0));
+	}
+	else
+	{
+		id_node->setString(idNode->getStringData().c_str());
+	}
 				
 	expr_node->setChild(0, id_node);
 	expr_node->setChild(1, exprNode);
@@ -220,7 +228,15 @@ void generate_inc_expr(int value, int nodeType, YYSTYPE parentNode, YYSTYPE idNo
 		inc_node = AST->createNode(PT_SubtractStatement, yylineno);
 	
 	YYSTYPE id_node = AST->createNode(nodeType, yylineno);
-	id_node->setString(idNode->getStringData().c_str());
+	if (nodeType == PT_EmitterMember)
+	{
+		id_node->setString(idNode->getStringData().c_str());
+		id_node->setChild(0, idNode->getChild(0));
+	}
+	else
+	{
+		id_node->setString(idNode->getStringData().c_str());
+	}	
 	
 	YYSTYPE v_node = AST->createNode(PT_Constant, yylineno);
 	v_node->setValue(1);
@@ -264,7 +280,7 @@ typedef int YYSTYPE;
 
 
 /* Line 219 of yacc.c.  */
-#line 268 "bsBulletParser.cpp"
+#line 284 "bsBulletParser.cpp"
 
 #if ! defined (YYSIZE_T) && defined (__SIZE_TYPE__)
 # define YYSIZE_T __SIZE_TYPE__
@@ -583,26 +599,26 @@ static const yysigned_char yyrhs[] =
 /* YYRLINE[YYN] -- source line where rule number YYN was defined.  */
 static const unsigned short int yyrline[] =
 {
-       0,   143,   143,   150,   154,   163,   167,   174,   185,   196,
-     207,   218,   229,   240,   251,   265,   276,   287,   298,   309,
-     320,   331,   342,   356,   360,   369,   373,   382,   391,   395,
-     404,   413,   417,   426,   436,   440,   447,   452,   464,   468,
-     477,   488,   492,   501,   510,   514,   523,   532,   536,   543,
-     547,   554,   558,   565,   569,   576,   580,   589,   593,   602,
-     606,   615,   619,   628,   632,   636,   640,   644,   648,   652,
-     656,   660,   664,   671,   675,   679,   683,   687,   691,   695,
-     699,   703,   710,   714,   718,   722,   726,   730,   734,   738,
-     742,   749,   753,   757,   761,   765,   769,   773,   777,   781,
-     788,   792,   799,   805,   812,   822,   828,   835,   845,   851,
-     858,   868,   874,   881,   891,   900,   905,   910,   915,   920,
-     925,   933,   939,   942,   945,   948,   951,   954,   957,   960,
-     963,   966,   969,   975,   981,   988,   993,   998,  1003,  1008,
-    1013,  1018,  1024,  1030,  1036,  1045,  1054,  1063,  1072,  1081,
-    1085,  1092,  1100,  1108,  1118,  1130,  1134,  1143,  1147,  1155,
-    1162,  1170,  1174,  1183,  1187,  1196,  1200,  1206,  1215,  1219,
-    1225,  1231,  1237,  1246,  1250,  1256,  1265,  1269,  1275,  1281,
-    1290,  1294,  1299,  1307,  1311,  1315,  1319,  1323,  1330,  1339,
-    1343,  1350,  1355,  1367,  1375,  1384,  1395,  1399,  1406,  1414
+       0,   159,   159,   166,   170,   179,   183,   190,   201,   212,
+     223,   234,   245,   256,   267,   281,   292,   303,   314,   325,
+     336,   347,   358,   372,   376,   385,   389,   398,   407,   411,
+     420,   429,   433,   442,   452,   456,   463,   468,   480,   484,
+     493,   504,   508,   517,   526,   530,   539,   548,   552,   559,
+     563,   570,   574,   581,   585,   592,   596,   605,   609,   618,
+     622,   631,   635,   644,   648,   652,   656,   660,   664,   668,
+     672,   676,   680,   687,   691,   695,   699,   703,   707,   711,
+     715,   719,   726,   730,   734,   738,   742,   746,   750,   754,
+     758,   765,   769,   773,   777,   781,   785,   789,   793,   797,
+     804,   808,   815,   821,   828,   838,   844,   851,   861,   867,
+     874,   884,   890,   897,   907,   916,   921,   926,   931,   936,
+     941,   949,   955,   962,   967,   972,   977,   982,   987,   992,
+     998,  1004,  1010,  1019,  1025,  1032,  1037,  1042,  1047,  1052,
+    1057,  1062,  1068,  1074,  1080,  1089,  1098,  1107,  1116,  1125,
+    1129,  1136,  1144,  1152,  1162,  1174,  1178,  1187,  1191,  1199,
+    1206,  1214,  1218,  1227,  1231,  1240,  1244,  1250,  1259,  1263,
+    1269,  1275,  1281,  1290,  1294,  1300,  1309,  1313,  1319,  1325,
+    1334,  1338,  1343,  1351,  1355,  1359,  1363,  1367,  1374,  1383,
+    1387,  1394,  1399,  1411,  1419,  1428,  1439,  1443,  1450,  1458
 };
 #endif
 
@@ -1727,21 +1743,21 @@ yyreduce:
   switch (yyn)
     {
         case 2:
-#line 144 "BulletParser.y"
+#line 160 "BulletParser.y"
     {
 			AST->getRootNode()->setChild(0, (yyvsp[0]));
 		;}
     break;
 
   case 3:
-#line 151 "BulletParser.y"
+#line 167 "BulletParser.y"
     {
 			(yyval) = (yyvsp[0]);
 		;}
     break;
 
   case 4:
-#line 155 "BulletParser.y"
+#line 171 "BulletParser.y"
     {
 			(yyval) = AST->createNode(PT_DefinitionList, yylineno);
 			(yyval)->setChild(0, (yyvsp[-1]));
@@ -1750,21 +1766,21 @@ yyreduce:
     break;
 
   case 5:
-#line 164 "BulletParser.y"
+#line 180 "BulletParser.y"
     {
 			(yyval) = (yyvsp[0]);
 		;}
     break;
 
   case 6:
-#line 168 "BulletParser.y"
+#line 184 "BulletParser.y"
     {
 			(yyval) = (yyvsp[0]);
 		;}
     break;
 
   case 7:
-#line 175 "BulletParser.y"
+#line 191 "BulletParser.y"
     {
 			(yyval) = AST->createNode(PT_EmitterDefinition, yylineno);
 			(yyval)->setString((yyvsp[-3])->getStringData().c_str());
@@ -1778,7 +1794,7 @@ yyreduce:
     break;
 
   case 8:
-#line 186 "BulletParser.y"
+#line 202 "BulletParser.y"
     {
 			(yyval) = AST->createNode(PT_EmitterDefinition, yylineno);
 			(yyval)->setString((yyvsp[-4])->getStringData().c_str());			
@@ -1792,7 +1808,7 @@ yyreduce:
     break;
 
   case 9:
-#line 197 "BulletParser.y"
+#line 213 "BulletParser.y"
     {
 			(yyval) = AST->createNode(PT_EmitterDefinition, yylineno);
 			(yyval)->setString((yyvsp[-4])->getStringData().c_str());			
@@ -1806,7 +1822,7 @@ yyreduce:
     break;
 
   case 10:
-#line 208 "BulletParser.y"
+#line 224 "BulletParser.y"
     {
 			(yyval) = AST->createNode(PT_EmitterDefinition, yylineno);
 			(yyval)->setString((yyvsp[-5])->getStringData().c_str());			
@@ -1820,7 +1836,7 @@ yyreduce:
     break;
 
   case 11:
-#line 219 "BulletParser.y"
+#line 235 "BulletParser.y"
     {
 			(yyval) = AST->createNode(PT_EmitterDefinition, yylineno);
 			(yyval)->setString((yyvsp[-4])->getStringData().c_str());			
@@ -1834,7 +1850,7 @@ yyreduce:
     break;
 
   case 12:
-#line 230 "BulletParser.y"
+#line 246 "BulletParser.y"
     {
 			(yyval) = AST->createNode(PT_EmitterDefinition, yylineno);
 			(yyval)->setString((yyvsp[-5])->getStringData().c_str());			
@@ -1848,7 +1864,7 @@ yyreduce:
     break;
 
   case 13:
-#line 241 "BulletParser.y"
+#line 257 "BulletParser.y"
     {
 			(yyval) = AST->createNode(PT_EmitterDefinition, yylineno);
 			(yyval)->setString((yyvsp[-5])->getStringData().c_str());			
@@ -1862,7 +1878,7 @@ yyreduce:
     break;
 
   case 14:
-#line 252 "BulletParser.y"
+#line 268 "BulletParser.y"
     {
 			(yyval) = AST->createNode(PT_EmitterDefinition, yylineno);
 			(yyval)->setString((yyvsp[-6])->getStringData().c_str());			
@@ -1876,7 +1892,7 @@ yyreduce:
     break;
 
   case 15:
-#line 266 "BulletParser.y"
+#line 282 "BulletParser.y"
     {
 			(yyval) = AST->createNode(PT_ControllerDefinition, yylineno);
 			(yyval)->setString((yyvsp[-3])->getStringData().c_str());
@@ -1890,7 +1906,7 @@ yyreduce:
     break;
 
   case 16:
-#line 277 "BulletParser.y"
+#line 293 "BulletParser.y"
     {
 			(yyval) = AST->createNode(PT_ControllerDefinition, yylineno);
 			(yyval)->setString((yyvsp[-4])->getStringData().c_str());			
@@ -1904,7 +1920,7 @@ yyreduce:
     break;
 
   case 17:
-#line 288 "BulletParser.y"
+#line 304 "BulletParser.y"
     {
 			(yyval) = AST->createNode(PT_ControllerDefinition, yylineno);
 			(yyval)->setString((yyvsp[-4])->getStringData().c_str());			
@@ -1918,7 +1934,7 @@ yyreduce:
     break;
 
   case 18:
-#line 299 "BulletParser.y"
+#line 315 "BulletParser.y"
     {
 			(yyval) = AST->createNode(PT_ControllerDefinition, yylineno);
 			(yyval)->setString((yyvsp[-5])->getStringData().c_str());			
@@ -1932,7 +1948,7 @@ yyreduce:
     break;
 
   case 19:
-#line 310 "BulletParser.y"
+#line 326 "BulletParser.y"
     {
 			(yyval) = AST->createNode(PT_ControllerDefinition, yylineno);
 			(yyval)->setString((yyvsp[-4])->getStringData().c_str());
@@ -1946,7 +1962,7 @@ yyreduce:
     break;
 
   case 20:
-#line 321 "BulletParser.y"
+#line 337 "BulletParser.y"
     {
 			(yyval) = AST->createNode(PT_ControllerDefinition, yylineno);
 			(yyval)->setString((yyvsp[-5])->getStringData().c_str());			
@@ -1960,7 +1976,7 @@ yyreduce:
     break;
 
   case 21:
-#line 332 "BulletParser.y"
+#line 348 "BulletParser.y"
     {
 			(yyval) = AST->createNode(PT_ControllerDefinition, yylineno);
 			(yyval)->setString((yyvsp[-5])->getStringData().c_str());			
@@ -1974,7 +1990,7 @@ yyreduce:
     break;
 
   case 22:
-#line 343 "BulletParser.y"
+#line 359 "BulletParser.y"
     {
 			(yyval) = AST->createNode(PT_ControllerDefinition, yylineno);
 			(yyval)->setString((yyvsp[-6])->getStringData().c_str());			
@@ -1988,14 +2004,14 @@ yyreduce:
     break;
 
   case 23:
-#line 357 "BulletParser.y"
+#line 373 "BulletParser.y"
     {
 			(yyval) = (yyvsp[0]);
 		;}
     break;
 
   case 24:
-#line 361 "BulletParser.y"
+#line 377 "BulletParser.y"
     {
 			(yyval) = AST->createNode(PT_MemberList, yylineno);
 			(yyval)->setChild(0, (yyvsp[-1]));
@@ -2004,14 +2020,14 @@ yyreduce:
     break;
 
   case 25:
-#line 370 "BulletParser.y"
+#line 386 "BulletParser.y"
     {
 			(yyval) = (yyvsp[0]);
 		;}
     break;
 
   case 26:
-#line 374 "BulletParser.y"
+#line 390 "BulletParser.y"
     {
 			(yyval) = AST->createNode(PT_AffectorDeclList, yylineno);
 			(yyval)->setChild(0, (yyvsp[-1]));
@@ -2020,7 +2036,7 @@ yyreduce:
     break;
 
   case 27:
-#line 383 "BulletParser.y"
+#line 399 "BulletParser.y"
     {
 			(yyval) = AST->createNode(PT_AffectorDecl, yylineno);
 			(yyval)->setChild(0, (yyvsp[-4]));
@@ -2029,14 +2045,14 @@ yyreduce:
     break;
 
   case 28:
-#line 392 "BulletParser.y"
+#line 408 "BulletParser.y"
     {
 			(yyval) = (yyvsp[0]);
 		;}
     break;
 
   case 29:
-#line 396 "BulletParser.y"
+#line 412 "BulletParser.y"
     {
 			(yyval) = AST->createNode(PT_EmitterList, yylineno);
 			(yyval)->setChild(0, (yyvsp[-1]));
@@ -2045,7 +2061,7 @@ yyreduce:
     break;
 
   case 30:
-#line 405 "BulletParser.y"
+#line 421 "BulletParser.y"
     {
 			(yyval) = AST->createNode(PT_Emitter, yylineno);
 			(yyval)->setChild(0, (yyvsp[-4]));
@@ -2054,14 +2070,14 @@ yyreduce:
     break;
 
   case 31:
-#line 414 "BulletParser.y"
+#line 430 "BulletParser.y"
     {
 			(yyval) = (yyvsp[0]);
 		;}
     break;
 
   case 32:
-#line 418 "BulletParser.y"
+#line 434 "BulletParser.y"
     {
 			(yyval) = AST->createNode(PT_FunctionList, yylineno);
 			(yyval)->setChild(0, (yyvsp[-1]));
@@ -2070,7 +2086,7 @@ yyreduce:
     break;
 
   case 33:
-#line 427 "BulletParser.y"
+#line 443 "BulletParser.y"
     {
 			(yyval) = AST->createNode(PT_Function, yylineno);
 			(yyval)->setChild(0, (yyvsp[-4]));
@@ -2080,21 +2096,21 @@ yyreduce:
     break;
 
   case 34:
-#line 437 "BulletParser.y"
+#line 453 "BulletParser.y"
     {
 			(yyval) = 0;
 		;}
     break;
 
   case 35:
-#line 441 "BulletParser.y"
+#line 457 "BulletParser.y"
     {
 			(yyval) = (yyvsp[-1]);
 		;}
     break;
 
   case 36:
-#line 448 "BulletParser.y"
+#line 464 "BulletParser.y"
     {
 			(yyval) = AST->createNode(PT_FunctionArg, yylineno);
 			(yyval)->setChild(0, (yyvsp[0]));
@@ -2102,7 +2118,7 @@ yyreduce:
     break;
 
   case 37:
-#line 453 "BulletParser.y"
+#line 469 "BulletParser.y"
     {
 			(yyval) = AST->createNode(PT_FunctionArgList, yylineno);
 			(yyval)->setChild(0, (yyvsp[-2]));
@@ -2114,14 +2130,14 @@ yyreduce:
     break;
 
   case 38:
-#line 465 "BulletParser.y"
+#line 481 "BulletParser.y"
     {
 			(yyval) = (yyvsp[0]);
 		;}
     break;
 
   case 39:
-#line 469 "BulletParser.y"
+#line 485 "BulletParser.y"
     {
 			(yyval) = AST->createNode(PT_EventList, yylineno);
 			(yyval)->setChild(0, (yyvsp[-1]));
@@ -2130,7 +2146,7 @@ yyreduce:
     break;
 
   case 40:
-#line 478 "BulletParser.y"
+#line 494 "BulletParser.y"
     {
 			(yyval) = AST->createNode(PT_Event, yylineno);
 			(yyval)->setChild(0, (yyvsp[-4]));
@@ -2140,14 +2156,14 @@ yyreduce:
     break;
 
   case 41:
-#line 489 "BulletParser.y"
+#line 505 "BulletParser.y"
     {
 			(yyval) = (yyvsp[0]);
 		;}
     break;
 
   case 42:
-#line 493 "BulletParser.y"
+#line 509 "BulletParser.y"
     {
 			(yyval) = AST->createNode(PT_StateList, yylineno);
 			(yyval)->setChild(0, (yyvsp[-1]));
@@ -2156,7 +2172,7 @@ yyreduce:
     break;
 
   case 43:
-#line 502 "BulletParser.y"
+#line 518 "BulletParser.y"
     {
 			(yyval) = AST->createNode(PT_State, yylineno);
 			(yyval)->setChild(0, (yyvsp[-3]));
@@ -2165,14 +2181,14 @@ yyreduce:
     break;
 
   case 44:
-#line 511 "BulletParser.y"
+#line 527 "BulletParser.y"
     {
 			(yyval) = (yyvsp[0]);
 		;}
     break;
 
   case 45:
-#line 515 "BulletParser.y"
+#line 531 "BulletParser.y"
     {
 			(yyval) = AST->createNode(PT_StateList, yylineno);
 			(yyval)->setChild(0, (yyvsp[-1]));
@@ -2181,7 +2197,7 @@ yyreduce:
     break;
 
   case 46:
-#line 524 "BulletParser.y"
+#line 540 "BulletParser.y"
     {
 			(yyval) = AST->createNode(PT_State, yylineno);
 			(yyval)->setChild(0, (yyvsp[-3]));
@@ -2190,70 +2206,70 @@ yyreduce:
     break;
 
   case 47:
-#line 533 "BulletParser.y"
+#line 549 "BulletParser.y"
     {
 			(yyval) = 0;
 		;}
     break;
 
   case 48:
-#line 537 "BulletParser.y"
+#line 553 "BulletParser.y"
     {
 			(yyval) = (yyvsp[-1]);
 		;}
     break;
 
   case 49:
-#line 544 "BulletParser.y"
+#line 560 "BulletParser.y"
     {
 			(yyval) = 0;
 		;}
     break;
 
   case 50:
-#line 548 "BulletParser.y"
+#line 564 "BulletParser.y"
     {
 			(yyval) = (yyvsp[-1]);
 		;}
     break;
 
   case 51:
-#line 555 "BulletParser.y"
+#line 571 "BulletParser.y"
     {
 			(yyval) = 0;
 		;}
     break;
 
   case 52:
-#line 559 "BulletParser.y"
+#line 575 "BulletParser.y"
     {
 			(yyval) = (yyvsp[-1]);
 		;}
     break;
 
   case 53:
-#line 566 "BulletParser.y"
+#line 582 "BulletParser.y"
     {
 			(yyval) = 0;
 		;}
     break;
 
   case 54:
-#line 570 "BulletParser.y"
+#line 586 "BulletParser.y"
     {
 			(yyval) = (yyvsp[-1]);
 		;}
     break;
 
   case 55:
-#line 577 "BulletParser.y"
+#line 593 "BulletParser.y"
     {
 			(yyval) = (yyvsp[0]);
 		;}
     break;
 
   case 56:
-#line 581 "BulletParser.y"
+#line 597 "BulletParser.y"
     {
 			(yyval) = AST->createNode(PT_StatementList, yylineno);
 			(yyval)->setChild(0, (yyvsp[-1]));
@@ -2262,14 +2278,14 @@ yyreduce:
     break;
 
   case 57:
-#line 590 "BulletParser.y"
+#line 606 "BulletParser.y"
     {
 			(yyval) = (yyvsp[0]);
 		;}
     break;
 
   case 58:
-#line 594 "BulletParser.y"
+#line 610 "BulletParser.y"
     {
 			(yyval) = AST->createNode(PT_StatementList, yylineno);
 			(yyval)->setChild(0, (yyvsp[-1]));
@@ -2278,14 +2294,14 @@ yyreduce:
     break;
 
   case 59:
-#line 603 "BulletParser.y"
+#line 619 "BulletParser.y"
     {
 			(yyval) = (yyvsp[0]);
 		;}
     break;
 
   case 60:
-#line 607 "BulletParser.y"
+#line 623 "BulletParser.y"
     {
 			(yyval) = AST->createNode(PT_StatementList, yylineno);
 			(yyval)->setChild(0, (yyvsp[-1]));
@@ -2294,14 +2310,14 @@ yyreduce:
     break;
 
   case 61:
-#line 616 "BulletParser.y"
+#line 632 "BulletParser.y"
     {
 			(yyval) = (yyvsp[0]);
 		;}
     break;
 
   case 62:
-#line 620 "BulletParser.y"
+#line 636 "BulletParser.y"
     {
 			(yyval) = AST->createNode(PT_StatementList, yylineno);
 			(yyval)->setChild(0, (yyvsp[-1]));
@@ -2310,280 +2326,280 @@ yyreduce:
     break;
 
   case 63:
-#line 629 "BulletParser.y"
-    {
-			(yyval) = (yyvsp[0]);
-		;}
-    break;
-
-  case 64:
-#line 633 "BulletParser.y"
-    {
-			(yyval) = (yyvsp[0]);
-		;}
-    break;
-
-  case 65:
-#line 637 "BulletParser.y"
-    {
-			(yyval) = (yyvsp[0]);
-		;}
-    break;
-
-  case 66:
-#line 641 "BulletParser.y"
-    {
-			(yyval) = (yyvsp[0]);
-		;}
-    break;
-
-  case 67:
 #line 645 "BulletParser.y"
     {
 			(yyval) = (yyvsp[0]);
 		;}
     break;
 
-  case 68:
+  case 64:
 #line 649 "BulletParser.y"
     {
 			(yyval) = (yyvsp[0]);
 		;}
     break;
 
-  case 69:
+  case 65:
 #line 653 "BulletParser.y"
     {
 			(yyval) = (yyvsp[0]);
 		;}
     break;
 
-  case 70:
+  case 66:
 #line 657 "BulletParser.y"
     {
 			(yyval) = (yyvsp[0]);
 		;}
     break;
 
-  case 71:
+  case 67:
 #line 661 "BulletParser.y"
     {
 			(yyval) = (yyvsp[0]);
 		;}
     break;
 
-  case 72:
+  case 68:
 #line 665 "BulletParser.y"
     {
 			(yyval) = (yyvsp[0]);
 		;}
     break;
 
+  case 69:
+#line 669 "BulletParser.y"
+    {
+			(yyval) = (yyvsp[0]);
+		;}
+    break;
+
+  case 70:
+#line 673 "BulletParser.y"
+    {
+			(yyval) = (yyvsp[0]);
+		;}
+    break;
+
+  case 71:
+#line 677 "BulletParser.y"
+    {
+			(yyval) = (yyvsp[0]);
+		;}
+    break;
+
+  case 72:
+#line 681 "BulletParser.y"
+    {
+			(yyval) = (yyvsp[0]);
+		;}
+    break;
+
   case 73:
-#line 672 "BulletParser.y"
-    {
-			(yyval) = (yyvsp[0]);
-		;}
-    break;
-
-  case 74:
-#line 676 "BulletParser.y"
-    {
-			(yyval) = (yyvsp[0]);
-		;}
-    break;
-
-  case 75:
-#line 680 "BulletParser.y"
-    {
-			(yyval) = (yyvsp[0]);
-		;}
-    break;
-
-  case 76:
-#line 684 "BulletParser.y"
-    {
-			(yyval) = (yyvsp[0]);
-		;}
-    break;
-
-  case 77:
 #line 688 "BulletParser.y"
     {
 			(yyval) = (yyvsp[0]);
 		;}
     break;
 
-  case 78:
+  case 74:
 #line 692 "BulletParser.y"
     {
 			(yyval) = (yyvsp[0]);
 		;}
     break;
 
-  case 79:
+  case 75:
 #line 696 "BulletParser.y"
     {
 			(yyval) = (yyvsp[0]);
 		;}
     break;
 
-  case 80:
+  case 76:
 #line 700 "BulletParser.y"
     {
 			(yyval) = (yyvsp[0]);
 		;}
     break;
 
-  case 81:
+  case 77:
 #line 704 "BulletParser.y"
     {
 			(yyval) = (yyvsp[0]);
 		;}
     break;
 
+  case 78:
+#line 708 "BulletParser.y"
+    {
+			(yyval) = (yyvsp[0]);
+		;}
+    break;
+
+  case 79:
+#line 712 "BulletParser.y"
+    {
+			(yyval) = (yyvsp[0]);
+		;}
+    break;
+
+  case 80:
+#line 716 "BulletParser.y"
+    {
+			(yyval) = (yyvsp[0]);
+		;}
+    break;
+
+  case 81:
+#line 720 "BulletParser.y"
+    {
+			(yyval) = (yyvsp[0]);
+		;}
+    break;
+
   case 82:
-#line 711 "BulletParser.y"
-    {
-			(yyval) = (yyvsp[0]);
-		;}
-    break;
-
-  case 83:
-#line 715 "BulletParser.y"
-    {
-			(yyval) = (yyvsp[0]);
-		;}
-    break;
-
-  case 84:
-#line 719 "BulletParser.y"
-    {
-			(yyval) = (yyvsp[0]);
-		;}
-    break;
-
-  case 85:
-#line 723 "BulletParser.y"
-    {
-			(yyval) = (yyvsp[0]);
-		;}
-    break;
-
-  case 86:
 #line 727 "BulletParser.y"
     {
 			(yyval) = (yyvsp[0]);
 		;}
     break;
 
-  case 87:
+  case 83:
 #line 731 "BulletParser.y"
     {
 			(yyval) = (yyvsp[0]);
 		;}
     break;
 
-  case 88:
+  case 84:
 #line 735 "BulletParser.y"
     {
 			(yyval) = (yyvsp[0]);
 		;}
     break;
 
-  case 89:
+  case 85:
 #line 739 "BulletParser.y"
     {
 			(yyval) = (yyvsp[0]);
 		;}
     break;
 
-  case 90:
+  case 86:
 #line 743 "BulletParser.y"
     {
 			(yyval) = (yyvsp[0]);
 		;}
     break;
 
+  case 87:
+#line 747 "BulletParser.y"
+    {
+			(yyval) = (yyvsp[0]);
+		;}
+    break;
+
+  case 88:
+#line 751 "BulletParser.y"
+    {
+			(yyval) = (yyvsp[0]);
+		;}
+    break;
+
+  case 89:
+#line 755 "BulletParser.y"
+    {
+			(yyval) = (yyvsp[0]);
+		;}
+    break;
+
+  case 90:
+#line 759 "BulletParser.y"
+    {
+			(yyval) = (yyvsp[0]);
+		;}
+    break;
+
   case 91:
-#line 750 "BulletParser.y"
-    {
-			(yyval) = (yyvsp[0]);
-		;}
-    break;
-
-  case 92:
-#line 754 "BulletParser.y"
-    {
-			(yyval) = (yyvsp[0]);
-		;}
-    break;
-
-  case 93:
-#line 758 "BulletParser.y"
-    {
-			(yyval) = (yyvsp[0]);
-		;}
-    break;
-
-  case 94:
-#line 762 "BulletParser.y"
-    {
-			(yyval) = (yyvsp[0]);
-		;}
-    break;
-
-  case 95:
 #line 766 "BulletParser.y"
     {
 			(yyval) = (yyvsp[0]);
 		;}
     break;
 
-  case 96:
+  case 92:
 #line 770 "BulletParser.y"
     {
 			(yyval) = (yyvsp[0]);
 		;}
     break;
 
-  case 97:
+  case 93:
 #line 774 "BulletParser.y"
     {
 			(yyval) = (yyvsp[0]);
 		;}
     break;
 
-  case 98:
+  case 94:
 #line 778 "BulletParser.y"
     {
 			(yyval) = (yyvsp[0]);
 		;}
     break;
 
-  case 99:
+  case 95:
 #line 782 "BulletParser.y"
     {
 			(yyval) = (yyvsp[0]);
 		;}
     break;
 
+  case 96:
+#line 786 "BulletParser.y"
+    {
+			(yyval) = (yyvsp[0]);
+		;}
+    break;
+
+  case 97:
+#line 790 "BulletParser.y"
+    {
+			(yyval) = (yyvsp[0]);
+		;}
+    break;
+
+  case 98:
+#line 794 "BulletParser.y"
+    {
+			(yyval) = (yyvsp[0]);
+		;}
+    break;
+
+  case 99:
+#line 798 "BulletParser.y"
+    {
+			(yyval) = (yyvsp[0]);
+		;}
+    break;
+
   case 100:
-#line 789 "BulletParser.y"
+#line 805 "BulletParser.y"
     {
 			(yyval) = 0;
 		;}
     break;
 
   case 101:
-#line 793 "BulletParser.y"
+#line 809 "BulletParser.y"
     {
 			(yyval) = (yyvsp[-1]);
 		;}
     break;
 
   case 102:
-#line 800 "BulletParser.y"
+#line 816 "BulletParser.y"
     {
 			(yyval) = AST->createNode(PT_IfStatement, yylineno);
 			(yyval)->setChild(0, (yyvsp[-2]));
@@ -2592,7 +2608,7 @@ yyreduce:
     break;
 
   case 103:
-#line 806 "BulletParser.y"
+#line 822 "BulletParser.y"
     {
 			(yyval) = AST->createNode(PT_IfStatement, yylineno);
 			(yyval)->setChild(0, (yyvsp[-4]));
@@ -2602,25 +2618,6 @@ yyreduce:
     break;
 
   case 104:
-#line 813 "BulletParser.y"
-    {
-			(yyval) = AST->createNode(PT_IfStatement, yylineno);
-			(yyval)->setChild(0, (yyvsp[-4]));
-			(yyval)->setChild(1, (yyvsp[-2]));
-			(yyval)->setChild(2, (yyvsp[0]));
-		;}
-    break;
-
-  case 105:
-#line 823 "BulletParser.y"
-    {
-			(yyval) = AST->createNode(PT_IfStatement, yylineno);
-			(yyval)->setChild(0, (yyvsp[-2]));
-			(yyval)->setChild(1, (yyvsp[0]));
-		;}
-    break;
-
-  case 106:
 #line 829 "BulletParser.y"
     {
 			(yyval) = AST->createNode(PT_IfStatement, yylineno);
@@ -2630,8 +2627,17 @@ yyreduce:
 		;}
     break;
 
-  case 107:
-#line 836 "BulletParser.y"
+  case 105:
+#line 839 "BulletParser.y"
+    {
+			(yyval) = AST->createNode(PT_IfStatement, yylineno);
+			(yyval)->setChild(0, (yyvsp[-2]));
+			(yyval)->setChild(1, (yyvsp[0]));
+		;}
+    break;
+
+  case 106:
+#line 845 "BulletParser.y"
     {
 			(yyval) = AST->createNode(PT_IfStatement, yylineno);
 			(yyval)->setChild(0, (yyvsp[-4]));
@@ -2640,16 +2646,7 @@ yyreduce:
 		;}
     break;
 
-  case 108:
-#line 846 "BulletParser.y"
-    {
-			(yyval) = AST->createNode(PT_IfStatement, yylineno);
-			(yyval)->setChild(0, (yyvsp[-2]));
-			(yyval)->setChild(1, (yyvsp[0]));
-		;}
-    break;
-
-  case 109:
+  case 107:
 #line 852 "BulletParser.y"
     {
 			(yyval) = AST->createNode(PT_IfStatement, yylineno);
@@ -2659,8 +2656,17 @@ yyreduce:
 		;}
     break;
 
-  case 110:
-#line 859 "BulletParser.y"
+  case 108:
+#line 862 "BulletParser.y"
+    {
+			(yyval) = AST->createNode(PT_IfStatement, yylineno);
+			(yyval)->setChild(0, (yyvsp[-2]));
+			(yyval)->setChild(1, (yyvsp[0]));
+		;}
+    break;
+
+  case 109:
+#line 868 "BulletParser.y"
     {
 			(yyval) = AST->createNode(PT_IfStatement, yylineno);
 			(yyval)->setChild(0, (yyvsp[-4]));
@@ -2669,16 +2675,7 @@ yyreduce:
 		;}
     break;
 
-  case 111:
-#line 869 "BulletParser.y"
-    {
-			(yyval) = AST->createNode(PT_IfStatement, yylineno);
-			(yyval)->setChild(0, (yyvsp[-2]));
-			(yyval)->setChild(1, (yyvsp[0]));
-		;}
-    break;
-
-  case 112:
+  case 110:
 #line 875 "BulletParser.y"
     {
 			(yyval) = AST->createNode(PT_IfStatement, yylineno);
@@ -2688,8 +2685,27 @@ yyreduce:
 		;}
     break;
 
+  case 111:
+#line 885 "BulletParser.y"
+    {
+			(yyval) = AST->createNode(PT_IfStatement, yylineno);
+			(yyval)->setChild(0, (yyvsp[-2]));
+			(yyval)->setChild(1, (yyvsp[0]));
+		;}
+    break;
+
+  case 112:
+#line 891 "BulletParser.y"
+    {
+			(yyval) = AST->createNode(PT_IfStatement, yylineno);
+			(yyval)->setChild(0, (yyvsp[-4]));
+			(yyval)->setChild(1, (yyvsp[-2]));
+			(yyval)->setChild(2, (yyvsp[0]));
+		;}
+    break;
+
   case 113:
-#line 882 "BulletParser.y"
+#line 898 "BulletParser.y"
     {
 			(yyval) = AST->createNode(PT_IfStatement, yylineno);
 			(yyval)->setChild(0, (yyvsp[-4]));
@@ -2699,7 +2715,7 @@ yyreduce:
     break;
 
   case 114:
-#line 892 "BulletParser.y"
+#line 908 "BulletParser.y"
     {
 			(yyval) = AST->createNode(PT_AssignStatement, yylineno);
 			(yyval)->setChild(0, (yyvsp[-3]));
@@ -2708,7 +2724,7 @@ yyreduce:
     break;
 
   case 115:
-#line 901 "BulletParser.y"
+#line 917 "BulletParser.y"
     {
 			(yyval) = AST->createNode(PT_AssignStatement, yylineno);
 			generate_inc_expr(1, PT_Identifier, (yyval), (yyvsp[-2]));
@@ -2716,7 +2732,7 @@ yyreduce:
     break;
 
   case 116:
-#line 906 "BulletParser.y"
+#line 922 "BulletParser.y"
     {
 			(yyval) = AST->createNode(PT_AssignStatement, yylineno);
 			generate_inc_expr(-1, PT_Identifier, (yyval), (yyvsp[-2]));
@@ -2724,7 +2740,7 @@ yyreduce:
     break;
 
   case 117:
-#line 911 "BulletParser.y"
+#line 927 "BulletParser.y"
     {
 			(yyval) = AST->createNode(PT_AssignStatement, yylineno);
 			generate_assignment_expr(PT_AddStatement, PT_Identifier, (yyval), (yyvsp[-3]), (yyvsp[-1]));
@@ -2732,7 +2748,7 @@ yyreduce:
     break;
 
   case 118:
-#line 916 "BulletParser.y"
+#line 932 "BulletParser.y"
     {
 			(yyval) = AST->createNode(PT_AssignStatement, yylineno);
 			generate_assignment_expr(PT_SubtractStatement, PT_Identifier, (yyval), (yyvsp[-3]), (yyvsp[-1]));
@@ -2740,7 +2756,7 @@ yyreduce:
     break;
 
   case 119:
-#line 921 "BulletParser.y"
+#line 937 "BulletParser.y"
     {
 			(yyval) = AST->createNode(PT_AssignStatement, yylineno);
 			generate_assignment_expr(PT_MultiplyStatement, PT_Identifier, (yyval), (yyvsp[-3]), (yyvsp[-1]));
@@ -2748,7 +2764,7 @@ yyreduce:
     break;
 
   case 120:
-#line 926 "BulletParser.y"
+#line 942 "BulletParser.y"
     {
 			(yyval) = AST->createNode(PT_AssignStatement, yylineno);
 			generate_assignment_expr(PT_DivideStatement, PT_Identifier, (yyval), (yyvsp[-3]), (yyvsp[-1]));
@@ -2756,7 +2772,7 @@ yyreduce:
     break;
 
   case 121:
-#line 934 "BulletParser.y"
+#line 950 "BulletParser.y"
     {
 			(yyval) = AST->createNode(PT_MemberAssignStatement, yylineno);
 			(yyval)->setChild(0, (yyvsp[-3]));
@@ -2765,73 +2781,101 @@ yyreduce:
     break;
 
   case 122:
-#line 940 "BulletParser.y"
+#line 956 "BulletParser.y"
     {
+			(yyval) = AST->createNode(PT_MemberAssignStatement, yylineno);
+			(yyval)->setChild(0, (yyvsp[-7]));
+			(yyval)->setChild(1, (yyvsp[-4]));
+			(yyval)->setChild(2, (yyvsp[-2]));
 		;}
     break;
 
   case 123:
-#line 943 "BulletParser.y"
+#line 963 "BulletParser.y"
     {
+			(yyval) = AST->createNode(PT_MemberAssignStatement, yylineno);
+			generate_inc_expr(1, PT_EmitterMember, (yyval), (yyvsp[-2]));
 		;}
     break;
 
   case 124:
-#line 946 "BulletParser.y"
+#line 968 "BulletParser.y"
     {
+			(yyval) = AST->createNode(PT_MemberAssignStatement, yylineno);
+			generate_inc_expr(-1, PT_EmitterMember, (yyval), (yyvsp[-2]));
 		;}
     break;
 
   case 125:
-#line 949 "BulletParser.y"
+#line 973 "BulletParser.y"
     {
+			(yyval) = AST->createNode(PT_MemberAssignStatement, yylineno);
+			generate_assignment_expr(PT_AddStatement, PT_EmitterMember, (yyval), (yyvsp[-3]), (yyvsp[-1]));
 		;}
     break;
 
   case 126:
-#line 952 "BulletParser.y"
+#line 978 "BulletParser.y"
     {
+			(yyval) = AST->createNode(PT_MemberAssignStatement, yylineno);
+			generate_assignment_expr(PT_SubtractStatement, PT_EmitterMember, (yyval), (yyvsp[-3]), (yyvsp[-1]));
 		;}
     break;
 
   case 127:
-#line 955 "BulletParser.y"
+#line 983 "BulletParser.y"
     {
+			(yyval) = AST->createNode(PT_MemberAssignStatement, yylineno);
+			generate_assignment_expr(PT_MultiplyStatement, PT_EmitterMember, (yyval), (yyvsp[-3]), (yyvsp[-1]));
 		;}
     break;
 
   case 128:
-#line 958 "BulletParser.y"
+#line 988 "BulletParser.y"
     {
+			(yyval) = AST->createNode(PT_MemberAssignStatement, yylineno);
+			generate_assignment_expr(PT_DivideStatement, PT_EmitterMember, (yyval), (yyvsp[-3]), (yyvsp[-1]));
 		;}
     break;
 
   case 129:
-#line 961 "BulletParser.y"
+#line 993 "BulletParser.y"
     {
+			(yyval) = AST->createNode(PT_MemberAssignStatement, yylineno);
+			generate_assignment_expr(PT_AddStatement, PT_EmitterMember, (yyval), (yyvsp[-7]), (yyvsp[-4]));
+			(yyval)->setChild(2, (yyvsp[-2]));
 		;}
     break;
 
   case 130:
-#line 964 "BulletParser.y"
+#line 999 "BulletParser.y"
     {
+			(yyval) = AST->createNode(PT_MemberAssignStatement, yylineno);
+			generate_assignment_expr(PT_SubtractStatement, PT_EmitterMember, (yyval), (yyvsp[-7]), (yyvsp[-4]));
+			(yyval)->setChild(2, (yyvsp[-2]));
 		;}
     break;
 
   case 131:
-#line 967 "BulletParser.y"
+#line 1005 "BulletParser.y"
     {
+			(yyval) = AST->createNode(PT_MemberAssignStatement, yylineno);
+			generate_assignment_expr(PT_MultiplyStatement, PT_EmitterMember, (yyval), (yyvsp[-7]), (yyvsp[-4]));
+			(yyval)->setChild(2, (yyvsp[-2]));
 		;}
     break;
 
   case 132:
-#line 970 "BulletParser.y"
+#line 1011 "BulletParser.y"
     {
+			(yyval) = AST->createNode(PT_MemberAssignStatement, yylineno);
+			generate_assignment_expr(PT_DivideStatement, PT_EmitterMember, (yyval), (yyvsp[-7]), (yyvsp[-4]));
+			(yyval)->setChild(2, (yyvsp[-2]));
 		;}
     break;
 
   case 133:
-#line 976 "BulletParser.y"
+#line 1020 "BulletParser.y"
     {
 			(yyval) = AST->createNode(PT_SetStatement, yylineno);
 			(yyval)->setChild(0, (yyvsp[-3]));
@@ -2840,7 +2884,7 @@ yyreduce:
     break;
 
   case 134:
-#line 982 "BulletParser.y"
+#line 1026 "BulletParser.y"
     {
 			(yyval) = AST->createNode(PT_SetStatement, yylineno);
 			(yyval)->setChild(0, (yyvsp[-7]));
@@ -2850,7 +2894,7 @@ yyreduce:
     break;
 
   case 135:
-#line 989 "BulletParser.y"
+#line 1033 "BulletParser.y"
     {
 			(yyval) = AST->createNode(PT_SetStatement, yylineno);
 			generate_inc_expr(1, PT_Property, (yyval), (yyvsp[-2]));
@@ -2858,7 +2902,7 @@ yyreduce:
     break;
 
   case 136:
-#line 994 "BulletParser.y"
+#line 1038 "BulletParser.y"
     {
 			(yyval) = AST->createNode(PT_SetStatement, yylineno);
 			generate_inc_expr(-1, PT_Property, (yyval), (yyvsp[-2]));
@@ -2866,7 +2910,7 @@ yyreduce:
     break;
 
   case 137:
-#line 999 "BulletParser.y"
+#line 1043 "BulletParser.y"
     {
 			(yyval) = AST->createNode(PT_SetStatement, yylineno);
 			generate_assignment_expr(PT_AddStatement, PT_Property, (yyval), (yyvsp[-3]), (yyvsp[-1]));
@@ -2874,7 +2918,7 @@ yyreduce:
     break;
 
   case 138:
-#line 1004 "BulletParser.y"
+#line 1048 "BulletParser.y"
     {
 			(yyval) = AST->createNode(PT_SetStatement, yylineno);
 			generate_assignment_expr(PT_SubtractStatement, PT_Property, (yyval), (yyvsp[-3]), (yyvsp[-1]));
@@ -2882,7 +2926,7 @@ yyreduce:
     break;
 
   case 139:
-#line 1009 "BulletParser.y"
+#line 1053 "BulletParser.y"
     {
 			(yyval) = AST->createNode(PT_SetStatement, yylineno);
 			generate_assignment_expr(PT_MultiplyStatement, PT_Property, (yyval), (yyvsp[-3]), (yyvsp[-1]));
@@ -2890,7 +2934,7 @@ yyreduce:
     break;
 
   case 140:
-#line 1014 "BulletParser.y"
+#line 1058 "BulletParser.y"
     {
 			(yyval) = AST->createNode(PT_SetStatement, yylineno);
 			generate_assignment_expr(PT_DivideStatement, PT_Property, (yyval), (yyvsp[-3]), (yyvsp[-1]));
@@ -2898,7 +2942,7 @@ yyreduce:
     break;
 
   case 141:
-#line 1019 "BulletParser.y"
+#line 1063 "BulletParser.y"
     {
 			(yyval) = AST->createNode(PT_SetStatement, yylineno);
 			generate_assignment_expr(PT_AddStatement, PT_Property, (yyval), (yyvsp[-7]), (yyvsp[-4]));
@@ -2907,7 +2951,7 @@ yyreduce:
     break;
 
   case 142:
-#line 1025 "BulletParser.y"
+#line 1069 "BulletParser.y"
     {
 			(yyval) = AST->createNode(PT_SetStatement, yylineno);
 			generate_assignment_expr(PT_SubtractStatement, PT_Property, (yyval), (yyvsp[-7]), (yyvsp[-4]));
@@ -2916,7 +2960,7 @@ yyreduce:
     break;
 
   case 143:
-#line 1031 "BulletParser.y"
+#line 1075 "BulletParser.y"
     {
 			(yyval) = AST->createNode(PT_SetStatement, yylineno);
 			generate_assignment_expr(PT_MultiplyStatement, PT_Property, (yyval), (yyvsp[-7]), (yyvsp[-4]));
@@ -2925,7 +2969,7 @@ yyreduce:
     break;
 
   case 144:
-#line 1037 "BulletParser.y"
+#line 1081 "BulletParser.y"
     {
 			(yyval) = AST->createNode(PT_SetStatement, yylineno);
 			generate_assignment_expr(PT_DivideStatement, PT_Property, (yyval), (yyvsp[-7]), (yyvsp[-4]));
@@ -2934,7 +2978,7 @@ yyreduce:
     break;
 
   case 145:
-#line 1046 "BulletParser.y"
+#line 1090 "BulletParser.y"
     {
 			(yyval) = AST->createNode(PT_WhileStatement, yylineno);
 			(yyval)->setChild(0, (yyvsp[-2]));
@@ -2943,7 +2987,7 @@ yyreduce:
     break;
 
   case 146:
-#line 1055 "BulletParser.y"
+#line 1099 "BulletParser.y"
     {
 			(yyval) = AST->createNode(PT_WhileStatement, yylineno);
 			(yyval)->setChild(0, (yyvsp[-2]));
@@ -2952,7 +2996,7 @@ yyreduce:
     break;
 
   case 147:
-#line 1064 "BulletParser.y"
+#line 1108 "BulletParser.y"
     {
 			(yyval) = AST->createNode(PT_WhileStatement, yylineno);
 			(yyval)->setChild(0, (yyvsp[-2]));
@@ -2961,7 +3005,7 @@ yyreduce:
     break;
 
   case 148:
-#line 1073 "BulletParser.y"
+#line 1117 "BulletParser.y"
     {
 			(yyval) = AST->createNode(PT_WhileStatement, yylineno);
 			(yyval)->setChild(0, (yyvsp[-2]));
@@ -2970,21 +3014,21 @@ yyreduce:
     break;
 
   case 149:
-#line 1082 "BulletParser.y"
+#line 1126 "BulletParser.y"
     {
 			(yyval) = AST->createNode(PT_BreakStatement, yylineno);
 		;}
     break;
 
   case 150:
-#line 1086 "BulletParser.y"
+#line 1130 "BulletParser.y"
     {
 			(yyval) = AST->createNode(PT_ContinueStatement, yylineno);
 		;}
     break;
 
   case 151:
-#line 1093 "BulletParser.y"
+#line 1137 "BulletParser.y"
     {
 			(yyval) = AST->createNode(PT_GotoStatement, yylineno);
 			(yyval)->setChild(0, (yyvsp[-1]));
@@ -2992,7 +3036,7 @@ yyreduce:
     break;
 
   case 152:
-#line 1101 "BulletParser.y"
+#line 1145 "BulletParser.y"
     {
 			(yyval) = AST->createNode(PT_WaitStatement, yylineno);
 			(yyval)->setChild(0, (yyvsp[-2]));
@@ -3000,7 +3044,7 @@ yyreduce:
     break;
 
   case 153:
-#line 1109 "BulletParser.y"
+#line 1153 "BulletParser.y"
     {
 			(yyval) = AST->createNode(PT_FireStatement, yylineno);
 			(yyval)->setString((yyvsp[-4])->getStringData().c_str());
@@ -3013,7 +3057,7 @@ yyreduce:
     break;
 
   case 154:
-#line 1119 "BulletParser.y"
+#line 1163 "BulletParser.y"
     {
 			(yyval) = AST->createNode(PT_FireStatement, yylineno);
 			(yyval)->setString((yyvsp[-2])->getStringData().c_str());
@@ -3025,14 +3069,14 @@ yyreduce:
     break;
 
   case 155:
-#line 1131 "BulletParser.y"
+#line 1175 "BulletParser.y"
     {
 			(yyval) = (yyvsp[0]);
 		;}
     break;
 
   case 156:
-#line 1135 "BulletParser.y"
+#line 1179 "BulletParser.y"
     {
 			(yyval) = AST->createNode(PT_ControllerList, yylineno);
 			(yyval)->setChild(0, (yyvsp[-2]));
@@ -3041,14 +3085,14 @@ yyreduce:
     break;
 
   case 157:
-#line 1144 "BulletParser.y"
+#line 1188 "BulletParser.y"
     {
 			(yyval) = (yyvsp[0]);
 		;}
     break;
 
   case 158:
-#line 1148 "BulletParser.y"
+#line 1192 "BulletParser.y"
     {
 			(yyval) = (yyvsp[0]);
 			(yyval)->_setType(PT_AffectorCall);
@@ -3056,14 +3100,14 @@ yyreduce:
     break;
 
   case 159:
-#line 1156 "BulletParser.y"
+#line 1200 "BulletParser.y"
     {	
 			(yyval) = AST->createNode(PT_DieStatement, yylineno);
 		;}
     break;
 
   case 160:
-#line 1163 "BulletParser.y"
+#line 1207 "BulletParser.y"
     {
 			(yyval) = AST->createNode(PT_ConstantExpression, yylineno);
 			(yyval)->setChild(0, (yyvsp[0]));
@@ -3071,14 +3115,14 @@ yyreduce:
     break;
 
   case 161:
-#line 1171 "BulletParser.y"
+#line 1215 "BulletParser.y"
     {
 			(yyval) = (yyvsp[0]);
 		;}
     break;
 
   case 162:
-#line 1175 "BulletParser.y"
+#line 1219 "BulletParser.y"
     {
 			(yyval) = AST->createNode(PT_LogicalOr, yylineno);
 			(yyval)->setChild(0, (yyvsp[-2]));
@@ -3087,14 +3131,14 @@ yyreduce:
     break;
 
   case 163:
-#line 1184 "BulletParser.y"
+#line 1228 "BulletParser.y"
     {
 			(yyval) = (yyvsp[0]);
 		;}
     break;
 
   case 164:
-#line 1188 "BulletParser.y"
+#line 1232 "BulletParser.y"
     {
 			(yyval) = AST->createNode(PT_LogicalAnd, yylineno);
 			(yyval)->setChild(0, (yyvsp[-2]));
@@ -3103,14 +3147,14 @@ yyreduce:
     break;
 
   case 165:
-#line 1197 "BulletParser.y"
+#line 1241 "BulletParser.y"
     {
 			(yyval) = (yyvsp[0]);
 		;}
     break;
 
   case 166:
-#line 1201 "BulletParser.y"
+#line 1245 "BulletParser.y"
     {
 			(yyval) = AST->createNode(PT_EqualsStatement, yylineno);
 			(yyval)->setChild(0, (yyvsp[-2]));
@@ -3119,7 +3163,7 @@ yyreduce:
     break;
 
   case 167:
-#line 1207 "BulletParser.y"
+#line 1251 "BulletParser.y"
     {
 			(yyval) = AST->createNode(PT_NotEqualsStatement, yylineno);
 			(yyval)->setChild(0, (yyvsp[-2]));
@@ -3128,14 +3172,14 @@ yyreduce:
     break;
 
   case 168:
-#line 1216 "BulletParser.y"
+#line 1260 "BulletParser.y"
     {
 			(yyval) = (yyvsp[0]);
 		;}
     break;
 
   case 169:
-#line 1220 "BulletParser.y"
+#line 1264 "BulletParser.y"
     {
 			(yyval) = AST->createNode(PT_LessThanStatement, yylineno);
 			(yyval)->setChild(0, (yyvsp[-2]));
@@ -3144,7 +3188,7 @@ yyreduce:
     break;
 
   case 170:
-#line 1226 "BulletParser.y"
+#line 1270 "BulletParser.y"
     {
 			(yyval) = AST->createNode(PT_GreaterThanStatement, yylineno);
 			(yyval)->setChild(0, (yyvsp[-2]));
@@ -3153,7 +3197,7 @@ yyreduce:
     break;
 
   case 171:
-#line 1232 "BulletParser.y"
+#line 1276 "BulletParser.y"
     {
 			(yyval) = AST->createNode(PT_LessThanEqStatement, yylineno);
 			(yyval)->setChild(0, (yyvsp[-2]));
@@ -3162,7 +3206,7 @@ yyreduce:
     break;
 
   case 172:
-#line 1238 "BulletParser.y"
+#line 1282 "BulletParser.y"
     {
 			(yyval) = AST->createNode(PT_GreaterThanEqStatement, yylineno);
 			(yyval)->setChild(0, (yyvsp[-2]));
@@ -3171,14 +3215,14 @@ yyreduce:
     break;
 
   case 173:
-#line 1247 "BulletParser.y"
+#line 1291 "BulletParser.y"
     {
 			(yyval) = (yyvsp[0]);
 		;}
     break;
 
   case 174:
-#line 1251 "BulletParser.y"
+#line 1295 "BulletParser.y"
     {
 			(yyval) = AST->createNode(PT_AddStatement, yylineno);
 			(yyval)->setChild(0, (yyvsp[-2]));
@@ -3187,7 +3231,7 @@ yyreduce:
     break;
 
   case 175:
-#line 1257 "BulletParser.y"
+#line 1301 "BulletParser.y"
     {
 			(yyval) = AST->createNode(PT_SubtractStatement, yylineno);
 			(yyval)->setChild(0, (yyvsp[-2]));
@@ -3196,14 +3240,14 @@ yyreduce:
     break;
 
   case 176:
-#line 1266 "BulletParser.y"
+#line 1310 "BulletParser.y"
     {
 			(yyval) = (yyvsp[0]);
 		;}
     break;
 
   case 177:
-#line 1270 "BulletParser.y"
+#line 1314 "BulletParser.y"
     {
 			(yyval) = AST->createNode(PT_MultiplyStatement, yylineno);
 			(yyval)->setChild(0, (yyvsp[-2]));
@@ -3212,7 +3256,7 @@ yyreduce:
     break;
 
   case 178:
-#line 1276 "BulletParser.y"
+#line 1320 "BulletParser.y"
     {
 			(yyval) = AST->createNode(PT_DivideStatement, yylineno);
 			(yyval)->setChild(0, (yyvsp[-2]));
@@ -3221,7 +3265,7 @@ yyreduce:
     break;
 
   case 179:
-#line 1282 "BulletParser.y"
+#line 1326 "BulletParser.y"
     {
 			(yyval) = AST->createNode(PT_RemainderStatement, yylineno);
 			(yyval)->setChild(0, (yyvsp[-2]));
@@ -3230,14 +3274,14 @@ yyreduce:
     break;
 
   case 180:
-#line 1291 "BulletParser.y"
+#line 1335 "BulletParser.y"
     {
 			(yyval) = (yyvsp[0]);
 		;}
     break;
 
   case 181:
-#line 1295 "BulletParser.y"
+#line 1339 "BulletParser.y"
     {
 			(yyval) = AST->createNode(PT_UnaryPosStatement, yylineno);
 			(yyval)->setChild(0, (yyvsp[0]));
@@ -3245,7 +3289,7 @@ yyreduce:
     break;
 
   case 182:
-#line 1300 "BulletParser.y"
+#line 1344 "BulletParser.y"
     {
 			(yyval) = AST->createNode(PT_UnaryNegStatement, yylineno);
 			(yyval)->setChild(0, (yyvsp[0]));
@@ -3253,42 +3297,42 @@ yyreduce:
     break;
 
   case 183:
-#line 1308 "BulletParser.y"
+#line 1352 "BulletParser.y"
     {
 			(yyval) = (yyvsp[0]);
 		;}
     break;
 
   case 184:
-#line 1312 "BulletParser.y"
+#line 1356 "BulletParser.y"
     {
 			(yyval) = (yyvsp[0]);
 		;}
     break;
 
   case 185:
-#line 1316 "BulletParser.y"
+#line 1360 "BulletParser.y"
     {
 			(yyval) = (yyvsp[0]);
 		;}
     break;
 
   case 186:
-#line 1320 "BulletParser.y"
+#line 1364 "BulletParser.y"
     {
 			(yyval) = (yyvsp[0]);
 		;}
     break;
 
   case 187:
-#line 1324 "BulletParser.y"
+#line 1368 "BulletParser.y"
     {
 			(yyval) = (yyvsp[-1]);
 		;}
     break;
 
   case 188:
-#line 1331 "BulletParser.y"
+#line 1375 "BulletParser.y"
     {
 			(yyval) = AST->createNode(PT_FunctionCall, yylineno);
 			(yyval)->setChild(0, (yyvsp[-1]));
@@ -3297,21 +3341,21 @@ yyreduce:
     break;
 
   case 189:
-#line 1340 "BulletParser.y"
+#line 1384 "BulletParser.y"
     {
 			(yyval) = 0;
 		;}
     break;
 
   case 190:
-#line 1344 "BulletParser.y"
+#line 1388 "BulletParser.y"
     {
 			(yyval) = (yyvsp[-1]);
 		;}
     break;
 
   case 191:
-#line 1351 "BulletParser.y"
+#line 1395 "BulletParser.y"
     {
 			(yyval) = AST->createNode(PT_FunctionCallArg, yylineno);
 			(yyval)->setChild(0, (yyvsp[0]));
@@ -3319,7 +3363,7 @@ yyreduce:
     break;
 
   case 192:
-#line 1356 "BulletParser.y"
+#line 1400 "BulletParser.y"
     {
 			(yyval) = AST->createNode(PT_FunctionCallArgList, yylineno);
 			(yyval)->setChild(0, (yyvsp[-2]));
@@ -3331,7 +3375,7 @@ yyreduce:
     break;
 
   case 193:
-#line 1368 "BulletParser.y"
+#line 1412 "BulletParser.y"
     {
 			(yyval) = AST->createNode(PT_Identifier, yylineno);
 			(yyval)->setString(yytext);
@@ -3339,7 +3383,7 @@ yyreduce:
     break;
 
   case 194:
-#line 1376 "BulletParser.y"
+#line 1420 "BulletParser.y"
     {
 			(yyval) = AST->createNode(PT_Property, yylineno);
 			(yyval)->setString((yyvsp[0])->getStringData().c_str());
@@ -3348,7 +3392,7 @@ yyreduce:
     break;
 
   case 195:
-#line 1385 "BulletParser.y"
+#line 1429 "BulletParser.y"
     {
 			(yyval) = AST->createNode(PT_EmitterMember, yylineno);
 			(yyval)->setString((yyvsp[-2])->getStringData().c_str());
@@ -3359,21 +3403,21 @@ yyreduce:
     break;
 
   case 196:
-#line 1396 "BulletParser.y"
+#line 1440 "BulletParser.y"
     {
 			(yyval) = (yyvsp[0]);
 		;}
     break;
 
   case 197:
-#line 1400 "BulletParser.y"
+#line 1444 "BulletParser.y"
     {
 			(yyval) = (yyvsp[0]);
 		;}
     break;
 
   case 198:
-#line 1407 "BulletParser.y"
+#line 1451 "BulletParser.y"
     {
 			(yyval) = AST->createNode(PT_Constant, yylineno);
 			(yyval)->setValue(atof(yytext));
@@ -3381,7 +3425,7 @@ yyreduce:
     break;
 
   case 199:
-#line 1415 "BulletParser.y"
+#line 1459 "BulletParser.y"
     {
 			(yyval) = AST->createNode(PT_Constant, yylineno);
 			(yyval)->setValue(atof(yytext));
@@ -3393,7 +3437,7 @@ yyreduce:
     }
 
 /* Line 1126 of yacc.c.  */
-#line 3397 "bsBulletParser.cpp"
+#line 3441 "bsBulletParser.cpp"
 
   yyvsp -= yylen;
   yyssp -= yylen;
@@ -3661,7 +3705,7 @@ yyreturn:
 }
 
 
-#line 1421 "BulletParser.y"
+#line 1465 "BulletParser.y"
 
 
 	

@@ -73,7 +73,15 @@ void generate_assignment_expr(int nodeType, int idType, YYSTYPE parentNode, YYST
 	YYSTYPE expr_node = AST->createNode(nodeType, yylineno);
 				
 	YYSTYPE id_node = AST->createNode(idType, yylineno);
-	id_node->setString(idNode->getStringData().c_str());
+	if (idType == PT_EmitterMember)
+	{
+		id_node->setString(idNode->getStringData().c_str());
+		id_node->setChild(0, idNode->getChild(0));
+	}
+	else
+	{
+		id_node->setString(idNode->getStringData().c_str());
+	}
 				
 	expr_node->setChild(0, id_node);
 	expr_node->setChild(1, exprNode);
@@ -93,7 +101,15 @@ void generate_inc_expr(int value, int nodeType, YYSTYPE parentNode, YYSTYPE idNo
 		inc_node = AST->createNode(PT_SubtractStatement, yylineno);
 	
 	YYSTYPE id_node = AST->createNode(nodeType, yylineno);
-	id_node->setString(idNode->getStringData().c_str());
+	if (nodeType == PT_EmitterMember)
+	{
+		id_node->setString(idNode->getStringData().c_str());
+		id_node->setChild(0, idNode->getChild(0));
+	}
+	else
+	{
+		id_node->setString(idNode->getStringData().c_str());
+	}	
 	
 	YYSTYPE v_node = AST->createNode(PT_Constant, yylineno);
 	v_node->setValue(1);
@@ -938,36 +954,64 @@ emitter_member_statement
 		}
 	| emitter_member '=' '{' constant_expression ',' constant_expression '}' ';'
 		{
+			$$ = AST->createNode(PT_MemberAssignStatement, yylineno);
+			$$->setChild(0, $1);
+			$$->setChild(1, $4);
+			$$->setChild(2, $6);
 		}
 	| emitter_member SYMBOL_INC ';'
 		{
+			$$ = AST->createNode(PT_MemberAssignStatement, yylineno);
+			generate_inc_expr(1, PT_EmitterMember, $$, $1);
 		}
 	| emitter_member SYMBOL_DEC ';'
 		{
+			$$ = AST->createNode(PT_MemberAssignStatement, yylineno);
+			generate_inc_expr(-1, PT_EmitterMember, $$, $1);
 		}
 	| emitter_member SYMBOL_ADD_A constant_expression ';'
 		{
+			$$ = AST->createNode(PT_MemberAssignStatement, yylineno);
+			generate_assignment_expr(PT_AddStatement, PT_EmitterMember, $$, $1, $3);
 		}
 	| emitter_member SYMBOL_SUB_A constant_expression ';'
 		{
+			$$ = AST->createNode(PT_MemberAssignStatement, yylineno);
+			generate_assignment_expr(PT_SubtractStatement, PT_EmitterMember, $$, $1, $3);
 		}
 	| emitter_member SYMBOL_MUL_A constant_expression ';'
 		{
+			$$ = AST->createNode(PT_MemberAssignStatement, yylineno);
+			generate_assignment_expr(PT_MultiplyStatement, PT_EmitterMember, $$, $1, $3);
 		}
 	| emitter_member SYMBOL_DIV_A constant_expression ';'
 		{
+			$$ = AST->createNode(PT_MemberAssignStatement, yylineno);
+			generate_assignment_expr(PT_DivideStatement, PT_EmitterMember, $$, $1, $3);
 		}
 	| emitter_member SYMBOL_ADD_A '{' constant_expression ',' constant_expression '}' ';'
 		{
+			$$ = AST->createNode(PT_MemberAssignStatement, yylineno);
+			generate_assignment_expr(PT_AddStatement, PT_EmitterMember, $$, $1, $4);
+			$$->setChild(2, $6);
 		}
 	| emitter_member SYMBOL_SUB_A '{' constant_expression ',' constant_expression '}' ';'
 		{
+			$$ = AST->createNode(PT_MemberAssignStatement, yylineno);
+			generate_assignment_expr(PT_SubtractStatement, PT_EmitterMember, $$, $1, $4);
+			$$->setChild(2, $6);
 		}
 	| emitter_member SYMBOL_MUL_A '{' constant_expression ',' constant_expression '}' ';'
 		{
+			$$ = AST->createNode(PT_MemberAssignStatement, yylineno);
+			generate_assignment_expr(PT_MultiplyStatement, PT_EmitterMember, $$, $1, $4);
+			$$->setChild(2, $6);
 		}
 	| emitter_member SYMBOL_DIV_A '{' constant_expression ',' constant_expression '}' ';'
 		{
+			$$ = AST->createNode(PT_MemberAssignStatement, yylineno);
+			generate_assignment_expr(PT_DivideStatement, PT_EmitterMember, $$, $1, $4);
+			$$->setChild(2, $6);
 		}
 	;
 
