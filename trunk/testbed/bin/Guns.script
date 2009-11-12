@@ -4,7 +4,7 @@ controller Boss1
 	time = 0;
 
 	// emitters - all these values are offsets from controller values
-	mainGun = emitter Flower(0, 0, 0);
+	mainGun = emitter Test(0, 0, 0);
 	
 	// events
 	Damaged = event(newHealth)
@@ -15,14 +15,13 @@ controller Boss1
 	Initial = state
 	{
 		wait(4);
-//		$mainGun.speed = 50;
+//		$mainGun.speed = 200;
 		goto Stage2;
 	}
 
 	Stage2 = state
 	{
 		wait(4);
-//		mainGun.speed = 100;
 		goto Initial;
 	}
 }

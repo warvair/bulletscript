@@ -684,6 +684,10 @@ event_statement
 		{
 			$$ = $1;
 		}
+	| emitter_member_statement
+		{
+			$$ = $1;
+		}
 	| event_iteration_statement
 		{
 			$$ = $1;
@@ -755,6 +759,10 @@ controller_state_statement
 			$$ = $1;
 		}
 	| extended_assignment_statement
+		{
+			$$ = $1;
+		}
+	| emitter_member_statement
 		{
 			$$ = $1;
 		}
@@ -920,7 +928,49 @@ extended_assignment_statement
 			generate_assignment_expr(PT_DivideStatement, PT_Identifier, $$, $1, $3);
 		}
 	;
-	
+
+emitter_member_statement
+	: emitter_member '=' constant_expression ';'
+		{
+			$$ = AST->createNode(PT_MemberAssignStatement, yylineno);
+			$$->setChild(0, $1);
+			$$->setChild(1, $3);
+		}
+	| emitter_member '=' '{' constant_expression ',' constant_expression '}' ';'
+		{
+		}
+	| emitter_member SYMBOL_INC ';'
+		{
+		}
+	| emitter_member SYMBOL_DEC ';'
+		{
+		}
+	| emitter_member SYMBOL_ADD_A constant_expression ';'
+		{
+		}
+	| emitter_member SYMBOL_SUB_A constant_expression ';'
+		{
+		}
+	| emitter_member SYMBOL_MUL_A constant_expression ';'
+		{
+		}
+	| emitter_member SYMBOL_DIV_A constant_expression ';'
+		{
+		}
+	| emitter_member SYMBOL_ADD_A '{' constant_expression ',' constant_expression '}' ';'
+		{
+		}
+	| emitter_member SYMBOL_SUB_A '{' constant_expression ',' constant_expression '}' ';'
+		{
+		}
+	| emitter_member SYMBOL_MUL_A '{' constant_expression ',' constant_expression '}' ';'
+		{
+		}
+	| emitter_member SYMBOL_DIV_A '{' constant_expression ',' constant_expression '}' ';'
+		{
+		}
+	;
+
 property_statement
 	: property '=' constant_expression ';'
 		{
@@ -1327,6 +1377,17 @@ property
 			$$ = AST->createNode(PT_Property, yylineno);
 			$$->setString($2->getStringData().c_str());
 			delete $2;
+		}
+	;
+	
+emitter_member
+	: '$' identifier '.' identifier
+		{
+			$$ = AST->createNode(PT_EmitterMember, yylineno);
+			$$->setString($2->getStringData().c_str());
+			delete $2;
+			
+			$$->setChild(0, $4);
 		}
 	;
 

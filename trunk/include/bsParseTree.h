@@ -50,6 +50,7 @@ namespace BS_NMSP
 		PT_Statement,
 		PT_IfStatement,
 		PT_AssignStatement,
+		PT_MemberAssignStatement,
 		PT_WhileStatement,
 		PT_BreakStatement,
 		PT_ContinueStatement,
@@ -79,6 +80,7 @@ namespace BS_NMSP
 		PT_FunctionCallArgList,
 		PT_Identifier,
 		PT_Property,
+		PT_EmitterMember,
 		PT_Constant
 	};
 

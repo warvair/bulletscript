@@ -25,7 +25,12 @@ namespace BS_NMSP
 #define BS_MAX_EMITTER_AFFECTORS		4
 
 // max number of properties that can be defined for a particular FireType
+// this cannot be more than 32
 #define BS_MAX_PROPERTIES				8
+
+// max number of user-defined member variables that can be defined for a particular Emitter
+// this cannot be more than 32
+#define BS_MAX_USER_EMITTER_MEMBERS		16
 
 // size of virtual machine stack
 #define BS_SCRIPT_STACK_SIZE			32

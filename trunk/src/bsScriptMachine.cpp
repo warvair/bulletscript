@@ -135,7 +135,7 @@ void ScriptMachine::updateEmitters(float frameTime)
 	Emitter* emit = mEmitters->getFirst();
 	while (emit)
 	{
-		emit->runScript(frameTime);
+		emit->update(frameTime);
 		emit = mEmitters->getNext(emit);
 	}
 }
@@ -540,6 +540,9 @@ void ScriptMachine::interpretCode(const uint32* code, size_t length, ScriptState
 				bstype value = st.stack[st.stackHead - 1];
 				int index = code[st.curInstruction + 1];
 				members[index] = value;
+				// must unset membervar controller here, but only if we're
+				// processing an emitter, not a controller.
+				// ...
 				st.stackHead--;
 				st.curInstruction += 2;
 			}			
@@ -566,6 +569,26 @@ void ScriptMachine::interpretCode(const uint32* code, size_t length, ScriptState
 
 				assert(st.stackHead < BS_SCRIPT_STACK_SIZE && 
 					"Stack limit reached: increase BS_SCRIPT_STACK_SIZE");
+			}
+			break;
+
+		case BC_SETEM1:
+			{
+				int emitIndex = code[st.curInstruction + 1];
+				int memIndex = code[st.curInstruction + 2];
+				
+				bstype value = st.stack[--st.stackHead];
+				
+				// Set member variable
+				// ...
+
+				st.curInstruction += 3;
+			}
+			break;
+
+		case BC_SETEM2:
+			{
+				// ...
 			}
 			break;
 
@@ -866,8 +889,7 @@ void ScriptMachine::interpretCode(const uint32* code, size_t length, ScriptState
 // --------------------------------------------------------------------------------
 void ScriptMachine::processScriptRecord(ScriptRecord* gsr)
 {
-	if (gsr->scriptState.suspendTime > 0)
-		return;
+	// Assume that we're not suspended.
 
 	CodeRecord* rec = getCodeRecord(gsr->curState);
 	uint32 *bytecode = rec->byteCode;

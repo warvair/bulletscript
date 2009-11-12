@@ -7,6 +7,8 @@ namespace BS_NMSP
 
 // --------------------------------------------------------------------------------
 Emitter::Emitter(ScriptMachine* scriptMachine) :
+	mActiveControllers(0),
+	mNumUserMembers(0),
 	mScriptMachine(scriptMachine),
 	mRecord(0)
 {
@@ -23,6 +25,8 @@ void Emitter::setDefinition(EmitterDefinition* def)
 		delete mRecord;
 
 	mRecord = def->createScriptRecord(mScriptMachine);
+
+	mNumUserMembers = def->getNumMemberVariables() - NUM_SPECIAL_MEMBERS;
 }
 // --------------------------------------------------------------------------------
 void Emitter::setX(bstype x)
@@ -51,13 +55,36 @@ void Emitter::setMember(int member, bstype value)
 {
 	assert (member >= 0 && "Emitter::setMember index must be >= 0");
 	mRecord->members[member + NUM_SPECIAL_MEMBERS] = value;
+	// Unset if controller active
+	mActiveControllers &= ~(1 << member);
 }
 // --------------------------------------------------------------------------------
 void Emitter::runScript(float frameTime)
 {
-	mScriptMachine->processScriptRecord(mRecord);
-	if (mRecord->scriptState.suspendTime > 0)
+	if (mRecord->scriptState.suspendTime <= 0)
+		mScriptMachine->processScriptRecord(mRecord);
+	else
 		mRecord->scriptState.suspendTime -= frameTime;
+}
+// --------------------------------------------------------------------------------
+void Emitter::update(float frameTime)
+{
+	// Update user MemberControllers.
+	for (int i = 0; i < mNumUserMembers; ++i)
+	{
+		int mask = 1 << i;
+		if (mActiveControllers & mask)
+		{
+			mRecord->members[i] += mMemberControllers[i].speed * frameTime;
+
+			mMemberControllers[i].time -= frameTime;
+			if (mMemberControllers[i].time <= 0)
+				mActiveControllers &= ~mask;
+		}
+	}
+
+	// Run script
+	runScript(frameTime);
 }
 // --------------------------------------------------------------------------------
 

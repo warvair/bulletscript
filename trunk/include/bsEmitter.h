@@ -11,13 +11,23 @@ namespace BS_NMSP
 
 	class _BSAPI Emitter : public DeepMemoryPoolObject
 	{
-	protected:
+		// MemberVariable controller
+		struct MemberController
+		{
+			float time;
+			bstype speed;
+		};
+
+		MemberController mMemberControllers[BS_MAX_USER_EMITTER_MEMBERS];
+		uint32 mActiveControllers; // Bitfield for MemberControllers set
+		int mNumUserMembers;
 
 		ScriptMachine* mScriptMachine;
 
-	public:
-
 		ScriptRecord* mRecord;
+
+		// Functions
+		void runScript(float frameTime);
 
 	public:
 
@@ -39,7 +49,7 @@ namespace BS_NMSP
 
 		void setMember(int member, bstype value);
 
-		void runScript(float frameTime);
+		void update(float frameTime);
 
 	};
 

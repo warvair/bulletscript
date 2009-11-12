@@ -35,14 +35,19 @@ int EmitterDefinition::getMaxLocalVariables() const
 	return mMaxLocals;
 }
 // --------------------------------------------------------------------------------
-void EmitterDefinition::addMemberVariable(const String& name, bool readonly, bstype value)
+bool EmitterDefinition::addMemberVariable(const String& name, bool readonly, bstype value)
 {
+	int numVars = getNumMemberVariables();
+	if (numVars >= (BS_MAX_USER_EMITTER_MEMBERS + NUM_SPECIAL_MEMBERS))
+		return false;
+
 	MemberVariable var;
 	var.name = name;
 	var.readonly = readonly;
 	var.value = value;
 
 	mMemberVariables.push_back(var);
+	return true;
 }
 // --------------------------------------------------------------------------------
 EmitterDefinition::MemberVariable& EmitterDefinition::getMemberVariable(int index)

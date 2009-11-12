@@ -458,7 +458,11 @@ void ParseTree::createEmitterMemberVariables(EmitterDefinition* def, ParseTreeNo
 		if (def->getMemberVariableIndex(varName) >= 0)
 			addError(node->getLine(), "Member variable '" + varName + "' already declared.");
 
-		def->addMemberVariable(varName, false);
+		if (!def->addMemberVariable(varName, false))
+		{
+			addError(node->getLine(), "Too many member variables defined for '" + def->getName() + "'.");
+			return;
+		}
 	}
 
 	for (int i = 0; i < ParseTreeNode::MAX_CHILDREN; ++ i)
@@ -530,8 +534,7 @@ void ParseTree::addControllerMemberVariables(ControllerDefinition* def,
 		String varName = range.first->second.name;
 		if (def->getMemberVariableIndex(varName) >= 0)
 		{
-			String msg = "Member variable '" + varName + "' already declared.";
-			addError(0, msg);
+			addError(0, "Member variable '" + varName + "' already declared.");
 		}
 		else
 		{
@@ -1179,12 +1182,6 @@ void ParseTree::createControllerStates(ControllerDefinition* def, ParseTreeNode*
 		{
 			String varName = node->getChild(0)->getStringData();
 
-			if (node->getChild(2))
-			{
-				// We're setting an emitter member variable
-				// ...
-			}
-
 			// See if it's a member or global
 			if (def->getMemberVariableIndex(varName) >= 0)
 			{
@@ -1210,6 +1207,31 @@ void ParseTree::createControllerStates(ControllerDefinition* def, ParseTreeNode*
 
 			if (rec->getVariableIndex(varName) < 0)
 				rec->addVariable(varName);
+		}
+		break;
+
+	case PT_MemberAssignStatement:
+		{
+			ParseTreeNode* memNode = node->getChild(0);
+			String emitName = memNode->getStringData();
+			String memberName = memNode->getChild(0)->getStringData();
+
+			// Check that they exist
+			int emitIndex = def->getEmitterVariableIndex(emitName);
+			if (emitIndex < 0)
+			{
+				addError(node->getLine(), "Emitter '" + emitName + "' is not declared.");
+				break;
+			}
+
+			const ControllerDefinition::EmitterVariable& var = def->getEmitterVariable(emitIndex);
+			EmitterDefinition* eDef = mScriptMachine->getEmitterDefinition(var.emitter);
+			if (eDef->getMemberVariableIndex(memberName) < 0)
+			{
+				addError(node->getLine(), "Emitter type '" + var.emitter + 
+					"' has no member named '" + memberName + "'.");
+				break;
+			}
 		}
 		break;
 
@@ -2011,6 +2033,33 @@ void ParseTree::generateBytecode(ControllerDefinition* def, ParseTreeNode* node,
 				bytecode->push_back(BC_SETL);
 				bytecode->push_back((uint32) index);
 			}
+		}
+		return;
+
+	case PT_MemberAssignStatement:
+		{
+			// Generate constant expression for value
+			generateBytecode(def, node->getChild(1), bytecode);
+
+			if (node->getChild(2))
+			{
+				// Generate constant expression for time
+				generateBytecode(def, node->getChild(2), bytecode);
+				bytecode->push_back(BC_SETEM2);
+			}
+			else
+			{
+				bytecode->push_back(BC_SETEM1);
+			}
+
+			String emitName = node->getChild(0)->getStringData();
+			String memName = node->getChild(0)->getChild(0)->getStringData();
+			uint32 emitIndex = def->getEmitterVariableIndex(emitName);
+
+			const ControllerDefinition::EmitterVariable& var = def->getEmitterVariable(emitIndex);
+			EmitterDefinition* eDef = mScriptMachine->getEmitterDefinition(var.emitter);
+			bytecode->push_back(emitIndex);
+			bytecode->push_back(eDef->getMemberVariableIndex(memName));
 		}
 		return;
 
