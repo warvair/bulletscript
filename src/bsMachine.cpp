@@ -52,10 +52,17 @@ void Machine::releaseType(UserTypeBase* ft)
 	mTypeManager->releaseType(ft);
 }
 // --------------------------------------------------------------------------------
+#ifdef BS_Z_DIMENSION
+void Machine::updateType(UserTypeBase* ft, bstype x, bstype y, bstype z, float frameTime)
+{
+	mTypeManager->updateType(ft, x, y, z, frameTime);
+}
+#else
 void Machine::updateType(UserTypeBase* ft, bstype x, bstype y, float frameTime)
 {
 	mTypeManager->updateType(ft, x, y, frameTime);
 }
+#endif
 // --------------------------------------------------------------------------------
 void Machine::registerFireFunction(const String& type, const String& name, int numArgs, FireFunction func)
 {

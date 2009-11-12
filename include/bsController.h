@@ -17,7 +17,12 @@ namespace BS_NMSP
 		struct EmitterInstance
 		{
 			Emitter* emitter;
-			bstype x, y, angle;
+			bstype x;
+			bstype y;
+#ifdef BS_Z_DIMENSION
+			bstype z;
+#endif
+			bstype angle;
 		};
 
 		std::vector<EmitterInstance> mEmitters;
@@ -40,6 +45,10 @@ namespace BS_NMSP
 		void setX(bstype x);
 
 		void setY(bstype y);
+
+#ifdef BS_Z_DIMENSION
+		void setZ(bstype z);
+#endif
 
 		void setAngle(bstype angle);
 

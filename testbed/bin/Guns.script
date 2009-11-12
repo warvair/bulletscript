@@ -3,8 +3,8 @@ controller Boss1
 	// member variables
 	time = 0;
 
-	// emitters
-	mainGun = emitter Flower(Level_Time + 10, 0, 180);
+	// emitters - all these values are offsets from controller values
+	mainGun = emitter Flower(0, 0, 0);
 	
 	// events
 	Damaged = event(newHealth)
@@ -14,25 +14,29 @@ controller Boss1
 	// states
 	Initial = state
 	{
-		time = 5;
-		wait(time + health);
-
-		pos = 19;
-		if (pos < 20)
-		{
-			pos += Level_Time;
-		}
-
+		wait(4);
+//		$mainGun.speed = 50;
 		goto Stage2;
 	}
 
 	Stage2 = state
 	{
-		x = 10;
-		wait(x);
+		wait(4);
+//		mainGun.speed = 100;
 		goto Initial;
 	}
 }
+
+emitter Test
+{
+	speed = 50;
+	Main = state 
+	{
+		fireA bullet(180, speed);
+		wait(0.5);
+	}
+}
+
 
 emitter Flower
 {
@@ -64,11 +68,8 @@ emitter Flower
 		i = 0;
 		while(i < 20)
 		{
-			fireA bullet(rand(360), 100) : death(0.5), gravity;
 			i++;
-
-//			wait(0);
-//			break;
+			fireA bullet(rand(360), 100) : death(0.5), gravity;
 		}
 
 		die();

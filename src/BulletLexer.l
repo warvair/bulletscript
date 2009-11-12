@@ -44,6 +44,7 @@ BINARY    	[0-1]
 "event"							{ return (KEYWORD_EVENT); }
 "while"							{ return (KEYWORD_WHILE); }
 "break"							{ return (KEYWORD_BREAK); }
+"continue"						{ return (KEYWORD_CONTINUE); }
 "if"							{ return (KEYWORD_IF); }
 "else"							{ return (KEYWORD_ELSE); }
 "goto"							{ return (KEYWORD_GOTO); }

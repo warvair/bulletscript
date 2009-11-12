@@ -1,3 +1,4 @@
+#include <assert.h>
 #include "bsEmitter.h"
 #include "bsScriptMachine.h"
 
@@ -26,22 +27,30 @@ void Emitter::setDefinition(EmitterDefinition* def)
 // --------------------------------------------------------------------------------
 void Emitter::setX(bstype x)
 {
-	setMember(Member_X, x);
+	mRecord->members[Member_X] = x;
 }
 // --------------------------------------------------------------------------------
 void Emitter::setY(bstype y)
 {
-	setMember(Member_Y, y);
+	mRecord->members[Member_Y] = y;
 }
+// --------------------------------------------------------------------------------
+#ifdef BS_Z_DIMENSION
+void Emitter::setZ(bstype z)
+{
+	mRecord->members[Member_Z] = z;
+}
+#endif
 // --------------------------------------------------------------------------------
 void Emitter::setAngle(bstype angle)
 {
-	setMember(Member_Angle, angle);
+	mRecord->members[Member_Angle] = angle;
 }
 // --------------------------------------------------------------------------------
 void Emitter::setMember(int member, bstype value)
 {
-	mRecord->members[member] = value;
+	assert (member >= 0 && "Emitter::setMember index must be >= 0");
+	mRecord->members[member + NUM_SPECIAL_MEMBERS] = value;
 }
 // --------------------------------------------------------------------------------
 void Emitter::runScript(float frameTime)

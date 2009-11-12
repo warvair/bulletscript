@@ -489,8 +489,11 @@ bool ScriptMachine::checkInstructionPosition(ScriptState& st, size_t length, boo
 }
 // --------------------------------------------------------------------------------
 void ScriptMachine::interpretCode(const uint32* code, size_t length, ScriptState& st, 
-								  int* curState, FireTypeControl* record, bstype x, 
-								  bstype y, bstype* members, bool loop)
+								  int* curState, FireTypeControl* record, bstype x, bstype y, 
+#ifdef BS_Z_DIMENSION
+								  bstype z, 
+#endif
+								  bstype* members, bool loop)
 {
 	if (st.curInstruction >= length)
 		return;
@@ -575,7 +578,7 @@ void ScriptMachine::interpretCode(const uint32* code, size_t length, ScriptState
 
 				const String& propName = getProperty(index);
 
-				record->__type->setProperty1(record->__object, propName, value);
+				record->__type->setProperty1(record, propName, value);
 				st.curInstruction += 2;
 			}
 			break;
@@ -774,7 +777,11 @@ void ScriptMachine::interpretCode(const uint32* code, size_t length, ScriptState
 			{
 				int fireType = code[st.curInstruction + 1];
 				FireType* ft = mTypeManager->getType(fireType);
+#ifdef BS_Z_DIMENSION
+				st.curInstruction += ft->processCode(code, st, x, y, z, members);
+#else
 				st.curInstruction += ft->processCode(code, st, x, y, members);
+#endif
 			}
 			break;
 
@@ -866,16 +873,26 @@ void ScriptMachine::processScriptRecord(ScriptRecord* gsr)
 	uint32 *bytecode = rec->byteCode;
 	size_t bytecodeLen = rec->byteCodeSize;
 
+#ifdef BS_Z_DIMENSION
+	interpretCode(bytecode, bytecodeLen, gsr->scriptState, &gsr->curState, 0,
+		gsr->members[Member_X], gsr->members[Member_Y], gsr->members[Member_Z], gsr->members, true);
+#else
 	interpretCode(bytecode, bytecodeLen, gsr->scriptState, &gsr->curState, 0,
 		gsr->members[Member_X], gsr->members[Member_Y], gsr->members, true);
+#endif
 }
 // --------------------------------------------------------------------------------
 void ScriptMachine::processConstantExpression(const uint32* code, 
 											  size_t length, 
 											  ScriptRecord* gsr)
 {
+#ifdef BS_Z_DIMENSION
+	interpretCode(code, length, gsr->scriptState, &gsr->curState, 0,
+		bsvalue0, bsvalue0, bsvalue0, gsr->members, false);
+#else
 	interpretCode(code, length, gsr->scriptState, &gsr->curState, 0,
 		bsvalue0, bsvalue0, gsr->members, false);
+#endif
 }
 // --------------------------------------------------------------------------------
 }

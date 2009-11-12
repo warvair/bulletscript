@@ -74,10 +74,13 @@ bool FireType::registerProperty(const String& name, SetFunction set, GetFunction
 	return true;
 }
 // --------------------------------------------------------------------------------
-void FireType::setProperty1(UserTypeBase* object, const String& prop, bstype value) const
+void FireType::setProperty1(FireTypeControl* record, const String& prop, bstype value) const
 {
 	int index = getPropertyIndex(prop);
-	mProperties[index].setter(object, value);
+	mProperties[index].setter(record->__object, value);
+
+	// Unset if it is currently active
+	record->activeProperties &= ~(1 << index);
 }
 // --------------------------------------------------------------------------------
 void FireType::setProperty2(FireTypeControl* record, const String& prop, 
@@ -251,14 +254,23 @@ void FireType::generateBytecode(EmitterDefinition* def, ParseTreeNode* node,
 }
 // --------------------------------------------------------------------------------
 int FireType::processCode(const uint32* code, ScriptState& state, bstype x, 
-						  bstype y, bstype* members)
+						  bstype y, 
+#ifdef BS_Z_DIMENSION
+						  bstype z, 
+#endif
+						  bstype* members)
 {
 	int funcIndex = code[state.curInstruction + 2];
 	uint32 numAffectors = 0;
 
 	FireFunction func = mFunctions[funcIndex].func;
 
+#ifdef BS_Z_DIMENSION
+	UserTypeBase* type = func(x, y, z, &state.stack[state.stackHead]);
+#else
 	UserTypeBase* type = func(x, y, &state.stack[state.stackHead]);
+#endif
+
 	state.stackHead -= mFunctions[funcIndex].numArguments;
 
 	if (type)

@@ -1,24 +1,27 @@
+extended to 3d: should be a compile #define, will mean lots of #ifdef code but worth it.
+
 suspend/resume for states: suspend takes up to 8(?) values, and resume must pass all these values to resume
 the state.  This way we can have combinational events.  However, this only works for controllers.  We would
 need emitters to take events as well.  Emitters shouldn't take events, however, because any logic like this
 should be done by controllers.
 
-Controller::setMember will not set emitter pos/angle correctly.
-	interpretCode also just sets the member array directly.  Maybe we should disallow people from
-	setting X/Y/Angle in script?  But let controllers set emitter x/y/angle.
-	Issue is that x/y/angle are special members, but implemented as normals ones, which can slow down
-	manipulating normal member vars.
+Controllers can change emitter member variables (including x/y/angle) smoothly, like properties.  If a smooth
+transition is interrupted by an immediate one, then the smooth transition is stopped.  First off this means
+that using the current method, we can only have a certain number of member variables.  Look into more flexible
+way of doing this, which can work for emitted objects as well.
 
-controllers should be able to change emitter member vars smoothly, like properties.  this will allow
-animation of emitters, eg moving gun position, or changing angle. $gun1.This_Angle = {45, 2};
-	other issues with this, look into it.  also need to allow callbacks to user if driving emitters
-	with controllers.
-	Generally think about emitter member vars, how they're controlled, etc.
+If individual emitters have extra objects, for instance some visual, which are not controlled by the Controller, 
+then we will need a callback when a member variable is changed.  Do not implement this for now: it will slow
+things down, and it is ultimately a hack because you are controlling a sibling system in the hierarchy.
 
-constant_expression needs to be able to take a member.var identifier, but only allow this in controller
-events/states.  Check in semantic checking.
+Without having member variables in affector arguments, we can't have an 'anchor' affector.  In fact, attached
+weapons like this are difficult: if the Emitter is destroyed, we need to destroy its emitted objects, but the
+current system is not set up for that.  This is important because there will be other uses for anchored objects.
 
-controller and emitter definitions may benefit from inheriting from a base class: cuts down on code.
+What about other built-in member variables?  This_Z for instance.
+
+Controller and Emitter definitions should inherit from a base class: cuts down on code.  There's currently a lot
+of duplication in parsing.
 
 1) Implement affectors [DONE]
 
@@ -30,7 +33,7 @@ controller and emitter definitions may benefit from inheriting from a base class
 
 	Get working with Threaded Building Blocks
 
-	Check assembler output, look into SSE/2, look into compiler optimisations.
+	Check assembler output, look into SSE/2, look into compiler optimisations, intrinsic functions.
 
 	Stack-register machine: abstract out all codegen/processing to a base VM class
 
@@ -38,12 +41,11 @@ controller and emitter definitions may benefit from inheriting from a base class
 
 	Cut down the number of arguments to interpretCode
 
-	Avoid float-int conversions where possible
+	Avoid float-int conversions where possible - converting float to int is especially slow.
+	
+	Try to avoid strings at runtime (eg, passing a literal to a const ref invokes constructor)
 	
 	FireTypeBase::getPropertyIndex is bad, find a way round it (used in FireTypeBase set/get properties)
-	
-	loop() may be inefficient because it requires checking and maintaining a loop struct.  It is used to
-	loop a set number of times, but there may be a quicker way of implementing this.
 	
 need to calculate memory usage if we're not going to allow custom allocators
 	

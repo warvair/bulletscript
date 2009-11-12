@@ -114,6 +114,7 @@ void generate_inc_expr(int value, int nodeType, YYSTYPE parentNode, YYSTYPE idNo
 %token KEYWORD_EVENT
 %token KEYWORD_WHILE
 %token KEYWORD_BREAK
+%token KEYWORD_CONTINUE
 %token KEYWORD_IF
 %token KEYWORD_ELSE
 %token KEYWORD_GOTO
@@ -1030,6 +1031,10 @@ flow_statement
 	: KEYWORD_BREAK ';'
 		{
 			$$ = AST->createNode(PT_BreakStatement, yylineno);
+		}
+	| KEYWORD_CONTINUE ';'
+		{
+			$$ = AST->createNode(PT_ContinueStatement, yylineno);
 		}
 	;
 
