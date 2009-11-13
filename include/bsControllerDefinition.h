@@ -66,13 +66,8 @@ namespace BS_NMSP
 		int getNumUserMembers() const;
 
 		// Emitter variables
-#ifdef BS_Z_DIMENSION
 		EmitterVariable& addEmitterVariable(const String& name, const String& emitter,
-			bstype x, bstype y, bstype z, bstype angle);
-#else
-		EmitterVariable& addEmitterVariable(const String& name, const String& emitter,
-			bstype x, bstype y, bstype angle);
-#endif
+			bstype args[NUM_SPECIAL_MEMBERS]);
 
 		EmitterVariable& getEmitterVariable(int index);
 		

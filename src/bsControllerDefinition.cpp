@@ -78,23 +78,18 @@ int ControllerDefinition::getNumUserMembers() const
 // --------------------------------------------------------------------------------
 ControllerDefinition::EmitterVariable& ControllerDefinition::addEmitterVariable(const String& name, 
 																				const String& emitter,
-																				bstype x, 
-																				bstype y, 
-#ifdef BS_Z_DIMENSION
-																				bstype z,
-#endif
-																				bstype angle)
+																				bstype args[NUM_SPECIAL_MEMBERS])
 {
 	EmitterVariable emit;
 	emit.name = name;
 	emit.emitter = emitter;
-	emit.x = x;
-	emit.y = y;
+	emit.x = args[Member_X];
+	emit.y = args[Member_Y];
 #ifdef BS_Z_DIMENSION
-	emit.z = z;
+	emit.z = args[Member_Y];
 #endif
 
-	emit.angle = angle;
+	emit.angle = args[Member_Angle];
 
 	mEmitterVariables.push_back(emit);
 

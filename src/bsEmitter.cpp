@@ -53,7 +53,7 @@ void Emitter::setAngle(bstype angle)
 // --------------------------------------------------------------------------------
 void Emitter::setSpecialMember(int member, bstype value)
 {
-	assert (member >= 0 && members < NUM_SPECIAL_MEMBERS && "Emitter::setMember index must be >= 0");
+	assert (member >= 0 && member < NUM_SPECIAL_MEMBERS && "Emitter::setMember index must be >= 0");
 	mRecord->members[member] = value;
 }
 // --------------------------------------------------------------------------------
