@@ -65,6 +65,8 @@ namespace BS_NMSP
 
 		bstype getEmitterMember(int emitter, int member) const;
 
+		void setEmitterMemberState(int emitter, int state);
+
 		void update(float frameTime);
 
 	};

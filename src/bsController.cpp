@@ -138,6 +138,11 @@ bstype Controller::getEmitterMember(int emitter, int member) const
 	}
 }
 // --------------------------------------------------------------------------------
+void Controller::setEmitterMemberState(int emitter, int state)
+{
+	mEmitters[emitter].emitter->setState(state);
+}
+// --------------------------------------------------------------------------------
 void Controller::runScript(float frameTime)
 {
 	if (mRecord->scriptState.suspendTime <= 0)

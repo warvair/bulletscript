@@ -148,17 +148,13 @@ void TypeManager::setDieFunction(const String& type, DieFunction func)
 	ft->setDieFunction(func);
 }
 // --------------------------------------------------------------------------------
-void TypeManager::registerProperty(const String& type, const String& name, 
+bool TypeManager::registerProperty(const String& type, const String& name, 
 								   SetFunction set, GetFunction get)
 {
 	FireType* ft = getType(type);
 	
 	assert(ft != 0 && "TypeManager::registerProperty no type");
-	if (!ft->registerProperty(name, set, get))
-	{
-		// Error
-		// ...
-	}
+	return ft->registerProperty(name, set, get);
 }
 // --------------------------------------------------------------------------------
 void TypeManager::registerAffector(const String& type, const String& name, AffectorFunction func)

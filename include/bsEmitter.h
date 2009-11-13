@@ -55,6 +55,8 @@ namespace BS_NMSP
 
 		bstype getMember(int member) const;
 
+		void setState(int state);
+
 		void update(float frameTime);
 
 	};

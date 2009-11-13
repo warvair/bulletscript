@@ -18,7 +18,7 @@ static ParseTree* AST = ParseTree::instancePtr ();
 
 void yyerror (char *a_msg)
 {
-	AST->addError (yylineno, a_msg);
+	AST->addError(yylineno, a_msg);
 }
 
 void generate_affector_list(YYSTYPE parentNode, YYSTYPE affNode)
@@ -742,6 +742,10 @@ event_statement
 		{
 			$$ = $1;
 		}
+	| member_goto_statement
+		{
+			$$ = $1;
+		}
 	| wait_statement
 		{
 			$$ = $1;
@@ -817,6 +821,10 @@ controller_state_statement
 			$$ = $1;
 		}
 	| goto_statement
+		{
+			$$ = $1;
+		}
+	| member_goto_statement
 		{
 			$$ = $1;
 		}
@@ -1166,6 +1174,14 @@ goto_statement
 		}		
 	;
 	
+member_goto_statement
+	: KEYWORD_GOTO emitter_member ';'
+		{
+			$$ = AST->createNode(PT_GotoStatement, yylineno);
+			$$->setChild(0, $2);
+		}
+	;
+
 wait_statement
 	: KEYWORD_WAIT '(' constant_expression ')' ';'
 		{
@@ -1379,6 +1395,10 @@ primary_expression
 			$$ = $1;
 		}
 	| property
+		{
+			$$ = $1;
+		}
+	| emitter_member
 		{
 			$$ = $1;
 		}

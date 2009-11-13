@@ -227,6 +227,10 @@
 				>
 			</File>
 			<File
+				RelativePath="..\src\bsObjectDefinition.cpp"
+				>
+			</File>
+			<File
 				RelativePath="..\src\bsParseTree.cpp"
 				>
 			</File>
@@ -310,6 +314,10 @@
 			</File>
 			<File
 				RelativePath="..\include\bsMachine.h"
+				>
+			</File>
+			<File
+				RelativePath="..\include\bsObjectDefinition.h"
 				>
 			</File>
 			<File

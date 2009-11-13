@@ -57,7 +57,7 @@ namespace BS_NMSP
 
 		void setDieFunction(const String& type, DieFunction func);
 
-		void registerProperty(const String& type, const String& name, SetFunction set, GetFunction get);
+		bool registerProperty(const String& type, const String& name, SetFunction set, GetFunction get);
 
 		void registerAffector(const String& type, const String& name, AffectorFunction func);
 

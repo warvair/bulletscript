@@ -6,79 +6,8 @@ namespace BS_NMSP
 
 // --------------------------------------------------------------------------------
 EmitterDefinition::EmitterDefinition(const String& name) :
-	mName(name),
-	m_constructCode(0),
-	m_constructSize(0),
-	mNumUserMembers(0),
-	mMaxLocals(0),
-	mInitialState(-1)
+	ObjectDefinition(name, "Emitter")
 {
-}
-// --------------------------------------------------------------------------------
-EmitterDefinition::~EmitterDefinition()
-{
-	delete[] m_constructCode;
-}
-// --------------------------------------------------------------------------------
-const String& EmitterDefinition::getName() const
-{
-	return mName;
-}
-// --------------------------------------------------------------------------------
-void EmitterDefinition::setMaxLocalVariables(int count)
-{
-	mMaxLocals = count;
-}
-// --------------------------------------------------------------------------------
-int EmitterDefinition::getMaxLocalVariables() const
-{
-	return mMaxLocals;
-}
-// --------------------------------------------------------------------------------
-bool EmitterDefinition::addMemberVariable(const String& name, bool readonly, bstype value)
-{
-	int numVars = getNumMemberVariables();
-	if (numVars >= (BS_MAX_USER_EMITTER_MEMBERS + NUM_SPECIAL_MEMBERS))
-		return false;
-
-	MemberVariable var;
-	var.name = name;
-	var.readonly = readonly;
-	var.value = value;
-
-	mMemberVariables.push_back(var);
-	return true;
-}
-// --------------------------------------------------------------------------------
-EmitterDefinition::MemberVariable& EmitterDefinition::getMemberVariable(int index)
-{
-	return mMemberVariables[index];
-}
-// --------------------------------------------------------------------------------
-int EmitterDefinition::getMemberVariableIndex(const String& name) const
-{
-	for (int i = 0; i < getNumMemberVariables(); ++i)
-	{
-		if (mMemberVariables[i].name == name)
-			return i;
-	}
-
-	return -1;
-}
-// --------------------------------------------------------------------------------
-int EmitterDefinition::getNumMemberVariables() const
-{
-	return (int) mMemberVariables.size();
-}
-// --------------------------------------------------------------------------------
-void EmitterDefinition::setNumUserMembers(int count)
-{
-	mNumUserMembers = count;
-}
-// --------------------------------------------------------------------------------
-int EmitterDefinition::getNumUserMembers() const
-{
-	return mNumUserMembers;
 }
 // --------------------------------------------------------------------------------
 EmitterDefinition::Function& EmitterDefinition::addFunction(const String& name, ParseTreeNode* node)
@@ -114,60 +43,6 @@ int EmitterDefinition::getNumFunctions() const
 	return (int) mFunctions.size();
 }
 // --------------------------------------------------------------------------------
-EmitterDefinition::State& EmitterDefinition::addState(const String& name)
-{
-	State state;
-	state.name = name;
-
-	mStates.push_back(state);
-
-	return mStates[getNumStates() - 1];
-}
-// --------------------------------------------------------------------------------
-EmitterDefinition::State& EmitterDefinition::getState(int index)
-{
-	return mStates[index];
-}
-// --------------------------------------------------------------------------------
-int EmitterDefinition::getStateIndex(const String& name) const
-{
-	for (int i = 0; i < getNumStates(); ++i)
-	{
-		if (mStates[i].name == name)
-			return i;
-	}
-
-	return -1;
-}
-// --------------------------------------------------------------------------------
-int EmitterDefinition::getNumStates() const
-{
-	return (int) mStates.size();
-}
-// --------------------------------------------------------------------------------
-void EmitterDefinition::setInitialState(int state)
-{
-	mInitialState = state;
-}
-// --------------------------------------------------------------------------------
-void EmitterDefinition::appendConstructionCode(const BytecodeBlock& code)
-{
-	m_constructor.insert(m_constructor.end(), code.begin(), code.end());
-}
-// --------------------------------------------------------------------------------
-void EmitterDefinition::finaliseConstructor()
-{
-	m_constructSize = m_constructor.size();
-	if (m_constructSize > 0)
-	{
-		m_constructCode = new uint32[m_constructSize];
-		for (size_t i = 0; i < m_constructSize; ++i)
-			m_constructCode[i] = m_constructor[i];
-	}
-
-	m_constructor.clear();
-}
-// --------------------------------------------------------------------------------
 ScriptRecord* EmitterDefinition::createScriptRecord(ScriptMachine* sm)
 {
 	ScriptRecord* record = new ScriptRecord(mMaxLocals);
@@ -182,9 +57,9 @@ ScriptRecord* EmitterDefinition::createScriptRecord(ScriptMachine* sm)
 	}
 
 	// Run construction code, if there is any
-	if (m_constructSize > 0)
+	if (mConstructSize > 0)
 	{
-		sm->interpretCode(m_constructCode, m_constructSize, record->scriptState,
+		sm->interpretCode(mConstructCode, mConstructSize, record->scriptState,
 			record->members);
 
 		record->scriptState.stackHead = 0;
