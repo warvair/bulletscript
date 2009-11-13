@@ -1,11 +1,13 @@
 controller Boss1
 {
 	// member variables
-	time = 0;
+	time = 3;
 
 	// emitters - all these values are offsets from controller values
-	left = emitter Test(-32, 0, 0);
-	right = emitter Test(32, 0, 0);
+	left = emitter Flower(-128, 0, 0);
+	right = emitter Flower(128, 0, 0);
+	up = emitter Flower(0, -128, 0);
+	down = emitter Flower(0, 128, 0);
 	
 	// events
 	Damaged = event(newHealth)
@@ -16,28 +18,38 @@ controller Boss1
 	// states
 	Stage1 = state
 	{
-		wait(1);
-		$left.This_Angle = {-90, 5};
+		wait(time);
+		$left.This_X += {64, 5};
+		$right.This_X -= {64, 5};
 		wait(5);
 		goto Stage2;
 	}
 
 	Stage2 = state
 	{
-		wait(4);
+		wait(time);
+		$left.This_X -= {64, 5};
+		$right.This_X += {64, 5};
+		wait(5);
+		goto Stage1;
 	}
 }
 
 emitter Test
 {
 	time = 0.1;
-	Main = state 
+	Stage1 = state 
 	{
 		fireA bullet(This_Angle, 100);
 		wait(time);
 	}
-}
 
+	Stage2 = state
+	{
+		fireA bullet(This_Angle + 90, 100);
+		wait(time);
+	}
+}
 
 emitter Flower
 {

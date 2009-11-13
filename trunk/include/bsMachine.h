@@ -13,6 +13,8 @@ namespace BS_NMSP
 	{
 		Log mLog;
 
+		int mNumErrors;
+
 		ScriptMachine* mScriptMachine;
 
 		TypeManager* mTypeManager;
@@ -29,6 +31,8 @@ namespace BS_NMSP
 		~Machine();
 
 		const Log& getLog() const;
+
+		int getErrorCount() const;
 
 		// General stuff
 		void registerGlobalVariable(const String& name, bstype initialValue);

@@ -105,7 +105,7 @@ namespace BS_NMSP
 		// Weak pointer to script machine
 		ScriptMachine* mScriptMachine;
 
-		// See: PTodeType enum
+		// See: PT_NodeType enum
 		int mType;
 
 		// Script line
@@ -168,7 +168,7 @@ namespace BS_NMSP
 
 	class ParseTree
 	{
-		static ScriptMachine* mScriptMachine;
+		ScriptMachine* mScriptMachine;
 
 		ParseTreeNode* mRoot;
 
@@ -190,13 +190,9 @@ namespace BS_NMSP
 		ControllerDefinition* createControllerDefinition(ParseTreeNode* node, const MemberVariableDeclarationMap& memberDecls);
 
 		// Member variables
-		void createEmitterMemberVariables(EmitterDefinition* def, ParseTreeNode* node);
+		void createMemberVariables(ObjectDefinition* def, ParseTreeNode* node);
 
-		void addEmitterMemberVariables(EmitterDefinition* def);
-
-		void createControllerMemberVariables(ControllerDefinition* def, ParseTreeNode* node);
-
-		void addControllerMemberVariables(ControllerDefinition* def, const MemberVariableDeclarationMap& memberDecls);
+		void addMemberVariables(ObjectDefinition* def, const MemberVariableDeclarationMap* memberDecls = 0);
 
 		// Affectors
 		void createAffectors(EmitterDefinition* def, ParseTreeNode* node);
@@ -218,10 +214,10 @@ namespace BS_NMSP
 
 		void checkFunctionProperties(ParseTreeNode* node, FireType* type);
 
-		// States
-		void createEmitterStates(EmitterDefinition* def, ParseTreeNode* node);
+		void checkFunctionDieStatements(ParseTreeNode* node, FireType* type);
 
-		void createControllerStates(ControllerDefinition* def, ParseTreeNode* node);
+		// States
+		void createStates(ObjectDefinition* def, ParseTreeNode* node);
 
 		// Fire statements
 		void _checkFireStatements(EmitterDefinition* def, ParseTreeNode* node, const String& type);
@@ -232,15 +228,12 @@ namespace BS_NMSP
 			FireType* ft);
 
 		// Code generation
-		void createMemberVariableBytecode(EmitterDefinition* def, ParseTreeNode* node, bool first);
+		void createMemberVariableBytecode(ObjectDefinition* def, ParseTreeNode* node, bool first);
 
 		void generateFireTail(EmitterDefinition* def, ParseTreeNode* node, BytecodeBlock* bytecode, 
 			FireType* ft);
 
-		void generateBytecode(EmitterDefinition* def, ParseTreeNode* node, BytecodeBlock* bytecode,
-			bool reset = false);
-
-		void generateBytecode(ControllerDefinition* def, ParseTreeNode* node, BytecodeBlock* bytecode,
+		void generateBytecode(ObjectDefinition* def, ParseTreeNode* node, BytecodeBlock* bytecode,
 			bool reset = false);
 
 		// Utility functions
@@ -266,7 +259,7 @@ namespace BS_NMSP
 
 		static ParseTree* instancePtr();
 
-		static void setMachines(ScriptMachine* scriptMachine);
+		void setMachines(ScriptMachine* scriptMachine);
 
 		void addError(int line, const String& msg);
 

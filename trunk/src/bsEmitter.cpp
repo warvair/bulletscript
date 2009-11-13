@@ -79,6 +79,13 @@ bstype Emitter::getMember(int member) const
 		return mRecord->members[member + NUM_SPECIAL_MEMBERS];
 }
 // --------------------------------------------------------------------------------
+void Emitter::setState(int state)
+{
+	mRecord->curState = state;
+	mRecord->scriptState.curInstruction = 0;
+	mRecord->scriptState.stackHead = 0;
+}
+// --------------------------------------------------------------------------------
 void Emitter::runScript(float frameTime)
 {
 	if (mRecord->scriptState.suspendTime <= 0)

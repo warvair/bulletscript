@@ -48,7 +48,7 @@ ScriptMachine::ScriptMachine(Log* _log) :
 	mControllers = new DeepMemoryPool<Controller, ScriptMachine*>(32, this);
 
 	// Set up AST
-	ParseTree::setMachines(this);
+	ParseTree::instancePtr()->setMachines(this);
 }
 // --------------------------------------------------------------------------------
 ScriptMachine::~ScriptMachine()
@@ -834,8 +834,6 @@ void ScriptMachine::interpretCode(const uint32* code, size_t length, ScriptState
 		case BC_DIE:
 			{
 				FireTypeControl* ftc = static_cast<FireTypeControl*>(object);
-				assert(ftc->__type->mDieFunction != 0 &&
-					"ScriptMachine::interpretCode no die() function provided.");
 
 				assert(ftc->__object != 0 &&
 					"ScriptMachine::interpretCode ftc->object is null");
@@ -864,6 +862,15 @@ void ScriptMachine::interpretCode(const uint32* code, size_t length, ScriptState
 				CodeRecord* rec = getCodeRecord(*curState);
 				code = rec->byteCode;
 				length = rec->byteCodeSize;
+			}
+			break;
+
+		case BC_GOTOM:
+			{
+				int emitter = code[st.curInstruction + 1];
+				int state = code[st.curInstruction + 2];
+				static_cast<Controller*>(object)->setEmitterMemberState(emitter, state);
+				st.curInstruction += 3;
 			}
 			break;
 

@@ -4,8 +4,6 @@
 #include "bsScriptMachine.h"
 #include "bsFireType.h"
 
-BS_NMSP::ScriptMachine* BS_NMSP::ParseTree::mScriptMachine = 0;
-
 BS_NMSP::ParseTree* BS_NMSP::ParseTree::msInstance = 0;
 
 namespace BS_NMSP
@@ -441,7 +439,7 @@ bool ParseTree::checkConstantExpression(ControllerDefinition* def, ParseTreeNode
 	return true;
 }
 // --------------------------------------------------------------------------------
-void ParseTree::createEmitterMemberVariables(EmitterDefinition* def, ParseTreeNode* node)
+void ParseTree::createMemberVariables(ObjectDefinition* def, ParseTreeNode* node)
 {
 	if (node->getType() == PT_AssignStatement)
 	{
@@ -450,8 +448,8 @@ void ParseTree::createEmitterMemberVariables(EmitterDefinition* def, ParseTreeNo
 		// Make sure that constant expressions are valid, ie use declared variables/functions
 		if (node->getChild(1)->getType() == PT_ConstantExpression)
 		{
-			if (!checkConstantExpression(def, node->getChild(1)))
-				return;
+//			if (!checkConstantExpression(def, node->getChild(1)))
+//				return;
 		}
 
 		// Make sure it doesn't already exist
@@ -469,51 +467,12 @@ void ParseTree::createEmitterMemberVariables(EmitterDefinition* def, ParseTreeNo
 	{
 		ParseTreeNode* child = node->getChild(i);
 		if (child)
-			createEmitterMemberVariables(def, child);
+			createMemberVariables(def, child);
 	}
 }
 // --------------------------------------------------------------------------------
-void ParseTree::addEmitterMemberVariables(EmitterDefinition* def)
-{
-	// Add special members
-	def->addMemberVariable("This_X", true);
-	def->addMemberVariable("This_Y", true);
-#ifdef BS_Z_DIMENSION
-	def->addMemberVariable("This_Z", true);
-#endif
-	def->addMemberVariable("This_Angle", true);
-}
-// --------------------------------------------------------------------------------
-void ParseTree::createControllerMemberVariables(ControllerDefinition* def, ParseTreeNode* node)
-{
-	if (node->getType() == PT_AssignStatement)
-	{
-		String varName = node->getChild(0)->getStringData();
-
-		// Make sure that constant expressions are valid, ie use declared variables/functions
-		if (node->getChild(1)->getType() == PT_ConstantExpression)
-		{
-			if (!checkConstantExpression(def, node->getChild(1)))
-				return;
-		}
-
-		// Make sure it doesn't already exist
-		if (def->getMemberVariableIndex(varName) >= 0)
-			addError(node->getLine(), "Member variable '" + varName + "' already declared.");
-
-		def->addMemberVariable(varName, false);
-	}
-
-	for (int i = 0; i < ParseTreeNode::MAX_CHILDREN; ++ i)
-	{
-		ParseTreeNode* child = node->getChild(i);
-		if (child)
-			createControllerMemberVariables(def, child);
-	}
-}
-// --------------------------------------------------------------------------------
-void ParseTree::addControllerMemberVariables(ControllerDefinition* def,
-											 const MemberVariableDeclarationMap& memberDecls)
+void ParseTree::addMemberVariables(ObjectDefinition* def,
+								   const MemberVariableDeclarationMap* memberDecls)
 {
 	// Add special members
 	def->addMemberVariable("This_X", true);
@@ -525,27 +484,30 @@ void ParseTree::addControllerMemberVariables(ControllerDefinition* def,
 
 	// Add user-specified member variables (and their initial value) here.
 	// They must be added before we compile the script, predeclared essentially.
-	typedef MemberVariableDeclarationMap::const_iterator declIt;
-	std::pair<declIt, declIt> range = memberDecls.equal_range(def->getName());
-
-	int members = 0;
-	while (range.first != range.second)
+	if (memberDecls)
 	{
-		String varName = range.first->second.name;
-		if (def->getMemberVariableIndex(varName) >= 0)
+		typedef MemberVariableDeclarationMap::const_iterator declIt;
+		std::pair<declIt, declIt> range = memberDecls->equal_range(def->getName());
+
+		int members = 0;
+		while (range.first != range.second)
 		{
-			addError(0, "Member variable '" + varName + "' already declared.");
-		}
-		else
-		{
-			def->addMemberVariable(varName, true, range.first->second.value);
-			members++;
+			String varName = range.first->second.name;
+			if (def->getMemberVariableIndex(varName) >= 0)
+			{
+				addError(0, "Member variable '" + varName + "' already declared.");
+			}
+			else
+			{
+				def->addMemberVariable(varName, true, range.first->second.value);
+				members++;
+			}
+
+			range.first++;
 		}
 
-		range.first++;
+		def->setNumUserMembers(members);
 	}
-
-	def->setNumUserMembers(members);
 }
 // --------------------------------------------------------------------------------
 bool ParseTree::checkAffectorArguments(EmitterDefinition* def, ParseTreeNode* node)
@@ -715,7 +677,7 @@ void ParseTree::checkFireControllers(EmitterDefinition* def, ParseTreeNode* node
 	{
 		String ctrlName = node->getChild(0)->getStringData();
 		
-		// Make sure ctrlName exists...
+		// Make sure ctrlName exists
 		int fIndex = def->getFunctionIndex(ctrlName);
 		if (fIndex < 0)
 		{
@@ -731,7 +693,7 @@ void ParseTree::checkFireControllers(EmitterDefinition* def, ParseTreeNode* node
 		
 		ctrls++;
 
-		// ...and that we're passing the correct number of arguments to it
+		// Are we passing the correct number of arguments to it?
 		int numArguments = 0;
 		if (node->getChild(1))
 			countFunctionCallArguments(node->getChild(1), numArguments);
@@ -989,13 +951,13 @@ void ParseTree::buildFunctions(EmitterDefinition* def, ParseTreeNode* node)
 	}
 }
 // --------------------------------------------------------------------------------
-void ParseTree::createEmitterStates(EmitterDefinition* def, ParseTreeNode* node)
+void ParseTree::createStates(ObjectDefinition* def, ParseTreeNode* node)
 {
 	switch (node->getType())
 	{
 	case PT_State:
 		{
-			EmitterDefinition::State st;
+			ObjectDefinition::State st;
 
 			String stateName = node->getChild(0)->getStringData();
 			if (def->getStateIndex(stateName) >= 0)
@@ -1007,7 +969,7 @@ void ParseTree::createEmitterStates(EmitterDefinition* def, ParseTreeNode* node)
 			def->addState(stateName);
 
 			// Create CodeRecord in ScriptMachine
-			int index = createCodeRecord("Emitter", def->getName(), "State", stateName);
+			int index = createCodeRecord(def->getType(), def->getName(), "State", stateName);
 			mStateIndices.push_back(index);
 		}
 		break;
@@ -1020,7 +982,7 @@ void ParseTree::createEmitterStates(EmitterDefinition* def, ParseTreeNode* node)
 			if (def->getMemberVariableIndex(varName) >= 0)
 			{
 				int mvIndex = def->getMemberVariableIndex(varName);
-				const EmitterDefinition::MemberVariable& mv = def->getMemberVariable(mvIndex);
+				const ObjectDefinition::MemberVariable& mv = def->getMemberVariable(mvIndex);
 				if (mv.readonly)
 				{
 					addError(node->getLine(), "'" + varName + "' is read-only.");
@@ -1035,17 +997,45 @@ void ParseTree::createEmitterStates(EmitterDefinition* def, ParseTreeNode* node)
 
 			// If it isn't, it's a local, so see if we need to create it.
 			int numStates = (int) def->getNumStates();
-			EmitterDefinition::State& st = def->getState(numStates - 1);
+			ObjectDefinition::State& st = def->getState(numStates - 1);
 
-			CodeRecord* rec = getCodeRecord("Emitter", def->getName(), "State", st.name);
+			CodeRecord* rec = getCodeRecord(def->getType(), def->getName(), "State", st.name);
 
 			if (rec->getVariableIndex(varName) < 0)
 				rec->addVariable(varName);
 		}
 		break;
 
+	case PT_MemberAssignStatement:
+		{
+			// This will only be used by controller states.
+			ParseTreeNode* memNode = node->getChild(0);
+			String emitName = memNode->getStringData();
+			String memberName = memNode->getChild(0)->getStringData();
+
+			// Check that they exist
+			ControllerDefinition* cDef = static_cast<ControllerDefinition*>(def);
+			int emitIndex = cDef->getEmitterVariableIndex(emitName);
+			if (emitIndex < 0)
+			{
+				addError(node->getLine(), "Emitter '" + emitName + "' is not declared.");
+				break;
+			}
+
+			const ControllerDefinition::EmitterVariable& var = cDef->getEmitterVariable(emitIndex);
+			EmitterDefinition* eDef = mScriptMachine->getEmitterDefinition(var.emitter);
+			if (eDef->getMemberVariableIndex(memberName) < 0)
+			{
+				addError(node->getLine(), "Emitter type '" + var.emitter + 
+					"' has no member named '" + memberName + "'.");
+				break;
+			}
+		}
+		break;
+
 	case PT_FireStatement:
 		{
+			// This will only be used by emitter states.
 			// Make sure that the fire function is registered.
 			String funcName = node->getChild(0)->getStringData();
 			String funcType = node->getStringData();
@@ -1080,14 +1070,8 @@ void ParseTree::createEmitterStates(EmitterDefinition* def, ParseTreeNode* node)
 			if (node->getChild(3))
 			{
 				int numCtrls = 0;
-				checkFireControllers(def, node->getChild(3), numCtrls, ft);
+				checkFireControllers(static_cast<EmitterDefinition*>(def), node->getChild(3), numCtrls, ft);
 			}
-		}
-		break;
-
-	case PT_Property:
-		{
-			addError(node->getLine(), "Properties can only be used in functions.");
 		}
 		break;
 
@@ -1100,8 +1084,8 @@ void ParseTree::createEmitterStates(EmitterDefinition* def, ParseTreeNode* node)
 			{
 				// Local, members, globals
 				int numStates = (int) def->getNumStates();
-				EmitterDefinition::State& st = def->getState(numStates - 1);
-				CodeRecord* rec = getCodeRecord("Emitter", def->getName(), "State", st.name);
+				ObjectDefinition::State& st = def->getState(numStates - 1);
+				CodeRecord* rec = getCodeRecord(def->getType(), def->getName(), "State", st.name);
 				if (rec->getVariableIndex(varName) < 0)
 				{
 					if (def->getMemberVariableIndex(varName) < 0)
@@ -1148,154 +1132,7 @@ void ParseTree::createEmitterStates(EmitterDefinition* def, ParseTreeNode* node)
 	for (int i = 0; i < ParseTreeNode::MAX_CHILDREN; ++ i)
 	{
 		if (node->getChild(i))
-			createEmitterStates(def, node->getChild(i));
-	}
-}
-// --------------------------------------------------------------------------------
-void ParseTree::createControllerStates(ControllerDefinition* def, ParseTreeNode* node)
-{
-	switch (node->getType())
-	{
-	case PT_State:
-		{
-			ControllerDefinition::State st;
-
-			String stateName = node->getChild(0)->getStringData();
-			if (def->getStateIndex(stateName) >= 0)
-			{
-				addError(node->getLine(), "State '" + stateName + "' has already been declared.");
-				return;
-			}
-
-			def->addState(stateName);
-
-			// Create CodeRecord in ScriptMachine
-			int index = createCodeRecord("Controller", def->getName(), "State", stateName);
-			mStateIndices.push_back(index);
-		}
-		break;
-
-	case PT_AssignStatement:
-		{
-			String varName = node->getChild(0)->getStringData();
-
-			// See if it's a member or global
-			if (def->getMemberVariableIndex(varName) >= 0)
-			{
-				int mvIndex = def->getMemberVariableIndex(varName);
-				const ControllerDefinition::MemberVariable& mv = def->getMemberVariable(mvIndex);
-				if (mv.readonly)
-				{
-					addError(node->getLine(), "'" + varName + "' is read-only.");
-				}
-				break;
-			}
-			else if (mScriptMachine->getGlobalVariableIndex(varName) >= 0)
-			{
-				addError(node->getLine(), "'" + varName + "' is read-only.");
-				break;
-			}
-
-			// If it isn't, it's a local, so see if we need to create it.
-			int numStates = (int) def->getNumStates();
-			ControllerDefinition::State& st = def->getState(numStates - 1);
-
-			CodeRecord* rec = getCodeRecord("Controller", def->getName(), "State", st.name);
-
-			if (rec->getVariableIndex(varName) < 0)
-				rec->addVariable(varName);
-		}
-		break;
-
-	case PT_MemberAssignStatement:
-		{
-			ParseTreeNode* memNode = node->getChild(0);
-			String emitName = memNode->getStringData();
-			String memberName = memNode->getChild(0)->getStringData();
-
-			// Check that they exist
-			int emitIndex = def->getEmitterVariableIndex(emitName);
-			if (emitIndex < 0)
-			{
-				addError(node->getLine(), "Emitter '" + emitName + "' is not declared.");
-				break;
-			}
-
-			const ControllerDefinition::EmitterVariable& var = def->getEmitterVariable(emitIndex);
-			EmitterDefinition* eDef = mScriptMachine->getEmitterDefinition(var.emitter);
-			if (eDef->getMemberVariableIndex(memberName) < 0)
-			{
-				addError(node->getLine(), "Emitter type '" + var.emitter + 
-					"' has no member named '" + memberName + "'.");
-				break;
-			}
-		}
-		break;
-
-	case PT_Property:
-		{
-			addError(node->getLine(), "Properties can only be used in functions.");
-		}
-		break;
-
-	case PT_Identifier:
-		{
-			int pType = node->getParent()->getType();
-			String varName = node->getStringData();
-			
-			if (pType >= PT_ConstantExpression && pType <= PT_UnaryNegStatement)
-			{
-				// Local, members, globals
-				int numStates = (int) def->getNumStates();
-				ControllerDefinition::State& st = def->getState(numStates - 1);
-				CodeRecord* rec = getCodeRecord("Controller", def->getName(), "State", st.name);
-				if (rec->getVariableIndex(varName) < 0)
-				{
-					if (def->getMemberVariableIndex(varName) < 0)
-					{
-						if (mScriptMachine->getGlobalVariableIndex(varName) < 0)
-							addError(node->getLine(), "Variable '" + varName + "' is not declared.");
-					}
-				}
-			}
-		}
-		break;
-
-	case PT_BreakStatement:
-	case PT_ContinueStatement:
-		{
-			// Make sure we're inside a while statement
-			ParseTreeNode* parentNode = node->getParent();
-			bool flowFound = false;
-			while (parentNode)
-			{
-				int nodeType = parentNode->getType();
-				if (nodeType == PT_WhileStatement)
-				{
-					flowFound = true;
-					break;
-				}
-				else if (nodeType == PT_State)
-				{
-					break;
-				}
-
-				parentNode = parentNode->getParent();
-			}
-
-			if (!flowFound)
-			{
-				addError(node->getLine(), "break/continue must be used inside a while statement.");
-			}
-		}
-		break;
-
-	}
-
-	for (int i = 0; i < ParseTreeNode::MAX_CHILDREN; ++ i)
-	{
-		if (node->getChild(i))
-			createControllerStates(def, node->getChild(i));
+			createStates(def, node->getChild(i));
 	}
 }
 // --------------------------------------------------------------------------------
@@ -1310,6 +1147,7 @@ void ParseTree::_checkFireStatements(EmitterDefinition* def, ParseTreeNode* node
 		String funcName = node->getChild(0)->getStringData();
 		EmitterDefinition::Function func = def->getFunction(def->getFunctionIndex(funcName));
 		checkFunctionProperties(func.node, ft);
+		checkFunctionDieStatements(func.node, ft);
 	}
 
 	for (int i = 0; i < ParseTreeNode::MAX_CHILDREN; ++ i)
@@ -1352,6 +1190,21 @@ void ParseTree::checkFunctionProperties(ParseTreeNode* node, FireType* type)
 	{
 		if (node->getChild(i))
 			checkFunctionProperties(node->getChild(i), type);
+	}
+}
+// --------------------------------------------------------------------------------
+void ParseTree::checkFunctionDieStatements(ParseTreeNode* node, FireType* type)
+{
+	if (node->getType() == PT_DieStatement)
+	{
+		if (!type->mDieFunction)
+			addError(node->getLine(), "Type '" + type->getName() + "' has no die() function registered.");
+	}
+
+	for (int i = 0; i < ParseTreeNode::MAX_CHILDREN; ++ i)
+	{
+		if (node->getChild(i))
+			checkFunctionDieStatements(node->getChild(i), type);
 	}
 }
 // --------------------------------------------------------------------------------
@@ -1398,7 +1251,7 @@ void ParseTree::setAffectorRecalculationType(EmitterDefinition* def, Affector* a
 	}
 }
 // --------------------------------------------------------------------------------
-void ParseTree::createMemberVariableBytecode(EmitterDefinition* def, ParseTreeNode* node, bool first)
+void ParseTree::createMemberVariableBytecode(ObjectDefinition* def, ParseTreeNode* node, bool first)
 {
 	static int s_index = 0;
 	if (first)
@@ -1408,7 +1261,7 @@ void ParseTree::createMemberVariableBytecode(EmitterDefinition* def, ParseTreeNo
 	{
 		// Create 'constructor' code for this emitter.  We only need to do this if member 
 		// variables are not constants.  If they are, then we can just set the constants here.
-		EmitterDefinition::MemberVariable& memVar = def->getMemberVariable(s_index);
+		ObjectDefinition::MemberVariable& memVar = def->getMemberVariable(s_index);
 		
 		int exprType = node->getChild(1)->getType();
 		if (exprType == PT_ConstantExpression)
@@ -1498,10 +1351,10 @@ void ParseTree::generateFireTail(EmitterDefinition* def, ParseTreeNode* node,
 	}
 }
 // --------------------------------------------------------------------------------
-void ParseTree::generateBytecode(EmitterDefinition* def, ParseTreeNode* node,
+void ParseTree::generateBytecode(ObjectDefinition* def, ParseTreeNode* node,
 								 BytecodeBlock* bytecode, bool reset)
 {
-	static EmitterDefinition::State* s_curState = 0;
+	static ObjectDefinition::State* s_curState = 0;
 	static EmitterDefinition::Function* s_curFunction = 0;
 	static bool s_stateNotFunction = true;
 
@@ -1528,7 +1381,7 @@ void ParseTree::generateBytecode(EmitterDefinition* def, ParseTreeNode* node,
 				generateBytecode(def, node->getChild(1), &stateByteCode);
 				
 				// Give to ScriptMachine
-				CodeRecord* rec = getCodeRecord("Emitter", def->getName(), "State", stateName);
+				CodeRecord* rec = getCodeRecord(def->getType(), def->getName(), "State", stateName);
 				rec->byteCodeSize = stateByteCode.size();
 				rec->byteCode = new uint32[rec->byteCodeSize];
 				for (uint32 i = 0; i < rec->byteCodeSize; ++i)
@@ -1537,10 +1390,17 @@ void ParseTree::generateBytecode(EmitterDefinition* def, ParseTreeNode* node,
 		}
 		return;
 
+	case PT_Event:
+		{
+		}
+		return;
+
 	case PT_Function:
 		{
+			// This will only be used by emitters.
+			EmitterDefinition* eDef = static_cast<EmitterDefinition*>(def);
 			String funcName = node->getChild(0)->getStringData();
-			s_curFunction = &(def->getFunction(def->getFunctionIndex(funcName))); // dodgy, but ok
+			s_curFunction = &(eDef->getFunction(eDef->getFunctionIndex(funcName))); // dodgy, but ok
 			s_stateNotFunction = false;
 
 			// Generate code
@@ -1550,7 +1410,7 @@ void ParseTree::generateBytecode(EmitterDefinition* def, ParseTreeNode* node,
 				generateBytecode(def, node->getChild(2), &funcByteCode);
 				
 				// Give to ScriptMachine
-				CodeRecord* rec = getCodeRecord("Emitter", def->getName(), "Function", funcName);
+				CodeRecord* rec = getCodeRecord(def->getType(), def->getName(), "Function", funcName);
 				rec->byteCodeSize = funcByteCode.size();
 				rec->byteCode = new uint32[rec->byteCodeSize];
 				for (uint32 i = 0; i < rec->byteCodeSize; ++i)
@@ -1592,9 +1452,9 @@ void ParseTree::generateBytecode(EmitterDefinition* def, ParseTreeNode* node,
 				CodeRecord* rec;
 				int index;
 				if (s_stateNotFunction)
-					rec = getCodeRecord("Emitter", def->getName(), "State", s_curState->name);
+					rec = getCodeRecord(def->getType(), def->getName(), "State", s_curState->name);
 				else
-					rec = getCodeRecord("Emitter", def->getName(), "Function", s_curFunction->name);
+					rec = getCodeRecord(def->getType(), def->getName(), "Function", s_curFunction->name);
 
 				index = rec->getVariableIndex(varName);
 
@@ -1604,8 +1464,40 @@ void ParseTree::generateBytecode(EmitterDefinition* def, ParseTreeNode* node,
 		}
 		return;
 
+	case PT_MemberAssignStatement:
+		{
+			// This will only be used by controllers.
+			// Generate constant expression for value
+			generateBytecode(def, node->getChild(1), bytecode);
+
+			if (node->getChild(2))
+			{
+				// Generate constant expression for time
+				generateBytecode(def, node->getChild(2), bytecode);
+				bytecode->push_back(BC_SETEM2);
+			}
+			else
+			{
+				bytecode->push_back(BC_SETEM1);
+			}
+
+			String emitName = node->getChild(0)->getStringData();
+			String memName = node->getChild(0)->getChild(0)->getStringData();
+
+			ControllerDefinition* cDef = static_cast<ControllerDefinition*>(def);
+			uint32 emitIndex = cDef->getEmitterVariableIndex(emitName);
+
+			const ControllerDefinition::EmitterVariable& var = cDef->getEmitterVariable(emitIndex);
+			EmitterDefinition* eDef = mScriptMachine->getEmitterDefinition(var.emitter);
+			bytecode->push_back(emitIndex);
+			bytecode->push_back(eDef->getMemberVariableIndex(memName));
+		}
+		return;
+
 	case PT_FireStatement:
 		{
+			// This will only be used by emitters.
+			EmitterDefinition* eDef = static_cast<EmitterDefinition*>(def);
 			String funcType = node->getStringData();
 			FireType* ft = mScriptMachine->getFireType(funcType);
 
@@ -1613,7 +1505,7 @@ void ParseTree::generateBytecode(EmitterDefinition* def, ParseTreeNode* node,
 			// to be used by FireType::generateBytecode
 			ParseTreeNode* tNode = node->getChild(3);
 			if (tNode)
-				generateFireTail(def, tNode, bytecode, ft);
+				generateFireTail(eDef, tNode, bytecode, ft);
 
 			// Generate fire function arguments next
 			if (node->getChild(1))
@@ -1621,13 +1513,12 @@ void ParseTree::generateBytecode(EmitterDefinition* def, ParseTreeNode* node,
 
 			// Then generate actual BC_FIRE code
 			String funcName = node->getChild(0)->getStringData();
-			ft->generateBytecode(def, node, bytecode, funcName);
+			ft->generateBytecode(eDef, node, bytecode, funcName);
 		}
 		return;
 
 	case PT_DieStatement:
 		{
-			// We don't know whether this is a bullet or area function
 			bytecode->push_back(BC_DIE);
 		}
 		break;
@@ -1735,17 +1626,53 @@ void ParseTree::generateBytecode(EmitterDefinition* def, ParseTreeNode* node,
 
 	case PT_GotoStatement:
 		{
-			String stateName = node->getChild(0)->getStringData();
+			int gotoType = node->getChild(0)->getType();
+			if (gotoType == PT_Identifier)
+			{
+				String stateName = node->getChild(0)->getStringData();
 
-			int index = getCodeRecordIndex("Emitter", def->getName(), "State", stateName);
-			if (index >= 0)
-			{
-				bytecode->push_back(BC_GOTO);
-				bytecode->push_back((uint32) index);
+				int index = getCodeRecordIndex(def->getType(), def->getName(), "State", stateName);
+				if (index >= 0)
+				{
+					bytecode->push_back(BC_GOTO);
+					bytecode->push_back((uint32) index);
+				}
+				else
+				{
+					addError(node->getLine(), "State '" + stateName + "' has not been declared.");
+				}
 			}
-			else
+			else if (gotoType == PT_EmitterMember)
 			{
-				addError(node->getLine(), "State '" + stateName + "' has not been declared.");
+				// This will only be used by controllers.
+				String emitName = node->getChild(0)->getStringData();
+				String stateName = node->getChild(0)->getChild(0)->getStringData();
+
+				// Check that they exist
+				ControllerDefinition* cDef = static_cast<ControllerDefinition*>(def);
+				int emitIndex = cDef->getEmitterVariableIndex(emitName);
+				if (emitIndex < 0)
+				{
+					addError(node->getLine(), "Emitter '" + emitName + "' is not declared.");
+					break;
+				}
+
+				const ControllerDefinition::EmitterVariable& var = cDef->getEmitterVariable(emitIndex);
+				EmitterDefinition* eDef = mScriptMachine->getEmitterDefinition(var.emitter);
+
+				int stateIndex = eDef->getStateIndex(stateName);
+				if (stateIndex < 0)
+				{
+					addError(node->getLine(), "Emitter type '" + var.emitter + 
+						"' has no state named '" + stateName + "'.");
+					break;
+				}
+
+				bytecode->push_back(BC_GOTOM);
+				bytecode->push_back((uint32) emitIndex);
+
+				int index = getCodeRecordIndex("Emitter", var.emitter, "State", stateName);
+				bytecode->push_back((uint32) index);
 			}
 		}
 		return;
@@ -1766,6 +1693,7 @@ void ParseTree::generateBytecode(EmitterDefinition* def, ParseTreeNode* node,
 
 	case PT_SetStatement:
 		{
+			// This will only be used by emitters (functions).
 			// Generate constant expression for value
 			generateBytecode(def, node->getChild(1), bytecode);
 
@@ -1820,6 +1748,7 @@ void ParseTree::generateBytecode(EmitterDefinition* def, ParseTreeNode* node,
 
 	case PT_Property:
 		{
+			// This will only be used by emitters (functions).
 			// Get property
 			bytecode->push_back(BC_GETPROPERTY);
 			String propName = node->getStringData();
@@ -1827,6 +1756,23 @@ void ParseTree::generateBytecode(EmitterDefinition* def, ParseTreeNode* node,
 			bytecode->push_back(propIndex);
 		}
 		break;
+
+	case PT_EmitterMember:
+		{
+			// This will only be used by controllers.
+			String emitName = node->getStringData();
+			String memName = node->getChild(0)->getStringData();
+
+			bytecode->push_back(BC_GETEM);
+			
+			ControllerDefinition* cDef = static_cast<ControllerDefinition*>(def);
+			uint32 emitIndex = cDef->getEmitterVariableIndex(emitName);
+			const ControllerDefinition::EmitterVariable& var = cDef->getEmitterVariable(emitIndex);
+			EmitterDefinition* eDef = mScriptMachine->getEmitterDefinition(var.emitter);
+			bytecode->push_back(emitIndex);
+			bytecode->push_back(eDef->getMemberVariableIndex(memName));
+		}
+		return;
 
 	case PT_Identifier:
 		{
@@ -1836,420 +1782,9 @@ void ParseTree::generateBytecode(EmitterDefinition* def, ParseTreeNode* node,
 			int index;
 			CodeRecord* rec;
 			if (s_stateNotFunction)
-				rec = getCodeRecord("Emitter", def->getName(), "State", s_curState->name);
+				rec = getCodeRecord(def->getType(), def->getName(), "State", s_curState->name);
 			else
-				rec = getCodeRecord("Emitter", def->getName(), "Function", s_curFunction->name);
-			index = rec->getVariableIndex(varName);
-
-			if (index >= 0)
-			{
-				bytecode->push_back(BC_GETL);
-				bytecode->push_back((uint32) index);
-			}
-			else if (def->getMemberVariableIndex(varName) >= 0)
-			{
-				int index = def->getMemberVariableIndex(varName);
-				bytecode->push_back(BC_GETM);
-				bytecode->push_back((uint32) index);
-			}
-			else
-			{
-				int globalIndex = mScriptMachine->getGlobalVariableIndex(varName);
-				if (globalIndex >= 0)
-				{
-					bytecode->push_back(BC_GETG);
-					bytecode->push_back((uint32) globalIndex);
-				}
-				else
-				{
-					addError(node->getLine(), "Variable '" + varName + "' is not declared.");
-				}
-			}
-		}
-		break;
-
-	default:
-		break;
-
-	}
-
-	for (int i = 0; i < ParseTreeNode::MAX_CHILDREN; ++ i)
-	{
-		if (node->getChild(i))
-			generateBytecode(def, node->getChild(i), bytecode, reset);
-	}
-
-	// Bottom-up nodes
-	switch (node->getType())
-	{
-	case PT_UnaryPosStatement:
-		bytecode->push_back(BC_OP_POS);
-		break;
-
-	case PT_UnaryNegStatement:
-		bytecode->push_back(BC_OP_NEG);
-		break;
-
-	case PT_AddStatement:
-		bytecode->push_back(BC_OP_ADD);
-		break;
-
-	case PT_SubtractStatement:
-		bytecode->push_back(BC_OP_SUBTRACT);
-		break;
-
-	case PT_MultiplyStatement:
-		bytecode->push_back(BC_OP_MULTIPLY);
-		break;
-
-	case PT_DivideStatement:
-		bytecode->push_back(BC_OP_DIVIDE);
-		break;
-
-	case PT_RemainderStatement:
-		bytecode->push_back(BC_OP_REMAINDER);
-		break;
-
-	case PT_LessThanStatement:
-		bytecode->push_back(BC_OP_LT);
-		break;
-
-	case PT_LessThanEqStatement:
-		bytecode->push_back(BC_OP_LTE);
-		break;
-
-	case PT_GreaterThanStatement:
-		bytecode->push_back(BC_OP_GT);
-		break;
-
-	case PT_GreaterThanEqStatement:
-		bytecode->push_back(BC_OP_GTE);
-		break;
-
-	case PT_EqualsStatement:
-		bytecode->push_back(BC_OP_EQ);
-		break;
-
-	case PT_NotEqualsStatement:
-		bytecode->push_back(BC_OP_NEQ);
-		break;
-
-	case PT_LogicalOr:
-		bytecode->push_back(BC_LOG_OR);
-		break;
-
-	case PT_LogicalAnd:
-		bytecode->push_back(BC_LOG_AND);
-		break;
-	}
-}
-// --------------------------------------------------------------------------------
-void ParseTree::generateBytecode(ControllerDefinition* def, ParseTreeNode* node,
-								 BytecodeBlock* bytecode, bool reset)
-{
-	static ControllerDefinition::State* s_curState = 0;
-//	static ControllerDefinition::Event* s_curEvent = 0;
-	static bool s_stateNotEvent = true;
-
-	if (reset)
-	{
-		s_curState = 0;
-//		s_curFunction = 0;
-		s_stateNotEvent = true;
-	}
-
-	// Top-down nodes
-	switch (node->getType())
-	{
-	case PT_State:
-		{
-			String stateName = node->getChild(0)->getStringData();
-			s_curState = &(def->getState(def->getStateIndex(stateName))); // dodgy, but ok
-			s_stateNotEvent = true;
-
-			// Generate code
-			if (node->getChild(1))
-			{
-				BytecodeBlock stateByteCode;
-				generateBytecode(def, node->getChild(1), &stateByteCode);
-				
-				// Give to ScriptMachine
-				CodeRecord* rec = getCodeRecord("Controller", def->getName(), "State", stateName);
-				rec->byteCodeSize = stateByteCode.size();
-				rec->byteCode = new uint32[rec->byteCodeSize];
-				for (uint32 i = 0; i < rec->byteCodeSize; ++i)
-					rec->byteCode[i] = stateByteCode[i];
-			}
-		}
-		return;
-
-	case PT_Event:
-		{
-		}
-		return;
-
-	case PT_MemberList:
-		{
-//			createMemberVariableBytecode(def, node, true);
-		}
-		return;
-
-	case PT_AssignStatement:
-		{
-			String varName = node->getChild(0)->getStringData ();
-			// Make sure we're not assigning to a global
-			if (mScriptMachine->getGlobalVariableIndex(varName) >= 0)
-			{
-				// Error, globals are read-only - however it should not get this far.
-				addError(node->getLine(), varName + " is read-only.");
-				break;
-			}
-
-			// Generate value
-			generateBytecode(def, node->getChild(1), bytecode);
-
-			// Set variable - see if it is a member first
-			if (def->getMemberVariableIndex(varName) >= 0)
-			{
-				int index = def->getMemberVariableIndex(varName);
-				bytecode->push_back(BC_SETM);
-				bytecode->push_back((uint32) index);
-			}
-			else
-			{
-				// Local variable
-				CodeRecord* rec;
-				int index;
-				if (s_stateNotEvent)
-					rec = getCodeRecord("Controller", def->getName(), "State", s_curState->name);
-//				else
-//					rec = getCodeRecord("Controller", def->getName(), "Event", s_curEvent->name);
-
-				index = rec->getVariableIndex(varName);
-
-				bytecode->push_back(BC_SETL);
-				bytecode->push_back((uint32) index);
-			}
-		}
-		return;
-
-	case PT_MemberAssignStatement:
-		{
-			// Generate constant expression for value
-			generateBytecode(def, node->getChild(1), bytecode);
-
-			if (node->getChild(2))
-			{
-				// Generate constant expression for time
-				generateBytecode(def, node->getChild(2), bytecode);
-				bytecode->push_back(BC_SETEM2);
-			}
-			else
-			{
-				bytecode->push_back(BC_SETEM1);
-			}
-
-			String emitName = node->getChild(0)->getStringData();
-			String memName = node->getChild(0)->getChild(0)->getStringData();
-			uint32 emitIndex = def->getEmitterVariableIndex(emitName);
-
-			const ControllerDefinition::EmitterVariable& var = def->getEmitterVariable(emitIndex);
-			EmitterDefinition* eDef = mScriptMachine->getEmitterDefinition(var.emitter);
-			bytecode->push_back(emitIndex);
-			bytecode->push_back(eDef->getMemberVariableIndex(memName));
-		}
-		return;
-
-	case PT_IfStatement:
-		{
-			// Generate test expression
-			generateBytecode(def, node->getChild(0), bytecode);
-
-			bytecode->push_back(BC_JZ);
-			size_t jumpPos = bytecode->size();
-			bytecode->push_back(0); // dummy jump address
-
-			// Generate 'if' code
-			if (node->getChild(1))
-				generateBytecode(def, node->getChild(1), bytecode);
-
-			// Generate 'else' code
-			if (node->getChild(2))
-			{
-				// Jump to end if we're coming from 'if'
-				bytecode->push_back(BC_JUMP);
-				size_t endJumpPos = bytecode->size();
-				bytecode->push_back(0); // dummy jump address
-
-				(*bytecode)[jumpPos] = (uint32) bytecode->size();
-				generateBytecode(def, node->getChild(2), bytecode);
-				(*bytecode)[endJumpPos] = (uint32) bytecode->size();
-			}
-			else
-			{
-				(*bytecode)[jumpPos] = (uint32) bytecode->size();
-			}
-		}
-		return;
-
-	case PT_BreakStatement:
-		{
-			// Find the flow structure that we want to break out of, and find where it ends,
-			// then unconditional jump to there.
-			bytecode->push_back(BC_JUMP);
-			uint32 jumpPosition = (uint32) bytecode->size();
-			bytecode->push_back(0); // dummy
-			std::list<uint32>& breaks = mBreakLocations.back();
-			breaks.push_back(jumpPosition);
-		}
-		return;
-
-	case PT_ContinueStatement:
-		{
-			// Find the flow structure that we want to jump back to, and find where it starts,
-			// then unconditional jump to there.
-			bytecode->push_back(BC_JUMP);
-			uint32 jumpPosition = (uint32) bytecode->size();
-			bytecode->push_back(0); // dummy
-			std::list<uint32>& continues = mContinueLocations.back();
-			continues.push_back(jumpPosition);
-		}
-		return;
-
-	case PT_WhileStatement:
-		{
-			// Start new break/continue lists
-			mBreakLocations.push_back(std::list<uint32>());
-			mContinueLocations.push_back(std::list<uint32>());
-
-			// Generate test expression
-			size_t startJumpPos = bytecode->size();
-			generateBytecode(def, node->getChild(0), bytecode);
-
-			bytecode->push_back(BC_JZ);
-			size_t endJumpPos = bytecode->size();
-			bytecode->push_back(0); // dummy jump address
-
-			// Generate code
-			if (node->getChild(1))
-				generateBytecode(def, node->getChild(1), bytecode);
-
-			bytecode->push_back(BC_JUMP);
-			bytecode->push_back(startJumpPos);
-
-			uint32 endPosition = (uint32) bytecode->size();
-			(*bytecode)[endJumpPos] = endPosition;	
-
-			// Now fill in breaks and continues
-			std::list<uint32>& breaks = mBreakLocations.back();
-			while (!breaks.empty())
-			{
-				uint32 location = breaks.back();
-				breaks.pop_back();
-				(*bytecode)[location] = endPosition;
-			}
-			mBreakLocations.pop_back();
-
-			std::list<uint32>& continues = mContinueLocations.back();
-			while (!continues.empty())
-			{
-				uint32 location = continues.back();
-				continues.pop_back();
-				(*bytecode)[location] = startJumpPos;
-			}
-			mContinueLocations.pop_back();
-		}
-		return;
-
-	case PT_GotoStatement:
-		{
-			String stateName = node->getChild(0)->getStringData();
-
-			int index = getCodeRecordIndex("Controller", def->getName(), "State", stateName);
-			if (index >= 0)
-			{
-				bytecode->push_back(BC_GOTO);
-				bytecode->push_back((uint32) index);
-			}
-			else
-			{
-				addError(node->getLine(), "State '" + stateName + "' has not been declared.");
-			}
-		}
-		return;
-
-	case PT_WaitStatement:
-		{
-			if (!node->getChild(0))
-			{
-				// Error, must have arguments
-				addError(node->getLine(), "Wait statement has no arguments.");
-				return;
-			}
-			
-			generateBytecode(def, node->getChild(0), bytecode);
-			bytecode->push_back(BC_WAIT);
-		}
-		return;
-
-	case PT_FunctionCall:
-		{
-			// Generate arguments first
-			if (node->getChild(1))
-				generateBytecode(def, node->getChild(1), bytecode);
-
-			String funcName = node->getChild(0)->getStringData();
-
-			// See if it's a native function
-			int index = mScriptMachine->getNativeFunctionIndex(funcName);
-
-			if (index < 0)
-			{
-				addError(node->getLine(), "Function '" + funcName + "' not found.");
-
-				return;
-			}
-
-			bytecode->push_back(BC_CALL);
-			bytecode->push_back((uint32) index);
-		}
-		return;
-
-	case PT_Constant:
-		{
-			// Push value
-			bstype val = node->getValueData();
-			bytecode->push_back(BC_PUSH);
-			bytecode->push_back(BS_TYPE_TO_UINT32(val));
-		}
-		break;
-
-	case PT_EmitterMember:
-		{
-			String emitName = node->getStringData();
-			String memName = node->getChild(0)->getStringData();
-
-			bytecode->push_back(BC_GETEM);
-			uint32 emitIndex = def->getEmitterVariableIndex(emitName);
-			const ControllerDefinition::EmitterVariable& var = def->getEmitterVariable(emitIndex);
-			EmitterDefinition* eDef = mScriptMachine->getEmitterDefinition(var.emitter);
-			bytecode->push_back(emitIndex);
-			bytecode->push_back(eDef->getMemberVariableIndex(memName));
-
-		}
-		return;
-
-	case PT_Identifier:
-		{
-			String varName = node->getStringData();
-
-			// Check for local, then member, then global
-			int index;
-			CodeRecord* rec;
-			if (s_stateNotEvent)
-				rec = getCodeRecord("Controller", def->getName(), "State", s_curState->name);
-//			else
-//				rec = getCodeRecord("Controller", def->getName(), "Event", s_curEvent->name);
+				rec = getCodeRecord(def->getType(), def->getName(), "Function", s_curFunction->name);
 			index = rec->getVariableIndex(varName);
 
 			if (index >= 0)
@@ -2358,17 +1893,15 @@ void ParseTree::generateBytecode(ControllerDefinition* def, ParseTreeNode* node,
 EmitterDefinition* ParseTree::createEmitterDefinition(ParseTreeNode* node)
 {
 	String name = node->getStringData();
-
-	// Create definition
 	EmitterDefinition* def = new EmitterDefinition(name);
 
 	// Create pre-declared member variables first
-	addEmitterMemberVariables(def);
+	addMemberVariables(def);
 
 	// Create script-declared member variables
 	bool hasMembers = node->getChild(PT_EmitterMemberNode) ? true : false;
 	if (hasMembers)
-		createEmitterMemberVariables(def, node->getChild(PT_EmitterMemberNode));
+		createMemberVariables(def, node->getChild(PT_EmitterMemberNode));
 
 	if (mNumErrors > 0)
 	{
@@ -2414,7 +1947,7 @@ EmitterDefinition* ParseTree::createEmitterDefinition(ParseTreeNode* node)
 
 	// Create the states
 	mStateIndices.clear();
-	createEmitterStates(def, node->getChild(PT_EmitterStateNode));
+	createStates(def, node->getChild(PT_EmitterStateNode));
 	
 	if (mNumErrors > 0)
 	{
@@ -2498,12 +2031,12 @@ ControllerDefinition* ParseTree::createControllerDefinition(ParseTreeNode* node,
 	ControllerDefinition* def = new ControllerDefinition(name);
 
 	// Create pre-declared member variables first
-	addControllerMemberVariables(def, memberDecls);
+	addMemberVariables(def, &memberDecls);
 
 	// Create script-declared member variables
 	bool hasMembers = node->getChild(PT_ControllerMemberNode) ? true : false;
 	if (hasMembers)
-		createControllerMemberVariables(def, node->getChild(PT_ControllerMemberNode));
+		createMemberVariables(def, node->getChild(PT_ControllerMemberNode));
 
 	if (mNumErrors > 0)
 	{
@@ -2548,7 +2081,7 @@ ControllerDefinition* ParseTree::createControllerDefinition(ParseTreeNode* node,
 */
 	// Create the states
 	mStateIndices.clear();
-	createControllerStates(def, node->getChild(PT_ControllerStateNode));
+	createStates(def, node->getChild(PT_ControllerStateNode));
 	
 	if (mNumErrors > 0)
 	{

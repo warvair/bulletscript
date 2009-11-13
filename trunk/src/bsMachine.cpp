@@ -4,7 +4,8 @@ namespace BS_NMSP
 {
 
 // --------------------------------------------------------------------------------
-Machine::Machine()
+Machine::Machine() :
+	mNumErrors(0)
 {
 	mScriptMachine = new ScriptMachine(&mLog);
 	mTypeManager = new TypeManager(&mLog, mScriptMachine);
@@ -22,6 +23,11 @@ const Log& Machine::getLog() const
 	return mLog;
 }
 // --------------------------------------------------------------------------------
+int Machine::getErrorCount() const
+{
+	return mNumErrors;
+}
+// --------------------------------------------------------------------------------
 void Machine::registerGlobalVariable(const String& name, bstype initialValue)
 {
 	mScriptMachine->registerGlobalVariable(name, initialValue);
@@ -34,7 +40,9 @@ void Machine::setGlobalVariableValue(const String& name, bstype value)
 // --------------------------------------------------------------------------------
 int Machine::compileScript(uint8* buffer, size_t bufferSize)
 {
-	return mScriptMachine->compileScript(buffer, bufferSize);
+	int compileErrors = mScriptMachine->compileScript(buffer, bufferSize);
+	mNumErrors += compileErrors;
+	return compileErrors;
 }
 // --------------------------------------------------------------------------------
 void Machine::createType(const String& type)
@@ -76,7 +84,11 @@ void Machine::setDieFunction(const String& type, DieFunction func)
 // --------------------------------------------------------------------------------
 void Machine::registerProperty(const String& type, const String& name, SetFunction set, GetFunction get)
 {
-	mTypeManager->registerProperty(type, name, set, get);
+	if (!mTypeManager->registerProperty(type, name, set, get))
+	{
+		mLog.addEntry("Error: couldn't register property '" + name + "' for type '" + type + "'.");
+		mNumErrors++;
+	}
 }
 // --------------------------------------------------------------------------------
 void Machine::registerAffector(const String& type, const String& name, AffectorFunction func)
@@ -111,9 +123,6 @@ void Machine::declareMemberVariable(const String& ctrl, const String& var, bstyp
 // --------------------------------------------------------------------------------
 void Machine::update(float frameTime)
 {
-	// Tie to update rate?
-	// ...
-
 	mScriptMachine->updateControllers(frameTime);
 	mScriptMachine->updateEmitters(frameTime);
 }
