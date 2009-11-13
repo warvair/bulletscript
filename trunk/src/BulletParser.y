@@ -417,13 +417,39 @@ emitter_list
 	;
 			
 emitter
-	: identifier '=' KEYWORD_EMITTER function_call ';'
+	: identifier '=' KEYWORD_EMITTER identifier ';'
 		{
 			$$ = AST->createNode(PT_Emitter, yylineno);
 			$$->setChild(0, $1);
 			$$->setChild(1, $4);
 		}
-	;		
+	| identifier '=' KEYWORD_EMITTER identifier '(' ')' ';'
+		{
+			$$ = AST->createNode(PT_Emitter, yylineno);
+			$$->setChild(0, $1);
+			$$->setChild(1, $4);
+		}
+	| identifier '=' KEYWORD_EMITTER identifier '(' emitter_variable_arg_list ')' ';'
+		{
+			$$ = AST->createNode(PT_Emitter, yylineno);
+			$$->setChild(0, $1);
+			$$->setChild(1, $4);
+			$$->setChild(2, $6);
+		}
+	;
+	
+emitter_variable_arg_list
+	: signed_constant
+		{
+			$$ = $1;
+		}
+	| emitter_variable_arg_list ',' signed_constant
+		{
+			$$ = AST->createNode(PT_EmitterArgList, yylineno);
+			$$->setChild(0, $1);
+			$$->setChild(1, $3);
+		}
+	;
 	
 function_list
 	: function
@@ -1360,7 +1386,7 @@ primary_expression
 		{
 			$$ = $1;
 		}
-	| constant
+	| unsigned_constant
 		{
 			$$ = $1;
 		}
@@ -1435,7 +1461,23 @@ emitter_member
 		}
 	;
 
-constant
+signed_constant
+	: unsigned_constant
+		{
+			$$ = $1;
+		}
+	| '+' unsigned_constant
+		{
+			$$ = $1;
+		}
+	| '-' unsigned_constant
+		{
+			$2->setValue(-($2->getValueData()));
+			$$ = $2;
+		}
+	;
+
+unsigned_constant
 	: constant_integer
 		{
 			$$ = $1;

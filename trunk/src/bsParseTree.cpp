@@ -629,7 +629,7 @@ void ParseTree::createEmitterVariables(ControllerDefinition* def, ParseTreeNode*
 		String varName = node->getChild(0)->getStringData();
 
 		ParseTreeNode* emitNode = node->getChild(1);
-		String emitType = emitNode->getChild(0)->getStringData();
+		String emitType = emitNode->getStringData();
 		
 		// Make sure that a) the variable name doesn't exist, and that b) the emitter name does
 		if (def->getEmitterVariableIndex(varName) >= 0)
@@ -644,42 +644,22 @@ void ParseTree::createEmitterVariables(ControllerDefinition* def, ParseTreeNode*
 			return;
 		}
 
-		bstype x = bsvalue0, y = bsvalue0;
-#ifdef BS_Z_DIMENSION
-		bstype z = bsvalue0;
-#endif
-		bstype angle = bsvalue0;
-		ParseTreeNode* emitArgsNode = emitNode->getChild(1);
+		ParseTreeNode* emitArgsNode = node->getChild(2);
+		bstype emitArgs[NUM_SPECIAL_MEMBERS] = {bsvalue0};
+
 		if (emitArgsNode)
 		{
 			int numArguments = 0;
-			countFunctionCallArguments(emitArgsNode, numArguments);
+			getEmitterVariableArguments(emitArgsNode, emitArgs, numArguments);
 
 			if (numArguments > NUM_SPECIAL_MEMBERS)
-				addError(node->getLine(), "Too many emitter arguments given, ignoring redundant ones.");
-
-			// Member variables have been specified
-			// If there are more than 3, give a warning but compile.
-			// This will require construction code.
-			// ...
-
-			// We run constructor code for member variables, then need code which pushes
-			// x/y/angle onto stack for each emitter, then take stack.  This does mean
-			// that if we have more than 10 guns we will hit the stack limit, though.
-			// Would be reasonable to only allow constants, rather than expressions.
-			// Answer here is to create the emitters, and have the bytecode use the 'set-emitter-member'
-			// opcode to set their values.
-			
-			// So creation order is: create member vars, create emitters, run member bytecode, run
-			// emitter bytecode.
+			{
+				// Warning, extra arguments ignored
+				// ...
+			}
 		}
 
-#ifdef BS_Z_DIMENSION
-		def->addEmitterVariable(varName, emitType, x, y, z, angle);
-#else
-		def->addEmitterVariable(varName, emitType, x, y, angle);
-#endif
-
+		def->addEmitterVariable(varName, emitType, emitArgs);
 	}
 
 	for (int i = 0; i < ParseTreeNode::MAX_CHILDREN; ++ i)
@@ -704,6 +684,26 @@ void ParseTree::countFunctionCallArguments(ParseTreeNode* node, int& numArgument
 	{
 		if (node->getChild(i))
 			countFunctionCallArguments(node->getChild(i), numArguments);
+	}
+}
+// --------------------------------------------------------------------------------
+void ParseTree::getEmitterVariableArguments(ParseTreeNode* node, 
+											bstype emitArgs[NUM_SPECIAL_MEMBERS],
+											int& numArguments)
+{
+	int nodeType = node->getType();
+
+	if (nodeType == PT_Constant)
+	{
+		if (numArguments < NUM_SPECIAL_MEMBERS)
+			emitArgs[numArguments] = node->getValueData();
+		numArguments++;
+	}
+
+	for (int i = 0; i < ParseTreeNode::MAX_CHILDREN; ++ i)
+	{
+		if (node->getChild(i))
+			getEmitterVariableArguments(node->getChild(i), emitArgs, numArguments);
 	}
 }
 // --------------------------------------------------------------------------------
@@ -2485,16 +2485,6 @@ EmitterDefinition* ParseTree::createEmitterDefinition(ParseTreeNode* node)
 	}
 	else
 	{
-		//def->print(std::cerr);
-/*
-		for (int i = 0; i < mScriptMachine->getNumCodeRecords(); ++i)
-		{
-			CodeRecord* rec = mScriptMachine->getCodeRecord(i);
-			for (size_t j = 0; j < rec->byteCodeSize; ++j)
-				std::cout << rec->byteCode[j] << std::endl;
-			std::cout << std::endl;
-		}
-*/
 		return def;
 	}
 }
@@ -2602,18 +2592,6 @@ ControllerDefinition* ParseTree::createControllerDefinition(ParseTreeNode* node,
 	}
 	else
 	{
-		//def->print(std::cerr);
-
-		for (int i = 0; i < mScriptMachine->getNumCodeRecords(); ++i)
-		{
-			CodeRecord* rec = mScriptMachine->getCodeRecord(i);
-			std::cout << rec->getName() << std::endl;
-			std::cout << "---------------------------" << std::endl;
-			for (size_t j = 0; j < rec->byteCodeSize; ++j)
-				std::cout << rec->byteCode[j] << std::endl;
-			std::cout << std::endl;
-		}
-
 		return def;
 	}
 }
@@ -2662,6 +2640,18 @@ void ParseTree::createDefinitions(ParseTreeNode* node,
 	// controllers rely on emitters
 	createEmitterDefinitions(node);
 	createControllerDefinitions(node, memberDecls);
+
+/*
+	for (int i = 0; i < mScriptMachine->getNumCodeRecords(); ++i)
+	{
+		CodeRecord* rec = mScriptMachine->getCodeRecord(i);
+		std::cout << rec->getName() << std::endl;
+		std::cout << "---------------------------" << std::endl;
+		for (size_t j = 0; j < rec->byteCodeSize; ++j)
+			std::cout << rec->byteCode[j] << std::endl;
+		std::cout << std::endl;
+	}
+*/
 }
 // --------------------------------------------------------------------------------
 String ParseTree::getCodeRecordName(const String& type, const String& typeName,

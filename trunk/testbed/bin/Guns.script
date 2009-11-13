@@ -4,7 +4,8 @@ controller Boss1
 	time = 0;
 
 	// emitters - all these values are offsets from controller values
-	mainGun = emitter Test(0, 0, 0);
+	left = emitter Test(-32, 0, 0);
+	right = emitter Test(32, 0, 0);
 	
 	// events
 	Damaged = event(newHealth)
@@ -16,7 +17,7 @@ controller Boss1
 	Stage1 = state
 	{
 		wait(1);
-		$mainGun.This_Angle = {-90, 5};
+		$left.This_Angle = {-90, 5};
 		wait(5);
 		goto Stage2;
 	}

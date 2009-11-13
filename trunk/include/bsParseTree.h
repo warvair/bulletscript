@@ -37,6 +37,7 @@ namespace BS_NMSP
 		PT_AffectorCall,
 		PT_EmitterList,
 		PT_Emitter,
+		PT_EmitterArgList,
 		PT_FunctionList,
 		PT_Function,
 		PT_FunctionArg,
@@ -248,6 +249,9 @@ namespace BS_NMSP
 		bool checkConstantExpression(ControllerDefinition* def, ParseTreeNode* node);
 
 		void countFunctionCallArguments(ParseTreeNode* node, int& numArguments);
+
+		void getEmitterVariableArguments(ParseTreeNode* node, bstype emitArgs[NUM_SPECIAL_MEMBERS],
+			int& numArguments);
 
 	protected:
 
