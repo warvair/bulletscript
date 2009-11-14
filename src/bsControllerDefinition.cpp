@@ -51,6 +51,39 @@ int ControllerDefinition::getNumEmitterVariables() const
 	return (int) mEmitterVariables.size();
 }
 // --------------------------------------------------------------------------------
+ControllerDefinition::Event& ControllerDefinition::addEvent(const String& name, ParseTreeNode* node)
+{
+	Event evt;
+	evt.name = name;
+	evt.numArguments = 0;
+	evt.node = node;
+
+	mEvents.push_back(evt);
+
+	return mEvents[getNumEvents() - 1];
+}
+// --------------------------------------------------------------------------------
+ControllerDefinition::Event& ControllerDefinition::getEvent(int index)
+{
+	return mEvents[index];
+}
+// --------------------------------------------------------------------------------
+int ControllerDefinition::getEventIndex(const String& name) const
+{
+	for (int i = 0; i < getNumEvents(); ++i)
+	{
+		if (mEvents[i].name == name)
+			return i;
+	}
+
+	return -1;
+}
+// --------------------------------------------------------------------------------
+int ControllerDefinition::getNumEvents() const
+{
+	return (int) mEvents.size();
+}
+// --------------------------------------------------------------------------------
 ScriptRecord* ControllerDefinition::createScriptRecord(ScriptMachine* sm)
 {
 	ScriptRecord* record = new ScriptRecord(mMaxLocals);

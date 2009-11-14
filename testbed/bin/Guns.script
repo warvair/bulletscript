@@ -4,23 +4,22 @@ controller Boss1
 	time = 3;
 
 	// emitters - all these values are offsets from controller values
-	left = emitter Flower(-128, 0, 0);
-	right = emitter Flower(128, 0, 0);
-	up = emitter Flower(0, -128, 0);
-	down = emitter Flower(0, 128, 0);
+	left = emitter Flower(-192, 0, 0);
+	right = emitter Flower(192, 0, 0);
 	
 	// events
 	Damaged = event(newHealth)
 	{
+		time = 2;
+		goto Stage1;
 	}
-
 
 	// states
 	Stage1 = state
 	{
 		wait(time);
-		$left.This_X += {64, 5};
-		$right.This_X -= {64, 5};
+		$left.This_X += {96, 5};
+		$right.This_X -= {96, 5};
 		wait(5);
 		goto Stage2;
 	}
@@ -28,10 +27,21 @@ controller Boss1
 	Stage2 = state
 	{
 		wait(time);
-		$left.This_X -= {64, 5};
-		$right.This_X += {64, 5};
+		$left.This_X -= {96, 5};
+		$right.This_X += {96, 5};
 		wait(5);
 		goto Stage1;
+	}
+
+	Stage3 = state
+	{
+		wait(time);
+		$left.This_Y -= {64, 5};
+		$right.This_Y += {64, 5};
+		wait(5);
+		$left.This_Y += {64, 5};
+		$right.This_Y -= {64, 5};
+		wait(5);
 	}
 }
 

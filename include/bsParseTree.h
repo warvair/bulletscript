@@ -227,8 +227,18 @@ namespace BS_NMSP
 
 		void checkFunctionDieStatements(ParseTreeNode* node, FireType* type);
 
+		// Events
+		void addEventArguments(ControllerDefinition* def, ParseTreeNode* node, 
+			ControllerDefinition::Event& evt);	
+
+		void addEvents(ControllerDefinition* def, ParseTreeNode* node);
+
+		void buildEvents(ControllerDefinition* def, ParseTreeNode* node);
+
 		// States
-		void createStates(ObjectDefinition* def, ParseTreeNode* node);
+		void addStates(ObjectDefinition* def, ParseTreeNode* node);
+
+		void buildStates(ObjectDefinition* def, ParseTreeNode* node);
 
 		// Fire statements
 		void _checkFireStatements(EmitterDefinition* def, ParseTreeNode* node, const String& type);
@@ -242,10 +252,10 @@ namespace BS_NMSP
 		void createMemberVariableBytecode(ObjectDefinition* def, ParseTreeNode* node, bool first);
 
 		void generateFireTail(EmitterDefinition* def, ParseTreeNode* node, BytecodeBlock* bytecode, 
-			FireType* ft);
+			FireType* ft, CodeBlockType codeType);
 
 		void generateBytecode(ObjectDefinition* def, ParseTreeNode* node, BytecodeBlock* bytecode,
-			bool reset = false);
+			CodeBlockType codeType, bool reset = false);
 
 		// Utility functions
 		bool checkConstantExpression(ObjectDefinition* def, CodeBlockType type, const String& name,
@@ -312,6 +322,8 @@ namespace BS_NMSP
 		std::list<int> mStateIndices;
 
 		std::list<int> mFunctionIndices;
+
+		std::list<int> mEventIndices;
 
 		std::list<std::list<uint32> > mBreakLocations;
 
