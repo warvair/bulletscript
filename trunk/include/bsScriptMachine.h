@@ -19,6 +19,12 @@ namespace BS_NMSP
 {
 	class TypeManager;
 
+	enum ScriptStatus
+	{
+		ScriptSuspended,
+		ScriptFinished
+	};
+
 	class ScriptMachine
 	{
 		friend class Machine;
@@ -65,7 +71,7 @@ namespace BS_NMSP
 		DeepMemoryPool<Controller, ScriptMachine*>* mControllers;
 
 		// Events
-		// ...
+//		DeepMemoryPool<ScriptState, int>* mEventScriptStates;
 
 		// Global property list
 		std::vector<String> mProperties;
@@ -163,14 +169,14 @@ namespace BS_NMSP
 
 		// Script state processing
 #ifdef BS_Z_DIMENSION
-		void interpretCode(const uint32* code, size_t length, ScriptState& st, int* curState, 
+		int interpretCode(const uint32* code, size_t length, ScriptState& st, int* curState, 
 			void* object, bstype x, bstype y, bstype z, bstype* members, bool loop);
 #else
-		void interpretCode(const uint32* code, size_t length, ScriptState& st, int* curState, 
+		int interpretCode(const uint32* code, size_t length, ScriptState& st, int* curState, 
 			void* object, bstype x, bstype y, bstype* members, bool loop);
 #endif
 
-		void interpretCode(const uint32* code, size_t length, ScriptState& st, bstype* members = 0);
+		int interpretCode(const uint32* code, size_t length, ScriptState& st, bstype* members = 0);
 
 		void processScriptRecord(ScriptRecord* gsr, void* object);
 

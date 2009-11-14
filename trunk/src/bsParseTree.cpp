@@ -2413,6 +2413,20 @@ ControllerDefinition* ParseTree::createControllerDefinition(ParseTreeNode* node,
 	def->setInitialState(*(mStateIndices.begin()));
 	def->setMaxLocalVariables(maxLocals);
 
+	// Locals for events
+	maxLocals = -1;
+	sit = mEventIndices.begin();
+	while (sit != mEventIndices.end())
+	{
+		CodeRecord* rec = mScriptMachine->getCodeRecord(*sit);
+		int numVars = rec->getNumVariables();
+		if (maxLocals < numVars)
+			maxLocals = numVars;
+		++sit;
+	}
+
+	def->setMaxEventLocalVariables(maxLocals);
+
 	// Initialise member vars
 	if (hasMembers)
 		generateBytecode(def, node->getChild(PT_ControllerMemberNode), 0, CBT_None, true);

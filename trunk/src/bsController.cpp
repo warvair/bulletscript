@@ -9,15 +9,14 @@ namespace BS_NMSP
 // --------------------------------------------------------------------------------
 Controller::Controller(ScriptMachine* machine) :
 	mScriptMachine(machine),
+	mMaxEventLocals(0),
 	mRecord(0)
 {
 }
 // --------------------------------------------------------------------------------
 Controller::~Controller()
 {
-	for (size_t i = 0; i < mEmitters.size(); ++i)
-		mScriptMachine->destroyEmitter(mEmitters[i].emitter);
-
+	onRelease();
 	delete mRecord;
 }
 // --------------------------------------------------------------------------------
@@ -73,6 +72,8 @@ void Controller::setDefinition(ControllerDefinition* def)
 
 		mEvents.push_back(ctrlEvt);
 	}
+
+	mMaxEventLocals = def->getMaxEventLocalVariables();
 }
 // --------------------------------------------------------------------------------
 void Controller::setX(bstype x)
@@ -157,13 +158,20 @@ void Controller::setEmitterMemberState(int emitter, int state)
 // --------------------------------------------------------------------------------
 void Controller::raiseEvent(const String& evt, const bstype* args)
 {
-	std::cout << "evt " << evt << " raised" << std::endl;
-
 	for (size_t i = 0; i < mEvents.size(); ++i)
 	{
 		if (mEvents[i].name == evt)
 		{
-//			mScriptMachine->
+			ScriptState state;
+
+			if (mMaxEventLocals > 0)
+				state.locals = new bstype[mMaxEventLocals];
+			
+			mScriptMachine->interpretCode(mEvents[i].code->byteCode, mEvents[i].code->byteCodeSize,
+				state, &mRecord->curState, this, mRecord->members[Member_X], mRecord->members[Member_Y], 
+				mRecord->members, false);
+
+			delete[] state.locals;
 			return;
 		}
 	}
@@ -179,7 +187,7 @@ void Controller::runScript(float frameTime)
 // --------------------------------------------------------------------------------
 void Controller::update(float frameTime)
 {
-	// Update special MemberControllers.
+	// Update special MemberControllers
 	for (size_t i = 0; i < mEmitters.size(); ++i)
 	{
 		for (int j = 0; j < NUM_SPECIAL_MEMBERS; ++j)

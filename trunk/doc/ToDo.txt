@@ -1,12 +1,6 @@
-events: what happens if we call an event before a previous call of it has finished?
-	need pool of ScriptStates, preallocated with max locals
-	could maybe make it so that you cannot wait in an event, but you'd still be able to raise other
-	events from an event.
+quicker rendering:
 
-
-
-tidy up parsing/semantic checking:
-	need a generateConstantExpression() function for bytecodegen
+events cannot suspend (ie wait), in order to make event processing much simpler.  still, this is not ideal.
 
 To make not being able to use member vars in functions more logical, maybe remove functions from emitter
 scope?  There's no real reason they should be there.  Also means that different emitters can use the same
