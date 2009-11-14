@@ -4,61 +4,48 @@ controller Boss1
 	time = 3;
 
 	// emitters - all these values are offsets from controller values
-	left = emitter Flower(-192, 0, 0);
-	right = emitter Flower(192, 0, 0);
-	left1 = emitter Flower(-224, 0, 0);
-	right1 = emitter Flower(224, 0, 0);
+	left = emitter Test(0, 0, 0);
 	
 	// events
 	Damaged = event(newHealth)
 	{
-		time = 2;
-		goto Stage3;
+		if (newHealth < 0.5)
+		{
+			goto Stage2;
+		}
+		else
+		{
+			goto Stage3;
+		}
 	}
 
 	// states
 	Stage1 = state
 	{
-		wait(time);
-		$left.This_X += {96, 5};
-		$right.This_X -= {96, 5};
-		wait(5);
-		goto Stage2;
+		wait(3);
+		raise Damaged(0.1);
 	}
 
 	Stage2 = state
 	{
-		wait(time);
-		$left.This_X -= {96, 5};
-		$right.This_X += {96, 5};
-		wait(5);
-		goto Stage1;
+		wait(2);
+		$left.time = 0.5;
+		raise Damaged(0.7);
 	}
 
 	Stage3 = state
 	{
-		$left.This_Y -= {128, 2};
-		$right.This_Y += {128, 2};
-		wait(2);
-
-		while (1)
-		{
-			$left.This_Y += {256, 2};
-			$right.This_Y -= {256, 2};
-			wait(2);
-			$left.This_Y -= {256, 2};
-			$right.This_Y += {256, 2};
-			wait(2);
-		}
+		wait(1);
+		$left.time = 1.2;
+		raise Damaged(0.2);
 	}
 }
 
 emitter Test
 {
-	time = 0.1;
+	time = 1;
 	Stage1 = state 
 	{
-		x = 5;
 		fireA bullet(This_Angle, 100);
 		wait(time);
 	}

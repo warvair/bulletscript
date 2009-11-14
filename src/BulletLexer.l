@@ -42,6 +42,7 @@ BINARY    	[0-1]
 "function"						{ return (KEYWORD_FUNCTION); }
 "state"							{ return (KEYWORD_STATE); }
 "event"							{ return (KEYWORD_EVENT); }
+"raise"							{ return (KEYWORD_RAISE); }
 "while"							{ return (KEYWORD_WHILE); }
 "break"							{ return (KEYWORD_BREAK); }
 "continue"						{ return (KEYWORD_CONTINUE); }

@@ -1,6 +1,5 @@
-quicker rendering:
-
-events cannot suspend (ie wait), in order to make event processing much simpler.  still, this is not ideal.
+quicker rendering
+	can use point sprites but then they must all use the same size
 
 To make not being able to use member vars in functions more logical, maybe remove functions from emitter
 scope?  There's no real reason they should be there.  Also means that different emitters can use the same

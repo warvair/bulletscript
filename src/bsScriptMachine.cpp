@@ -866,6 +866,21 @@ int ScriptMachine::interpretCode(const uint32* code, size_t length, ScriptState&
 			}
 			break;
 
+		case BC_RAISE:
+			{
+				int evtIndex = code[st.curInstruction + 1];
+				int numArgs = code[st.curInstruction + 2];
+
+				Controller* ctrl = static_cast<Controller*>(object);
+				
+				// If the event changes the state then we want to bail now
+				if (ctrl->raiseEvent(evtIndex, &st.stack[st.stackHead - numArgs]))
+					return ScriptFinished;
+
+				st.curInstruction += 3;
+			}
+			break;
+
 		case BC_CALL:
 			{
 				int function = code[st.curInstruction + 1];
@@ -885,6 +900,15 @@ int ScriptMachine::interpretCode(const uint32* code, size_t length, ScriptState&
 				CodeRecord* rec = getCodeRecord(*curState);
 				code = rec->byteCode;
 				length = rec->byteCodeSize;
+			}
+			break;
+
+		case BC_GOTOE:
+			{
+				int newState = code[st.curInstruction + 1];
+//				std::cout << "gotoe " << newState << std::endl;
+				static_cast<Controller*>(object)->setState(newState);
+				st.curInstruction += 2;
 			}
 			break;
 

@@ -40,11 +40,13 @@ namespace BS_NMSP
 		BC_LOG_OR,
 		BC_CALL,
 		BC_GOTO,
+		BC_GOTOE,
 		BC_GOTOM,
 		BC_JUMP,
 		BC_JZ,
 		BC_WAIT,
 		BC_FIRE,
+		BC_RAISE,
 		BC_DIE
 	};
 

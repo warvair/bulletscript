@@ -68,12 +68,20 @@ void Controller::setDefinition(ControllerDefinition* def)
 
 		Event ctrlEvt;
 		ctrlEvt.name = evt.name;
+		ctrlEvt.numArguments = evt.numArguments;
 		ctrlEvt.code = evt.code;
 
 		mEvents.push_back(ctrlEvt);
 	}
 
 	mMaxEventLocals = def->getMaxEventLocalVariables();
+}
+// --------------------------------------------------------------------------------
+void Controller::setState(int state)
+{
+	mRecord->curState = state;
+	mRecord->scriptState.curInstruction = 0;
+	mRecord->scriptState.stackHead = 0;
 }
 // --------------------------------------------------------------------------------
 void Controller::setX(bstype x)
@@ -156,25 +164,32 @@ void Controller::setEmitterMemberState(int emitter, int state)
 	mEmitters[emitter].emitter->setState(state);
 }
 // --------------------------------------------------------------------------------
-void Controller::raiseEvent(const String& evt, const bstype* args)
+bool Controller::raiseEvent(const String& evt, const bstype* args)
 {
 	for (size_t i = 0; i < mEvents.size(); ++i)
 	{
 		if (mEvents[i].name == evt)
-		{
-			ScriptState state;
-
-			if (mMaxEventLocals > 0)
-				state.locals = new bstype[mMaxEventLocals];
-			
-			mScriptMachine->interpretCode(mEvents[i].code->byteCode, mEvents[i].code->byteCodeSize,
-				state, &mRecord->curState, this, mRecord->members[Member_X], mRecord->members[Member_Y], 
-				mRecord->members, false);
-
-			delete[] state.locals;
-			return;
-		}
+			return raiseEvent((int) i, args);
 	}
+
+	return false;
+}
+// --------------------------------------------------------------------------------
+bool Controller::raiseEvent(int index, const bstype* args)
+{
+	ScriptState state;
+
+	if (mMaxEventLocals > 0)
+		state.locals = new bstype[mMaxEventLocals];
+	
+	int oldState = mRecord->curState;
+	memcpy(state.locals, args, mEvents[index].numArguments * sizeof(bstype));
+	mScriptMachine->interpretCode(mEvents[index].code->byteCode, mEvents[index].code->byteCodeSize,
+		state, 0, this, mRecord->members[Member_X], mRecord->members[Member_Y], 
+		mRecord->members, false);
+
+	delete[] state.locals;
+	return oldState != mRecord->curState;
 }
 // --------------------------------------------------------------------------------
 void Controller::runScript(float frameTime)
