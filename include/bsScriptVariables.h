@@ -17,15 +17,20 @@ namespace BS_NMSP
 	class _BSAPI GlobalVariable
 	{
 		String mName;
+
+		bool mReadOnly;
+
 		bstype mValue;
 
 		std::list<VariableListener*> mListeners;
 
 	public:
 
-		GlobalVariable (const String& name, bstype value);
+		GlobalVariable (const String& name, bool readOnly, bstype value);
 
 		const String &getName() const;
+
+		bool isReadOnly() const;
 		
 		void setValue(bstype value);
 

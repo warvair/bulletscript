@@ -15,6 +15,7 @@ namespace BS_NMSP
 		BC_GETL,
 		BC_SETM,
 		BC_GETM,
+		BC_SETG,
 		BC_GETG,
 		BC_SETEM1,
 		BC_SETEM2,

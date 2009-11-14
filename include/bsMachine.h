@@ -35,7 +35,7 @@ namespace BS_NMSP
 		int getErrorCount() const;
 
 		// General stuff
-		void registerGlobalVariable(const String& name, bstype initialValue);
+		void registerGlobalVariable(const String& name, bool readOnly, bstype initialValue);
 
 		void setGlobalVariableValue(const String& name, bstype value);
 

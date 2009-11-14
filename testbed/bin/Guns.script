@@ -40,6 +40,7 @@ emitter Test
 	time = 0.1;
 	Stage1 = state 
 	{
+		x = 5;
 		fireA bullet(This_Angle, 100);
 		wait(time);
 	}
@@ -124,7 +125,7 @@ emitter Flower
 		fl_speed += 0.2 * fl_dir;
 		if (fl_speed < 1 || fl_speed > 10)
 		{
-			dir *= -1;
+			fl_dir *= -1;
 		}
 
 		fl_angle += fl_speed;

@@ -266,9 +266,9 @@ const String& ScriptMachine::getProperty(int index) const
 	return mProperties[index];
 }
 // --------------------------------------------------------------------------------
-void ScriptMachine::registerGlobalVariable(const String& name, bstype initialValue)
+void ScriptMachine::registerGlobalVariable(const String& name, bool readOnly, bstype initialValue)
 {
-	GlobalVariable *var = new GlobalVariable(name, initialValue);
+	GlobalVariable *var = new GlobalVariable(name, readOnly, initialValue);
 	mGlobals.push_back(var);
 }
 // --------------------------------------------------------------------------------
@@ -303,6 +303,11 @@ void ScriptMachine::setGlobalVariableValue(const String& name, bstype value)
 	}
 
 	assert(false && "ScriptMachine::setGlobalVariableValue: variable not found");
+}
+// --------------------------------------------------------------------------------
+void ScriptMachine::setGlobalVariableValue(int index, bstype value)
+{
+	mGlobals[index]->setValue(value);
 }
 // --------------------------------------------------------------------------------
 GlobalVariable* ScriptMachine::getGlobalVariable(const String& name)
@@ -555,6 +560,16 @@ void ScriptMachine::interpretCode(const uint32* code, size_t length, ScriptState
 				assert(st.stackHead < BS_SCRIPT_STACK_SIZE && 
 					"Stack limit reached: increase BS_SCRIPT_STACK_SIZE");
 			}
+			break;
+
+		case BC_SETG:
+			{
+				bstype value = st.stack[st.stackHead - 1];
+				int index = code[st.curInstruction + 1];
+				setGlobalVariableValue(index, value);
+				st.stackHead--;
+				st.curInstruction += 2;
+			}			
 			break;
 
 		case BC_GETG:
