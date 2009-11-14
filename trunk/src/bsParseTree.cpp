@@ -337,106 +337,138 @@ int ParseTree::getNumErrors() const
 	return mNumErrors;
 }
 // --------------------------------------------------------------------------------
-bool ParseTree::checkConstantExpression(EmitterDefinition* def, ParseTreeNode* node)
+bool ParseTree::checkConstantExpression(ObjectDefinition* def, CodeBlockType type, 
+										const String& name, ParseTreeNode* node)
 {
 	int nodeType = node->getType();
-	if (nodeType == PT_FunctionCall)
+	switch (node->getType())
 	{
-		String funcName = node->getChild(0)->getStringData();
-		int index = mScriptMachine->getNativeFunctionIndex(funcName);
-		if (index < 0)
+	case PT_FunctionCall:
 		{
-			addError(node->getLine(), "Function '" + funcName + "' not found.");
-			return false;
-		}
-		else
-		{
-			return true;
-		}
-	}
-	else if (nodeType == PT_Identifier)
-	{
-		String varName = node->getStringData();
-
-		// Check local, member, global
-		int numStates = def->getNumStates();
-		EmitterDefinition::State& st = def->getState(numStates - 1);
-		CodeRecord* rec = getCodeRecord("Emitter", def->getName(), "State", st.name);
-		if (rec->getVariableIndex(varName) < 0)
-		{
-			if (def->getMemberVariableIndex(varName) < 0)
+			String funcName = node->getChild(0)->getStringData();
+			int index = mScriptMachine->getNativeFunctionIndex(funcName);
+			if (index < 0)
 			{
-				if (mScriptMachine->getGlobalVariableIndex(varName) < 0)
-				{
-					addError(node->getLine(), "Variable '" + varName + "' is not declared.");
-					return false;
-				}
+				addError(node->getLine(), "Function '" + funcName + "' not found.");
+				return false;
 			}
 		}
+		return true;
+
+	case PT_Identifier:
+		{
+			String varName = node->getStringData();
+
+			switch (type)
+			{
+			case CBT_MemberDeclaration:
+			case CBT_AffectorArgument:
+				{
+					// only globals allowed here.
+					if (mScriptMachine->getGlobalVariableIndex(varName) < 0)
+					{
+						addError(node->getLine(), "Variable '" + varName + "' is either undeclared or inaccessible.");
+						return false;
+					}
+				}
+				return true;
+
+			case CBT_EmitterState:
+			case CBT_ControllerState:
+				{
+					int numStates = def->getNumStates();
+					ObjectDefinition::State& st = def->getState(numStates - 1);
+					CodeRecord* rec = getCodeRecord(def->getType(), def->getName(), "State", st.name);
+					if (rec->getVariableIndex(varName) < 0)
+					{
+						if (def->getMemberVariableIndex(varName) < 0)
+						{
+							if (mScriptMachine->getGlobalVariableIndex(varName) < 0)
+							{
+								addError(node->getLine(), "Variable '" + varName + "' is not declared.");
+								return false;
+							}
+						}
+					}
+				}
+				return true;
+
+			case CBT_Function:
+				{
+					// cannot use member variables in functions
+					CodeRecord* rec = getCodeRecord("Emitter", def->getName(), "Function", name);
+					if (rec->getVariableIndex(varName) < 0)
+					{
+						if (mScriptMachine->getGlobalVariableIndex(varName) < 0)
+						{
+							addError(node->getLine(), "Variable '" + varName + "' is not declared.");
+							return false;
+						}
+					}
+				}
+				return true;
+
+			case CBT_Event:
+				{
+					// ...
+				}
+				return true;
+			}
+		}
+		return true;
+
+	case PT_Property:
+		{
+			// Only usable in functions
+			if (type != CBT_Function)
+			{
+				addError(node->getLine(), "Properties can only be used in functions.");
+				return false;
+			}
+
+			// Add to global property list
+			String propName = node->getStringData();
+			if (mScriptMachine->getPropertyIndex(propName) < 0)
+				mScriptMachine->addProperty(propName);
+
+			// Properties are not known yet, check later...
+		}
+		return true;
+
+	case PT_EmitterMember:
+		{
+			String varName = node->getStringData();
+
+			// Only usable in controllers
+			if (type != CBT_ControllerState && type != CBT_Function)
+			{
+				addError(node->getLine(), "Emitter members can only be used in controllers.");
+				return false;
+			}
+
+			ControllerDefinition* cDef = static_cast<ControllerDefinition*>(def);
+			if (cDef->getEmitterVariableIndex(varName) < 0)
+			{
+				addError(node->getLine(), "Emitter variable '" + varName + "' is not declared.");
+				return false;
+			}
+
+		}
+		return true;
 	}
 
+	bool ok = true;
 	for (int i = 0; i < ParseTreeNode::MAX_CHILDREN; ++ i)
 	{
 		ParseTreeNode* child = node->getChild(i);
 		if (child)
 		{
-			if (!checkConstantExpression(def, child))
-				return false;
+			if (!checkConstantExpression(def, type, name, child))
+				ok = false;
 		}
 	}
 
-	return true;
-}
-// --------------------------------------------------------------------------------
-bool ParseTree::checkConstantExpression(ControllerDefinition* def, ParseTreeNode* node)
-{
-	int nodeType = node->getType();
-	if (nodeType == PT_FunctionCall)
-	{
-		String funcName = node->getChild(0)->getStringData();
-		int index = mScriptMachine->getNativeFunctionIndex(funcName);
-		if (index < 0)
-		{
-			addError(node->getLine(), "Function '" + funcName + "' not found.");
-			return false;
-		}
-		else
-		{
-			return true;
-		}
-	}
-	else if (nodeType == PT_Identifier)
-	{
-		String varName = node->getStringData();
-
-		// Check local, member, global
-		int numStates = def->getNumStates();
-		ControllerDefinition::State& st = def->getState(numStates - 1);
-		CodeRecord* rec = getCodeRecord("Controller", def->getName(), "State", st.name);
-		if (rec->getVariableIndex(varName) < 0)
-		{
-			if (def->getMemberVariableIndex(varName) < 0)
-			{
-				if (mScriptMachine->getGlobalVariableIndex(varName) < 0)
-				{
-					addError(node->getLine(), "Variable '" + varName + "' is not declared.");
-					return false;
-				}
-			}
-		}
-	}
-
-	for (int i = 0; i < ParseTreeNode::MAX_CHILDREN; ++ i)
-	{
-		ParseTreeNode* child = node->getChild(i);
-		if (child)
-		{
-			if (!checkConstantExpression(def, child))
-				return false;
-		}
-	}
-
-	return true;
+	return ok;
 }
 // --------------------------------------------------------------------------------
 void ParseTree::createMemberVariables(ObjectDefinition* def, ParseTreeNode* node)
@@ -448,8 +480,8 @@ void ParseTree::createMemberVariables(ObjectDefinition* def, ParseTreeNode* node
 		// Make sure that constant expressions are valid, ie use declared variables/functions
 		if (node->getChild(1)->getType() == PT_ConstantExpression)
 		{
-//			if (!checkConstantExpression(def, node->getChild(1)))
-//				return;
+			if (!checkConstantExpression(def, CBT_MemberDeclaration, def->getName(), node->getChild(1)))
+				return;
 		}
 
 		// Make sure it doesn't already exist
@@ -513,28 +545,9 @@ void ParseTree::addMemberVariables(ObjectDefinition* def,
 bool ParseTree::checkAffectorArguments(EmitterDefinition* def, ParseTreeNode* node)
 {
 	bool ok = true;
-	if (node->getType() == PT_Identifier)
-	{
-		int pType = node->getParent()->getType();
-		String varName = node->getStringData();
-		
-		if (pType >= PT_ConstantExpression && pType <= PT_UnaryNegStatement)
-		{
-			if (def->getMemberVariableIndex(varName) < 0)
-			{
-				if (mScriptMachine->getGlobalVariableIndex(varName) < 0)
-				{
-					addError(node->getLine(), "Variable '" + varName + "' is not declared.");
-					ok = false;
-				}
-			}
-			else
-			{
-				addError(node->getLine(), "Cannot use member variables in affector arguments.");
-				ok = false;
-			}
-		}
-	}
+
+	if (node->getType() == PT_ConstantExpression)
+		ok = checkConstantExpression(def, CBT_AffectorArgument, def->getName(), node);
 
 	for (int i = 0; i < ParseTreeNode::MAX_CHILDREN; ++ i)
 	{
@@ -670,7 +683,8 @@ void ParseTree::getEmitterVariableArguments(ParseTreeNode* node,
 }
 // --------------------------------------------------------------------------------
 void ParseTree::checkFireControllers(EmitterDefinition* def, ParseTreeNode* node, 
-									 int& ctrls, FireType* ft)
+									 int& ctrls, FireType* ft, CodeBlockType type,
+									 const String& typeName)
 {
 	int nodeType = node->getType();
 	if (nodeType == PT_FunctionCall)
@@ -696,7 +710,13 @@ void ParseTree::checkFireControllers(EmitterDefinition* def, ParseTreeNode* node
 		// Are we passing the correct number of arguments to it?
 		int numArguments = 0;
 		if (node->getChild(1))
+		{
+			// Check constant expressions
+			if (!checkConstantExpression(def, type, typeName, node->getChild(1)))
+				return;
+
 			countFunctionCallArguments(node->getChild(1), numArguments);
+		}
 
 		EmitterDefinition::Function& func = def->getFunction(fIndex);
 		if (numArguments != func.numArguments)
@@ -704,8 +724,11 @@ void ParseTree::checkFireControllers(EmitterDefinition* def, ParseTreeNode* node
 			std::stringstream ss;
 			ss << "Function '" << ctrlName << "' expects " << func.numArguments << " arguments.";
 			addError(node->getLine(), ss.str());
-			return;
 		}
+
+		// return here because we may have passed a function call as an argument and we don't
+		// want to check that, because it will have already been checked.
+		return;
 	}
 	else if (nodeType == PT_AffectorCall)
 	{
@@ -732,14 +755,15 @@ void ParseTree::checkFireControllers(EmitterDefinition* def, ParseTreeNode* node
 		{
 			addError(node->getLine(), "Affector function '" + mAffectors[index].function + "' is not"
 				" registered with type '" + ft->getName() + "'.");
-			return;
 		}
+
+		return;
 	}
 
 	for (int i = 0; i < ParseTreeNode::MAX_CHILDREN; ++ i)
 	{
 		if (node->getChild(i))
-			checkFireControllers(def, node->getChild(i), ctrls, ft);
+			checkFireControllers(def, node->getChild(i), ctrls, ft, type, typeName);
 	}
 }
 // --------------------------------------------------------------------------------
@@ -816,24 +840,38 @@ void ParseTree::buildFunctions(EmitterDefinition* def, ParseTreeNode* node)
 		{
 			String varName = node->getChild(0)->getStringData();
 
-			// See if it's a member or global
-			if (def->getMemberVariableIndex(varName) >= 0)
+			CodeRecord* rec = getCodeRecord("Emitter", def->getName(), "Function", s_curFunc->name);
+			bool varFound = false;
+			if (rec->getVariableIndex(varName) >= 0)
 			{
-				addError(node->getLine(), "Cannot use member variables in control functions.");
-				break;
+				varFound = true;
 			}
-			else if (mScriptMachine->getGlobalVariableIndex(varName) >= 0)
+			else
 			{
-				addError(node->getLine(), "'" + varName + "' is read-only.");
-				break;
+				// Check for globals next, because you cannot use members, so they take precedence
+				// in the case that a member and a global have the same name.
+				int gvIndex = mScriptMachine->getGlobalVariableIndex(varName);
+				if (gvIndex >= 0)
+				{
+					varFound = true;
+					GlobalVariable* gv = mScriptMachine->getGlobalVariable(gvIndex);
+					if (gv->isReadOnly())
+					{
+						addError(node->getLine(), "'" + varName + "' is read-only.");
+						return;
+					}
+				}
 			}
 
-			// If it isn't, it's a local, so see if we need to create it.
-			CodeRecord* rec = getCodeRecord("Emitter", def->getName(), "Function", s_curFunc->name);
-			if (rec->getVariableIndex(varName) < 0)
+			// Check RHS
+			if (!checkConstantExpression(def, CBT_Function, s_curFunc->name, node->getChild(1)))
+				return;
+
+			// Create local if not found
+			if (!varFound)
 				rec->addVariable(varName);
 		}
-		break;
+		return;
 
 	case PT_FireStatement:
 		{
@@ -856,7 +894,12 @@ void ParseTree::buildFunctions(EmitterDefinition* def, ParseTreeNode* node)
 			// Arguments
 			int numArguments = 0;
 			if (node->getChild(1))
+			{
+				if (!checkConstantExpression(def, CBT_Function, s_curFunc->name, node->getChild(1)))
+					return;
+
 				countFunctionCallArguments(node->getChild(1), numArguments);
+			}
 
 			int expectedArgs = ft->getNumFireFunctionArguments(funcName);
 			if (numArguments != expectedArgs)
@@ -870,46 +913,20 @@ void ParseTree::buildFunctions(EmitterDefinition* def, ParseTreeNode* node)
 			if (node->getChild(3))
 			{
 				int numCtrls = 0;
-				checkFireControllers(def, node->getChild(3), numCtrls, ft);
+				checkFireControllers(def, node->getChild(3), numCtrls, ft, CBT_Function, s_curFunc->name);
 			}
 		}
-		break;
+		return;
 
-	case PT_Property:
+	case PT_SetStatement:
 		{
-			String propName = node->getStringData();
+			String propName = node->getChild(0)->getStringData();
 			if (mScriptMachine->getPropertyIndex(propName) < 0)
 				mScriptMachine->addProperty(propName);
-		}
-		break;
 
-	case PT_Identifier:
-		{
-			int pType = node->getParent()->getType();
-			String varName = node->getStringData();
-			
-			if (pType >= PT_ConstantExpression && pType <= PT_UnaryNegStatement)
-			{
-				// Local, members, globals
-				CodeRecord* rec = getCodeRecord("Emitter", def->getName(), "Function", s_curFunc->name);
-				if (rec->getVariableIndex(varName) < 0)
-				{
-					if (def->getMemberVariableIndex(varName) < 0)
-					{
-						if (mScriptMachine->getGlobalVariableIndex(varName) < 0)
-						{
-							addError(node->getLine(), "Variable '" + varName + "' is not declared.");
-						}
-					}
-					else
-					{
-						addError(node->getLine(), "Cannot use member variables in functions.");
-						break;
-					}
-				}
-			}
+			checkConstantExpression(def, CBT_Function, s_curFunc->name, node->getChild(1));
 		}
-		break;
+		return;
 
 	case PT_BreakStatement:
 	case PT_ContinueStatement:
@@ -978,33 +995,62 @@ void ParseTree::createStates(ObjectDefinition* def, ParseTreeNode* node)
 		{
 			String varName = node->getChild(0)->getStringData();
 
-			// See if it's a member or global
-			if (def->getMemberVariableIndex(varName) >= 0)
-			{
-				int mvIndex = def->getMemberVariableIndex(varName);
-				const ObjectDefinition::MemberVariable& mv = def->getMemberVariable(mvIndex);
-				if (mv.readonly)
-				{
-					addError(node->getLine(), "'" + varName + "' is read-only.");
-				}
-				break;
-			}
-			else if (mScriptMachine->getGlobalVariableIndex(varName) >= 0)
-			{
-				addError(node->getLine(), "'" + varName + "' is read-only.");
-				break;
-			}
-
-			// If it isn't, it's a local, so see if we need to create it.
 			int numStates = (int) def->getNumStates();
 			ObjectDefinition::State& st = def->getState(numStates - 1);
-
 			CodeRecord* rec = getCodeRecord(def->getType(), def->getName(), "State", st.name);
 
-			if (rec->getVariableIndex(varName) < 0)
+			bool varFound = false;
+			if (rec->getVariableIndex(varName) >= 0)
+			{
+				varFound = true;
+			}
+			else
+			{
+				int mvIndex = def->getMemberVariableIndex(varName);
+				if (mvIndex >= 0)
+				{
+					const ObjectDefinition::MemberVariable& mv = def->getMemberVariable(mvIndex);
+					if (mv.readonly)
+					{
+						addError(node->getLine(), "'" + varName + "' is read-only.");
+						return;
+					}
+
+					varFound = true;
+				}
+				else
+				{
+					int gvIndex = mScriptMachine->getGlobalVariableIndex(varName);
+					if (gvIndex >= 0)
+					{
+						varFound = true;
+						GlobalVariable* gv = mScriptMachine->getGlobalVariable(gvIndex);
+						if (gv->isReadOnly())
+						{
+							addError(node->getLine(), "'" + varName + "' is read-only.");
+							return;
+						}
+
+						varFound = true;
+					}
+				}
+			}
+
+			// Check RHS
+			CodeBlockType cbtype;
+			if (def->getType() == "Controller")
+				cbtype = CBT_ControllerState;
+			else
+				cbtype = CBT_EmitterState;
+
+			if (!checkConstantExpression(def, cbtype, "", node->getChild(1)))
+				return;
+
+			// Create local if not found
+			if (!varFound)
 				rec->addVariable(varName);
 		}
-		break;
+		return;
 
 	case PT_MemberAssignStatement:
 		{
@@ -1019,7 +1065,7 @@ void ParseTree::createStates(ObjectDefinition* def, ParseTreeNode* node)
 			if (emitIndex < 0)
 			{
 				addError(node->getLine(), "Emitter '" + emitName + "' is not declared.");
-				break;
+				return;
 			}
 
 			const ControllerDefinition::EmitterVariable& var = cDef->getEmitterVariable(emitIndex);
@@ -1028,10 +1074,12 @@ void ParseTree::createStates(ObjectDefinition* def, ParseTreeNode* node)
 			{
 				addError(node->getLine(), "Emitter type '" + var.emitter + 
 					"' has no member named '" + memberName + "'.");
-				break;
+				return;
 			}
+
+			checkConstantExpression(def, CBT_ControllerState, "", node->getChild(1));
 		}
-		break;
+		return;
 
 	case PT_FireStatement:
 		{
@@ -1055,7 +1103,12 @@ void ParseTree::createStates(ObjectDefinition* def, ParseTreeNode* node)
 			// Arguments
 			int numArguments = 0;
 			if (node->getChild(1))
+			{
+				if (!checkConstantExpression(def, CBT_EmitterState, "", node->getChild(1)))
+					return;
+
 				countFunctionCallArguments(node->getChild(1), numArguments);
+			}
 
 			int expectedArgs = ft->getNumFireFunctionArguments(funcName);
 			if (numArguments != expectedArgs)
@@ -1070,33 +1123,11 @@ void ParseTree::createStates(ObjectDefinition* def, ParseTreeNode* node)
 			if (node->getChild(3))
 			{
 				int numCtrls = 0;
-				checkFireControllers(static_cast<EmitterDefinition*>(def), node->getChild(3), numCtrls, ft);
+				checkFireControllers(static_cast<EmitterDefinition*>(def), node->getChild(3), numCtrls, ft,
+					CBT_EmitterState, "");
 			}
 		}
-		break;
-
-	case PT_Identifier:
-		{
-			int pType = node->getParent()->getType();
-			String varName = node->getStringData();
-			
-			if (pType >= PT_ConstantExpression && pType <= PT_UnaryNegStatement)
-			{
-				// Local, members, globals
-				int numStates = (int) def->getNumStates();
-				ObjectDefinition::State& st = def->getState(numStates - 1);
-				CodeRecord* rec = getCodeRecord(def->getType(), def->getName(), "State", st.name);
-				if (rec->getVariableIndex(varName) < 0)
-				{
-					if (def->getMemberVariableIndex(varName) < 0)
-					{
-						if (mScriptMachine->getGlobalVariableIndex(varName) < 0)
-							addError(node->getLine(), "Variable '" + varName + "' is not declared.");
-					}
-				}
-			}
-		}
-		break;
+		return;
 
 	case PT_BreakStatement:
 	case PT_ContinueStatement:
@@ -1125,7 +1156,7 @@ void ParseTree::createStates(ObjectDefinition* def, ParseTreeNode* node)
 				addError(node->getLine(), "break/continue must be used inside a while statement.");
 			}
 		}
-		break;
+		return;
 
 	}
 
@@ -1223,18 +1254,7 @@ void ParseTree::setAffectorRecalculationType(EmitterDefinition* def, Affector* a
 		// Variable, either global or member
 		{
 			String varName = node->getStringData();
-			if (def->getMemberVariableIndex(varName) >= 0)
-			{
-				int mvIndex = def->getMemberVariableIndex(varName);
-				const EmitterDefinition::MemberVariable& mv = def->getMemberVariable(mvIndex);
-
-				// Different Emitter instances will be using a particular Affector instance, and when
-				// a FireType runs an affector, it will need to know which Emitter it was fired from,
-				// and if that Emitter has been signalled as modified (by member var change) then recalc.
-
-				
-			}
-			else if (mScriptMachine->getGlobalVariableIndex(varName) >= 0)
+			if (mScriptMachine->getGlobalVariableIndex(varName) >= 0)
 			{
 				// Recalculate when global variable changes value
 				GlobalVariable* gv = mScriptMachine->getGlobalVariable(varName);
@@ -1428,39 +1448,35 @@ void ParseTree::generateBytecode(ObjectDefinition* def, ParseTreeNode* node,
 	case PT_AssignStatement:
 		{
 			String varName = node->getChild(0)->getStringData ();
-			// Make sure we're not assigning to a global
-			if (mScriptMachine->getGlobalVariableIndex(varName) >= 0)
-			{
-				// Error, globals are read-only - however it should not get this far.
-				addError(node->getLine(), varName + " is read-only.");
-				break;
-			}
 
 			// Generate value
 			generateBytecode(def, node->getChild(1), bytecode);
 
-			// Set variable - see if it is a member first
-			if (def->getMemberVariableIndex(varName) >= 0)
+			CodeRecord* rec;
+			int index;
+
+			if (s_stateNotFunction)
+				rec = getCodeRecord(def->getType(), def->getName(), "State", s_curState->name);
+			else
+				rec = getCodeRecord(def->getType(), def->getName(), "Function", s_curFunction->name);
+
+			index = rec->getVariableIndex(varName);
+			if (index >= 0)
 			{
-				int index = def->getMemberVariableIndex(varName);
+				bytecode->push_back(BC_SETL);
+			}
+			else if (def->getMemberVariableIndex(varName) >= 0)
+			{
+				index = def->getMemberVariableIndex(varName);
 				bytecode->push_back(BC_SETM);
-				bytecode->push_back((uint32) index);
 			}
 			else
 			{
-				// Local variable
-				CodeRecord* rec;
-				int index;
-				if (s_stateNotFunction)
-					rec = getCodeRecord(def->getType(), def->getName(), "State", s_curState->name);
-				else
-					rec = getCodeRecord(def->getType(), def->getName(), "Function", s_curFunction->name);
-
-				index = rec->getVariableIndex(varName);
-
-				bytecode->push_back(BC_SETL);
-				bytecode->push_back((uint32) index);
+				index = mScriptMachine->getGlobalVariableIndex(varName);
+				bytecode->push_back(BC_SETG);
 			}
+
+			bytecode->push_back((uint32) index);
 		}
 		return;
 
@@ -1790,27 +1806,19 @@ void ParseTree::generateBytecode(ObjectDefinition* def, ParseTreeNode* node,
 			if (index >= 0)
 			{
 				bytecode->push_back(BC_GETL);
-				bytecode->push_back((uint32) index);
 			}
 			else if (def->getMemberVariableIndex(varName) >= 0)
 			{
-				int index = def->getMemberVariableIndex(varName);
+				index = def->getMemberVariableIndex(varName);
 				bytecode->push_back(BC_GETM);
-				bytecode->push_back((uint32) index);
 			}
 			else
 			{
-				int globalIndex = mScriptMachine->getGlobalVariableIndex(varName);
-				if (globalIndex >= 0)
-				{
-					bytecode->push_back(BC_GETG);
-					bytecode->push_back((uint32) globalIndex);
-				}
-				else
-				{
-					addError(node->getLine(), "Variable '" + varName + "' is not declared.");
-				}
+				index = mScriptMachine->getGlobalVariableIndex(varName);
+				bytecode->push_back(BC_GETG);
 			}
+
+			bytecode->push_back((uint32) index);
 		}
 		break;
 

@@ -93,9 +93,10 @@ int main (int argc, char **argv)
 	machine.setDieFunction("unit", UnitSystem::killUnit);
 
 	// Register global variables
-	machine.registerGlobalVariable("Level_Time", 0);
-	machine.registerGlobalVariable("ScreenSize_X", SCREEN_WIDTH);
-	machine.registerGlobalVariable("ScreenSize_Y", SCREEN_HEIGHT);
+	machine.registerGlobalVariable("Level_Time", true, 0);
+	machine.registerGlobalVariable("ScreenSize_X", true, SCREEN_WIDTH);
+	machine.registerGlobalVariable("ScreenSize_Y", true, SCREEN_HEIGHT);
+	machine.registerGlobalVariable("Test_Global", false, 0);
 
 	// User member variables must be declared before compiling scripts
 	machine.declareMemberVariable("Boss1", "health", 1); // 100%

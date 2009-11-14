@@ -144,13 +144,15 @@ namespace BS_NMSP
 		const String& getProperty(int index) const;
 
 		// Global variables
-		void registerGlobalVariable(const String& name, bstype initialValue);
+		void registerGlobalVariable(const String& name, bool readOnly, bstype initialValue);
 
 		int getGlobalVariableIndex(const String& name) const;
 
 		bstype getGlobalVariableValue(int index) const;
 
 		void setGlobalVariableValue(const String& name, bstype value);
+
+		void setGlobalVariableValue(int index, bstype value);
 
 		GlobalVariable *getGlobalVariable(const String& name);
 

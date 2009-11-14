@@ -24,6 +24,17 @@ namespace BS_NMSP
 		PT_EmitterStateNode
 	};
 
+	enum CodeBlockType
+	{
+		CBT_None,
+		CBT_MemberDeclaration,
+		CBT_AffectorArgument,
+		CBT_EmitterState,
+		CBT_ControllerState,
+		CBT_Function,
+		CBT_Event
+	};
+
 	// Node types
 	enum PT_NodeType
 	{
@@ -225,7 +236,7 @@ namespace BS_NMSP
 		void checkFireStatements(EmitterDefinition* def, ParseTreeNode* node);
 
 		void checkFireControllers(EmitterDefinition* def, ParseTreeNode* node, int& ctrls, 
-			FireType* ft);
+			FireType* ft, CodeBlockType type, const String& typeName);
 
 		// Code generation
 		void createMemberVariableBytecode(ObjectDefinition* def, ParseTreeNode* node, bool first);
@@ -237,9 +248,8 @@ namespace BS_NMSP
 			bool reset = false);
 
 		// Utility functions
-		bool checkConstantExpression(EmitterDefinition* def, ParseTreeNode* node);
-
-		bool checkConstantExpression(ControllerDefinition* def, ParseTreeNode* node);
+		bool checkConstantExpression(ObjectDefinition* def, CodeBlockType type, const String& name,
+			ParseTreeNode* node);
 
 		void countFunctionCallArguments(ParseTreeNode* node, int& numArguments);
 

@@ -28,9 +28,9 @@ int Machine::getErrorCount() const
 	return mNumErrors;
 }
 // --------------------------------------------------------------------------------
-void Machine::registerGlobalVariable(const String& name, bstype initialValue)
+void Machine::registerGlobalVariable(const String& name, bool readOnly, bstype initialValue)
 {
-	mScriptMachine->registerGlobalVariable(name, initialValue);
+	mScriptMachine->registerGlobalVariable(name, readOnly, initialValue);
 }
 // --------------------------------------------------------------------------------
 void Machine::setGlobalVariableValue(const String& name, bstype value)

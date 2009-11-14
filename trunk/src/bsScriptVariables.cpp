@@ -4,8 +4,9 @@ namespace BS_NMSP
 {
 
 // --------------------------------------------------------------------------------
-GlobalVariable::GlobalVariable(const String& name, bstype value) :
+GlobalVariable::GlobalVariable(const String& name, bool readOnly, bstype value) :
 	mName(name),
+	mReadOnly(readOnly),
 	mValue(value)
 {
 }
@@ -13,6 +14,11 @@ GlobalVariable::GlobalVariable(const String& name, bstype value) :
 const String& GlobalVariable::getName() const
 {
 	return mName;
+}
+// --------------------------------------------------------------------------------
+bool GlobalVariable::isReadOnly() const
+{
+	return mReadOnly;
 }
 // --------------------------------------------------------------------------------
 void GlobalVariable::setValue(bstype value)
