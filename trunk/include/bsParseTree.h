@@ -71,6 +71,7 @@ namespace BS_NMSP
 		PT_SetStatement,
 		PT_FireStatement,
 		PT_DieStatement,
+		PT_RaiseStatement,
 		PT_ConstantExpression,
 		PT_LogicalOr,
 		PT_LogicalAnd,

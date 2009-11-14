@@ -128,6 +128,7 @@ void generate_inc_expr(int value, int nodeType, YYSTYPE parentNode, YYSTYPE idNo
 %token KEYWORD_FUNCTION
 %token KEYWORD_STATE
 %token KEYWORD_EVENT
+%token KEYWORD_RAISE
 %token KEYWORD_WHILE
 %token KEYWORD_BREAK
 %token KEYWORD_CONTINUE
@@ -746,6 +747,10 @@ event_statement
 		{
 			$$ = $1;
 		}
+	| raise_statement
+		{
+			$$ = $1;
+		}
 	;
 
 emitter_state_statement
@@ -825,6 +830,10 @@ controller_state_statement
 			$$ = $1;
 		}
 	| wait_statement
+		{
+			$$ = $1;
+		}
+	| raise_statement
 		{
 			$$ = $1;
 		}
@@ -1237,6 +1246,14 @@ die_statement
 	: KEYWORD_DIE '(' ')' ';'
 		{	
 			$$ = AST->createNode(PT_DieStatement, yylineno);
+		}
+	;
+	
+raise_statement
+	: KEYWORD_RAISE function_call ';'
+		{
+			$$ = AST->createNode(PT_RaiseStatement, yylineno);
+			$$->setChild(0, $2);
 		}
 	;
 		

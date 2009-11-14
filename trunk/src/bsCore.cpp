@@ -51,7 +51,10 @@ int CodeRecord::getNumVariables() const
 // --------------------------------------------------------------------------------
 // --------------------------------------------------------------------------------
 ScriptState::ScriptState() :
-	locals(0)
+	locals(0),
+	curInstruction(0),
+	stackHead(0),
+	suspendTime(0.0f)
 {
 }
 // --------------------------------------------------------------------------------
@@ -59,10 +62,6 @@ ScriptRecord::ScriptRecord(int numLocals) :
 	curState(0),
 	members(0)
 {
-	scriptState.curInstruction = 0;
-	scriptState.stackHead = 0;
-	scriptState.suspendTime = 0;
-
 	if (numLocals > 0)
 		scriptState.locals = new bstype[numLocals];
 }

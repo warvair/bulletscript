@@ -32,6 +32,7 @@ namespace BS_NMSP
 		struct Event
 		{
 			String name;
+			int numArguments;
 			CodeRecord* code;
 		};
 
@@ -69,6 +70,8 @@ namespace BS_NMSP
 
 		void setMember(int member, bstype value);
 
+		void setState(int state);
+
 		void setEmitterMember(int emitter, int member, bstype value);
 
 		void setEmitterMember(int emitter, int member, bstype value, float time);
@@ -77,7 +80,9 @@ namespace BS_NMSP
 
 		void setEmitterMemberState(int emitter, int state);
 
-		void raiseEvent(const String& evt, const bstype* args);
+		bool raiseEvent(const String& evt, const bstype* args);
+
+		bool raiseEvent(int index, const bstype* args);
 
 		void update(float frameTime);
 

@@ -1169,6 +1169,33 @@ void ParseTree::buildEvents(ControllerDefinition* def, ParseTreeNode* node)
 		}
 		return;
 
+	case PT_RaiseStatement:
+		{
+			ParseTreeNode* funcNode = node->getChild(0);
+			String eventName = funcNode->getChild(0)->getStringData();
+
+			int eventIndex = def->getEventIndex(eventName);
+			if (eventIndex < 0)
+			{
+				addError(node->getLine(), "Event '" + eventName + "' is not registered.");
+			}
+			else
+			{
+				int givenArgs = 0;
+				if (funcNode->getChild(1))
+					countFunctionCallArguments(funcNode->getChild(1), givenArgs);
+
+				ControllerDefinition::Event& evt = def->getEvent(eventIndex);
+				if (givenArgs != evt.numArguments)
+				{
+					std::stringstream ss;
+					ss << "Event '" << eventName << "' expects " << evt.numArguments << " arguments.";
+					addError(node->getLine(), ss.str());
+				}
+			}
+		}
+		return;
+
 	case PT_BreakStatement:
 	case PT_ContinueStatement:
 		{
@@ -1422,6 +1449,35 @@ void ParseTree::buildStates(ObjectDefinition* def, ParseTreeNode* node)
 			{
 				// Error, must have arguments
 				addError(node->getLine(), "Wait statement has no arguments.");
+			}
+		}
+		return;
+
+	case PT_RaiseStatement:
+		{
+			// This will only be used by controllers.
+			ParseTreeNode* funcNode = node->getChild(0);
+			String eventName = funcNode->getChild(0)->getStringData();
+
+			ControllerDefinition* cDef = static_cast<ControllerDefinition*>(def);
+			int eventIndex = cDef->getEventIndex(eventName);
+			if (eventIndex < 0)
+			{
+				addError(node->getLine(), "Event '" + eventName + "' is not registered.");
+			}
+			else
+			{
+				int givenArgs = 0;
+				if (funcNode->getChild(1))
+					countFunctionCallArguments(funcNode->getChild(1), givenArgs);
+
+				ControllerDefinition::Event& evt = cDef->getEvent(eventIndex);
+				if (givenArgs != evt.numArguments)
+				{
+					std::stringstream ss;
+					ss << "Event '" << eventName << "' expects " << evt.numArguments << " arguments.";
+					addError(node->getLine(), ss.str());
+				}
 			}
 		}
 		return;
@@ -1889,6 +1945,28 @@ void ParseTree::generateBytecode(ObjectDefinition* def, ParseTreeNode* node,
 		}
 		return;
 
+	case PT_RaiseStatement:
+		{
+			// This will only be used by controllers.
+			ParseTreeNode* funcNode = node->getChild(0);
+			String eventName = funcNode->getChild(0)->getStringData();
+
+			int numArgs = 0;
+			if (funcNode->getChild(1))
+			{
+				countFunctionCallArguments(funcNode->getChild(1), numArgs);
+				generateBytecode(def, funcNode->getChild(1), bytecode, codeType);
+			}
+
+			ControllerDefinition* cDef = static_cast<ControllerDefinition*>(def);
+			int eventIndex = cDef->getEventIndex(eventName);
+
+			bytecode->push_back(BC_RAISE);
+			bytecode->push_back(eventIndex);
+			bytecode->push_back(numArgs);
+		}
+		return;
+
 	case PT_BreakStatement:
 		{
 			// Find the flow structure that we want to break out of, and find where it ends,
@@ -1966,7 +2044,12 @@ void ParseTree::generateBytecode(ObjectDefinition* def, ParseTreeNode* node,
 				String stateName = node->getChild(0)->getStringData();
 
 				int index = getCodeRecordIndex(def->getType(), def->getName(), "State", stateName);
-				bytecode->push_back(BC_GOTO);
+
+				if (codeType == CBT_Event)
+					bytecode->push_back(BC_GOTOE);
+				else
+					bytecode->push_back(BC_GOTO);
+
 				bytecode->push_back((uint32) index);
 			}
 			else if (gotoType == PT_EmitterMember)
