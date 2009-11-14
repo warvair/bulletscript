@@ -1172,7 +1172,12 @@ void ParseTree::buildEvents(ControllerDefinition* def, ParseTreeNode* node)
 	case PT_RaiseStatement:
 		{
 			ParseTreeNode* funcNode = node->getChild(0);
-			String eventName = funcNode->getChild(0)->getStringData();
+
+			String eventName;
+			if (funcNode->getType() == PT_Identifier)
+				eventName = funcNode->getStringData();
+			else
+				eventName = funcNode->getChild(0)->getStringData();
 
 			int eventIndex = def->getEventIndex(eventName);
 			if (eventIndex < 0)
@@ -1193,6 +1198,14 @@ void ParseTree::buildEvents(ControllerDefinition* def, ParseTreeNode* node)
 					addError(node->getLine(), ss.str());
 				}
 			}
+		}
+		return;
+
+	case PT_EnableStatement:
+		{
+			String varName = node->getChild(0)->getStringData();
+			if (def->getEmitterVariableIndex(varName) < 0)
+				addError(node->getLine(), "Emitter variable '" + varName + "' is not declared.");
 		}
 		return;
 
@@ -1457,7 +1470,13 @@ void ParseTree::buildStates(ObjectDefinition* def, ParseTreeNode* node)
 		{
 			// This will only be used by controllers.
 			ParseTreeNode* funcNode = node->getChild(0);
-			String eventName = funcNode->getChild(0)->getStringData();
+
+			String eventName;
+			if (funcNode->getType() == PT_Identifier)
+				eventName = funcNode->getStringData();
+			else
+				eventName = funcNode->getChild(0)->getStringData();
+
 
 			ControllerDefinition* cDef = static_cast<ControllerDefinition*>(def);
 			int eventIndex = cDef->getEventIndex(eventName);
@@ -1479,6 +1498,15 @@ void ParseTree::buildStates(ObjectDefinition* def, ParseTreeNode* node)
 					addError(node->getLine(), ss.str());
 				}
 			}
+		}
+		return;
+
+	case PT_EnableStatement:
+		{
+			String varName = node->getChild(0)->getStringData();
+			ControllerDefinition* cDef = static_cast<ControllerDefinition*>(def);
+			if (cDef->getEmitterVariableIndex(varName) < 0)
+				addError(node->getLine(), "Emitter variable '" + varName + "' is not declared.");
 		}
 		return;
 
@@ -1949,7 +1977,11 @@ void ParseTree::generateBytecode(ObjectDefinition* def, ParseTreeNode* node,
 		{
 			// This will only be used by controllers.
 			ParseTreeNode* funcNode = node->getChild(0);
-			String eventName = funcNode->getChild(0)->getStringData();
+			String eventName;
+			if (funcNode->getType() == PT_Identifier)
+				eventName = funcNode->getStringData();
+			else
+				eventName = funcNode->getChild(0)->getStringData();
 
 			int numArgs = 0;
 			if (funcNode->getChild(1))
@@ -1964,6 +1996,22 @@ void ParseTree::generateBytecode(ObjectDefinition* def, ParseTreeNode* node,
 			bytecode->push_back(BC_RAISE);
 			bytecode->push_back(eventIndex);
 			bytecode->push_back(numArgs);
+		}
+		return;
+
+	case PT_EnableStatement:
+		{
+			String varName = node->getChild(0)->getStringData();
+			int index = static_cast<ControllerDefinition*>(def)->getEmitterVariableIndex(varName);
+
+			bytecode->push_back(BC_ENABLE);
+			bytecode->push_back(index);
+
+			String enable = node->getStringData();
+			if (enable == "enable")
+				bytecode->push_back(1);
+			else
+				bytecode->push_back(0);
 		}
 		return;
 

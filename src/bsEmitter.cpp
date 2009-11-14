@@ -7,6 +7,7 @@ namespace BS_NMSP
 
 // --------------------------------------------------------------------------------
 Emitter::Emitter(ScriptMachine* scriptMachine) :
+	mEnabled(true),
 	mActiveControllers(0),
 	mNumUserMembers(0),
 	mScriptMachine(scriptMachine),
@@ -27,6 +28,11 @@ void Emitter::setDefinition(EmitterDefinition* def)
 	mRecord = def->createScriptRecord(mScriptMachine);
 
 	mNumUserMembers = def->getNumMemberVariables() - NUM_SPECIAL_MEMBERS;
+}
+// --------------------------------------------------------------------------------
+void Emitter::enable(bool enable)
+{
+	mEnabled = enable;
 }
 // --------------------------------------------------------------------------------
 void Emitter::setX(bstype x)
@@ -75,8 +81,8 @@ void Emitter::setMember(int member, bstype value, float time)
 // --------------------------------------------------------------------------------
 bstype Emitter::getMember(int member) const
 {
-		assert (member >= 0 && "Emitter::getMember index must be >= 0");
-		return mRecord->members[member + NUM_SPECIAL_MEMBERS];
+	assert (member >= 0 && "Emitter::getMember index must be >= 0");
+	return mRecord->members[member + NUM_SPECIAL_MEMBERS];
 }
 // --------------------------------------------------------------------------------
 void Emitter::setState(int state)
@@ -96,6 +102,9 @@ void Emitter::runScript(float frameTime)
 // --------------------------------------------------------------------------------
 void Emitter::update(float frameTime)
 {
+	if (!mEnabled)
+		return;
+	
 	// Update user MemberControllers.
 	for (int i = 0; i < mNumUserMembers; ++i)
 	{

@@ -47,6 +47,7 @@ namespace BS_NMSP
 		BC_WAIT,
 		BC_FIRE,
 		BC_RAISE,
+		BC_ENABLE,
 		BC_DIE
 	};
 

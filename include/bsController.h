@@ -84,6 +84,8 @@ namespace BS_NMSP
 
 		bool raiseEvent(int index, const bstype* args);
 
+		void enableEmitter(int index, bool enable);
+
 		void update(float frameTime);
 
 	};
