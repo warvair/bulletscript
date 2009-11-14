@@ -64,6 +64,9 @@ namespace BS_NMSP
 
 		DeepMemoryPool<Controller, ScriptMachine*>* mControllers;
 
+		// Events
+		// ...
+
 		// Global property list
 		std::vector<String> mProperties;
 

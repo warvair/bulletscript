@@ -177,6 +177,7 @@ int main (int argc, char **argv)
 
 	int lastSel = -1, curSel = -1;
 
+	bool evtRaised = false;
 	while (true)
 	{
 		if (!processMessages())
@@ -201,6 +202,13 @@ int main (int argc, char **argv)
 
 		// Set script globals - this will update BulletAffector global arguments
 		machine.setGlobalVariableValue("Level_Time", totalTime / 1000.0f);
+
+		if (totalTime > 10000 && !evtRaised)
+		{
+			float damage = 0.5f;
+			controller->raiseEvent("Damaged", &damage);
+			evtRaised = true;
+		}
 
 		if (!paused())
 		{

@@ -10,7 +10,6 @@ namespace BS_NMSP
 {
 
 	class ScriptMachine;
-
 	class ParseTreeNode;
 
 	class _BSAPI EmitterDefinition : public ObjectDefinition
@@ -42,7 +41,7 @@ namespace BS_NMSP
 
 	private:
 
-		// Functions, states and affectors
+		// Functions
 		std::vector<Function> mFunctions;
 
 	};

@@ -29,7 +29,15 @@ namespace BS_NMSP
 			uint32 activeControllers;
 		};
 
+		struct Event
+		{
+			String name;
+			CodeRecord* code;
+		};
+
 		std::vector<EmitterInstance> mEmitters;
+
+		std::vector<Event> mEvents;
 
 		ScriptRecord* mRecord;
 
@@ -66,6 +74,8 @@ namespace BS_NMSP
 		bstype getEmitterMember(int emitter, int member) const;
 
 		void setEmitterMemberState(int emitter, int state);
+
+		void raiseEvent(const String& evt, const bstype* args);
 
 		void update(float frameTime);
 

@@ -61,6 +61,18 @@ void Controller::setDefinition(ControllerDefinition* def)
 
 		mEmitters.push_back(inst);
 	}
+
+	// Create events
+	for (int i = 0; i < def->getNumEvents(); ++i)
+	{
+		ControllerDefinition::Event& evt = def->getEvent(i);
+
+		Event ctrlEvt;
+		ctrlEvt.name = evt.name;
+		ctrlEvt.code = evt.code;
+
+		mEvents.push_back(ctrlEvt);
+	}
 }
 // --------------------------------------------------------------------------------
 void Controller::setX(bstype x)
@@ -130,7 +142,7 @@ bstype Controller::getEmitterMember(int emitter, int member) const
 {
 	if (member < NUM_SPECIAL_MEMBERS)
 	{
-		return bsvalue0;
+		return mEmitters[emitter].special[member];
 	}
 	else
 	{
@@ -141,6 +153,20 @@ bstype Controller::getEmitterMember(int emitter, int member) const
 void Controller::setEmitterMemberState(int emitter, int state)
 {
 	mEmitters[emitter].emitter->setState(state);
+}
+// --------------------------------------------------------------------------------
+void Controller::raiseEvent(const String& evt, const bstype* args)
+{
+	std::cout << "evt " << evt << " raised" << std::endl;
+
+	for (size_t i = 0; i < mEvents.size(); ++i)
+	{
+		if (mEvents[i].name == evt)
+		{
+//			mScriptMachine->
+			return;
+		}
+	}
 }
 // --------------------------------------------------------------------------------
 void Controller::runScript(float frameTime)

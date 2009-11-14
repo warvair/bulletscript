@@ -9,6 +9,7 @@ namespace BS_NMSP
 {
 
 	class ScriptMachine;
+	class ParseTreeNode;
 
 	class _BSAPI ControllerDefinition : public ObjectDefinition
 	{
@@ -26,6 +27,14 @@ namespace BS_NMSP
 			bstype angle;
 		};
 
+		struct Event
+		{
+			String name;
+			int numArguments;
+			ParseTreeNode* node;
+			CodeRecord* code;
+		};
+
 	public:
 
 		explicit ControllerDefinition(const String& name);
@@ -40,13 +49,24 @@ namespace BS_NMSP
 
 		int getNumEmitterVariables() const;
 
+		// Functions
+		Event& addEvent(const String& name, ParseTreeNode* node);
+
+		Event& getEvent(int index);
+		
+		int getEventIndex(const String& name) const;
+
+		int getNumEvents() const;
+
 		// Core
 		ScriptRecord* createScriptRecord(ScriptMachine* sm);
 
 	private:
 
-		// Emitters, events and states
+		// Emitters & events
 		std::vector<EmitterVariable> mEmitterVariables;
+
+		std::vector<Event> mEvents;
 		
 	};
 
