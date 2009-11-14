@@ -6,7 +6,8 @@ namespace BS_NMSP
 
 // --------------------------------------------------------------------------------
 ControllerDefinition::ControllerDefinition(const String& name) :
-	ObjectDefinition(name, "Controller")
+	ObjectDefinition(name, "Controller"),
+	mMaxEventLocals(0)
 {
 }
 // --------------------------------------------------------------------------------
@@ -82,6 +83,16 @@ int ControllerDefinition::getEventIndex(const String& name) const
 int ControllerDefinition::getNumEvents() const
 {
 	return (int) mEvents.size();
+}
+// --------------------------------------------------------------------------------
+void ControllerDefinition::setMaxEventLocalVariables(int count)
+{
+	mMaxEventLocals = count;
+}
+// --------------------------------------------------------------------------------
+int ControllerDefinition::getMaxEventLocalVariables() const
+{
+	return mMaxEventLocals;
 }
 // --------------------------------------------------------------------------------
 ScriptRecord* ControllerDefinition::createScriptRecord(ScriptMachine* sm)

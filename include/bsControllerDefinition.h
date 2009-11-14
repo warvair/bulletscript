@@ -49,7 +49,7 @@ namespace BS_NMSP
 
 		int getNumEmitterVariables() const;
 
-		// Functions
+		// Events
 		Event& addEvent(const String& name, ParseTreeNode* node);
 
 		Event& getEvent(int index);
@@ -57,6 +57,10 @@ namespace BS_NMSP
 		int getEventIndex(const String& name) const;
 
 		int getNumEvents() const;
+
+		void setMaxEventLocalVariables(int count);
+
+		int getMaxEventLocalVariables() const;
 
 		// Core
 		ScriptRecord* createScriptRecord(ScriptMachine* sm);
@@ -67,6 +71,8 @@ namespace BS_NMSP
 		std::vector<EmitterVariable> mEmitterVariables;
 
 		std::vector<Event> mEvents;
+
+		int mMaxEventLocals;
 		
 	};
 

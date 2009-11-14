@@ -746,10 +746,6 @@ event_statement
 		{
 			$$ = $1;
 		}
-	| wait_statement
-		{
-			$$ = $1;
-		}
 	;
 
 emitter_state_statement

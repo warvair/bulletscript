@@ -43,9 +43,10 @@ ScriptMachine::ScriptMachine(Log* _log) :
 	// Register functions
 	registerNativeFunction("rand", bm_rand);
 
-	// Create pools for Emitters and Controllers
+	// Create pools
 	mEmitters = new DeepMemoryPool<Emitter, ScriptMachine*>(32, this);
 	mControllers = new DeepMemoryPool<Controller, ScriptMachine*>(32, this);
+//	mEventScriptStates = new DeepMemoryPool<ScriptState, int>(8, 4);
 
 	// Set up AST
 	ParseTree::instancePtr()->setMachines(this);
@@ -53,7 +54,8 @@ ScriptMachine::ScriptMachine(Log* _log) :
 // --------------------------------------------------------------------------------
 ScriptMachine::~ScriptMachine()
 {
-	// Delete Controllers first, because they own some emitters, and then Emitters
+	// Delete Controllers before Emitters, because they own some emitters
+//	delete mEventScriptStates;
 	delete mControllers;
 	delete mEmitters;
 
@@ -166,6 +168,10 @@ void ScriptMachine::destroyController(Controller* ctrl)
 // --------------------------------------------------------------------------------
 void ScriptMachine::updateControllers(float frameTime)
 {
+	// Update Controller events here rather than in Controller::update because it is
+	// quicker to simply go through one master list.
+	
+
 	Controller* ctrl = mControllers->getFirst();
 	while (ctrl)
 	{
@@ -493,7 +499,7 @@ bool ScriptMachine::checkInstructionPosition(ScriptState& st, size_t length, boo
 	}
 }
 // --------------------------------------------------------------------------------
-void ScriptMachine::interpretCode(const uint32* code, size_t length, ScriptState& st, 
+int ScriptMachine::interpretCode(const uint32* code, size_t length, ScriptState& st, 
 								  int* curState, void* object, bstype x, bstype y, 
 #ifdef BS_Z_DIMENSION
 								  bstype z, 
@@ -501,7 +507,7 @@ void ScriptMachine::interpretCode(const uint32* code, size_t length, ScriptState
 								  bstype* members, bool loop)
 {
 	if (st.curInstruction >= length)
-		return;
+		return ScriptFinished;
 
 	while (true)
 	{
@@ -842,9 +848,11 @@ void ScriptMachine::interpretCode(const uint32* code, size_t length, ScriptState
 			{
 				st.suspendTime = st.stack[--st.stackHead];
 				st.curInstruction++;
-				checkInstructionPosition(st, length, loop);
+
+				if (st.curInstruction >= (int) length && loop)
+					st.curInstruction = 0;
 			}
-			return;
+			return ScriptSuspended;
 
 		case BC_DIE:
 			{
@@ -919,11 +927,11 @@ void ScriptMachine::interpretCode(const uint32* code, size_t length, ScriptState
 		}
 
 		if (!checkInstructionPosition(st, length, loop))
-			return;
+			return ScriptFinished;
 	}
 }
 // --------------------------------------------------------------------------------
-void ScriptMachine::interpretCode(const uint32* code, size_t length, ScriptState& st, bstype* members)
+int ScriptMachine::interpretCode(const uint32* code, size_t length, ScriptState& st, bstype* members)
 {
 	while (st.curInstruction < length)
 	{
@@ -1150,6 +1158,8 @@ void ScriptMachine::interpretCode(const uint32* code, size_t length, ScriptState
 
 		}
 	}
+
+	return ScriptFinished;
 }
 // --------------------------------------------------------------------------------
 void ScriptMachine::processScriptRecord(ScriptRecord* gsr, void* object)
