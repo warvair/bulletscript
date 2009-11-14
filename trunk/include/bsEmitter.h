@@ -18,6 +18,8 @@ namespace BS_NMSP
 			bstype speed;
 		};
 
+		bool mEnabled;
+
 		MemberController mMemberControllers[BS_MAX_USER_EMITTER_MEMBERS];
 		uint32 mActiveControllers; // Bitfield for MemberControllers set
 		int mNumUserMembers;
@@ -36,6 +38,8 @@ namespace BS_NMSP
 		~Emitter();
 
 		void setDefinition(EmitterDefinition* def);
+
+		void enable(bool enable);
 		
 		void setX(bstype x);
 

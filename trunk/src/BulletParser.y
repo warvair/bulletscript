@@ -129,6 +129,8 @@ void generate_inc_expr(int value, int nodeType, YYSTYPE parentNode, YYSTYPE idNo
 %token KEYWORD_STATE
 %token KEYWORD_EVENT
 %token KEYWORD_RAISE
+%token KEYWORD_ENABLE
+%token KEYWORD_DISABLE
 %token KEYWORD_WHILE
 %token KEYWORD_BREAK
 %token KEYWORD_CONTINUE
@@ -751,6 +753,10 @@ event_statement
 		{
 			$$ = $1;
 		}
+	| enable_statement
+		{
+			$$ = $1;
+		}
 	;
 
 emitter_state_statement
@@ -834,6 +840,10 @@ controller_state_statement
 			$$ = $1;
 		}
 	| raise_statement
+		{
+			$$ = $1;
+		}
+	| enable_statement
 		{
 			$$ = $1;
 		}
@@ -1255,7 +1265,27 @@ raise_statement
 			$$ = AST->createNode(PT_RaiseStatement, yylineno);
 			$$->setChild(0, $2);
 		}
+	| KEYWORD_RAISE identifier ';'
+		{
+			$$ = AST->createNode(PT_RaiseStatement, yylineno);
+			$$->setChild(0, $2);
+		}
 	;
+		
+enable_statement
+	: KEYWORD_ENABLE '$' identifier ';'
+		{
+			$$ = AST->createNode(PT_EnableStatement, yylineno);
+			$$->setString("enable");
+			$$->setChild(0, $3);
+		}
+	| KEYWORD_DISABLE '$' identifier ';'
+		{
+			$$ = AST->createNode(PT_EnableStatement, yylineno);
+			$$->setString("disable");
+			$$->setChild(0, $3);
+		}
+	;		
 		
 constant_expression
 	: logical_or_expression

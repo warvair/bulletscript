@@ -192,6 +192,11 @@ bool Controller::raiseEvent(int index, const bstype* args)
 	return oldState != mRecord->curState;
 }
 // --------------------------------------------------------------------------------
+void Controller::enableEmitter(int index, bool enable)
+{
+	mEmitters[index].emitter->enable(enable);
+}
+// --------------------------------------------------------------------------------
 void Controller::runScript(float frameTime)
 {
 	if (mRecord->scriptState.suspendTime <= 0)

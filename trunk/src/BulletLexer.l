@@ -43,6 +43,8 @@ BINARY    	[0-1]
 "state"							{ return (KEYWORD_STATE); }
 "event"							{ return (KEYWORD_EVENT); }
 "raise"							{ return (KEYWORD_RAISE); }
+"enable"						{ return (KEYWORD_ENABLE); }
+"disable"						{ return (KEYWORD_DISABLE); }
 "while"							{ return (KEYWORD_WHILE); }
 "break"							{ return (KEYWORD_BREAK); }
 "continue"						{ return (KEYWORD_CONTINUE); }

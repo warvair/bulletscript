@@ -881,6 +881,16 @@ int ScriptMachine::interpretCode(const uint32* code, size_t length, ScriptState&
 			}
 			break;
 
+		case BC_ENABLE:
+			{
+				int emitIndex = code[st.curInstruction + 1];
+				int enable = code[st.curInstruction + 2];
+
+				static_cast<Controller*>(object)->enableEmitter(emitIndex, enable == 1);
+				st.curInstruction += 3;
+			}
+			break;
+
 		case BC_CALL:
 			{
 				int function = code[st.curInstruction + 1];

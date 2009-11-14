@@ -5,45 +5,36 @@ controller Boss1
 
 	// emitters - all these values are offsets from controller values
 	left = emitter Test(0, 0, 0);
-	
-	// events
-	Damaged = event(newHealth)
+
+	TurnOn = event()
 	{
-		if (newHealth < 0.5)
-		{
-			goto Stage2;
-		}
-		else
-		{
-			goto Stage3;
-		}
+		enable $left;
+		goto Stage1;
+	}
+
+	TurnOff = event()
+	{
+		disable $left;
+		goto Stage2;
 	}
 
 	// states
 	Stage1 = state
 	{
 		wait(3);
-		raise Damaged(0.1);
+		raise TurnOff;
 	}
 
 	Stage2 = state
 	{
-		wait(2);
-		$left.time = 0.5;
-		raise Damaged(0.7);
-	}
-
-	Stage3 = state
-	{
-		wait(1);
-		$left.time = 1.2;
-		raise Damaged(0.2);
+		wait(3);
+		raise TurnOn;
 	}
 }
 
 emitter Test
 {
-	time = 1;
+	time = 0.2;
 	Stage1 = state 
 	{
 		fireA bullet(This_Angle, 100);
