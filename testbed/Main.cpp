@@ -26,6 +26,116 @@ using namespace bs;
 
 extern int gTotalBullets;
 
+class GunWrapper
+{
+	bs::Machine* mMachine;
+	bs::Emitter* mGun;
+	bs::Controller* mCtrl;
+	bool mGunNotCtrl;
+	float mTime;
+	bool mAlive;
+
+public:
+
+	explicit GunWrapper(bs::Machine* machine) :
+		mMachine(machine),
+		mAlive(true)
+	{
+		if (rand() & 1)
+		{
+			mGunNotCtrl = true;
+			int rr = rand() % 4;
+			if (rr == 0)
+			{
+				mGun = machine->createEmitter("Flower");
+				mGun->setX(200 + rand() % 400);
+				mGun->setY(200 + rand() % 200);
+			}
+			else if (rr == 1)
+			{
+				mGun = machine->createEmitter("Fireworks");
+				mGun->setX(100 + rand() % 600);
+				mGun->setY(100);
+			}
+			else if (rr == 2)
+			{
+				mGun = machine->createEmitter("Abstract");
+				mGun->setX(200 + rand() % 400);
+				mGun->setY(200 + rand() % 200);
+			}
+			else if (rr == 3)
+			{
+				mGun = machine->createEmitter("ShipSpawner");
+				mGun->setX(200 + rand() % 400);
+				mGun->setY(400 + rand() % 100);
+			}
+
+			mTime = 10 + rand() % 18;
+
+			mGun->setAngle(180);
+		}
+		else
+		{
+			mGunNotCtrl = false;
+			mCtrl = machine->createController("Boss1");
+
+			mCtrl->setX(100 + rand() % 600);
+			mCtrl->setY(100 + rand() % 400);
+			mCtrl->setAngle(180);
+		}
+	}
+
+	~GunWrapper()
+	{
+		if (mGunNotCtrl)
+			mMachine->destroyEmitter(mGun);
+		else
+			mMachine->destroyController(mCtrl);
+		std::cout << "killed wrapper" << std::endl;
+	}
+
+	void update(float frameTime)
+	{
+		mTime -= frameTime;
+		if (mTime < 0.0f)
+			mAlive = false;
+	}
+
+	bool isAlive() const
+	{
+		return mAlive;
+	}
+};
+
+std::list<GunWrapper*> gWrappers;
+
+int updateWrappers(float frameTime)
+{
+	int count = 0;
+	
+	// update
+	std::list<GunWrapper*>::iterator it = gWrappers.begin();
+	while (it != gWrappers.end())
+	{
+		std::list<GunWrapper*>::iterator it2 = it; ++it2;
+		
+		(*it)->update(frameTime);
+		if (!(*it)->isAlive())
+		{
+			gWrappers.erase(it);
+			delete *it;
+			it = it2;
+		}
+		else
+		{
+			++it;
+			count++;
+		}
+	}
+
+	return count;
+}
+
 std::vector<String> getDirectoryListing(const String &dir, const String &pattern)
 {
 	std::vector<String> fileList;
@@ -186,18 +296,66 @@ int main (int argc, char **argv)
 	std::cout << "---------------------" << std::endl;
 	std::cout << "[Esc] Quit." << std::endl;
 	std::cout << "[Mouse, cursors] Move ship." << std::endl;
-
+/*
 	// Create a gun
-//	Emitter* gun = machine.createEmitter("Flower");
-//	gun->setX(400);
-//	gun->setY(300);
-//	gun->setAngle(180);
+	Emitter* gun;
+
+	gun = machine.createEmitter("ShipSpawner");
+	gun->setX(230);
+	gun->setY(400);
+	gun->setAngle(180);
+
+	gun = machine.createEmitter("ShipSpawner");
+	gun->setX(530);
+	gun->setY(400);
+	gun->setAngle(180);
+
+	gun = machine.createEmitter("Abstract");
+	gun->setX(400);
+	gun->setY(500);
+	gun->setAngle(180);
+
+	gun = machine.createEmitter("Flower");
+	gun->setX(400);
+	gun->setY(200);
+	gun->setAngle(180);
+
+	gun = machine.createEmitter("Flower");
+	gun->setX(650);
+	gun->setY(400);
+	gun->setAngle(180);
+
+	gun = machine.createEmitter("Flower");
+	gun->setX(150);
+	gun->setY(400);
+	gun->setAngle(180);
+
+	gun = machine.createEmitter("Fireworks");
+	gun->setX(10);
+	gun->setY(10);
+	gun->setAngle(180);
+
+	gun = machine.createEmitter("Fireworks");
+	gun->setX(110);
+	gun->setY(10);
+	gun->setAngle(180);
+
+	gun = machine.createEmitter("Fireworks");
+	gun->setX(210);
+	gun->setY(10);
+	gun->setAngle(180);
 
 	// Create a controller
 	Controller* controller = machine.createController("Boss1");
 	controller->setX(400);
 	controller->setY(300);
 	controller->setAngle(180);
+
+	controller = machine.createController("Boss1");
+	controller->setX(150);
+	controller->setY(140);
+	controller->setAngle(180);
+*/
 
 	// Main loop
 	unsigned int curTime = SDL_GetTicks();
@@ -207,6 +365,7 @@ int main (int argc, char **argv)
 	unsigned int numFrames = 0;
 
 	int numBullets = 0;
+	int numWrappers = 0;
 
 	int moveDir = -1;
 	int oldX = -10000, oldY = -10000;
@@ -215,6 +374,8 @@ int main (int argc, char **argv)
 	float updateCounter = 0;
 	float updateFreq = 1 / 60.0f;
 	bool updateLogic = false;
+
+	float wrapperCounter;
 
 	int lastSel = -1, curSel = -1;
 
@@ -256,10 +417,12 @@ int main (int argc, char **argv)
 			if (fpsCounter > 1000)
 			{
 				fpsCounter -= 1000;
-				std::cerr << (totalTime/1000.0f) << " FPS: " << numFrames << " Bullets: " << numBullets << "/" << gTotalBullets << std::endl;
+				std::cerr << (totalTime/1000.0f) << " FPS: " << numFrames << " Bullets: " 
+					<< numBullets << "/" << numWrappers << std::endl;
 				numFrames = 0;
 			}
 
+			wrapperCounter += frameTime;
 			updateCounter += frameTime;
 			if (updateCounter >= updateFreq)
 			{
@@ -273,6 +436,9 @@ int main (int argc, char **argv)
 
 			if (updateLogic)
 			{
+				// Update test wrappers
+				numWrappers = updateWrappers(updateFreq);
+
 				// Update machine
 				machine.update(updateFreq);
 
@@ -281,7 +447,19 @@ int main (int argc, char **argv)
 				AreaBattery::update(updateFreq);
 				AudioSystem::update(updateFreq);
 				UnitSystem::update(updateFreq);
+
 			}
+		}
+
+		if (wrapperCounter > 2)
+		{
+			if (numBullets < 5000)
+			{
+				GunWrapper* wr = new GunWrapper(&machine);
+				gWrappers.push_back(wr);
+				std::cout << "new wrapper" << std::endl;
+			}
+			wrapperCounter -= 2;
 		}
 
 		// Render

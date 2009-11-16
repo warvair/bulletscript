@@ -75,8 +75,8 @@ bs::UserTypeBase* BulletBattery::emitAngle(bs::bstype x, bs::bstype y, const bs:
 	b.x = x;
 	b.y = y;
 	b.speed = args[-1];
-	b.vx = (bs::bstype) sin(args[-2] * bs::DEG_TO_RAD);
-	b.vy = (bs::bstype) cos(args[-2] * bs::DEG_TO_RAD);
+	b.vx = (bs::bstype) sin(args[-2] * bs::DEG_TO_RAD) * b.speed;
+	b.vy = (bs::bstype) cos(args[-2] * bs::DEG_TO_RAD) * b.speed;
 	b.alpha = 1;
 	b.red = 1;
 	b.green = 1;
@@ -104,8 +104,8 @@ void BulletBattery::setAngle(bs::UserTypeBase* object, bs::bstype value)
 {
 	Bullet* b = static_cast<Bullet*>(object);
 
-	b->vx = (bs::bstype) sin(value * bs::DEG_TO_RAD);
-	b->vy = (bs::bstype) cos(value * bs::DEG_TO_RAD);
+	b->vx = (bs::bstype) sin(value * bs::DEG_TO_RAD) * b->speed;
+	b->vy = (bs::bstype) cos(value * bs::DEG_TO_RAD) * b->speed;
 }
 // --------------------------------------------------------------------------------
 bs::bstype BulletBattery::getAngle(bs::UserTypeBase* object)
@@ -172,7 +172,8 @@ bs::bstype BulletBattery::getBlue(bs::UserTypeBase* object)
 void BulletBattery::gravity(bs::UserTypeBase* object, float frameTime, const bs::bstype* args)
 {
 	Bullet* b = static_cast<Bullet*>(object);
-	b->y -= args[-1] * frameTime;
+
+	b->vy -= args[-1] * frameTime;
 }
 // --------------------------------------------------------------------------------
 int BulletBattery::update(float frameTime)
@@ -199,8 +200,8 @@ int BulletBattery::update(float frameTime)
 			b.__time += frameTime;
 			
 			// Apply normal movement update
-			b.x += b.vx * b.speed * frameTime;
-			b.y += b.vy * b.speed * frameTime;
+			b.x += b.vx * frameTime;
+			b.y += b.vy * frameTime;
 
 			// bulletscript: apply affectors and control functions
 			mMachine->updateType(&b, b.x, b.y, frameTime);
