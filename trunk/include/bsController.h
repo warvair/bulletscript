@@ -40,7 +40,7 @@ namespace BS_NMSP
 
 		std::vector<Event> mEvents;
 
-		int mMaxEventLocals;
+		ScriptState mEventState;
 
 		ScriptRecord* mRecord;
 

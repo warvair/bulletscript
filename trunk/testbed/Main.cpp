@@ -12,7 +12,12 @@
 
 #if BS_PLATFORM == BS_PLATFORM_WIN32
 #	include <windows.h>
+#	include <direct.h>
+#	include <io.h>
 #endif
+
+#include <sys/types.h>
+#include <sys/stat.h>
 
 #define GUN_X	(SCREEN_WIDTH / 2)
 #define GUN_Y	(SCREEN_HEIGHT * 0.9)
@@ -20,6 +25,37 @@
 using namespace bs;
 
 extern int gTotalBullets;
+
+std::vector<String> getDirectoryListing(const String &dir, const String &pattern)
+{
+	std::vector<String> fileList;
+	
+	long lHandle, res;
+	struct _finddata_t tagData;
+
+	String fullPath = dir + "/" + pattern;
+
+	lHandle = (long) _findfirst (fullPath.c_str (), &tagData);
+	res = 0;
+	while (lHandle != -1 && res != -1)
+	{
+		// Don't add directories
+		if ((tagData.attrib & _A_SUBDIR) == 0 &&
+			(strcmp (tagData.name, ".") && strcmp (tagData.name, "..")))
+		{
+			String fileName = String (tagData.name);
+			fileList.push_back (fileName);
+		}
+
+		res = _findnext (lHandle, &tagData);
+	}
+
+	// Close if we found any files
+	if (lHandle != -1)
+		_findclose (lHandle);
+
+	return fileList;
+}
 
 // Load a script file
 uint8* loadFile(const String& fileName, size_t& byteSize)
@@ -104,25 +140,30 @@ int main (int argc, char **argv)
 	std::cout << "Compiling..." << std::endl;
 
 	// Load file
-	size_t fileSize;
-	uint8* fileBuf = loadFile("Guns.script", fileSize);
-	if(machine.compileScript (fileBuf, fileSize) != 0)
-	{
-		std::cout << "Could not compile Guns.script"  << std::endl;
-		const Log& _log = machine.getLog();
+	std::vector<String> scriptFiles = getDirectoryListing(".", "*.script");
 
-		String msg = _log.getFirst();
-		while (msg != Log::END)
+	for (size_t i = 0; i < scriptFiles.size(); ++i)
+	{
+		size_t fileSize;
+		uint8* fileBuf = loadFile(scriptFiles[i], fileSize);
+		if(machine.compileScript (fileBuf, fileSize) != 0)
 		{
-			std::cout << msg << std::endl;
-			msg = _log.getNext();
+			std::cout << "Could not compile " << scriptFiles[i] << std::endl;
+			const Log& _log = machine.getLog();
+
+			String msg = _log.getFirst();
+			while (msg != Log::END)
+			{
+				std::cout << msg << std::endl;
+				msg = _log.getNext();
+			}
+
+			delete[] fileBuf;
+			return 0;
 		}
 
 		delete[] fileBuf;
-		return 0;
 	}
-
-	delete[] fileBuf;
 
 	std::cout << "Initialising..." << std::endl;
 

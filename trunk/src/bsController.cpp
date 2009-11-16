@@ -9,7 +9,6 @@ namespace BS_NMSP
 // --------------------------------------------------------------------------------
 Controller::Controller(ScriptMachine* machine) :
 	mScriptMachine(machine),
-	mMaxEventLocals(0),
 	mRecord(0)
 {
 }
@@ -18,6 +17,8 @@ Controller::~Controller()
 {
 	onRelease();
 	delete mRecord;
+
+	delete[] mEventState.locals;
 }
 // --------------------------------------------------------------------------------
 void Controller::onRelease()
@@ -31,6 +32,8 @@ void Controller::setDefinition(ControllerDefinition* def)
 {
 	if (mRecord)
 		delete mRecord;
+
+	delete[] mEventState.locals;
 
 	mRecord = def->createScriptRecord(mScriptMachine);
 
@@ -74,7 +77,8 @@ void Controller::setDefinition(ControllerDefinition* def)
 		mEvents.push_back(ctrlEvt);
 	}
 
-	mMaxEventLocals = def->getMaxEventLocalVariables();
+	int eventLocals = def->getMaxEventLocalVariables();
+	mEventState.locals = new bstype[eventLocals];
 }
 // --------------------------------------------------------------------------------
 void Controller::setState(int state)
@@ -177,18 +181,17 @@ bool Controller::raiseEvent(const String& evt, const bstype* args)
 // --------------------------------------------------------------------------------
 bool Controller::raiseEvent(int index, const bstype* args)
 {
-	ScriptState state;
-
-	if (mMaxEventLocals > 0)
-		state.locals = new bstype[mMaxEventLocals];
+	mEventState.curInstruction = 0;
+	mEventState.stackHead = 0;
+	mEventState.suspendTime = 0.0f;
 	
+	memcpy(mEventState.locals, args, mEvents[index].numArguments * sizeof(bstype));
+
 	int oldState = mRecord->curState;
-	memcpy(state.locals, args, mEvents[index].numArguments * sizeof(bstype));
 	mScriptMachine->interpretCode(mEvents[index].code->byteCode, mEvents[index].code->byteCodeSize,
-		state, 0, this, mRecord->members[Member_X], mRecord->members[Member_Y], 
+		mEventState, 0, this, mRecord->members[Member_X], mRecord->members[Member_Y], 
 		mRecord->members, false);
 
-	delete[] state.locals;
 	return oldState != mRecord->curState;
 }
 // --------------------------------------------------------------------------------
