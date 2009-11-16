@@ -1,0 +1,51 @@
+emitter ShipSpawner
+{
+	time = 0.5;
+
+	debris = function()
+	{
+		wait(0.3);
+		$alpha = {0, 0.6};
+		wait(0.6);
+		die();
+	}
+
+	grow = function(dir, time)
+	{
+		$start = {180 + 180 * dir, 0.3};
+		$end = {180, 0.3};
+		wait(time);
+
+		a = 0;
+		while(a < 20)
+		{
+			fireA bullet(a * 18, 80) : debris();
+			a++;
+		}
+
+		$alpha = {0, 0.3};
+		$width = {300, 0.1};
+		$height = {300, 0.1};
+		$iwidth = {$iwidth + 100, 0.1};
+		$iheight = {$iheight + 100, 0.1};
+		wait(0.3);
+		die();
+	}
+
+	// States
+	Emit = state
+	{
+		arc area(64, 64, 90, 90, 32) : grow(-1, time);
+		arc area(64, 64, 270, 270, 32) : grow(1, time);
+
+		wait(time);
+		ship1 unit();
+
+		wait(2);
+	}
+
+	Stable = state
+	{
+		wait(10);
+	}
+}

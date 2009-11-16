@@ -34,11 +34,17 @@ controller Boss1
 
 emitter Test
 {
-	time = 0.2;
+	time = 0.1;
 	Stage1 = state 
 	{
-		fireA bullet(This_Angle, 100);
-		wait(time);
+		i = 0;
+		while (i < 90)
+		{
+			fireA bullet(This_Angle + i - 45, 100);
+			wait(time);
+			i++;
+		}
+		wait(time + 1);
 	}
 
 	Stage2 = state
@@ -47,4 +53,39 @@ emitter Test
 		wait(time);
 	}
 }
+
+emitter Fireworks
+{
+	// members
+
+	// affectors
+	gravity = affector Gravity(100);
+
+	// functions
+	death = function(time)
+	{
+		$alpha = {0, time};
+		wait(time);
+		die();
+	}
+
+	explode = function(time)
+	{
+		wait(time);
+		i = 0;
+		while(i < 40)
+		{
+			i++;
+			fireA bullet(rand(360), 100) : death(0.5), gravity;
+		}
+		die();
+	}
+
+	// states
+	Launch = state
+	{
+		fireA bullet(10, 300) : gravity, explode(3.3);
+		wait(0.1);
+	}
+}	
 

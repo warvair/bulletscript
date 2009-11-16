@@ -282,7 +282,14 @@ void ParseTree::create()
 // --------------------------------------------------------------------------------
 void ParseTree::destroy()
 {
-	mCodeblockNames.clear();
+	mAffectors.clear();
+	mStateIndices.clear();
+	mFunctionIndices.clear();
+	mEventIndices.clear();
+	mBreakLocations.clear();
+	mContinueLocations.clear();
+	mNumErrors = 0;
+
 	delete mRoot;
 	mRoot = 0;
 }
@@ -376,16 +383,14 @@ bool ParseTree::checkConstantExpression(ObjectDefinition* def, CodeBlockType typ
 			case CBT_EmitterState:
 			case CBT_ControllerState:
 				{
-					int numStates = def->getNumStates();
-					ObjectDefinition::State& st = def->getState(numStates - 1);
-					CodeRecord* rec = getCodeRecord(def->getType(), def->getName(), "State", st.name);
+					CodeRecord* rec = getCodeRecord(def->getType(), def->getName(), "State", name);
 					if (rec->getVariableIndex(varName) < 0)
 					{
 						if (def->getMemberVariableIndex(varName) < 0)
 						{
 							if (mScriptMachine->getGlobalVariableIndex(varName) < 0)
 							{
-								addError(node->getLine(), "Variable '" + varName + "' is not declared.");
+								addError(node->getLine(), "Variable '" + varName + "' is not declared1.");
 								return false;
 							}
 						}
@@ -401,7 +406,7 @@ bool ParseTree::checkConstantExpression(ObjectDefinition* def, CodeBlockType typ
 					{
 						if (mScriptMachine->getGlobalVariableIndex(varName) < 0)
 						{
-							addError(node->getLine(), "Variable '" + varName + "' is not declared.");
+							addError(node->getLine(), "Variable '" + varName + "' is not declared2.");
 							return false;
 						}
 					}
@@ -449,7 +454,7 @@ bool ParseTree::checkConstantExpression(ObjectDefinition* def, CodeBlockType typ
 			ControllerDefinition* cDef = static_cast<ControllerDefinition*>(def);
 			if (cDef->getEmitterVariableIndex(varName) < 0)
 			{
-				addError(node->getLine(), "Emitter variable '" + varName + "' is not declared.");
+				addError(node->getLine(), "Emitter variable '" + varName + "' is not declared3.");
 				return false;
 			}
 
@@ -695,7 +700,7 @@ void ParseTree::checkFireControllers(EmitterDefinition* def, ParseTreeNode* node
 		int fIndex = def->getFunctionIndex(ctrlName);
 		if (fIndex < 0)
 		{
-			addError(node->getLine(), "Function '" + ctrlName + "' is not declared.");
+			addError(node->getLine(), "Function '" + ctrlName + "' is not declared4.");
 			return;
 		}
 
@@ -1275,12 +1280,14 @@ void ParseTree::addStates(ObjectDefinition* def, ParseTreeNode* node)
 // --------------------------------------------------------------------------------
 void ParseTree::buildStates(ObjectDefinition* def, ParseTreeNode* node)
 {
+	static ObjectDefinition::State* s_curState = 0;
+
 	switch (node->getType())
 	{
 	case PT_State:
 		{
 			String stateName = node->getChild(0)->getStringData();
-			// Get current state?
+			s_curState = &(def->getState(def->getStateIndex(stateName)));
 		}
 		break;
 
@@ -1288,9 +1295,7 @@ void ParseTree::buildStates(ObjectDefinition* def, ParseTreeNode* node)
 		{
 			String varName = node->getChild(0)->getStringData();
 
-			int numStates = (int) def->getNumStates();
-			ObjectDefinition::State& st = def->getState(numStates - 1);
-			CodeRecord* rec = getCodeRecord(def->getType(), def->getName(), "State", st.name);
+			CodeRecord* rec = getCodeRecord(def->getType(), def->getName(), "State", s_curState->name);
 
 			bool varFound = false;
 			if (rec->getVariableIndex(varName) >= 0)
@@ -1336,7 +1341,7 @@ void ParseTree::buildStates(ObjectDefinition* def, ParseTreeNode* node)
 			else
 				cbtype = CBT_EmitterState;
 
-			if (!checkConstantExpression(def, cbtype, "", node->getChild(1)))
+			if (!checkConstantExpression(def, cbtype, s_curState->name, node->getChild(1)))
 				return;
 
 			// Create local if not found
@@ -1370,7 +1375,7 @@ void ParseTree::buildStates(ObjectDefinition* def, ParseTreeNode* node)
 				return;
 			}
 
-			checkConstantExpression(def, CBT_ControllerState, "", node->getChild(1));
+			checkConstantExpression(def, CBT_ControllerState, s_curState->name, node->getChild(1));
 		}
 		return;
 
@@ -1397,7 +1402,7 @@ void ParseTree::buildStates(ObjectDefinition* def, ParseTreeNode* node)
 			int numArguments = 0;
 			if (node->getChild(1))
 			{
-				if (!checkConstantExpression(def, CBT_EmitterState, "", node->getChild(1)))
+				if (!checkConstantExpression(def, CBT_EmitterState, s_curState->name, node->getChild(1)))
 					return;
 
 				countFunctionCallArguments(node->getChild(1), numArguments);
@@ -1417,7 +1422,7 @@ void ParseTree::buildStates(ObjectDefinition* def, ParseTreeNode* node)
 			{
 				int numCtrls = 0;
 				checkFireControllers(static_cast<EmitterDefinition*>(def), node->getChild(3), numCtrls, ft,
-					CBT_EmitterState, "");
+					CBT_EmitterState, s_curState->name);
 			}
 		}
 		return;
