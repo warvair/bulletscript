@@ -171,7 +171,7 @@ bool RendererGL::initialise (int width, int height)
 	glEnable (GL_BLEND);
 
 	// Create bullet sprite
-	TGALoader bulletLoader ("bullet2.tga");
+	TGALoader bulletLoader ("bullet1.tga");
 	int bwidth, bheight;
 	mBulletTexture = bulletLoader.loadToVRAM (bwidth, bheight);
 	if (mBulletTexture == 0)

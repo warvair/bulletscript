@@ -170,7 +170,7 @@
 			/>
 			<Tool
 				Name="VCPostBuildEventTool"
-				CommandLine="copy $(SolutionDir)\..\bin\BulletScript.dll $(SolutionDir)\..\testbed\bin&#x0D;&#x0A;copy $(SolutionDir)\..\bin\BulletScript.dll $(SolutionDir)\..\minimal\bin&#x0D;&#x0A;"
+				CommandLine="copy $(SolutionDir)\..\bin\BulletScript.dll $(SolutionDir)\..\testbed\bin&#x0D;&#x0A;&#x0D;&#x0A;"
 			/>
 		</Configuration>
 	</Configurations>
