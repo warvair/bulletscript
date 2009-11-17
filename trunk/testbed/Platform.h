@@ -1,7 +1,11 @@
 #ifndef __PLATFORM_H__
 #define __PLATFORM_H__
 
+#include "Main.h"
+
+#ifndef MINIMAL_APP
 #include <SDL.h>
+#endif
 
 bool processMessages();
 

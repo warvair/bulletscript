@@ -2,6 +2,13 @@
 #define __RENDERERGL_H__
 
 #include <vector>
+#include "Main.h"
+
+#ifdef MINIMAL_APP
+class RendererGL
+{
+};
+#else
 #include "bsPrerequisites.h"
 #include "BulletSystem.h"
 
@@ -11,6 +18,7 @@
 
 #include <gl/gl.h>
 #include <gl/glu.h>
+
 #include <SDL.h>
 
 class TGALoader
@@ -100,5 +108,7 @@ public:
 	void renderUnit(float x, float y);
 
 };
+
+#endif // MINIMAL_APP
 
 #endif

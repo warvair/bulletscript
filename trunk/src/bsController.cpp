@@ -9,6 +9,8 @@ namespace BS_NMSP
 // --------------------------------------------------------------------------------
 Controller::Controller(ScriptMachine* machine) :
 	mScriptMachine(machine),
+	mEmitters(0),
+	mNumEmitters(0),
 	mRecord(0)
 {
 }
@@ -16,33 +18,34 @@ Controller::Controller(ScriptMachine* machine) :
 Controller::~Controller()
 {
 	onRelease();
-	delete mRecord;
-
-	delete[] mEventState.locals;
 }
 // --------------------------------------------------------------------------------
 void Controller::onRelease()
 {
-	for (size_t i = 0; i < mEmitters.size(); ++i)
+	for (size_t i = 0; i < mNumEmitters; ++i)
 		mScriptMachine->destroyEmitter(mEmitters[i].emitter);
-	mEmitters.clear();
+	
+	delete[] mEmitters;
+	delete[] mEvents;
+	delete[] mEventState.locals;
+	delete mRecord;
 }
 // --------------------------------------------------------------------------------
 void Controller::setDefinition(ControllerDefinition* def)
 {
-	if (mRecord)
-		delete mRecord;
-
-	delete[] mEventState.locals;
-
 	mRecord = def->createScriptRecord(mScriptMachine);
 
+	mNumEmitters = def->getNumEmitterVariables();
+	mEmitters = new EmitterInstance[mNumEmitters];
+
 	// Create the emitters that this Controller uses.
-	for (int i = 0; i < def->getNumEmitterVariables(); ++i)
+	for (int i = 0; i < mNumEmitters; ++i)
 	{
 		ControllerDefinition::EmitterVariable& var = def->getEmitterVariable(i);
 		
-		EmitterInstance inst;
+		mEmitters[i] = EmitterInstance();
+		EmitterInstance& inst = mEmitters[i];
+
 		inst.special[Member_X] = var.x;
 		inst.special[Member_Y] = var.y;
 #ifdef BS_Z_DIMENSION
@@ -60,21 +63,22 @@ void Controller::setDefinition(ControllerDefinition* def)
 
 		inst.emitter->setAngle(mRecord->members[Member_Angle] + inst.special[Member_Angle]);
 		inst.activeControllers = 0;
-
-		mEmitters.push_back(inst);
 	}
 
 	// Create events
-	for (int i = 0; i < def->getNumEvents(); ++i)
+	mNumEvents = def->getNumEvents();
+	mEvents = new Event[mNumEvents];
+
+	for (int i = 0; i < mNumEvents; ++i)
 	{
 		ControllerDefinition::Event& evt = def->getEvent(i);
 
-		Event ctrlEvt;
+		mEvents[i] = Event();
+		Event& ctrlEvt = mEvents[i];
+
 		ctrlEvt.name = evt.name;
 		ctrlEvt.numArguments = evt.numArguments;
 		ctrlEvt.code = evt.code;
-
-		mEvents.push_back(ctrlEvt);
 	}
 
 	int eventLocals = def->getMaxEventLocalVariables();
@@ -91,14 +95,14 @@ void Controller::setState(int state)
 void Controller::setX(bstype x)
 {
 	mRecord->members[Member_X] = x;
-	for (size_t i = 0; i < mEmitters.size(); ++i)
+	for (size_t i = 0; i < mNumEmitters; ++i)
 		mEmitters[i].emitter->setX(mEmitters[i].special[Member_X] + x);
 }
 // --------------------------------------------------------------------------------
 void Controller::setY(bstype y)
 {
 	mRecord->members[Member_Y] = y;
-	for (size_t i = 0; i < mEmitters.size(); ++i)
+	for (size_t i = 0; i < mNumEmitters; ++i)
 		mEmitters[i].emitter->setY(mEmitters[i].special[Member_Y] + y);
 }
 // --------------------------------------------------------------------------------
@@ -106,7 +110,7 @@ void Controller::setY(bstype y)
 void Controller::setZ(bstype z)
 {
 	mRecord->members[Member_Z] = z;
-	for (size_t i = 0; i < mEmitters.size(); ++i)
+	for (size_t i = 0; i < mNumEmitters; ++i)
 		mEmitters[i].emitter->setZ(mEmitters[i].special[Member_Z] + z);
 }
 #endif
@@ -114,7 +118,7 @@ void Controller::setZ(bstype z)
 void Controller::setAngle(bstype angle)
 {
 	mRecord->members[Member_Angle] = angle;
-	for (size_t i = 0; i < mEmitters.size(); ++i)
+	for (size_t i = 0; i < mNumEmitters; ++i)
 		mEmitters[i].emitter->setAngle(mEmitters[i].special[Member_Angle] + angle);
 }
 // --------------------------------------------------------------------------------
@@ -170,7 +174,7 @@ void Controller::setEmitterMemberState(int emitter, int state)
 // --------------------------------------------------------------------------------
 bool Controller::raiseEvent(const String& evt, const bstype* args)
 {
-	for (size_t i = 0; i < mEvents.size(); ++i)
+	for (size_t i = 0; i < mNumEvents; ++i)
 	{
 		if (mEvents[i].name == evt)
 			return raiseEvent((int) i, args);
@@ -211,7 +215,7 @@ void Controller::runScript(float frameTime)
 void Controller::update(float frameTime)
 {
 	// Update special MemberControllers
-	for (size_t i = 0; i < mEmitters.size(); ++i)
+	for (size_t i = 0; i < mNumEmitters; ++i)
 	{
 		for (int j = 0; j < NUM_SPECIAL_MEMBERS; ++j)
 		{

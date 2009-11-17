@@ -1,4 +1,5 @@
 #include "bsMachine.h"
+#include "bsAlloc.h"
 
 namespace BS_NMSP
 {
@@ -7,6 +8,9 @@ namespace BS_NMSP
 Machine::Machine() :
 	mNumErrors(0)
 {
+	// Memory allocation
+	SmallAllocator::initialise();
+
 	mScriptMachine = new ScriptMachine(&mLog);
 	mTypeManager = new TypeManager(&mLog, mScriptMachine);
 	mScriptMachine->setTypeManager(mTypeManager);

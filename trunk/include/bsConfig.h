@@ -35,4 +35,7 @@ namespace BS_NMSP
 // size of virtual machine stack
 #define BS_SCRIPT_STACK_SIZE			32
 
+// cutoff at which point the small allocator uses new instead
+#define BS_SMALLOC_LIMIT				256
+
 #endif

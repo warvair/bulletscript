@@ -36,9 +36,13 @@ namespace BS_NMSP
 			CodeRecord* code;
 		};
 
-		std::vector<EmitterInstance> mEmitters;
+		EmitterInstance* mEmitters;
 
-		std::vector<Event> mEvents;
+		int mNumEmitters;
+
+		Event* mEvents;
+
+		int mNumEvents;
 
 		ScriptState mEventState;
 

@@ -13,6 +13,12 @@ static bool gPaused = false;
 
 static int gCurBullet = -1;
 
+#ifdef MINIMAL_APP
+bool processMessages()
+{
+	return true;
+}
+#else
 bool processMessages()
 {
 	SDL_Event evt;
@@ -82,6 +88,7 @@ bool processMessages()
 
 	return true;
 }
+#endif
 
 float getHorzMovement()
 {

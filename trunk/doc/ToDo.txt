@@ -1,3 +1,6 @@
+memory allocation
+	try to pre-allocate everything.  SmallAllocator is currently slower than new!
+
 quicker rendering
 	can use point sprites but then they must all use the same size
 
@@ -64,3 +67,31 @@ maybe resume their old behaviour when you stop firing.  This is an edge case but
 	Guns should be able to relinquish control of their FireTypes, by calling "yield()" or similar.  When
 	this is the case, all FireTypes do not have any special updating done (we have a pointer to the Gun
 	in the FireTypeControl for checking).
+
+
+Memory Management
+-----------------
+
+Try to turn this into pre-allocated memory.  If not possible, look into memory allocation techniques.  If we
+write our allocator, use it for all new'ing and just pass it off to new/delete by default.  This way we can
+track memory allocation.
+
+Runtime dynamic memory allocation
+
+	Memory Pooling
+		DeepMemoryPool::mPool (realloc)
+		DeepMemoryPool::mPool[] instances
+	
+	Runtime Controller creation
+		Controller::mEmitters
+		Controller::mEvents
+		Controller::mEventState.locals
+		ControllerDefinition::createScriptRecord (ScriptRecord*)
+		ControllerDefinition::createScriptRecord (ScriptRecord::members)
+			ScriptRecord::ScriptRecord (ScriptState::locals)
+			
+	Runtime Emitter creation
+		EmitterDefinition::createScriptRecord (ScriptRecord*)
+		EmitterDefinition::createScriptRecord (ScriptRecord::members)
+			ScriptRecord::ScriptRecord (ScriptState::locals) [same as ControllerDefinition::createScriptRecord)
+		
