@@ -46,7 +46,6 @@ ScriptMachine::ScriptMachine(Log* _log) :
 	// Create pools
 	mEmitters = new DeepMemoryPool<Emitter, ScriptMachine*>(32, this);
 	mControllers = new DeepMemoryPool<Controller, ScriptMachine*>(32, this);
-//	mEventScriptStates = new DeepMemoryPool<ScriptState, int>(8, 4);
 
 	// Set up AST
 	ParseTree::instancePtr()->setMachines(this);
@@ -916,7 +915,6 @@ int ScriptMachine::interpretCode(const uint32* code, size_t length, ScriptState&
 		case BC_GOTOE:
 			{
 				int newState = code[st.curInstruction + 1];
-//				std::cout << "gotoe " << newState << std::endl;
 				static_cast<Controller*>(object)->setState(newState);
 				st.curInstruction += 2;
 			}

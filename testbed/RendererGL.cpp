@@ -3,6 +3,8 @@
 #include "RendererGL.h"
 #include "AreaSystem.h"
 
+#ifndef MINIMAL_APP
+
 // --------------------------------------------------------------------------------
 GLuint TGALoader::loadToVRAM(int& width, int& height)
 {
@@ -500,3 +502,5 @@ void RendererGL::renderUnit(float x, float y)
 	glEnd();
 }
 // --------------------------------------------------------------------------------
+
+#endif

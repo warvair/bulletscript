@@ -13,6 +13,7 @@ void AudioSystem::initialise(bs::Machine* machine)
 	FSOUND_Init(44100, 32, 0);
 
 	// Load sound effects
+
 	mSamples[0] = FSOUND_Sample_Load(FSOUND_FREE, "dblbass.wav", FSOUND_2D, 0, 0);
 	mSamples[1] = FSOUND_Sample_Load(FSOUND_FREE, "discharge.wav", FSOUND_2D, 0, 0);
 	mSamples[2] = FSOUND_Sample_Load(FSOUND_FREE, "drop1.wav", FSOUND_2D, 0, 0);

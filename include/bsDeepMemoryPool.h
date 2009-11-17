@@ -23,7 +23,9 @@ namespace BS_NMSP
 	template<typename T, typename A1>
 	class DeepMemoryPool
 	{
-		std::vector<T*> mPool;
+		T** mPool;
+
+		size_t mPoolSize;
 
 		A1 mArg1;
 
@@ -31,32 +33,33 @@ namespace BS_NMSP
 
 		void recreatePool(size_t newSize)
 		{
-			size_t oldSize = mPool.size();
-			if (newSize > oldSize)
+			if (newSize > mPoolSize)
 			{
-				mPool.resize(newSize);
-				for (size_t i = oldSize; i < newSize; ++i)
+				mPool = (T**) realloc(mPool, newSize * sizeof(T**));
+				for (size_t i = mPoolSize; i < newSize; ++i)
 				{
 					mPool[i] = new T(mArg1);
 					mPool[i]->__dmpoIndex = (int) i;
 					mPool[i]->__dmpoActive = false;
 					mFreeList.push_back((int) i);
 				}
+
+				mPoolSize = newSize;
 			}
 		}
 
 		void destroyPool()
 		{
-			for (size_t i = 0; i < mPool.size(); ++i)
+			for (size_t i = 0; i < mPoolSize; ++i)
 				delete mPool[i];
 
-			mPool.clear();
+			free(mPool);
 			mFreeList.clear();
 		}
 
 		inline T* _getFrom(size_t index) const
 		{
-			size_t size = mPool.size();
+			size_t size = mPoolSize;
 
 			while (index < size)
 			{
@@ -72,6 +75,8 @@ namespace BS_NMSP
 	public:
 
 		DeepMemoryPool(size_t initialSize, A1 a1) :
+			mPool(0),
+			mPoolSize(0),
 			mArg1(a1)
 		{
 			recreatePool(initialSize);
@@ -85,7 +90,7 @@ namespace BS_NMSP
 		T* acquire()
 		{
 			if (mFreeList.empty())
-				recreatePool(mPool.size() * 2);
+				recreatePool(mPoolSize * 2);
 
 			int index = mFreeList.front();
 			mFreeList.pop_front();

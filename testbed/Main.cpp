@@ -7,7 +7,6 @@
 #include "RendererGL.h"
 #include "BulletSystem.h"
 #include "AreaSystem.h"
-#include "AudioSystem.h"
 #include "UnitSystem.h"
 
 #if BS_PLATFORM == BS_PLATFORM_WIN32
@@ -19,8 +18,23 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 
-#define GUN_X	(SCREEN_WIDTH / 2)
-#define GUN_Y	(SCREEN_HEIGHT * 0.9)
+#if BS_PLATFORM == BS_PLATFORM_LINUX
+#	include <stdlib.h>
+#	include <sys/time.h>
+#	include <time.h>
+
+timeval start_time;
+
+unsigned int timeGetTime()
+{
+	timeval now;
+	unsigned int ticks;
+	
+	gettimeofday(&now, NULL);
+	ticks = (now.tv_sec - start_time.tv_sec) * 1000 + (now.tv_usec - start_time.tv_usec) / 1000;
+	return ticks;
+}
+#endif
 
 using namespace bs;
 
@@ -117,6 +131,7 @@ int updateWrappers(float frameTime)
 	std::list<GunWrapper*>::iterator it = gWrappers.begin();
 	while (it != gWrappers.end())
 	{
+/*
 		std::list<GunWrapper*>::iterator it2 = it; ++it2;
 		
 		(*it)->update(frameTime);
@@ -131,6 +146,8 @@ int updateWrappers(float frameTime)
 			++it;
 			count++;
 		}
+*/
+		++it;
 	}
 
 	return count;
@@ -189,6 +206,15 @@ uint8* loadFile(const String& fileName, size_t& byteSize)
 	return buffer;
 }
 
+unsigned int getTicks()
+{
+#ifdef MINIMAL_APP
+	return timeGetTime();
+#else
+	return SDL_GetTicks();
+#endif
+}
+
 int main (int argc, char **argv)
 {
 	srand(time(0));
@@ -224,13 +250,6 @@ int main (int argc, char **argv)
 	machine.registerProperty("area", "angle", AreaBattery::setAngle, AreaBattery::getAngle);
 	machine.registerProperty("area", "start", AreaBattery::setStart, AreaBattery::getStart);
 	machine.registerProperty("area", "end", AreaBattery::setEnd, AreaBattery::getEnd);
-
-	// Register audio functions
-	machine.createType("sound");
-
-	machine.registerFireFunction("sound", "fx", 2, AudioSystem::emitSound);
-	machine.setDieFunction("sound", AudioSystem::killSound);
-	machine.registerProperty("sound", "volume", AudioSystem::setVolume,	AudioSystem::getVolume);
 
 	// Register unit functions
 	machine.createType("unit");
@@ -280,22 +299,16 @@ int main (int argc, char **argv)
 	// Initialise systems
 	BulletBattery::initialise(&machine);
 	AreaBattery::initialise(&machine);
-	AudioSystem::initialise(&machine);
 	UnitSystem::initialise(&machine);
 
-	// Renderer
+#ifndef MINIMAL_APP
 	RendererGL renderer;
 	if (!renderer.initialise(SCREEN_WIDTH, SCREEN_HEIGHT))
 		return 0;
 
 	SDL_ShowCursor(SDL_DISABLE);
+#endif
 
-	// Print interface commands
-	std::cout << std::endl;
-	std::cout << "BulletScript" << std::endl;
-	std::cout << "---------------------" << std::endl;
-	std::cout << "[Esc] Quit." << std::endl;
-	std::cout << "[Mouse, cursors] Move ship." << std::endl;
 /*
 	// Create a gun
 	Emitter* gun;
@@ -358,111 +371,94 @@ int main (int argc, char **argv)
 */
 
 	// Main loop
-	unsigned int curTime = SDL_GetTicks();
+	unsigned int curTime = getTicks();
 	unsigned int totalTime = 0;
 
 	unsigned int fpsCounter = 0;
-	unsigned int numFrames = 0;
+	unsigned int numFrames = 0, updateTime = 0;
 
 	int numBullets = 0;
 	int numWrappers = 0;
 
-	int moveDir = -1;
-	int oldX = -10000, oldY = -10000;
-	int mouseX = oldX, mouseY = oldY;
-
 	float updateCounter = 0;
 	float updateFreq = 1 / 60.0f;
-	bool updateLogic = false;
 
 	float wrapperCounter;
-
-	int lastSel = -1, curSel = -1;
 
 	bool evtRaised = false;
 	while (true)
 	{
+#ifndef MINIMAL_APP
 		if (!processMessages())
 			break;
-
-		// Get update time
-		unsigned int deltaTime = 0;
-		unsigned int newTime = 0;
-//		while (deltaTime < 1)
-		{
-			newTime = SDL_GetTicks();
-			deltaTime = newTime - curTime;
-		}
-
-		curTime = newTime;
-		numFrames++;
-		
-		totalTime += deltaTime;
-		fpsCounter += deltaTime;
-
-		float frameTime = deltaTime / 1000.0f;
-
-		// Set script globals - this will update BulletAffector global arguments
-		machine.setGlobalVariableValue("Level_Time", totalTime / 1000.0f);
-
-		if (totalTime > 4000 && !evtRaised)
-		{
-//			float damage = 0.5f;
-//			controller->raiseEvent("Damaged", &damage);
-//			evtRaised = true;
-		}
+#endif
 
 		if (!paused())
 		{
+			// Get update time
+			unsigned int newTime = getTicks();
+			unsigned int deltaTime = newTime - curTime;
+
+			curTime = newTime;
+			
+			totalTime += deltaTime;
+			fpsCounter += deltaTime;
+
+			float frameTime = deltaTime / 1000.0f;
+
 			if (fpsCounter > 1000)
 			{
 				fpsCounter -= 1000;
-				std::cerr << (totalTime/1000.0f) << " FPS: " << numFrames << " Bullets: " 
-					<< numBullets << "/" << numWrappers << std::endl;
+				std::cerr << "Avg update time: " << (updateTime / (float) numFrames) << "ms " << (totalTime/1000.0f) << 
+					" FPS: " << numFrames << " Bullets: " << numBullets << "/" << gWrappers.size() << std::endl;
 				numFrames = 0;
+				updateTime = 0;
 			}
 
 			wrapperCounter += frameTime;
 			updateCounter += frameTime;
-			if (updateCounter >= updateFreq)
+
+			updateFreq = frameTime;
+//			if (updateCounter >= updateFreq) // uncomment this line to run at 60hz
 			{
 				updateCounter -= updateFreq;
-				updateLogic = true;
-			}
-			else
-			{
-				updateLogic = false;
-			}
 
-			if (updateLogic)
-			{
 				// Update test wrappers
 				numWrappers = updateWrappers(updateFreq);
+
+				// Set script globals - this will update BulletAffector global arguments
+				machine.setGlobalVariableValue("Level_Time", totalTime / 1000.0f);
+
+				unsigned int bsTime1 = getTicks();
 
 				// Update machine
 				machine.update(updateFreq);
 
 				// Update types
-				numBullets = BulletBattery::update(updateFreq);
+				numBullets = BulletBattery::update(frameTime);
 				AreaBattery::update(updateFreq);
-				AudioSystem::update(updateFreq);
 				UnitSystem::update(updateFreq);
 
+				unsigned int bsTime2 = getTicks();
+
+				updateTime += (bsTime2 - bsTime1);
 			}
+
+			numFrames++;
 		}
 
-		if (wrapperCounter > 2)
+		if (wrapperCounter > 0.3)
 		{
-			if (numBullets < 5000)
+			if (numBullets < 50000)
 			{
 				GunWrapper* wr = new GunWrapper(&machine);
 				gWrappers.push_back(wr);
-				std::cout << "new wrapper" << std::endl;
 			}
-			wrapperCounter -= 2;
+			wrapperCounter -= 0.3;
 		}
 
 		// Render
+#ifndef MINIMAL_APP
 		renderer.startRendering();
 
 		BulletBattery::render(&renderer);
@@ -470,11 +466,15 @@ int main (int argc, char **argv)
 		UnitSystem::render(&renderer);
 
 		renderer.finishRendering();
+#endif
+
 	}
 
-	AudioSystem::shutdown();
 	UnitSystem::shutdown();
 
+#ifndef MINIMAL_APP
 	SDL_Quit();
+#endif
+
 	return 0;
 }

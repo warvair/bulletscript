@@ -1,6 +1,7 @@
 #include <iostream>
 #include "bsCore.h"
 #include "bsScriptMachine.h"
+#include "bsAlloc.h"
 
 namespace BS_NMSP
 {
@@ -63,13 +64,17 @@ ScriptRecord::ScriptRecord(int numLocals) :
 	members(0)
 {
 	if (numLocals > 0)
-		scriptState.locals = new bstype[numLocals];
+	{
+		scriptState.locals = (bstype*) SmallAllocator::alloc(numLocals * sizeof(bstype));
+//		scriptState.locals = new bstype[numLocals];
+	}
 }
 // --------------------------------------------------------------------------------
 ScriptRecord::~ScriptRecord()
 {
 	delete[] members;
-	delete[] scriptState.locals;
+	SmallAllocator::release(scriptState.locals);
+//	delete[] scriptState.locals;
 }
 // --------------------------------------------------------------------------------
 }

@@ -1,3 +1,4 @@
+#include "Main.h"
 #include "UnitSystem.h"
 
 bs::Machine* UnitSystem::mMachine = 0;
@@ -55,7 +56,9 @@ bool Unit::update(float frameTime)
 // --------------------------------------------------------------------------------
 void Unit::render(RendererGL* renderer)
 {
+#ifndef MINIMAL_APP
 	renderer->renderUnit(mX, mY);
+#endif
 }
 // --------------------------------------------------------------------------------
 void Unit::__deactivate()
@@ -137,8 +140,10 @@ void UnitSystem::killUnit(Unit* unit)
 // --------------------------------------------------------------------------------
 void UnitSystem::render(RendererGL* renderer)
 {
+#ifndef MINIMAL_APP
 	for (size_t i = 0; i < mUnits.size(); ++i)
 		if (mUnits[i]->__active)
 			mUnits[i]->render(renderer);
+#endif
 }
 // --------------------------------------------------------------------------------

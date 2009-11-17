@@ -222,6 +222,7 @@ int BulletBattery::update(float frameTime)
 // --------------------------------------------------------------------------------
 void BulletBattery::render(RendererGL *renderer)
 {
+#ifndef MINIMAL_APP
 	std::vector<Bullet>::iterator it = mBullets.begin();
 	while (it != mBullets.end ())
 	{
@@ -231,6 +232,7 @@ void BulletBattery::render(RendererGL *renderer)
 
 		++ it;
 	}
+#endif
 }
 // --------------------------------------------------------------------------------
 Bullet* BulletBattery::getBullet(int index)
