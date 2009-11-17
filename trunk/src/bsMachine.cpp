@@ -6,7 +6,9 @@ namespace BS_NMSP
 
 // --------------------------------------------------------------------------------
 Machine::Machine() :
-	mNumErrors(0)
+	mNumErrors(0),
+	mScriptMachine(0),
+	mTypeManager(0)
 {
 	// Memory allocation
 	SmallAllocator::initialise();
@@ -18,6 +20,8 @@ Machine::Machine() :
 // --------------------------------------------------------------------------------
 Machine::~Machine()
 {
+	SmallAllocator::destroy();
+
 	delete mScriptMachine;
 	delete mTypeManager;
 }

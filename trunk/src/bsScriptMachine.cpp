@@ -38,7 +38,9 @@ void bm_rand(ScriptState& state)
 // --------------------------------------------------------------------------------
 ScriptMachine::ScriptMachine(Log* _log) :
 	mTypeManager(0),
-	mLog(_log)
+	mLog(_log),
+	mEmitters(0),
+	mControllers(0)
 {
 	// Register functions
 	registerNativeFunction("rand", bm_rand);
@@ -54,7 +56,6 @@ ScriptMachine::ScriptMachine(Log* _log) :
 ScriptMachine::~ScriptMachine()
 {
 	// Delete Controllers before Emitters, because they own some emitters
-//	delete mEventScriptStates;
 	delete mControllers;
 	delete mEmitters;
 

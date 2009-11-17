@@ -5,31 +5,29 @@ LIBNAME_D = bulletscript.so
 
 LIBSRCDIR = ../src
 
-LIBSRC = $(LIBSRCDIR)/bsBulletLexer.cpp $(LIBSRCDIR)/bsBulletParser.cpp $(LIBSRCDIR)/bsFireType.cpp $(LIBSRCDIR)/bsGunDefinition.cpp $(LIBSRCDIR)/bsLog.cpp $(LIBSRCDIR)/bsParseTree.cpp $(LIBSRCDIR)/bsScriptMachine.cpp $(LIBSRCDIR)/bsScriptStructs.cpp $(LIBSRCDIR)/bsScriptVariables.cpp
-
 LIBOUTDIR_S = ../lib
 
 LIBOUTDIR_D = ../bin
 
+LIBSRC = $(LIBSRCDIR)/bsAffector.cpp $(LIBSRCDIR)/bsAlloc.cpp $(LIBSRCDIR)/bsBulletLexer.cpp $(LIBSRCDIR)/bsBulletParser.cpp $(LIBSRCDIR)/bsController.cpp $(LIBSRCDIR)/bsControllerDefinition.cpp $(LIBSRCDIR)/bsCore.cpp $(LIBSRCDIR)/bsEmitter.cpp $(LIBSRCDIR)/bsEmitterDefinition.cpp $(LIBSRCDIR)/bsFireType.cpp $(LIBSRCDIR)/bsLog.cpp $(LIBSRCDIR)/bsMachine.cpp $(LIBSRCDIR)/bsObjectDefinition.cpp $(LIBSRCDIR)/bsParseTree.cpp $(LIBSRCDIR)/bsScriptMachine.cpp  $(LIBSRCDIR)/bsScriptVariables.cpp $(LIBSRCDIR)/bsTypeManager.cpp
+
 LIBFILES = $(LIBSRC:.cpp=.o)
 
-# minimal app
-MINNAME_S = minimal-static
+# testbed
+TESTBEDNAME = testbed
 
-MINNAME_D = minimal-shared
+TESTBEDSRCDIR = ../testbed
 
-MINSRCDIR = ../minimal
+TESTBEDOUTDIR = ../testbed/bin
 
-MINSRC = $(MINSRCDIR)/Main.cpp $(MINSRCDIR)/BulletSystem.cpp
+TESTBEDSRC = $(TESTBEDSRCDIR)/AreaSystem.cpp $(TESTBEDSRCDIR)/BulletSystem.cpp $(TESTBEDSRCDIR)/Main.cpp $(TESTBEDSRCDIR)/Platform.cpp $(TESTBEDSRCDIR)/RendererGL.cpp $(TESTBEDSRCDIR)/UnitSystem.cpp
 
-MINOUTDIR = ../minimal/bin
-
-MINFILES = $(MINSRC:.cpp=.o)
+TESTBEDFILES = $(TESTBEDSRC:.cpp=.o)
 
 # compiler
 CXX = g++
 
-CXXFLAGS = -O2 -I../include -I/usr/local/boost_1_40_0 -g
+CXXFLAGS = -O2 -I../include
 
 # bulletscript
 lib-static: $(LIBFILES)
@@ -39,13 +37,9 @@ lib-static: $(LIBFILES)
 #lib-shared: $(LIBFILES)
 #	$(CXX) -shared -o $(LIBOUTDIR_D)/$(LIBNAME_D) $(LIBFILES)
 
-# minimal app
-minimal-static: $(MINFILES)
-	$(CXX) $(CXXFLAGS) $^ $(LIBOUTDIR_S)/bulletscript-static.a -o $(MINOUTDIR)/$(MINNAME_S)
-
-# minimal-shared: $(MINFILES)
-# need to specify that files are compiled with -fPIC
-	
+# testbed
+testbed: $(TESTBEDFILES)
+	 $(CXX) $(CXXFLAGS) $^ $(LIBOUTDIR_S)/$(LIBNAME_S) -o $(TESTBEDOUTDIR)/$(TESTBEDNAME)
 
 .cpp.o:
 	$(CXX) $(CXXFLAGS) -c $< -o $@
@@ -53,8 +47,8 @@ minimal-static: $(MINFILES)
 # cleanup
 clean:
 	rm -f $(LIBOUTDIR_S)/$(LIBNAME_S)
-	rm -f $(MINOUTDIR)/$(MINNAME_S)
 	rm -f $(LIBSRCDIR)/*.o
-	rm -f $(MINSRCDIR)/*.o
+	rm -f $(TESTBEDSRCDIR)/*.o
+
 
 	

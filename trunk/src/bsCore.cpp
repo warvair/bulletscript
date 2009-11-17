@@ -59,22 +59,23 @@ ScriptState::ScriptState() :
 {
 }
 // --------------------------------------------------------------------------------
+// --------------------------------------------------------------------------------
 ScriptRecord::ScriptRecord(int numLocals) :
 	curState(0),
 	members(0)
 {
 	if (numLocals > 0)
 	{
-		scriptState.locals = (bstype*) SmallAllocator::alloc(numLocals * sizeof(bstype));
-//		scriptState.locals = new bstype[numLocals];
+//		scriptState.locals = (bstype*) SmallAllocator::alloc(numLocals * sizeof(bstype));
+		scriptState.locals = new bstype[numLocals];
 	}
 }
 // --------------------------------------------------------------------------------
 ScriptRecord::~ScriptRecord()
 {
 	delete[] members;
-	SmallAllocator::release(scriptState.locals);
-//	delete[] scriptState.locals;
+//	SmallAllocator::release(scriptState.locals);
+	delete[] scriptState.locals;
 }
 // --------------------------------------------------------------------------------
 }

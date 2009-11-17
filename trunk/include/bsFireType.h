@@ -61,6 +61,7 @@ namespace BS_NMSP
 	};
 
 	class ScriptMachine;
+	class TypeManager;
 
 	class _BSAPI FireType
 	{
