@@ -11,6 +11,8 @@ Controller::Controller(ScriptMachine* machine) :
 	mScriptMachine(machine),
 	mEmitters(0),
 	mNumEmitters(0),
+	mEvents(0),
+	mNumEvents(0),
 	mRecord(0)
 {
 }

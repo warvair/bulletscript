@@ -55,7 +55,7 @@ public:
 		mMachine(machine),
 		mAlive(true)
 	{
-		if (rand() & 1)
+		if (true)//(rand() & 1)
 		{
 			mGunNotCtrl = true;
 			int rr = rand() % 4;
@@ -105,7 +105,6 @@ public:
 			mMachine->destroyEmitter(mGun);
 		else
 			mMachine->destroyController(mCtrl);
-		std::cout << "killed wrapper" << std::endl;
 	}
 
 	void update(float frameTime)
@@ -153,6 +152,19 @@ int updateWrappers(float frameTime)
 	return count;
 }
 
+void destroyGunWrappers()
+{
+	std::list<GunWrapper*>::iterator it = gWrappers.begin();
+	while (it != gWrappers.end())
+	{
+		delete *it;
+		++it;
+	}
+
+	gWrappers.clear();
+}
+
+#if BS_PLATFORM == BS_PLATFORM_WIN32
 std::vector<String> getDirectoryListing(const String &dir, const String &pattern)
 {
 	std::vector<String> fileList;
@@ -183,6 +195,14 @@ std::vector<String> getDirectoryListing(const String &dir, const String &pattern
 
 	return fileList;
 }
+#elif BS_PLATFORM == BS_PLATFORM_LINUX
+std::vector<String> getDirectoryListing(const String &dir, const String &pattern)
+{
+	std::vector<String> fileList;
+	
+	return fileList;
+}
+#endif
 
 // Load a script file
 uint8* loadFile(const String& fileName, size_t& byteSize)
@@ -217,6 +237,10 @@ unsigned int getTicks()
 
 int main (int argc, char **argv)
 {
+	int runTime = 999999999;
+	if (argc >= 2)
+		runTime = atoi(argv[1]) * 1000;
+
 	srand(time(0));
 
 	// Create machine
@@ -269,7 +293,12 @@ int main (int argc, char **argv)
 	std::cout << "Compiling..." << std::endl;
 
 	// Load file
-	std::vector<String> scriptFiles = getDirectoryListing(".", "*.script");
+//	std::vector<String> scriptFiles = getDirectoryListing(".", "*.script");
+	std::vector<String> scriptFiles;
+	scriptFiles.push_back("Abstract.script");
+	scriptFiles.push_back("Basic.script");
+	scriptFiles.push_back("Flower.script");
+	scriptFiles.push_back("Spawns.script");
 
 	for (size_t i = 0; i < scriptFiles.size(); ++i)
 	{
@@ -386,7 +415,7 @@ int main (int argc, char **argv)
 	float wrapperCounter;
 
 	bool evtRaised = false;
-	while (true)
+	while (totalTime < runTime)
 	{
 #ifndef MINIMAL_APP
 		if (!processMessages())
@@ -475,6 +504,7 @@ int main (int argc, char **argv)
 #ifndef MINIMAL_APP
 	SDL_Quit();
 #endif
-
+	
+	destroyGunWrappers();
 	return 0;
 }

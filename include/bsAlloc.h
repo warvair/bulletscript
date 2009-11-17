@@ -4,6 +4,10 @@
 #include <list>
 #include "bsPrerequisites.h"
 
+#if BS_PLATFORM == BS_PLATFORM_LINUX
+#	include <cstdlib>
+#endif
+
 namespace BS_NMSP
 {
 
@@ -31,14 +35,17 @@ namespace BS_NMSP
 
 	public:
 
-		~SmallAllocator()
-		{
-			free(mPool);
-		}
-
 		static void initialise()
 		{
 			resize(INITIAL_SIZE);
+		}
+
+		static void destroy()
+		{
+			free(mPool);
+			mPool = 0;
+			mSize = 0;
+			mBlocks.clear();
 		}
 
 		static void* alloc(size_t size)
