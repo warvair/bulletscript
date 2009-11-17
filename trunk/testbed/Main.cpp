@@ -293,12 +293,7 @@ int main (int argc, char **argv)
 	std::cout << "Compiling..." << std::endl;
 
 	// Load file
-//	std::vector<String> scriptFiles = getDirectoryListing(".", "*.script");
-	std::vector<String> scriptFiles;
-	scriptFiles.push_back("Abstract.script");
-	scriptFiles.push_back("Basic.script");
-	scriptFiles.push_back("Flower.script");
-	scriptFiles.push_back("Spawns.script");
+	std::vector<String> scriptFiles = getDirectoryListing(".", "*.script");
 
 	for (size_t i = 0; i < scriptFiles.size(); ++i)
 	{
@@ -415,7 +410,7 @@ int main (int argc, char **argv)
 	float wrapperCounter;
 
 	bool evtRaised = false;
-	while (totalTime < runTime)
+	while (true)
 	{
 #ifndef MINIMAL_APP
 		if (!processMessages())
@@ -447,8 +442,8 @@ int main (int argc, char **argv)
 			wrapperCounter += frameTime;
 			updateCounter += frameTime;
 
-			updateFreq = frameTime;
-//			if (updateCounter >= updateFreq) // uncomment this line to run at 60hz
+			updateFreq = frameTime;				// comment this line out to run at 60hz
+//			if (updateCounter >= updateFreq)	// uncomment this line to run at 60hz
 			{
 				updateCounter -= updateFreq;
 
