@@ -1257,6 +1257,10 @@ die_statement
 		{	
 			$$ = AST->createNode(PT_DieStatement, yylineno);
 		}
+	| KEYWORD_DIE ';'
+		{	
+			$$ = AST->createNode(PT_DieStatement, yylineno);
+		}
 	;
 	
 raise_statement

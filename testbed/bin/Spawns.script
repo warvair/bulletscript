@@ -43,9 +43,4 @@ emitter ShipSpawner
 
 		wait(2);
 	}
-
-	Stable = state
-	{
-		wait(10);
-	}
 }
