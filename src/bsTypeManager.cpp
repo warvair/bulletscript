@@ -81,21 +81,22 @@ void TypeManager::updateType(UserTypeBase* ft, bstype x, bstype y, float frameTi
 		return;
 
 	FireTypeControl* rec = ft->__ft;
+	FireType* fireType = rec->__type;
 
 	// Update pointer to the user object
 	rec->__object = ft;
 
 	// Update changing properties before script, because they are independent of script status
-	int numProperties = rec->__type->mNumProperties;
+	int numProperties = fireType->mNumProperties;
 	for (int i = 0; i < numProperties; ++i)
 	{
 		int mask = 1 << i;
 		if (rec->activeProperties & mask)
 		{
-			bstype curValue = rec->__type->mProperties[i].getter(rec->__object);
+			bstype curValue = fireType->mProperties[i].getter(rec->__object);
 			bstype newValue = curValue + rec->properties[i].speed * frameTime;
 
-			rec->__type->mProperties[i].setter(rec->__object, newValue);
+			fireType->mProperties[i].setter(rec->__object, newValue);
 
 			rec->properties[i].time -= frameTime;
 			if (rec->properties[i].time <= 0)
