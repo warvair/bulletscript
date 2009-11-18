@@ -86,8 +86,6 @@ bs::UserTypeBase* BulletBattery::emitAngle(bs::bstype x, bs::bstype y, const bs:
 	b.speed = args[-1];
 	b.angle = args[-2];
 
-//	b.vx = (bs::bstype) sin(args[-2] * bs::DEG_TO_RAD) * b.speed;
-//	b.vy = (bs::bstype) cos(args[-2] * bs::DEG_TO_RAD) * b.speed;
 	int index = (int) (args[-2] * 10) % 3600;
 	b.vx = sinTable[index] * args[-1];
 	b.vy = cosTable[index] * args[-1];
@@ -120,8 +118,6 @@ void BulletBattery::setAngle(bs::UserTypeBase* object, bs::bstype value)
 	Bullet* b = static_cast<Bullet*>(object);
 
 	b->angle = value;
-//	b->vx = (bs::bstype) sin(value * bs::DEG_TO_RAD) * b->speed;
-//	b->vy = (bs::bstype) cos(value * bs::DEG_TO_RAD) * b->speed;
 	int index = (int) (value * 10) % 3600;
 	b->vx = sinTable[index] * b->speed;
 	b->vy = cosTable[index] * b->speed;

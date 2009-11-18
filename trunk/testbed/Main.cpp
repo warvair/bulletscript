@@ -122,6 +122,7 @@ void destroyGunWrappers()
 	gWrappers.clear();
 }
 
+/*
 FILE* open_profile_file(const char* fileName)
 {
 	FILE* fp = fopen(fileName, "a+");
@@ -141,7 +142,7 @@ void write_profile_info(FILE* fp, float time, float length, int fps, int bullets
 {
 	fprintf(fp, "%3.2f\t\t%4.3f\t\t\t%d\t%d\n", time, length, fps, bullets);
 }
-
+*/
 #if BS_PLATFORM == BS_PLATFORM_WIN32
 std::vector<String> getDirectoryListing(const String &dir, const String &pattern)
 {
@@ -321,13 +322,13 @@ int main (int argc, char **argv)
 	int numBullets = 0;
 
 	// 50 emitters to start
-	for (int i = 0; i < 12; ++i)
+	for (int i = 0; i < 50; ++i)
 	{
 		GunWrapper* wr = new GunWrapper(&machine);
 		gWrappers.push_back(wr);
 	}
 
-	FILE* prof = open_profile_file("profiling.txt");
+//	FILE* prof = open_profile_file("profiling.txt");
 
 	while (true)
 	{
@@ -353,7 +354,7 @@ int main (int argc, char **argv)
 			std::cerr << "Avg update time: " << (updateTime / (float) numFrames) << "ms " << (totalTime/1000.0f) << 
 				" FPS: " << numFrames << " Bullets: " << numBullets << "/" << gWrappers.size() << std::endl;
 
-			write_profile_info(prof, (totalTime/1000.0f), (updateTime / (float) numFrames), numFrames, numBullets);
+//			write_profile_info(prof, (totalTime/1000.0f), (updateTime / (float) numFrames), numFrames, numBullets);
 
 			numFrames = 0;
 			updateTime = 0;
@@ -380,7 +381,7 @@ int main (int argc, char **argv)
 		// Render
 
 #ifndef MINIMAL_APP
-/*
+		/*
 		renderer.startRendering();
 
 		BulletBattery::render(&renderer);
@@ -388,9 +389,8 @@ int main (int argc, char **argv)
 		UnitSystem::render(&renderer);
 
 		renderer.finishRendering();
-*/
+		*/
 #endif
-
 
 	}
 
@@ -400,7 +400,7 @@ int main (int argc, char **argv)
 	SDL_Quit();
 #endif
 	
-	close_profile_file(&prof);
+//	close_profile_file(&prof);
 
 	destroyGunWrappers();
 	return 0;
