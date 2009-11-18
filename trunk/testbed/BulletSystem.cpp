@@ -17,6 +17,8 @@ int BulletBattery::mStoreIndex;
 int BulletBattery::mUseIndex;
 std::vector<Bullet> BulletBattery::mSpawnedBullets;
 
+float BulletBattery::sinTable[3600], BulletBattery::cosTable[3600];
+
 // --------------------------------------------------------------------------------
 void BulletBattery::initialise(bs::Machine* machine)
 {
@@ -31,6 +33,13 @@ void BulletBattery::initialise(bs::Machine* machine)
 
 	for (int i = 0; i < BATTERY_SIZE; ++ i)
 		mFreeList[mUseIndex].push_back(BATTERY_SIZE - i - 1);
+
+	// trig tables
+	for (int i = 0; i < 3600; ++i)
+	{
+		sinTable[i] = (float) sin((i / 10.0f) * bs::DEG_TO_RAD);
+		cosTable[i] = (float) cos((i / 10.0f) * bs::DEG_TO_RAD);
+	}
 }
 // --------------------------------------------------------------------------------
 unsigned int BulletBattery::getFreeBulletSlot()
@@ -75,8 +84,14 @@ bs::UserTypeBase* BulletBattery::emitAngle(bs::bstype x, bs::bstype y, const bs:
 	b.x = x;
 	b.y = y;
 	b.speed = args[-1];
-	b.vx = (bs::bstype) sin(args[-2] * bs::DEG_TO_RAD) * b.speed;
-	b.vy = (bs::bstype) cos(args[-2] * bs::DEG_TO_RAD) * b.speed;
+	b.angle = args[-2];
+
+//	b.vx = (bs::bstype) sin(args[-2] * bs::DEG_TO_RAD) * b.speed;
+//	b.vy = (bs::bstype) cos(args[-2] * bs::DEG_TO_RAD) * b.speed;
+	int index = (int) (args[-2] * 10) % 3600;
+	b.vx = sinTable[index] * args[-1];
+	b.vy = cosTable[index] * args[-1];
+
 	b.alpha = 1;
 	b.red = 1;
 	b.green = 1;
@@ -104,21 +119,18 @@ void BulletBattery::setAngle(bs::UserTypeBase* object, bs::bstype value)
 {
 	Bullet* b = static_cast<Bullet*>(object);
 
-	b->vx = (bs::bstype) sin(value * bs::DEG_TO_RAD) * b->speed;
-	b->vy = (bs::bstype) cos(value * bs::DEG_TO_RAD) * b->speed;
+	b->angle = value;
+//	b->vx = (bs::bstype) sin(value * bs::DEG_TO_RAD) * b->speed;
+//	b->vy = (bs::bstype) cos(value * bs::DEG_TO_RAD) * b->speed;
+	int index = (int) (value * 10) % 3600;
+	b->vx = sinTable[index] * b->speed;
+	b->vy = cosTable[index] * b->speed;
 }
 // --------------------------------------------------------------------------------
 bs::bstype BulletBattery::getAngle(bs::UserTypeBase* object)
 {
 	Bullet* b = static_cast<Bullet*>(object);
-
-	bs::bstype angle = atan2(b->vy, b->vx) * bs::RAD_TO_DEG;
-	if (angle < 0)
-		return fabs(angle) + 90;
-	else
-	{
-		return (180 - angle) - 90;
-	}
+	return b->angle;
 }
 // --------------------------------------------------------------------------------
 void BulletBattery::setFade(bs::UserTypeBase* object, bs::bstype value)

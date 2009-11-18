@@ -8,6 +8,7 @@ class RendererGL;
 struct Bullet : public bs::UserTypeBase
 {
 	bs::bstype x, y;
+	bs::bstype angle;
 	bs::bstype vx, vy;
 	bs::bstype speed;
 	bs::bstype alpha;
@@ -18,7 +19,7 @@ struct Bullet : public bs::UserTypeBase
 	float __time;
 
 	bool __active;
-	char padding[15]; // pad to 64 bytes
+	char padding[11]; // pad to 64 bytes
 
 	Bullet() : __active(false) {}
 };
@@ -45,6 +46,8 @@ class BulletBattery
 	static std::vector<unsigned int> mFreeList[2];
 	static int mStoreIndex;
 	static int mUseIndex;
+
+	static float sinTable[3600], cosTable[3600];
 
 	static std::vector<Bullet> mSpawnedBullets;
 

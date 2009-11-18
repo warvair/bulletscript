@@ -106,51 +106,9 @@ public:
 		else
 			mMachine->destroyController(mCtrl);
 	}
-
-	void update(float frameTime)
-	{
-		mTime -= frameTime;
-		if (mTime < 0.0f)
-			mAlive = false;
-	}
-
-	bool isAlive() const
-	{
-		return mAlive;
-	}
 };
 
 std::list<GunWrapper*> gWrappers;
-
-int updateWrappers(float frameTime)
-{
-	int count = 0;
-	
-	// update
-	std::list<GunWrapper*>::iterator it = gWrappers.begin();
-	while (it != gWrappers.end())
-	{
-/*
-		std::list<GunWrapper*>::iterator it2 = it; ++it2;
-		
-		(*it)->update(frameTime);
-		if (!(*it)->isAlive())
-		{
-			gWrappers.erase(it);
-			delete *it;
-			it = it2;
-		}
-		else
-		{
-			++it;
-			count++;
-		}
-*/
-		++it;
-	}
-
-	return count;
-}
 
 void destroyGunWrappers()
 {
@@ -162,6 +120,26 @@ void destroyGunWrappers()
 	}
 
 	gWrappers.clear();
+}
+
+FILE* open_profile_file(const char* fileName)
+{
+	FILE* fp = fopen(fileName, "a+");
+	fprintf(fp, "Timestamp (s)\tUpdate length (ms)\tFPS\tbullets\n");
+	fprintf(fp, "-------------------------------------------------------\n");
+	return fp;
+}
+
+void close_profile_file(FILE** fp)
+{
+	fprintf(*fp, "\n");
+	fclose(*fp);
+	*fp = 0;
+}
+
+void write_profile_info(FILE* fp, float time, float length, int fps, int bullets)
+{
+	fprintf(fp, "%3.2f\t\t%4.3f\t\t\t%d\t%d\n", time, length, fps, bullets);
 }
 
 #if BS_PLATFORM == BS_PLATFORM_WIN32
@@ -241,7 +219,7 @@ int main (int argc, char **argv)
 	if (argc >= 2)
 		runTime = atoi(argv[1]) * 1000;
 
-	srand(time(0));
+	srand(999);
 
 	// Create machine
 	Machine machine;
@@ -333,67 +311,6 @@ int main (int argc, char **argv)
 	SDL_ShowCursor(SDL_DISABLE);
 #endif
 
-/*
-	// Create a gun
-	Emitter* gun;
-
-	gun = machine.createEmitter("ShipSpawner");
-	gun->setX(230);
-	gun->setY(400);
-	gun->setAngle(180);
-
-	gun = machine.createEmitter("ShipSpawner");
-	gun->setX(530);
-	gun->setY(400);
-	gun->setAngle(180);
-
-	gun = machine.createEmitter("Abstract");
-	gun->setX(400);
-	gun->setY(500);
-	gun->setAngle(180);
-
-	gun = machine.createEmitter("Flower");
-	gun->setX(400);
-	gun->setY(200);
-	gun->setAngle(180);
-
-	gun = machine.createEmitter("Flower");
-	gun->setX(650);
-	gun->setY(400);
-	gun->setAngle(180);
-
-	gun = machine.createEmitter("Flower");
-	gun->setX(150);
-	gun->setY(400);
-	gun->setAngle(180);
-
-	gun = machine.createEmitter("Fireworks");
-	gun->setX(10);
-	gun->setY(10);
-	gun->setAngle(180);
-
-	gun = machine.createEmitter("Fireworks");
-	gun->setX(110);
-	gun->setY(10);
-	gun->setAngle(180);
-
-	gun = machine.createEmitter("Fireworks");
-	gun->setX(210);
-	gun->setY(10);
-	gun->setAngle(180);
-
-	// Create a controller
-	Controller* controller = machine.createController("Boss1");
-	controller->setX(400);
-	controller->setY(300);
-	controller->setAngle(180);
-
-	controller = machine.createController("Boss1");
-	controller->setX(150);
-	controller->setY(140);
-	controller->setAngle(180);
-*/
-
 	// Main loop
 	unsigned int curTime = getTicks();
 	unsigned int totalTime = 0;
@@ -402,14 +319,16 @@ int main (int argc, char **argv)
 	unsigned int numFrames = 0, updateTime = 0;
 
 	int numBullets = 0;
-	int numWrappers = 0;
 
-	float updateCounter = 0;
-	float updateFreq = 1 / 60.0f;
+	// 50 emitters to start
+	for (int i = 0; i < 12; ++i)
+	{
+		GunWrapper* wr = new GunWrapper(&machine);
+		gWrappers.push_back(wr);
+	}
 
-	float wrapperCounter;
+	FILE* prof = open_profile_file("profiling.txt");
 
-	bool evtRaised = false;
 	while (true)
 	{
 #ifndef MINIMAL_APP
@@ -417,72 +336,51 @@ int main (int argc, char **argv)
 			break;
 #endif
 
-		if (!paused())
+		// Get update time
+		unsigned int newTime = getTicks();
+		unsigned int deltaTime = newTime - curTime;
+
+		curTime = newTime;
+		
+		totalTime += deltaTime;
+		fpsCounter += deltaTime;
+
+		float frameTime = deltaTime / 1000.0f;
+
+		if (fpsCounter > 1000)
 		{
-			// Get update time
-			unsigned int newTime = getTicks();
-			unsigned int deltaTime = newTime - curTime;
+			fpsCounter -= 1000;
+			std::cerr << "Avg update time: " << (updateTime / (float) numFrames) << "ms " << (totalTime/1000.0f) << 
+				" FPS: " << numFrames << " Bullets: " << numBullets << "/" << gWrappers.size() << std::endl;
 
-			curTime = newTime;
-			
-			totalTime += deltaTime;
-			fpsCounter += deltaTime;
+			write_profile_info(prof, (totalTime/1000.0f), (updateTime / (float) numFrames), numFrames, numBullets);
 
-			float frameTime = deltaTime / 1000.0f;
-
-			if (fpsCounter > 1000)
-			{
-				fpsCounter -= 1000;
-				std::cerr << "Avg update time: " << (updateTime / (float) numFrames) << "ms " << (totalTime/1000.0f) << 
-					" FPS: " << numFrames << " Bullets: " << numBullets << "/" << gWrappers.size() << std::endl;
-				numFrames = 0;
-				updateTime = 0;
-			}
-
-			wrapperCounter += frameTime;
-			updateCounter += frameTime;
-
-			updateFreq = frameTime;				// comment this line out to run at 60hz
-//			if (updateCounter >= updateFreq)	// uncomment this line to run at 60hz
-			{
-				updateCounter -= updateFreq;
-
-				// Update test wrappers
-				numWrappers = updateWrappers(updateFreq);
-
-				// Set script globals - this will update BulletAffector global arguments
-				machine.setGlobalVariableValue("Level_Time", totalTime / 1000.0f);
-
-				unsigned int bsTime1 = getTicks();
-
-				// Update machine
-				machine.update(updateFreq);
-
-				// Update types
-				numBullets = BulletBattery::update(frameTime);
-				AreaBattery::update(updateFreq);
-				UnitSystem::update(updateFreq);
-
-				unsigned int bsTime2 = getTicks();
-
-				updateTime += (bsTime2 - bsTime1);
-			}
-
-			numFrames++;
+			numFrames = 0;
+			updateTime = 0;
 		}
 
-		if (wrapperCounter > 0.3)
-		{
-			if (numBullets < 50000)
-			{
-				GunWrapper* wr = new GunWrapper(&machine);
-				gWrappers.push_back(wr);
-			}
-			wrapperCounter -= 0.3;
-		}
+		// Set script globals - this will update BulletAffector global arguments
+		machine.setGlobalVariableValue("Level_Time", totalTime / 1000.0f);
+
+		unsigned int bsTime1 = getTicks();
+
+		// Update machine
+		machine.update(frameTime);
+
+		// Update types
+		numBullets = BulletBattery::update(frameTime);
+		AreaBattery::update(frameTime);
+		UnitSystem::update(frameTime);
+
+		unsigned int bsTime2 = getTicks();
+		updateTime += (bsTime2 - bsTime1);
+
+		numFrames++;
 
 		// Render
+
 #ifndef MINIMAL_APP
+/*
 		renderer.startRendering();
 
 		BulletBattery::render(&renderer);
@@ -490,7 +388,9 @@ int main (int argc, char **argv)
 		UnitSystem::render(&renderer);
 
 		renderer.finishRendering();
+*/
 #endif
+
 
 	}
 
@@ -500,6 +400,8 @@ int main (int argc, char **argv)
 	SDL_Quit();
 #endif
 	
+	close_profile_file(&prof);
+
 	destroyGunWrappers();
 	return 0;
 }
