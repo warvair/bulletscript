@@ -13,6 +13,8 @@ static bool gPaused = false;
 
 static int gCurBullet = -1;
 
+static int gKeys[SDLK_LAST];
+
 #ifdef MINIMAL_APP
 bool processMessages()
 {
@@ -21,6 +23,9 @@ bool processMessages()
 #else
 bool processMessages()
 {
+	// Only check for key presses
+	memset(gKeys, 0, SDLK_LAST * sizeof(int));
+
 	SDL_Event evt;
 	while (SDL_PollEvent(&evt)) 
 	{
@@ -30,41 +35,11 @@ bool processMessages()
 			return false;
 
 		case SDL_KEYDOWN:
+			gKeys[evt.key.keysym.sym] = 1;
 			if (evt.key.keysym.sym == SDLK_ESCAPE)
 				return false;
-			else if(evt.key.keysym.sym == SDLK_UP)
-			{
-				gCurBullet++;
-			}
-			else if(evt.key.keysym.sym == SDLK_DOWN)
-			{
-				gCurBullet--;
-				if (gCurBullet < 0)
-					gCurBullet = -1;
-			}
-			else if(evt.key.keysym.sym == SDLK_w)
-				gCount += 1;
-			else if(evt.key.keysym.sym == SDLK_q)
-			{
-				gCount -= 1;
-				if (gCount < 1)
-					gCount = 1;
-			}
-			else if (evt.key.keysym.sym == SDLK_d)
-				gDebug = !gDebug;
-			else if (evt.key.keysym.sym == SDLK_p)
-				gPaused = !gPaused;
-			break;
 
 		case SDL_KEYUP:
-			if(evt.key.keysym.sym == SDLK_LEFT)
-				gHorz = 0;
-			else if(evt.key.keysym.sym == SDLK_RIGHT)
-				gHorz = 0;
-			else if(evt.key.keysym.sym == SDLK_UP)
-				gVert = 0;
-			else if(evt.key.keysym.sym == SDLK_DOWN)
-				gVert = 0;
 			break;
 
 		case SDL_ACTIVEEVENT:
@@ -89,6 +64,11 @@ bool processMessages()
 	return true;
 }
 #endif
+
+bool keyDown(int key)
+{
+	return (gKeys[key] == 1);
+}
 
 float getHorzMovement()
 {

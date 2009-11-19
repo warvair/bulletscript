@@ -138,6 +138,8 @@ void generate_inc_expr(int value, int nodeType, YYSTYPE parentNode, YYSTYPE idNo
 %token KEYWORD_ELSE
 %token KEYWORD_GOTO
 %token KEYWORD_WAIT
+%token KEYWORD_SUSPEND
+%token KEYWORD_SIGNAL
 %token KEYWORD_DIE
 %token INTEGER
 %token REAL
@@ -432,7 +434,7 @@ emitter
 			$$->setChild(0, $1);
 			$$->setChild(1, $4);
 		}
-	| identifier '=' KEYWORD_EMITTER identifier '(' emitter_variable_arg_list ')' ';'
+	| identifier '=' KEYWORD_EMITTER identifier '(' constant_arg_list ')' ';'
 		{
 			$$ = AST->createNode(PT_Emitter, yylineno);
 			$$->setChild(0, $1);
@@ -441,12 +443,12 @@ emitter
 		}
 	;
 	
-emitter_variable_arg_list
+constant_arg_list
 	: signed_constant
 		{
 			$$ = $1;
 		}
-	| emitter_variable_arg_list ',' signed_constant
+	| constant_arg_list ',' signed_constant
 		{
 			$$ = AST->createNode(PT_EmitterArgList, yylineno);
 			$$->setChild(0, $1);
@@ -753,6 +755,14 @@ event_statement
 		{
 			$$ = $1;
 		}
+	| suspend_statement
+		{
+			$$ = $1;
+		}
+	| signal_statement
+		{
+			$$ = $1;
+		}
 	| enable_statement
 		{
 			$$ = $1;
@@ -836,6 +846,10 @@ controller_state_statement
 			$$ = $1;
 		}
 	| wait_statement
+		{
+			$$ = $1;
+		}
+	| suspend_statement
 		{
 			$$ = $1;
 		}
@@ -1201,6 +1215,29 @@ wait_statement
 	: KEYWORD_WAIT '(' constant_expression ')' ';'
 		{
 			$$ = AST->createNode(PT_WaitStatement, yylineno);
+			$$->setChild(0, $3);
+		}
+	;
+	
+suspend_statement
+	: KEYWORD_SUSPEND ';'
+		{
+			$$ = AST->createNode(PT_SuspendStatement, yylineno);
+		}
+	| KEYWORD_SUSPEND '(' constant_arg_list ')' ';'
+		{
+			$$ = AST->createNode(PT_SuspendStatement, yylineno);
+			$$->setChild(0, $3);
+		}
+		
+signal_statement
+	: KEYWORD_SIGNAL ';'
+		{
+			$$ = AST->createNode(PT_SignalStatement, yylineno);
+		}
+	| KEYWORD_SIGNAL '(' constant_arg_list ')' ';'
+		{
+			$$ = AST->createNode(PT_SignalStatement, yylineno);
 			$$->setChild(0, $3);
 		}
 	;

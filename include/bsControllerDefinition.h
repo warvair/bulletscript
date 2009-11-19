@@ -116,17 +116,31 @@ namespace BS_NMSP
 		/**	\brief Sets the maximum number of local variables that an event in this ControllerDefinition
 		 *	can take.
 		 *	
-		 *	\param count number of locals.
+		 *	\param count maximum number of locals.
 		 */
 		void setMaxEventLocalVariables(int count);
 
 		/**	\brief Gets the maximum number of local variables that an event in this ControllerDefinition
 		 *	can take.
 		 *	
-		 *	\return maximum number of event local variables.
+		 *	\return maximum number of locals.
 		 */
 		int getMaxEventLocalVariables() const;
 		
+		/**	\brief Sets the maximum number of blocks that an event or state in this ControllerDefinition
+		 *	can specify.
+		 *	
+		 *	\param count maximum number of blocks.
+		 */
+		void setMaxBlocks(int count);
+
+		/**	\brief Gets the maximum number of blocks that an event or state in this ControllerDefinition
+		 *	can specify.
+		 *	
+		 *	\return maximum number of blocks.
+		 */
+		int getMaxBlocks() const;
+
 		/**	\brief Create a ScriptRecord for a Controller to use.
 		 *	
 		 *	\param machine pointer to an active ScriptMachine.
@@ -142,6 +156,8 @@ namespace BS_NMSP
 		std::vector<Event> mEvents;
 
 		int mMaxEventLocals;
+
+		int mMaxBlocks;
 		
 	};
 

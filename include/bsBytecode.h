@@ -45,6 +45,8 @@ namespace BS_NMSP
 		BC_JUMP,
 		BC_JZ,
 		BC_WAIT,
+		BC_SUSPEND,
+		BC_SIGNAL,
 		BC_EMIT,
 		BC_RAISE,
 		BC_ENABLE,

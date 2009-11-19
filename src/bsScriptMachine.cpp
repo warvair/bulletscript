@@ -852,6 +852,41 @@ int ScriptMachine::interpretCode(const uint32* code, size_t length, ScriptState&
 			}
 			return ScriptSuspended;
 
+		case BC_SUSPEND:
+			{
+				int numBlocks = code[st.curInstruction + 1];
+				for (int i = 0; i < numBlocks; ++i)
+				{
+					// add to current object's block list.
+					bstype block = BS_UINT32_TO_TYPE(code[st.curInstruction + 2 + i]);
+					static_cast<Controller*>(object)->addBlock(block);
+				}
+
+				st.curInstruction += (2 + numBlocks);
+
+				if (st.curInstruction >= (int) length && loop)
+					st.curInstruction = 0;
+			}
+			return ScriptSuspended;
+
+		case BC_SIGNAL:
+			{
+				// If the script is currently waiting, then set it going again, else try and remove
+				// any specified blocks.
+				static_cast<Controller*>(object)->resume();
+
+				int numBlocks = code[st.curInstruction + 1];
+				for (int i = 0; i < numBlocks; ++i)
+				{
+					// signal block.
+					bstype block = BS_UINT32_TO_TYPE(code[st.curInstruction + 2 + i]);
+					static_cast<Controller*>(object)->signal(block);
+				}
+
+				st.curInstruction += (2 + numBlocks);
+			}
+			break;
+
 		case BC_DIE:
 			{
 				EmitTypeControl* ftc = static_cast<EmitTypeControl*>(object);

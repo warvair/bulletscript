@@ -45,23 +45,25 @@
      KEYWORD_ELSE = 271,
      KEYWORD_GOTO = 272,
      KEYWORD_WAIT = 273,
-     KEYWORD_DIE = 274,
-     INTEGER = 275,
-     REAL = 276,
-     IDENTIFIER = 277,
-     SYMBOL_LTE = 278,
-     SYMBOL_GTE = 279,
-     SYMBOL_EQ = 280,
-     SYMBOL_NEQ = 281,
-     SYMBOL_LOG_AND = 282,
-     SYMBOL_LOG_OR = 283,
-     SYMBOL_INC = 284,
-     SYMBOL_DEC = 285,
-     SYMBOL_ADD_A = 286,
-     SYMBOL_SUB_A = 287,
-     SYMBOL_MUL_A = 288,
-     SYMBOL_DIV_A = 289,
-     TOKEN_ERROR = 290
+     KEYWORD_SUSPEND = 274,
+     KEYWORD_SIGNAL = 275,
+     KEYWORD_DIE = 276,
+     INTEGER = 277,
+     REAL = 278,
+     IDENTIFIER = 279,
+     SYMBOL_LTE = 280,
+     SYMBOL_GTE = 281,
+     SYMBOL_EQ = 282,
+     SYMBOL_NEQ = 283,
+     SYMBOL_LOG_AND = 284,
+     SYMBOL_LOG_OR = 285,
+     SYMBOL_INC = 286,
+     SYMBOL_DEC = 287,
+     SYMBOL_ADD_A = 288,
+     SYMBOL_SUB_A = 289,
+     SYMBOL_MUL_A = 290,
+     SYMBOL_DIV_A = 291,
+     TOKEN_ERROR = 292
    };
 #endif
 /* Tokens.  */
@@ -81,23 +83,25 @@
 #define KEYWORD_ELSE 271
 #define KEYWORD_GOTO 272
 #define KEYWORD_WAIT 273
-#define KEYWORD_DIE 274
-#define INTEGER 275
-#define REAL 276
-#define IDENTIFIER 277
-#define SYMBOL_LTE 278
-#define SYMBOL_GTE 279
-#define SYMBOL_EQ 280
-#define SYMBOL_NEQ 281
-#define SYMBOL_LOG_AND 282
-#define SYMBOL_LOG_OR 283
-#define SYMBOL_INC 284
-#define SYMBOL_DEC 285
-#define SYMBOL_ADD_A 286
-#define SYMBOL_SUB_A 287
-#define SYMBOL_MUL_A 288
-#define SYMBOL_DIV_A 289
-#define TOKEN_ERROR 290
+#define KEYWORD_SUSPEND 274
+#define KEYWORD_SIGNAL 275
+#define KEYWORD_DIE 276
+#define INTEGER 277
+#define REAL 278
+#define IDENTIFIER 279
+#define SYMBOL_LTE 280
+#define SYMBOL_GTE 281
+#define SYMBOL_EQ 282
+#define SYMBOL_NEQ 283
+#define SYMBOL_LOG_AND 284
+#define SYMBOL_LOG_OR 285
+#define SYMBOL_INC 286
+#define SYMBOL_DEC 287
+#define SYMBOL_ADD_A 288
+#define SYMBOL_SUB_A 289
+#define SYMBOL_MUL_A 290
+#define SYMBOL_DIV_A 291
+#define TOKEN_ERROR 292
 
 
 
