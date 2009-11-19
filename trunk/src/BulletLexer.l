@@ -52,6 +52,8 @@ BINARY    	[0-1]
 "else"							{ return (KEYWORD_ELSE); }
 "goto"							{ return (KEYWORD_GOTO); }
 "wait"							{ return (KEYWORD_WAIT); }
+"suspend"						{ return (KEYWORD_SUSPEND); }
+"signal"						{ return (KEYWORD_SIGNAL); }
 "die"							{ return (KEYWORD_DIE); }
 
 {DIGIT}+						{ return (INTEGER); }

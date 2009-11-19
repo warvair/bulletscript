@@ -57,6 +57,9 @@ namespace BS_NMSP
 
 		int mNumEvents;
 
+		// Blocks
+		std::list<bstype> mBlocks;
+
 		// Script structures.
 		ScriptState mEventState;
 
@@ -206,6 +209,32 @@ namespace BS_NMSP
 		 *	\return true if the event changed the Controller state, or not.  This is for internal use.
 		 */
 		bool raiseEvent(int index, const bstype* args);
+
+		/**	\brief Adds a block to the Controller.
+		 *	
+		 *	Blocks are used to suspend a Controller state, and only resume when the blocks have been signalled
+		 *	to it, via an event, or code.  This way states can wait upon multiple events before resuming.
+		 *	In the case that the block already exists, it is not added.
+		 *
+		 *	\param block the value to act as a block.
+		 */
+		void addBlock(bstype block);
+
+		/**	\brief Removes a block from the Controller.
+		 *	
+		 *	if the specified block exists in the Controller, it will be removed.  This function helps implement
+		 *	signal functionality in scripts, for pausing scripts upon events.
+		 *
+		 *	\param block the value to act as a block.
+		 */
+		void signal(bstype block);
+
+		/**	\brief Resumes the Controller from a waiting state.
+		 *	
+		 *	This is used to implement signal functionality.  While signals are generally used to resume from
+		 *	a suspend, they will also resume a state if it is currently waiting.
+		 */
+		void resume();
 
 		/**	\brief Enables or disables the Emitter.
 		 *	

@@ -68,6 +68,8 @@ namespace BS_NMSP
 		PT_ContinueStatement,
 		PT_GotoStatement,
 		PT_WaitStatement,
+		PT_SuspendStatement,
+		PT_SignalStatement,
 		PT_SetStatement,
 		PT_EmitStatement,
 		PT_DieStatement,
@@ -259,6 +261,8 @@ namespace BS_NMSP
 		void generateBytecode(ObjectDefinition* def, ParseTreeNode* node, BytecodeBlock* bytecode,
 			CodeBlockType codeType, bool reset = false);
 
+		void generateConstantArgumentList(ParseTreeNode* node, BytecodeBlock* code);
+
 		// Utility functions
 		bool checkConstantExpression(ObjectDefinition* def, CodeBlockType type, const String& name,
 			ParseTreeNode* node);
@@ -267,6 +271,8 @@ namespace BS_NMSP
 
 		void getEmitterVariableArguments(ParseTreeNode* node, bstype emitArgs[NUM_SPECIAL_MEMBERS],
 			int& numArguments);
+
+		void countConstantArgumentList(ParseTreeNode* node, int& numArguments);
 
 	protected:
 

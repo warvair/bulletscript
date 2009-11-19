@@ -42,6 +42,8 @@ extern int gTotalBullets;
 
 class GunWrapper
 {
+public:
+
 	bs::Machine* mMachine;
 	bs::Emitter* mGun;
 	bs::Controller* mCtrl;
@@ -386,6 +388,17 @@ int main (int argc, char **argv)
 #ifndef MINIMAL_APP
 		if (!processMessages())
 			break;
+
+		if (keyDown(SDLK_1))
+		{
+			std::list<GunWrapper*>::iterator it = gWrappers.begin();
+			(*it)->mCtrl->raiseEvent("Resume1", 0);
+		}
+		if (keyDown(SDLK_2))
+		{
+			std::list<GunWrapper*>::iterator it = gWrappers.begin();
+			(*it)->mCtrl->raiseEvent("Resume2", 0);
+		}
 #endif
 
 		// Get update time

@@ -9,6 +9,8 @@
 
 bool processMessages();
 
+bool keyDown(int key);
+
 float getHorzMovement();
 
 float getVertMovement();

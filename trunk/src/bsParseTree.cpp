@@ -415,7 +415,18 @@ bool ParseTree::checkConstantExpression(ObjectDefinition* def, CodeBlockType typ
 
 			case CBT_Event:
 				{
-					// ...
+					CodeRecord* rec = getCodeRecord(def->getType(), def->getName(), "Event", name);
+					if (rec->getVariableIndex(varName) < 0)
+					{
+						if (def->getMemberVariableIndex(varName) < 0)
+						{
+							if (mScriptMachine->getGlobalVariableIndex(varName) < 0)
+							{
+								addError(node->getLine(), "Variable '" + varName + "' is not declared1.");
+								return false;
+							}
+						}
+					}
 				}
 				return true;
 			}
@@ -671,9 +682,7 @@ void ParseTree::getEmitterVariableArguments(ParseTreeNode* node,
 											bstype emitArgs[NUM_SPECIAL_MEMBERS],
 											int& numArguments)
 {
-	int nodeType = node->getType();
-
-	if (nodeType == PT_Constant)
+	if (node->getType() == PT_Constant)
 	{
 		if (numArguments < NUM_SPECIAL_MEMBERS)
 			emitArgs[numArguments] = node->getValueData();
@@ -684,6 +693,18 @@ void ParseTree::getEmitterVariableArguments(ParseTreeNode* node,
 	{
 		if (node->getChild(i))
 			getEmitterVariableArguments(node->getChild(i), emitArgs, numArguments);
+	}
+}
+// --------------------------------------------------------------------------------
+void ParseTree::countConstantArgumentList(ParseTreeNode* node, int& numArguments)
+{
+	if (node->getType() == PT_Constant)
+		numArguments++;
+
+	for (int i = 0; i < ParseTreeNode::MAX_CHILDREN; ++ i)
+	{
+		if (node->getChild(i))
+			countConstantArgumentList(node->getChild(i), numArguments);
 	}
 }
 // --------------------------------------------------------------------------------
@@ -1164,13 +1185,18 @@ void ParseTree::buildEvents(ControllerDefinition* def, ParseTreeNode* node)
 		}
 		return;
 
-	case PT_WaitStatement:
+	case PT_SuspendStatement:
 		{
-			if (!node->getChild(0))
-			{
-				// Error, must have arguments
-				addError(node->getLine(), "Wait statement has no arguments.");
-			}
+			// Count blocks
+			int numBlocks = 0;
+			ParseTreeNode* blockNode = node->getChild(0);
+			if (blockNode)
+				countConstantArgumentList(blockNode, numBlocks);
+
+			int curNumBlocks = def->getMaxBlocks();
+
+			if (numBlocks > curNumBlocks)
+				def->setMaxBlocks(numBlocks);
 		}
 		return;
 
@@ -1471,6 +1497,22 @@ void ParseTree::buildStates(ObjectDefinition* def, ParseTreeNode* node)
 		}
 		return;
 
+	case PT_SuspendStatement:
+		{
+			// Count blocks
+			int numBlocks = 0;
+			ParseTreeNode* blockNode = node->getChild(0);
+			if (blockNode)
+				countConstantArgumentList(blockNode, numBlocks);
+
+			ControllerDefinition* cDef = static_cast<ControllerDefinition*>(def);
+			int curNumBlocks = cDef->getMaxBlocks();
+
+			if (numBlocks > curNumBlocks)
+				cDef->setMaxBlocks(numBlocks);
+		}
+		return;
+
 	case PT_RaiseStatement:
 		{
 			// This will only be used by controllers.
@@ -1757,6 +1799,21 @@ void ParseTree::generateEmitTail(EmitterDefinition* def, ParseTreeNode* node,
 	}
 }
 // --------------------------------------------------------------------------------
+void ParseTree::generateConstantArgumentList(ParseTreeNode* node, BytecodeBlock* code)
+{
+	if (node->getType() == PT_Constant)
+	{
+		bstype value = node->getValueData();
+		code->push_back(BS_TYPE_TO_UINT32(value));
+	}
+
+	for (int i = 0; i < ParseTreeNode::MAX_CHILDREN; ++ i)
+	{
+		if (node->getChild(i))
+			generateConstantArgumentList(node->getChild(i), code);
+	}
+}
+// --------------------------------------------------------------------------------
 void ParseTree::generateBytecode(ObjectDefinition* def, ParseTreeNode* node,
 								 BytecodeBlock* bytecode, CodeBlockType codeType, bool reset)
 {
@@ -1772,7 +1829,8 @@ void ParseTree::generateBytecode(ObjectDefinition* def, ParseTreeNode* node,
 	}
 
 	// Top-down nodes
-	switch (node->getType())
+	int nodeType = node->getType();
+	switch (nodeType)
 	{
 	case PT_State:
 		{
@@ -2133,7 +2191,45 @@ void ParseTree::generateBytecode(ObjectDefinition* def, ParseTreeNode* node,
 		}
 		return;
 
-	case PT_SetStatement:
+
+	case PT_SuspendStatement:
+	case PT_SignalStatement:
+		{
+			// Count number of blocks
+			int numBlocks = 0;
+
+			ParseTreeNode* blockNode = node->getChild(0);
+			if (blockNode)
+				countConstantArgumentList(blockNode, numBlocks);
+			
+			if (numBlocks == 0)
+			{
+				if (nodeType == PT_SuspendStatement)
+				{
+					bytecode->push_back(BC_PUSH);
+					bytecode->push_back(BS_SUSPEND_FOREVER_TIME);
+					bytecode->push_back(BC_WAIT);
+				}
+				else
+				{
+					bytecode->push_back(BC_SIGNAL);
+					bytecode->push_back(0);
+				}
+			}
+			else
+			{
+				if (nodeType == PT_SuspendStatement)
+					bytecode->push_back(BC_SUSPEND);
+				else
+					bytecode->push_back(BC_SIGNAL);
+
+				bytecode->push_back((uint32) numBlocks);
+				generateConstantArgumentList(blockNode, bytecode);
+			}
+		}
+		return;
+
+		    case PT_SetStatement:
 		{
 			// This will only be used by emitters (functions).
 			// Generate constant expression for value

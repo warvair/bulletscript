@@ -18,10 +18,21 @@ controller Boss1
 		goto Stage2;
 	}
 
+	Resume1 = event()
+	{
+		signal(1);
+	}
+
+	Resume2 = event()
+	{
+		signal(2);
+	}
+
 	// states
 	Stage1 = state
 	{
 		wait(3);
+		suspend(1, 2);
 		raise TurnOff;
 	}
 

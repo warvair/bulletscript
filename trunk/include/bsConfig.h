@@ -35,6 +35,11 @@ namespace BS_NMSP
 // size of virtual machine stack
 #define BS_SCRIPT_STACK_SIZE			32
 
+// wait time for suspend().  This is not the most elegant way of implementing suspend, but
+// it is the most efficient.  It is unlikely that the user will leave the program running for
+// more than 31.688 years.
+#define BS_SUSPEND_FOREVER_TIME			999999999
+
 // cutoff at which point the small allocator uses new instead
 #define BS_SMALLOC_LIMIT				256
 

@@ -30,6 +30,8 @@ void Controller::onRelease()
 		mScriptMachine->destroyEmitter(mEmitters[i].emitter);
 	
 	// Note: it would be nice if we didn't do any dealloc here.
+	mBlocks.clear();
+
 	delete[] mEmitters;
 	delete[] mEvents;
 	delete[] mEventState.locals;
@@ -73,7 +75,8 @@ void Controller::setDefinition(ControllerDefinition* def)
 
 	// Create events
 	mNumEvents = def->getNumEvents();
-	mEvents = new Event[mNumEvents];
+	if (mNumEvents > 0)
+		mEvents = new Event[mNumEvents];
 
 	for (int i = 0; i < mNumEvents; ++i)
 	{
@@ -88,7 +91,8 @@ void Controller::setDefinition(ControllerDefinition* def)
 	}
 
 	int eventLocals = def->getMaxEventLocalVariables();
-	mEventState.locals = new bstype[eventLocals];
+	if (eventLocals > 0)
+		mEventState.locals = new bstype[eventLocals];
 }
 // --------------------------------------------------------------------------------
 void Controller::setState(int state)
@@ -209,7 +213,8 @@ bool Controller::raiseEvent(int index, const bstype* args)
 	mEventState.stackHead = 0;
 	mEventState.suspendTime = 0.0f;
 	
-	memcpy(mEventState.locals, args, mEvents[index].numArguments * sizeof(bstype));
+	if (args)
+		memcpy(mEventState.locals, args, mEvents[index].numArguments * sizeof(bstype));
 
 	int oldState = mRecord->curState;
 	mScriptMachine->interpretCode(mEvents[index].code->byteCode, mEvents[index].code->byteCodeSize,
@@ -221,6 +226,34 @@ bool Controller::raiseEvent(int index, const bstype* args)
 	return oldState != mRecord->curState;
 }
 // --------------------------------------------------------------------------------
+void Controller::addBlock(bstype block)
+{
+	mBlocks.push_back(block);
+}
+// --------------------------------------------------------------------------------
+void Controller::signal(bstype block)
+{
+	std::list<bstype>::iterator it = mBlocks.begin();
+	while (it != mBlocks.end())
+	{
+		if (*it == block)
+		{
+			std::list<bstype>::iterator next = it; ++next;
+			mBlocks.erase(it);
+			it = next;
+		}
+		else
+		{
+			++it;
+		}
+	}
+}
+// --------------------------------------------------------------------------------
+void Controller::resume()
+{
+	mRecord->scriptState.suspendTime = -1;
+}
+// --------------------------------------------------------------------------------
 void Controller::enableEmitter(int index, bool enable)
 {
 	mEmitters[index].emitter->enable(enable);
@@ -230,9 +263,14 @@ void Controller::runScript(float frameTime)
 {
 	// Either run the script or update the suspend time.
 	if (mRecord->scriptState.suspendTime <= 0)
-		mScriptMachine->processScriptRecord(mRecord, this);
+	{
+		if (mBlocks.empty())
+			mScriptMachine->processScriptRecord(mRecord, this);
+	}
 	else
+	{
 		mRecord->scriptState.suspendTime -= frameTime;
+	}
 }
 // --------------------------------------------------------------------------------
 void Controller::update(float frameTime)
