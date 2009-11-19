@@ -6,17 +6,18 @@ namespace BS_NMSP
 {
 
 // --------------------------------------------------------------------------------
-Emitter::Emitter(ScriptMachine* scriptMachine) :
+Emitter::Emitter(ScriptMachine* machine) :
 	mEnabled(true),
 	mActiveControllers(0),
 	mNumUserMembers(0),
-	mScriptMachine(scriptMachine),
+	mScriptMachine(machine),
 	mRecord(0)
 {
 }
 // --------------------------------------------------------------------------------
 Emitter::~Emitter()
 {
+	// Todo: fix RAII, see bsCore.h/ScriptRecord
 	delete mRecord;
 }
 // --------------------------------------------------------------------------------
@@ -33,6 +34,11 @@ void Emitter::setDefinition(EmitterDefinition* def)
 void Emitter::enable(bool enable)
 {
 	mEnabled = enable;
+}
+// --------------------------------------------------------------------------------
+bool Emitter::isEnabled() const
+{
+	return mEnabled;
 }
 // --------------------------------------------------------------------------------
 void Emitter::setX(bstype x)
@@ -67,7 +73,9 @@ void Emitter::setMember(int member, bstype value)
 {
 	assert (member >= 0 && "Emitter::setMember index must be >= 0");
 	mRecord->members[member + NUM_SPECIAL_MEMBERS] = value;
-	// Unset if controller active
+	
+	// Unset the controller if it's active, because directly setting a variable cancels
+	// any smooth interpolation.
 	mActiveControllers &= ~(1 << member);
 }
 // --------------------------------------------------------------------------------
@@ -94,6 +102,7 @@ void Emitter::setState(int state)
 // --------------------------------------------------------------------------------
 void Emitter::runScript(float frameTime)
 {
+	// Either run the script or update the suspend time.
 	if (mRecord->scriptState.suspendTime <= 0)
 		mScriptMachine->processScriptRecord(mRecord, this);
 	else
@@ -119,7 +128,7 @@ void Emitter::update(float frameTime)
 		}
 	}
 
-	// Run script
+	// Once that's done, do some work on the Emitter itself.
 	runScript(frameTime);
 }
 // --------------------------------------------------------------------------------

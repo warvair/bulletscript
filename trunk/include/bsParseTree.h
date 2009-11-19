@@ -69,7 +69,7 @@ namespace BS_NMSP
 		PT_GotoStatement,
 		PT_WaitStatement,
 		PT_SetStatement,
-		PT_FireStatement,
+		PT_EmitStatement,
 		PT_DieStatement,
 		PT_RaiseStatement,
 		PT_EnableStatement,
@@ -177,7 +177,7 @@ namespace BS_NMSP
 		const String& getStringData() const;
 	};
 
-	class FireType;
+	class EmitType;
 
 	class ParseTree
 	{
@@ -225,9 +225,9 @@ namespace BS_NMSP
 
 		void buildFunctions(EmitterDefinition* def, ParseTreeNode* node);
 
-		void checkFunctionProperties(ParseTreeNode* node, FireType* type);
+		void checkFunctionProperties(ParseTreeNode* node, EmitType* type);
 
-		void checkFunctionDieStatements(ParseTreeNode* node, FireType* type);
+		void checkFunctionDieStatements(ParseTreeNode* node, EmitType* type);
 
 		// Events
 		void addEventArguments(ControllerDefinition* def, ParseTreeNode* node, 
@@ -242,19 +242,19 @@ namespace BS_NMSP
 
 		void buildStates(ObjectDefinition* def, ParseTreeNode* node);
 
-		// Fire statements
-		void _checkFireStatements(EmitterDefinition* def, ParseTreeNode* node, const String& type);
+		// Emit statements
+		void _checkEmitStatements(EmitterDefinition* def, ParseTreeNode* node, const String& type);
 
-		void checkFireStatements(EmitterDefinition* def, ParseTreeNode* node);
+		void checkEmitStatements(EmitterDefinition* def, ParseTreeNode* node);
 
-		void checkFireControllers(EmitterDefinition* def, ParseTreeNode* node, int& ctrls, 
-			FireType* ft, CodeBlockType type, const String& typeName);
+		void checkEmitControllers(EmitterDefinition* def, ParseTreeNode* node, int& ctrls, 
+			EmitType* ft, CodeBlockType type, const String& typeName);
 
 		// Code generation
 		void createMemberVariableBytecode(ObjectDefinition* def, ParseTreeNode* node, bool first);
 
-		void generateFireTail(EmitterDefinition* def, ParseTreeNode* node, BytecodeBlock* bytecode, 
-			FireType* ft, CodeBlockType codeType);
+		void generateEmitTail(EmitterDefinition* def, ParseTreeNode* node, BytecodeBlock* bytecode, 
+			EmitType* ft, CodeBlockType codeType);
 
 		void generateBytecode(ObjectDefinition* def, ParseTreeNode* node, BytecodeBlock* bytecode,
 			CodeBlockType codeType, bool reset = false);

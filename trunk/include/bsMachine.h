@@ -51,12 +51,12 @@ namespace BS_NMSP
 		void releaseType(UserTypeBase* ft);
 
 #ifdef BS_Z_DIMENSION
-		void updateType(UserTypeBase* ft, bstype x, bstype y, bstype z, float frameTime);
+		int updateType(UserTypeBase* ft, bstype x, bstype y, bstype z, float frameTime);
 #else
-		void updateType(UserTypeBase* ft, bstype x, bstype y, float frameTime);
+		int updateType(UserTypeBase* ft, bstype x, bstype y, float frameTime);
 #endif
 
-		void registerFireFunction(const String& type, const String& name, int numArgs, FireFunction func);
+		void registerEmitFunction(const String& type, const String& name, int numArgs, EmitFunction func);
 
 		void setDieFunction(const String& type, DieFunction func);
 

@@ -676,7 +676,7 @@ static const char *const yytname[] =
   "event_iteration_statement", "emitter_state_iteration_statement",
   "controller_state_iteration_statement", "flow_statement",
   "goto_statement", "member_goto_statement", "wait_statement",
-  "fire_statement", "controller_list", "controller_entry", "die_statement",
+  "emit_statement", "controller_list", "controller_entry", "die_statement",
   "raise_statement", "enable_statement", "constant_expression",
   "logical_or_expression", "logical_and_expression", "equality_expression",
   "relational_expression", "additive_expression",
@@ -3158,7 +3158,7 @@ yyreduce:
   case 163:
 #line 1210 "BulletParser.y"
     {
-			(yyval) = AST->createNode(PT_FireStatement, yylineno);
+			(yyval) = AST->createNode(PT_EmitStatement, yylineno);
 			(yyval)->setString((yyvsp[-4])->getStringData().c_str());
 			delete (yyvsp[-4]);
 			
@@ -3171,7 +3171,7 @@ yyreduce:
   case 164:
 #line 1220 "BulletParser.y"
     {
-			(yyval) = AST->createNode(PT_FireStatement, yylineno);
+			(yyval) = AST->createNode(PT_EmitStatement, yylineno);
 			(yyval)->setString((yyvsp[-2])->getStringData().c_str());
 			delete (yyvsp[-2]);
 			

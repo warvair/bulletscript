@@ -85,6 +85,7 @@ emitter Fireworks
 	Launch = state
 	{
 		fireA bullet(10, 300) : gravity, explode(3.3);
+		fireA bullet(350, 300) : gravity, explode(3.3);
 		wait(0.1);
 	}
 }	

@@ -12,8 +12,8 @@ namespace BS_NMSP
 	const bstype bsvalue0 = 0.0f;
 }
 
-#define BS_TYPE_TO_UINT32(x)				(*((BS_NMSP::uint32*) ((void*) (&x))))
-#define BS_UINT32_TO_TYPE(x)				(*((bstype*) ((void*) (&x))))
+#define BS_TYPE_TO_UINT32(x)			(*((BS_NMSP::uint32*) ((void*) (&x))))
+#define BS_UINT32_TO_TYPE(x)			(*((bstype*) ((void*) (&x))))
 
 // By default bulletscript uses 2 dimensions
 //#define BS_Z_DIMENSION
@@ -24,7 +24,7 @@ namespace BS_NMSP
 // max number of affectors that an emitter can use
 #define BS_MAX_EMITTER_AFFECTORS		4
 
-// max number of properties that can be defined for a particular FireType
+// max number of properties that can be defined for a particular EmitType
 // this cannot be more than 32
 #define BS_MAX_PROPERTIES				8
 

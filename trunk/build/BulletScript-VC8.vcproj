@@ -91,7 +91,7 @@
 			/>
 			<Tool
 				Name="VCPostBuildEventTool"
-				CommandLine="copy $(SolutionDir)\..\bin\BulletScriptd.dll $(SolutionDir)\..\testbed\bin&#x0D;&#x0A;copy $(SolutionDir)\..\bin\BulletScriptd.dll $(SolutionDir)\..\minimal\bin&#x0D;&#x0A;"
+				CommandLine="copy $(SolutionDir)\..\bin\BulletScriptd.dll $(SolutionDir)\..\testbed\bin&#x0D;&#x0A;&#x0D;&#x0A;"
 			/>
 		</Configuration>
 		<Configuration
@@ -140,6 +140,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
+				AdditionalDependencies="winmm.lib"
 				OutputFile="$(OutDir)\BulletScript.dll"
 				LinkIncremental="1"
 				GenerateDebugInformation="true"
@@ -221,7 +222,7 @@
 				>
 			</File>
 			<File
-				RelativePath="..\src\bsFireType.cpp"
+				RelativePath="..\src\bsEmitType.cpp"
 				>
 			</File>
 			<File
@@ -315,7 +316,7 @@
 				>
 			</File>
 			<File
-				RelativePath="..\include\bsFireType.h"
+				RelativePath="..\include\bsEmitType.h"
 				>
 			</File>
 			<File

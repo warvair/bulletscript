@@ -2,7 +2,7 @@
 #include <iostream>
 #include "bsParseTree.h"
 #include "bsScriptMachine.h"
-#include "bsFireType.h"
+#include "bsEmitType.h"
 
 BS_NMSP::ParseTree* BS_NMSP::ParseTree::msInstance = 0;
 
@@ -571,7 +571,7 @@ void ParseTree::createAffectors(EmitterDefinition* def, ParseTreeNode* node)
 	if (node->getType() == PT_AffectorDecl)
 	{
 		// Create temporary structure with the node.  We don't actually want to
-		// create any instances yet because we don't know which FireTypes are
+		// create any instances yet because we don't know which EmitTypes are
 		// going to use them.
 		String affName = node->getChild(0)->getStringData();
 		for (size_t i = 0; i < mAffectors.size(); ++i)
@@ -687,8 +687,8 @@ void ParseTree::getEmitterVariableArguments(ParseTreeNode* node,
 	}
 }
 // --------------------------------------------------------------------------------
-void ParseTree::checkFireControllers(EmitterDefinition* def, ParseTreeNode* node, 
-									 int& ctrls, FireType* ft, CodeBlockType type,
+void ParseTree::checkEmitControllers(EmitterDefinition* def, ParseTreeNode* node, 
+									 int& ctrls, EmitType* ft, CodeBlockType type,
 									 const String& typeName)
 {
 	int nodeType = node->getType();
@@ -706,7 +706,7 @@ void ParseTree::checkFireControllers(EmitterDefinition* def, ParseTreeNode* node
 
 		if (ctrls > 0)
 		{
-			addError(node->getLine(), "Fire functions can only take one control function.");
+			addError(node->getLine(), "Emit functions can only take one control function.");
 			return;
 		}
 		
@@ -768,7 +768,7 @@ void ParseTree::checkFireControllers(EmitterDefinition* def, ParseTreeNode* node
 	for (int i = 0; i < ParseTreeNode::MAX_CHILDREN; ++ i)
 	{
 		if (node->getChild(i))
-			checkFireControllers(def, node->getChild(i), ctrls, ft, type, typeName);
+			checkEmitControllers(def, node->getChild(i), ctrls, ft, type, typeName);
 	}
 }
 // --------------------------------------------------------------------------------
@@ -878,21 +878,21 @@ void ParseTree::buildFunctions(EmitterDefinition* def, ParseTreeNode* node)
 		}
 		return;
 
-	case PT_FireStatement:
+	case PT_EmitStatement:
 		{
-			// Make sure that the fire function is registered.
+			// Make sure that the emit function is registered.
 			String funcName = node->getChild(0)->getStringData();
 			String funcType = node->getStringData();
 
-			FireType* ft = mScriptMachine->getFireType(funcType);
+			EmitType* ft = mScriptMachine->getEmitType(funcType);
 			if (!ft)
 			{
-				addError(node->getLine(), "Unknown fire type ' " + funcType + "'.");
+				addError(node->getLine(), "Unknown emit type ' " + funcType + "'.");
 				return;
 			}
-			else if (!ft->fireFunctionExists(funcName))
+			else if (!ft->emitFunctionExists(funcName))
 			{
-				addError(node->getLine(), "Fire function '" + funcName + "' is not registered.");
+				addError(node->getLine(), "Emit function '" + funcName + "' is not registered.");
 				return;
 			}
 
@@ -906,7 +906,7 @@ void ParseTree::buildFunctions(EmitterDefinition* def, ParseTreeNode* node)
 				countFunctionCallArguments(node->getChild(1), numArguments);
 			}
 
-			int expectedArgs = ft->getNumFireFunctionArguments(funcName);
+			int expectedArgs = ft->getNumEmitFunctionArguments(funcName);
 			if (numArguments != expectedArgs)
 			{
 				std::stringstream ss;
@@ -914,11 +914,11 @@ void ParseTree::buildFunctions(EmitterDefinition* def, ParseTreeNode* node)
 				addError(node->getLine(), ss.str());
 				return;
 			}
-			// FireType parameters
+			// EmitType parameters
 			if (node->getChild(3))
 			{
 				int numCtrls = 0;
-				checkFireControllers(def, node->getChild(3), numCtrls, ft, CBT_Function, s_curFunc->name);
+				checkEmitControllers(def, node->getChild(3), numCtrls, ft, CBT_Function, s_curFunc->name);
 			}
 		}
 		return;
@@ -1379,22 +1379,22 @@ void ParseTree::buildStates(ObjectDefinition* def, ParseTreeNode* node)
 		}
 		return;
 
-	case PT_FireStatement:
+	case PT_EmitStatement:
 		{
 			// This will only be used by emitter states.
-			// Make sure that the fire function is registered.
+			// Make sure that the emit function is registered.
 			String funcName = node->getChild(0)->getStringData();
 			String funcType = node->getStringData();
 
-			FireType* ft = mScriptMachine->getFireType(funcType);
+			EmitType* ft = mScriptMachine->getEmitType(funcType);
 			if (!ft)
 			{
-				addError(node->getLine(), "Unknown fire type ' " + funcType + "'.");
+				addError(node->getLine(), "Unknown emit type ' " + funcType + "'.");
 				return;
 			}
-			else if (!ft->fireFunctionExists(funcName))
+			else if (!ft->emitFunctionExists(funcName))
 			{
-				addError(node->getLine(), "Fire function '" + funcName + "' is not registered.");
+				addError(node->getLine(), "Emit function '" + funcName + "' is not registered.");
 				return;
 			}
 
@@ -1408,7 +1408,7 @@ void ParseTree::buildStates(ObjectDefinition* def, ParseTreeNode* node)
 				countFunctionCallArguments(node->getChild(1), numArguments);
 			}
 
-			int expectedArgs = ft->getNumFireFunctionArguments(funcName);
+			int expectedArgs = ft->getNumEmitFunctionArguments(funcName);
 			if (numArguments != expectedArgs)
 			{
 				std::stringstream ss;
@@ -1417,11 +1417,11 @@ void ParseTree::buildStates(ObjectDefinition* def, ParseTreeNode* node)
 				return;
 			}
 
-			// FireType parameters
+			// EmitType parameters
 			if (node->getChild(3))
 			{
 				int numCtrls = 0;
-				checkFireControllers(static_cast<EmitterDefinition*>(def), node->getChild(3), numCtrls, ft,
+				checkEmitControllers(static_cast<EmitterDefinition*>(def), node->getChild(3), numCtrls, ft,
 					CBT_EmitterState, s_curState->name);
 			}
 		}
@@ -1553,12 +1553,12 @@ void ParseTree::buildStates(ObjectDefinition* def, ParseTreeNode* node)
 	}
 }
 // --------------------------------------------------------------------------------
-void ParseTree::_checkFireStatements(EmitterDefinition* def, ParseTreeNode* node, const String& type)
+void ParseTree::_checkEmitStatements(EmitterDefinition* def, ParseTreeNode* node, const String& type)
 {
 	int nodeType = node->getType();
 	if (nodeType == PT_FunctionCall)
 	{
-		FireType* ft = mScriptMachine->getFireType(type);
+		EmitType* ft = mScriptMachine->getEmitType(type);
 
 		// Make sure that any control function used has the correct properties
 		String funcName = node->getChild(0)->getStringData();
@@ -1570,31 +1570,31 @@ void ParseTree::_checkFireStatements(EmitterDefinition* def, ParseTreeNode* node
 	for (int i = 0; i < ParseTreeNode::MAX_CHILDREN; ++ i)
 	{
 		if (node->getChild(i))
-			_checkFireStatements(def, node->getChild(i), type);
+			_checkEmitStatements(def, node->getChild(i), type);
 	}
 }
 // -------------------------------------------------------------------------
-void ParseTree::checkFireStatements(EmitterDefinition* def, ParseTreeNode* node)
+void ParseTree::checkEmitStatements(EmitterDefinition* def, ParseTreeNode* node)
 {
-	if (node->getType() == PT_FireStatement)
+	if (node->getType() == PT_EmitStatement)
 	{
 		ParseTreeNode* tailNode = node->getChild(3);
 		if (tailNode)
 		{
 			// Loop through list
 			String typeName = node->getStringData();
-			_checkFireStatements(def, tailNode, typeName);
+			_checkEmitStatements(def, tailNode, typeName);
 		}
 	}
 
 	for (int i = 0; i < ParseTreeNode::MAX_CHILDREN; ++ i)
 	{
 		if (node->getChild(i))
-			checkFireStatements(def, node->getChild(i));
+			checkEmitStatements(def, node->getChild(i));
 	}
 }
 // --------------------------------------------------------------------------------
-void ParseTree::checkFunctionProperties(ParseTreeNode* node, FireType* type)
+void ParseTree::checkFunctionProperties(ParseTreeNode* node, EmitType* type)
 {
 	if (node->getType() == PT_Property)
 	{
@@ -1610,11 +1610,11 @@ void ParseTree::checkFunctionProperties(ParseTreeNode* node, FireType* type)
 	}
 }
 // --------------------------------------------------------------------------------
-void ParseTree::checkFunctionDieStatements(ParseTreeNode* node, FireType* type)
+void ParseTree::checkFunctionDieStatements(ParseTreeNode* node, EmitType* type)
 {
 	if (node->getType() == PT_DieStatement)
 	{
-		if (!type->mDieFunction)
+		if (!type->getDieFunction())
 			addError(node->getLine(), "Type '" + type->getName() + "' has no die() function registered.");
 	}
 
@@ -1700,8 +1700,8 @@ void ParseTree::createMemberVariableBytecode(ObjectDefinition* def, ParseTreeNod
 	}
 }
 // --------------------------------------------------------------------------------
-void ParseTree::generateFireTail(EmitterDefinition* def, ParseTreeNode* node, 
-								 BytecodeBlock* bytecode, FireType* ft, CodeBlockType codeType)
+void ParseTree::generateEmitTail(EmitterDefinition* def, ParseTreeNode* node, 
+								 BytecodeBlock* bytecode, EmitType* ft, CodeBlockType codeType)
 {
 	int nodeType = node->getType();
 	if (nodeType == PT_FunctionCall)
@@ -1713,7 +1713,7 @@ void ParseTree::generateFireTail(EmitterDefinition* def, ParseTreeNode* node,
 	else if (nodeType == PT_AffectorCall)
 	{
 
-		// See if affector instance has been created in FireType, and if it has, use 
+		// See if affector instance has been created in EmitType, and if it has, use 
 		// its index, otherwise add it and use its index.
 		String affector = node->getStringData();
 		int affIndex = -1;
@@ -1726,13 +1726,13 @@ void ParseTree::generateFireTail(EmitterDefinition* def, ParseTreeNode* node,
 			}
 		}
 
-		// See FireType::getControllers
+		// See EmitType::getControllers
 		String instanceName = def->getName() + "-" + affector;
 
 		int instanceIndex = ft->getAffectorInstanceIndex(instanceName);
 		if (instanceIndex < 0)
 		{
-			// Generate CodeRecord and give to FireType
+			// Generate CodeRecord and give to EmitType
 			BytecodeBlock argCode;
 			ParseTreeNode* argsNode = mAffectors[affIndex].node->getChild(1)->getChild(1);
 			generateBytecode(def, argsNode, &argCode, codeType);
@@ -1753,7 +1753,7 @@ void ParseTree::generateFireTail(EmitterDefinition* def, ParseTreeNode* node,
 	for (int i = 0; i < ParseTreeNode::MAX_CHILDREN; ++ i)
 	{
 		if (node->getChild(i))
-			generateFireTail(def, node->getChild(i), bytecode, ft, codeType);
+			generateEmitTail(def, node->getChild(i), bytecode, ft, codeType);
 	}
 }
 // --------------------------------------------------------------------------------
@@ -1917,24 +1917,24 @@ void ParseTree::generateBytecode(ObjectDefinition* def, ParseTreeNode* node,
 		}
 		return;
 
-	case PT_FireStatement:
+	case PT_EmitStatement:
 		{
 			// This will only be used by emitters.
 			EmitterDefinition* eDef = static_cast<EmitterDefinition*>(def);
 			String funcType = node->getStringData();
-			FireType* ft = mScriptMachine->getFireType(funcType);
+			EmitType* ft = mScriptMachine->getEmitType(funcType);
 
-			// Generate FireType function arguments and create affector instances,
-			// to be used by FireType::generateBytecode
+			// Generate EmitType function arguments and create affector instances,
+			// to be used by EmitType::generateBytecode
 			ParseTreeNode* tNode = node->getChild(3);
 			if (tNode)
-				generateFireTail(eDef, tNode, bytecode, ft, codeType);
+				generateEmitTail(eDef, tNode, bytecode, ft, codeType);
 
-			// Generate fire function arguments next
+			// Generate emit function arguments next
 			if (node->getChild(1))
 				generateBytecode(def, node->getChild(1), bytecode, codeType);
 
-			// Then generate actual BC_FIRE code
+			// Then generate actual BC_EMIT code
 			String funcName = node->getChild(0)->getStringData();
 			ft->generateBytecode(eDef, node, bytecode, funcName);
 		}
@@ -2051,7 +2051,7 @@ void ParseTree::generateBytecode(ObjectDefinition* def, ParseTreeNode* node,
 			mContinueLocations.push_back(std::list<uint32>());
 
 			// Generate test expression
-			size_t startJumpPos = bytecode->size();
+			uint32 startJumpPos = (uint32) bytecode->size();
 			generateBytecode(def, node->getChild(0), bytecode, codeType);
 
 			bytecode->push_back(BC_JZ);
@@ -2395,11 +2395,11 @@ EmitterDefinition* ParseTree::createEmitterDefinition(ParseTreeNode* node)
 		}
 	}
 
-	// This is a bit of a hack, but now we have to check fire statements to make sure that
+	// This is a bit of a hack, but now we have to check emit statements to make sure that
 	// the functions they use do not contain invalid properties, and that they do not use a
 	// function that has the same name as an affector. This is because we do not
 	// know what type a function has been given from the function itself.
-	checkFireStatements(def, node);
+	checkEmitStatements(def, node);
 
 	if (mNumErrors > 0)
 	{

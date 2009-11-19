@@ -170,8 +170,6 @@ void ScriptMachine::updateControllers(float frameTime)
 {
 	// Update Controller events here rather than in Controller::update because it is
 	// quicker to simply go through one master list.
-	
-
 	Controller* ctrl = mControllers->getFirst();
 	while (ctrl)
 	{
@@ -198,12 +196,12 @@ int ScriptMachine::getNumCodeRecords() const
 	return (int) mCodeRecords.size();
 }
 // --------------------------------------------------------------------------------
-FireTypeControl* ScriptMachine::getFireTypeRecord(int index)
+EmitTypeControl* ScriptMachine::getEmitTypeRecord(int index)
 {
 	assert(index >= 0 && index < mEmitterRecords.size() && 
-		"ScriptMachine::getFireTypeRecord: out of bounds.");
+		"ScriptMachine::getEmitTypeRecord: out of bounds.");
 
-	FireTypeControl* rec = mEmitterRecords[index].pool->acquire();
+	EmitTypeControl* rec = mEmitterRecords[index].pool->acquire();
 	rec->__emitterDefinition = index;
 	rec->activeProperties = 0;
 	rec->state.curInstruction = 0;
@@ -212,10 +210,10 @@ FireTypeControl* ScriptMachine::getFireTypeRecord(int index)
 	return rec;
 }
 // --------------------------------------------------------------------------------
-void ScriptMachine::releaseFireTypeRecord(int index, FireTypeControl* rec)
+void ScriptMachine::releaseEmitTypeRecord(int index, EmitTypeControl* rec)
 {
 	assert(index >= 0 && index < mEmitterRecords.size() && 
-		"ScriptMachine::releaseFireTypeRecord: out of bounds.");
+		"ScriptMachine::releaseEmitTypeRecord: out of bounds.");
 
 	mEmitterRecords[index].pool->release(rec);
 }
@@ -248,7 +246,7 @@ NativeFunction ScriptMachine::getNativeFunction(int index) const
 	return mNativeFunctions[index].function;
 }
 // --------------------------------------------------------------------------------
-FireType* ScriptMachine::getFireType(const String& name) const
+EmitType* ScriptMachine::getEmitType(const String& name) const
 {
 	return mTypeManager->getType(name);
 }
@@ -351,7 +349,7 @@ bool ScriptMachine::addEmitterDefinition(const String& name, EmitterDefinition* 
 
 	// Create pool
 	int maxLocals = def->getMaxLocalVariables();
-	rec.pool = new DeepMemoryPool<FireTypeControl, int>(128, maxLocals);
+	rec.pool = new DeepMemoryPool<EmitTypeControl, int>(128, maxLocals);
 
 	mEmitterRecords.push_back(rec);
 
@@ -637,7 +635,7 @@ int ScriptMachine::interpretCode(const uint32* code, size_t length, ScriptState&
 				bstype value = st.stack[--st.stackHead];
 
 				const String& propName = getProperty(index);
-				FireTypeControl* ftc = static_cast<FireTypeControl*>(object);
+				EmitTypeControl* ftc = static_cast<EmitTypeControl*>(object);
 
 				ftc->__type->setProperty1(ftc, propName, value);
 				st.curInstruction += 2;
@@ -652,7 +650,7 @@ int ScriptMachine::interpretCode(const uint32* code, size_t length, ScriptState&
 				st.stackHead -= 2;
 
 				const String& propName = getProperty(index);
-				FireTypeControl* ftc = static_cast<FireTypeControl*>(object);
+				EmitTypeControl* ftc = static_cast<EmitTypeControl*>(object);
 
 				ftc->__type->setProperty2(ftc, propName, value, time);
 				st.curInstruction += 2;
@@ -663,7 +661,7 @@ int ScriptMachine::interpretCode(const uint32* code, size_t length, ScriptState&
 			{
 				int index = code[st.curInstruction + 1];
 				const String& propName = getProperty(index);
-				FireTypeControl* ftc = static_cast<FireTypeControl*>(object);
+				EmitTypeControl* ftc = static_cast<EmitTypeControl*>(object);
 
 				st.stack[st.stackHead] = ftc->__type->getProperty(ftc->__object, propName);
 				st.stackHead++;
@@ -832,10 +830,10 @@ int ScriptMachine::interpretCode(const uint32* code, size_t length, ScriptState&
 			}
 			break;
 
-		case BC_FIRE:
+		case BC_EMIT:
 			{
-				int fireType = code[st.curInstruction + 1];
-				FireType* ft = mTypeManager->getType(fireType);
+				int emitType = code[st.curInstruction + 1];
+				EmitType* ft = mTypeManager->getType(emitType);
 #ifdef BS_Z_DIMENSION
 				st.curInstruction += ft->processCode(code, st, x, y, z, members);
 #else
@@ -856,12 +854,12 @@ int ScriptMachine::interpretCode(const uint32* code, size_t length, ScriptState&
 
 		case BC_DIE:
 			{
-				FireTypeControl* ftc = static_cast<FireTypeControl*>(object);
+				EmitTypeControl* ftc = static_cast<EmitTypeControl*>(object);
 
 				assert(ftc->__object != 0 &&
 					"ScriptMachine::interpretCode ftc->object is null");
 
-				ftc->__type->mDieFunction(ftc->__object);
+				ftc->__type->callDieFunction(ftc->__object);
 				st.curInstruction++;
 			}
 			break;
@@ -939,7 +937,7 @@ int ScriptMachine::interpretCode(const uint32* code, size_t length, ScriptState&
 
 		case BC_JZ:
 			{
-				if (BS_TYPE_TO_UINT32 (st.stack[st.stackHead - 1]) == 0)
+				if (BS_TYPE_TO_UINT32(st.stack[st.stackHead - 1]) == 0)
 				{
 					int address = code[st.curInstruction + 1];
 					st.stackHead--;

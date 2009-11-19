@@ -59,7 +59,7 @@ public:
 
 	static void initialise(bs::Machine* machine);
 
-	static int update(float frameTime);
+	static int update(float frameTime, int* numBullets = 0);
 
 	static void render(RendererGL* renderer);
 

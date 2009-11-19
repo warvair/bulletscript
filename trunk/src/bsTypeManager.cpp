@@ -1,5 +1,7 @@
 #include <iostream>
 #include <assert.h>
+#include <ctime>
+#include <windows.h>
 #include "bsTypeManager.h"
 
 namespace BS_NMSP
@@ -14,7 +16,7 @@ TypeManager::~TypeManager()
 // --------------------------------------------------------------------------------
 void TypeManager::createType(const String& type)
 {
-	FireType* ft = new FireType(type, (int) mTypes.size(), this, mVM);
+	EmitType* ft = new EmitType(type, (int) mTypes.size(), this, mScriptMachine);
 	mTypes.push_back(ft);
 }
 // --------------------------------------------------------------------------------
@@ -23,7 +25,7 @@ void TypeManager::addErrorMsg(const String& msg)
 	mLog->addEntry(msg);
 }
 // --------------------------------------------------------------------------------
-FireType* TypeManager::getType(const String& name) const
+EmitType* TypeManager::getType(const String& name) const
 {
 	for (size_t i = 0; i < mTypes.size(); ++i)
 		if (mTypes[i]->getName() == name)
@@ -32,7 +34,7 @@ FireType* TypeManager::getType(const String& name) const
 	return 0;
 }
 // --------------------------------------------------------------------------------
-FireType* TypeManager::getType(int type) const
+EmitType* TypeManager::getType(int type) const
 {
 	return mTypes[type];
 }
@@ -46,12 +48,12 @@ int TypeManager::getTypeId(const String& name) const
 	return -1;
 }
 // --------------------------------------------------------------------------------
-bool TypeManager::fireFunctionExists(int type, const String& name) const
+bool TypeManager::emitFunctionExists(int type, const String& name) const
 {
 	assert(type >= 0 && type < (int) mTypes.size() && 
-		"TypeManager::fireFunctionExists out of range");
+		"TypeManager::emitFunctionExists out of range");
 
-	return mTypes[type]->fireFunctionExists(name);
+	return mTypes[type]->emitFunctionExists(name);
 }
 // --------------------------------------------------------------------------------
 bool TypeManager::affectorFunctionExists(int type, const String& name) const
@@ -66,37 +68,37 @@ void TypeManager::releaseType(UserTypeBase* ft)
 {
 	if (ft->__ft)
 	{
-		mVM->releaseFireTypeRecord(ft->__ft->__emitterDefinition, ft->__ft);
+		mScriptMachine->releaseEmitTypeRecord(ft->__ft->__emitterDefinition, ft->__ft);
 		ft->__ft = 0;
 	}
 }
 // --------------------------------------------------------------------------------
 #ifdef BS_Z_DIMENSION
-void TypeManager::updateType(UserTypeBase* ft, bstype x, bstype y, bstype z, float frameTime)
+int TypeManager::updateType(UserTypeBase* ft, bstype x, bstype y, bstype z, float frameTime)
 #else
-void TypeManager::updateType(UserTypeBase* ft, bstype x, bstype y, float frameTime)
+int TypeManager::updateType(UserTypeBase* ft, bstype x, bstype y, float frameTime)
 #endif
 {
 	if (!ft->__ft)
-		return;
+		return 0;
 
-	FireTypeControl* rec = ft->__ft;
-	FireType* fireType = rec->__type;
+	EmitTypeControl* rec = ft->__ft;
+	EmitType* emitType = rec->__type;
 
 	// Update pointer to the user object
 	rec->__object = ft;
 
 	// Update changing properties before script, because they are independent of script status
-	int numProperties = fireType->mNumProperties;
+	int numProperties = emitType->mNumProperties;
 	for (int i = 0; i < numProperties; ++i)
 	{
 		int mask = 1 << i;
 		if (rec->activeProperties & mask)
 		{
-			bstype curValue = fireType->mProperties[i].getter(rec->__object);
+			bstype curValue = emitType->mProperties[i].getter(rec->__object);
 			bstype newValue = curValue + rec->properties[i].speed * frameTime;
 
-			fireType->mProperties[i].setter(rec->__object, newValue);
+			emitType->mProperties[i].setter(rec->__object, newValue);
 
 			rec->properties[i].time -= frameTime;
 			if (rec->properties[i].time <= 0)
@@ -110,10 +112,10 @@ void TypeManager::updateType(UserTypeBase* ft, bstype x, bstype y, float frameTi
 		if (rec->state.suspendTime <= 0)
 		{
 #ifdef BS_Z_DIMENSION
-			mVM->interpretCode(rec->code->byteCode, rec->code->byteCodeSize, 
-				rec->state, 0, rec, ScriptMachine::VT_FireTypeControl, x, y, z, 0, false);
+			mScriptMachine->interpretCode(rec->code->byteCode, rec->code->byteCodeSize, 
+				rec->state, 0, rec, ScriptMachine::VT_EmitTypeControl, x, y, z, 0, false);
 #else
-			mVM->interpretCode(rec->code->byteCode, rec->code->byteCodeSize, 
+			mScriptMachine->interpretCode(rec->code->byteCode, rec->code->byteCodeSize, 
 				rec->state, 0, rec, x, y, 0, false);
 #endif
 		}
@@ -130,20 +132,22 @@ void TypeManager::updateType(UserTypeBase* ft, bstype x, bstype y, float frameTi
 		for (int i = 0; i < ft->__ft->numAffectors; ++i)
 			ft->__ft->__type->applyAffector(ft, ft->__ft->affectors[i], frameTime);
 	}
+
+	return 0;
 }
 // --------------------------------------------------------------------------------
-void TypeManager::registerFireFunction(const String& type, const String& name, 
-									   int numArgs, FireFunction func)
+void TypeManager::registerEmitFunction(const String& type, const String& name, 
+									   int numArgs, EmitFunction func)
 {
-	FireType* ft = getType(type);
+	EmitType* ft = getType(type);
 	
-	assert(ft != 0 && "TypeManager::registerFireFunction no type");
-	ft->registerFireFunction(name, numArgs, func);
+	assert(ft != 0 && "TypeManager::registerEmitFunction no type");
+	ft->registerEmitFunction(name, numArgs, func);
 }
 // --------------------------------------------------------------------------------
 void TypeManager::setDieFunction(const String& type, DieFunction func)
 {
-	FireType* ft = getType(type);
+	EmitType* ft = getType(type);
 	
 	assert(ft != 0 && "TypeManager::setDieFunction no type");
 	ft->setDieFunction(func);
@@ -152,7 +156,7 @@ void TypeManager::setDieFunction(const String& type, DieFunction func)
 bool TypeManager::registerProperty(const String& type, const String& name, 
 								   SetFunction set, GetFunction get)
 {
-	FireType* ft = getType(type);
+	EmitType* ft = getType(type);
 	
 	assert(ft != 0 && "TypeManager::registerProperty no type");
 	return ft->registerProperty(name, set, get);
@@ -160,7 +164,7 @@ bool TypeManager::registerProperty(const String& type, const String& name,
 // --------------------------------------------------------------------------------
 void TypeManager::registerAffector(const String& type, const String& name, AffectorFunction func)
 {
-	FireType* ft = getType(type);
+	EmitType* ft = getType(type);
 	
 	assert(ft != 0 && "TypeManager::registerAffector no type");
 	ft->registerAffector(name, func);

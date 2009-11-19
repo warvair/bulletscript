@@ -55,7 +55,7 @@ public:
 		mMachine(machine),
 		mAlive(true)
 	{
-		if (true)//(rand() & 1)
+		if (false/*rand() & 1*/)
 		{
 			mGunNotCtrl = true;
 			int rr = rand() % 4;
@@ -84,15 +84,12 @@ public:
 				mGun->setY(400 + rand() % 100);
 			}
 
-			mTime = 10 + rand() % 18;
-
 			mGun->setAngle(180);
 		}
 		else
 		{
 			mGunNotCtrl = false;
 			mCtrl = machine->createController("Boss1");
-
 			mCtrl->setX(100 + rand() % 600);
 			mCtrl->setY(100 + rand() % 400);
 			mCtrl->setAngle(180);
@@ -120,6 +117,62 @@ void destroyGunWrappers()
 	}
 
 	gWrappers.clear();
+}
+
+void plotValues(const std::vector<float> time1, const std::vector<float> time2)
+{
+	// find fps range
+	float minT = 9999999, maxT = -1, rangeT;
+	for (size_t i = 0; i < time1.size(); ++i)
+	{
+		if (time1[i] > maxT)
+			maxT = time1[i];
+		if (time1[i] < minT)
+			minT = time1[i];
+	}
+	rangeT = maxT - minT;
+	int iRange = (int) (rangeT * 100.0f);
+
+	int height = iRange;
+	int width = time1.size();
+
+	std::cerr << "plot: " << width << "x" << height << std::endl;
+
+	unsigned char* image = new unsigned char[height * width];
+	memset(image, 255, height * width);
+
+	for (size_t i = 0; i < time1.size(); ++i)
+	{
+		int offset = (int) ((time1[i] - minT) * 100.0f);
+		offset = offset * width + i;
+		image[offset] = 0;
+	}
+
+	// now do small time
+	float minT2 = 9999999, maxT2 = -1, rangeT2;
+	for (size_t i = 0; i < time2.size(); ++i)
+	{
+		if (time2[i] > maxT2)
+			maxT2 = time2[i];
+		if (time2[i] < minT2)
+			minT2 = time2[i];
+	}
+	rangeT2 = maxT2 - minT2;
+	// scale to large time
+	float scaleFac = rangeT / rangeT2;
+
+//	std::cerr << rangeT2 << " " << rangeT << " " << scaleFac << std::endl;
+	for (size_t i = 0; i < time2.size(); ++i)
+	{
+		int offset = (int) ((time2[i] - minT2) * scaleFac * 100.0f);
+		offset = offset * width + i;
+		image[offset] = 150;
+	}
+
+	FILE* fp = fopen("plot.raw", "wb");
+	fwrite(image, height * width, sizeof(unsigned char), fp);
+	fclose(fp);
+	delete[] image;
 }
 
 /*
@@ -228,7 +281,7 @@ int main (int argc, char **argv)
 	// Register bullet functions
 	machine.createType("bullet");
 
-	machine.registerFireFunction("bullet", "fireA", 2, BulletBattery::emitAngle);
+	machine.registerEmitFunction("bullet", "fireA", 2, BulletBattery::emitAngle);
 	machine.setDieFunction("bullet", BulletBattery::killBullet);
 	machine.registerProperty("bullet", "angle",	BulletBattery::setAngle, BulletBattery::getAngle);
 	machine.registerProperty("bullet", "red", BulletBattery::setRed, BulletBattery::getRed);
@@ -240,10 +293,10 @@ int main (int argc, char **argv)
 	// Register area functions
 	machine.createType("area");
 
-	machine.registerFireFunction("area", "quadC", 3, AreaBattery::emitQuadC);
-	machine.registerFireFunction("area", "quadB", 3, AreaBattery::emitQuadB);
-	machine.registerFireFunction("area", "ellipse", 2, AreaBattery::emitEllipse);
-	machine.registerFireFunction("area", "arc", 5, AreaBattery::emitArc);
+	machine.registerEmitFunction("area", "quadC", 3, AreaBattery::emitQuadC);
+	machine.registerEmitFunction("area", "quadB", 3, AreaBattery::emitQuadB);
+	machine.registerEmitFunction("area", "ellipse", 2, AreaBattery::emitEllipse);
+	machine.registerEmitFunction("area", "arc", 5, AreaBattery::emitArc);
 	machine.setDieFunction("area", AreaBattery::killArea);
 	machine.registerProperty("area", "alpha", AreaBattery::setFade,	AreaBattery::getFade);
 	machine.registerProperty("area", "width", AreaBattery::setWidth, AreaBattery::getWidth);
@@ -257,7 +310,7 @@ int main (int argc, char **argv)
 	// Register unit functions
 	machine.createType("unit");
 
-	machine.registerFireFunction("unit", "ship1", 0, UnitSystem::emitUnit);
+	machine.registerEmitFunction("unit", "ship1", 0, UnitSystem::emitUnit);
 	machine.setDieFunction("unit", UnitSystem::killUnit);
 
 	// Register global variables
@@ -317,18 +370,16 @@ int main (int argc, char **argv)
 	unsigned int totalTime = 0;
 
 	unsigned int fpsCounter = 0;
-	unsigned int numFrames = 0, updateTime = 0;
+	unsigned int numFrames = 0, updateTime0 = 0, updateTime2 = 0;
 
 	int numBullets = 0;
 
 	// 50 emitters to start
-	for (int i = 0; i < 50; ++i)
+	for (int i = 0; i < 1; ++i)
 	{
 		GunWrapper* wr = new GunWrapper(&machine);
 		gWrappers.push_back(wr);
 	}
-
-//	FILE* prof = open_profile_file("profiling.txt");
 
 	while (true)
 	{
@@ -351,37 +402,39 @@ int main (int argc, char **argv)
 		if (fpsCounter > 1000)
 		{
 			fpsCounter -= 1000;
-			std::cerr << "Avg update time: " << (updateTime / (float) numFrames) << "ms " << (totalTime/1000.0f) << 
-				" FPS: " << numFrames << " Bullets: " << numBullets << "/" << gWrappers.size() << std::endl;
 
-//			write_profile_info(prof, (totalTime/1000.0f), (updateTime / (float) numFrames), numFrames, numBullets);
+			int fps = numFrames;
+			float updateMS2 = (updateTime2 / (float) numFrames);
+			std::cerr << "Avg update time: " << updateMS2 << "ms " << (totalTime/1000.0f) << 
+				" FPS: " << fps << " " << numBullets << "/" << gWrappers.size() << std::endl;
 
 			numFrames = 0;
-			updateTime = 0;
+			updateTime0 = 0;
+			updateTime2 = 0;
 		}
 
 		// Set script globals - this will update BulletAffector global arguments
 		machine.setGlobalVariableValue("Level_Time", totalTime / 1000.0f);
 
-		unsigned int bsTime1 = getTicks();
-
 		// Update machine
 		machine.update(frameTime);
 
+		unsigned int bsTime2 = getTicks();
+
 		// Update types
-		numBullets = BulletBattery::update(frameTime);
+		updateTime0 += BulletBattery::update(frameTime, &numBullets);
 		AreaBattery::update(frameTime);
 		UnitSystem::update(frameTime);
 
-		unsigned int bsTime2 = getTicks();
-		updateTime += (bsTime2 - bsTime1);
+		unsigned int bsTime3 = getTicks();
+		updateTime2 += (bsTime3 - bsTime2);
 
 		numFrames++;
 
 		// Render
 
 #ifndef MINIMAL_APP
-		/*
+
 		renderer.startRendering();
 
 		BulletBattery::render(&renderer);
@@ -389,7 +442,7 @@ int main (int argc, char **argv)
 		UnitSystem::render(&renderer);
 
 		renderer.finishRendering();
-		*/
+
 #endif
 
 	}
