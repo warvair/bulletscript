@@ -13,7 +13,7 @@ ControllerDefinition::ControllerDefinition(const String& name) :
 // --------------------------------------------------------------------------------
 ControllerDefinition::EmitterVariable& ControllerDefinition::addEmitterVariable(const String& name, 
 																				const String& emitter,
-																				bstype args[NUM_SPECIAL_MEMBERS])
+																				const bstype* args)
 {
 	EmitterVariable emit;
 	emit.name = name;
@@ -95,7 +95,7 @@ int ControllerDefinition::getMaxEventLocalVariables() const
 	return mMaxEventLocals;
 }
 // --------------------------------------------------------------------------------
-ScriptRecord* ControllerDefinition::createScriptRecord(ScriptMachine* sm)
+ScriptRecord* ControllerDefinition::createScriptRecord(ScriptMachine* machine)
 {
 	ScriptRecord* record = new ScriptRecord(mMaxLocals);
 
@@ -111,7 +111,7 @@ ScriptRecord* ControllerDefinition::createScriptRecord(ScriptMachine* sm)
 	// Run construction code, if there is any
 	if (mConstructSize > 0)
 	{
-		sm->interpretCode(mConstructCode, mConstructSize, record->scriptState,
+		machine->interpretCode(mConstructCode, mConstructSize, record->scriptState,
 			record->members);
 
 		record->scriptState.stackHead = 0;

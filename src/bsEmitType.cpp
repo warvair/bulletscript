@@ -1,5 +1,5 @@
 #include <iostream>
-#include "bsFireType.h"
+#include "bsEmitType.h"
 #include "bsEmitter.h"
 #include "bsScriptMachine.h"
 
@@ -7,18 +7,18 @@ namespace BS_NMSP
 {
 
 // --------------------------------------------------------------------------------
-FireType::FireType(const String& name, int type, TypeManager* typeMan,
-				   ScriptMachine* vm) :
+EmitType::EmitType(const String& name, int type, TypeManager* typeMan,
+				   ScriptMachine* machine) :
 	mName(name),
 	mType(type),
 	mNumProperties(0),
 	mTypeManager(typeMan),
-	mVM(vm),
+	mScriptMachine(machine),
 	mDieFunction(0)
 {
 }
 // --------------------------------------------------------------------------------
-FireType::~FireType()
+EmitType::~EmitType()
 {
 	mAffectors.clear();
 
@@ -28,27 +28,34 @@ FireType::~FireType()
 	mAffectorInstances.clear();
 }
 // --------------------------------------------------------------------------------
-const String& FireType::getName() const
+const String& EmitType::getName() const
 {
 	return mName;
 }
 // --------------------------------------------------------------------------------
-int FireType::getType() const
+int EmitType::getType() const
 {
 	return mType;
 }
 // --------------------------------------------------------------------------------
-void FireType::registerFireFunction(const String& name, int numArgs, FireFunction func)
+bool EmitType::registerEmitFunction(const String& name, int numArgs, EmitFunction func)
 {
+	for (size_t i = 0; i < mFunctions.size(); ++i)
+	{
+		if (mFunctions[i].name == name)
+			return false;
+	}
+
 	FunctionEntry fe;
 	fe.name = name;
 	fe.func = func;
 	fe.numArguments = numArgs;
 
 	mFunctions.push_back(fe);
+	return true;
 }
 // --------------------------------------------------------------------------------
-int FireType::getNumFireFunctionArguments(const String& name) const
+int EmitType::getNumEmitFunctionArguments(const String& name) const
 {
 	for (size_t i = 0; i < mFunctions.size(); ++i)
 		if (mFunctions[i].name == name)
@@ -57,15 +64,32 @@ int FireType::getNumFireFunctionArguments(const String& name) const
 	return -1;
 }
 // --------------------------------------------------------------------------------
-void FireType::setDieFunction(DieFunction func)
+void EmitType::setDieFunction(DieFunction func)
 {
 	mDieFunction = func;
 }
 // --------------------------------------------------------------------------------
-bool FireType::registerProperty(const String& name, SetFunction set, GetFunction get)
+DieFunction EmitType::getDieFunction() const
+{
+	return mDieFunction;
+}
+// --------------------------------------------------------------------------------
+void EmitType::callDieFunction(UserTypeBase* object)
+{
+	mDieFunction(object);
+}
+// --------------------------------------------------------------------------------
+bool EmitType::registerProperty(const String& name, SetFunction set, GetFunction get)
 {
 	if (mNumProperties == BS_MAX_PROPERTIES)
 		return false;
+
+	// Make sure it's not already registered
+	for (int i = 0; i < mNumProperties; ++i)
+	{
+		if (mProperties[i].name == name)
+			return false;
+	}
 
 	mProperties[mNumProperties].name = name;
 	mProperties[mNumProperties].setter = set;
@@ -74,7 +98,18 @@ bool FireType::registerProperty(const String& name, SetFunction set, GetFunction
 	return true;
 }
 // --------------------------------------------------------------------------------
-void FireType::setProperty1(FireTypeControl* record, const String& prop, bstype value) const
+int EmitType::getPropertyIndex(const String& name) const
+{
+	for (int i = 0; i < mNumProperties; ++i)
+	{
+		if (mProperties[i].name == name)
+			return i;
+	}
+	
+	return -1;
+}
+// --------------------------------------------------------------------------------
+void EmitType::setProperty1(EmitTypeControl* record, const String& prop, bstype value) const
 {
 	int index = getPropertyIndex(prop);
 	mProperties[index].setter(record->__object, value);
@@ -83,7 +118,7 @@ void FireType::setProperty1(FireTypeControl* record, const String& prop, bstype 
 	record->activeProperties &= ~(1 << index);
 }
 // --------------------------------------------------------------------------------
-void FireType::setProperty2(FireTypeControl* record, const String& prop, 
+void EmitType::setProperty2(EmitTypeControl* record, const String& prop, 
 							bstype value, bstype time) const
 {
 	int index = getPropertyIndex(prop);
@@ -96,13 +131,13 @@ void FireType::setProperty2(FireTypeControl* record, const String& prop,
 	record->properties[index].speed = (value - curValue) / time;
 }
 // --------------------------------------------------------------------------------
-bstype FireType::getProperty(UserTypeBase* object, const String& prop) const
+bstype EmitType::getProperty(UserTypeBase* object, const String& prop) const
 {
 	int index = getPropertyIndex(prop);
 	return mProperties[index].getter(object);
 }
 // --------------------------------------------------------------------------------
-bool FireType::fireFunctionExists(const String& name) const
+bool EmitType::emitFunctionExists(const String& name) const
 {
 	for (size_t i = 0; i < mFunctions.size(); ++i)
 		if (mFunctions[i].name == name)
@@ -111,7 +146,7 @@ bool FireType::fireFunctionExists(const String& name) const
 	return false;
 }
 // --------------------------------------------------------------------------------
-bool FireType::affectorFunctionExists(const String& name) const
+bool EmitType::affectorFunctionExists(const String& name) const
 {
 	for (size_t i = 0; i < mAffectors.size(); ++i)
 		if (mAffectors[i].name == name)
@@ -120,7 +155,7 @@ bool FireType::affectorFunctionExists(const String& name) const
 	return false;
 }
 // --------------------------------------------------------------------------------
-void FireType::registerAffector(const String& name, AffectorFunction func)
+void EmitType::registerAffector(const String& name, AffectorFunction func)
 {
 	AffectorEntry ae;
 	ae.name = name;
@@ -129,7 +164,7 @@ void FireType::registerAffector(const String& name, AffectorFunction func)
 	mAffectors.push_back(ae);
 }
 // --------------------------------------------------------------------------------
-AffectorFunction FireType::getAffectorFunction(const String& name)
+AffectorFunction EmitType::getAffectorFunction(const String& name)
 {
 	for (size_t i = 0; i < mAffectors.size(); ++i)
 	{
@@ -140,7 +175,7 @@ AffectorFunction FireType::getAffectorFunction(const String& name)
 	return 0;
 }
 // --------------------------------------------------------------------------------
-int FireType::addAffectorInstance(const String& name, AffectorFunction func, int numArgs,
+int EmitType::addAffectorInstance(const String& name, AffectorFunction func, int numArgs,
 								  const BytecodeBlock& code, ScriptMachine* machine)
 {
 	Affector* aff = new Affector(name, machine, func, numArgs, code);
@@ -148,7 +183,7 @@ int FireType::addAffectorInstance(const String& name, AffectorFunction func, int
 	return (int) (mAffectorInstances.size() - 1);
 }
 // --------------------------------------------------------------------------------
-int FireType::getAffectorInstanceIndex(const String& name) const
+int EmitType::getAffectorInstanceIndex(const String& name) const
 {
 	for (size_t i = 0; i < mAffectorInstances.size(); ++i)
 	{
@@ -159,12 +194,12 @@ int FireType::getAffectorInstanceIndex(const String& name) const
 	return -1;
 }
 // --------------------------------------------------------------------------------
-Affector* FireType::getAffectorInstance(int index) const
+Affector* EmitType::getAffectorInstance(int index) const
 {
 	return mAffectorInstances[index];
 }
 // --------------------------------------------------------------------------------
-void FireType::getControllers(EmitterDefinition* def, ParseTreeNode* node, String& callName, 
+void EmitType::getControllers(EmitterDefinition* def, ParseTreeNode* node, String& callName, 
 							  int& funcIndex, std::vector<int>& affectors)
 {
 	int nodeType = node->getType();
@@ -177,7 +212,7 @@ void FireType::getControllers(EmitterDefinition* def, ParseTreeNode* node, Strin
 	}
 	else if (nodeType == PT_AffectorCall)
 	{
-		// See ParseTree::generateFireTail
+		// See ParseTree::generateEmitTail
 		String instanceName = def->getName() + "-" + node->getStringData();
 		int index = getAffectorInstanceIndex(instanceName);
 		affectors.push_back(index);
@@ -190,15 +225,15 @@ void FireType::getControllers(EmitterDefinition* def, ParseTreeNode* node, Strin
 	}
 }
 // --------------------------------------------------------------------------------
-void FireType::generateBytecode(EmitterDefinition* def, ParseTreeNode* node,
+void EmitType::generateBytecode(EmitterDefinition* def, ParseTreeNode* node,
 								BytecodeBlock* code, const String& funcName)
 {
 /*
 	[control function args]
 	[emit function args]
-	BC_FIRE
-	FireType id
-	FireType emit function id
+	BC_EMIT
+	EmitType id
+	EmitType emit function id
 	control function id + 1
 	control function number of arguments
 	number of affectors
@@ -207,7 +242,7 @@ void FireType::generateBytecode(EmitterDefinition* def, ParseTreeNode* node,
 */
 
 	// opcode
-	code->push_back(BC_FIRE);
+	code->push_back(BC_EMIT);
 
 	// type
 	code->push_back((uint32) mType);
@@ -231,7 +266,7 @@ void FireType::generateBytecode(EmitterDefinition* def, ParseTreeNode* node,
 	controlType = ftFuncIndex + 1;
 	code->push_back(controlType);
 
-	// Push number of FireType function arguments
+	// Push number of EmitType function arguments
 	if (ftFuncIndex >= 0)
 	{
 		int defIndex = def->getFunctionIndex(callName);
@@ -249,12 +284,11 @@ void FireType::generateBytecode(EmitterDefinition* def, ParseTreeNode* node,
 	// This is very hacky, but works.  This is because, at the point that this function is
 	// called, the EmitterDefinition that is calling it will be the next to be added, and will
 	// therefore have this index.  Terrible, I know.
-	int index = mVM->getNumEmitterDefinitions(); 
+	int index = mScriptMachine->getNumEmitterDefinitions(); 
 	code->push_back((uint32) index);
 }
 // --------------------------------------------------------------------------------
-int FireType::processCode(const uint32* code, ScriptState& state, bstype x, 
-						  bstype y, 
+int EmitType::processCode(const uint32* code, ScriptState& state, bstype x, bstype y, 
 #ifdef BS_Z_DIMENSION
 						  bstype z, 
 #endif
@@ -263,7 +297,7 @@ int FireType::processCode(const uint32* code, ScriptState& state, bstype x,
 	int funcIndex = code[state.curInstruction + 2];
 	uint32 numAffectors = 0;
 
-	FireFunction func = mFunctions[funcIndex].func;
+	EmitFunction func = mFunctions[funcIndex].func;
 
 #ifdef BS_Z_DIMENSION
 	UserTypeBase* type = func(x, y, z, &state.stack[state.stackHead]);
@@ -279,7 +313,7 @@ int FireType::processCode(const uint32* code, ScriptState& state, bstype x,
 		uint32 controlFunc = code[state.curInstruction + 3];
 		numAffectors = code[state.curInstruction + 5];
 
-		// Should create FireTypeControl if it uses a controller function,
+		// Should create EmitTypeControl if it uses a controller function,
 		// or affectors.
 		if (controlFunc == 0 && numAffectors == 0)
 		{
@@ -287,9 +321,9 @@ int FireType::processCode(const uint32* code, ScriptState& state, bstype x,
 		}
 		else
 		{
-			// Request a FireTypeControl from pool
+			// Request a EmitTypeControl from pool
 			int emitDef = code[state.curInstruction + 6 + numAffectors];
-			type->__ft = mVM->getFireTypeRecord(emitDef);
+			type->__ft = mScriptMachine->getEmitTypeRecord(emitDef);
 			type->__ft->__type = this;
 
 			// Set up control function
@@ -297,7 +331,7 @@ int FireType::processCode(const uint32* code, ScriptState& state, bstype x,
 			{
 				int numArgs = code[state.curInstruction + 4];
 
-				type->__ft->code = mVM->getCodeRecord(controlFunc - 1);
+				type->__ft->code = mScriptMachine->getCodeRecord(controlFunc - 1);
 				
 				state.stackHead -= numArgs;
 				memcpy(type->__ft->state.locals, state.stack + state.stackHead, numArgs * sizeof(bstype));
@@ -310,7 +344,8 @@ int FireType::processCode(const uint32* code, ScriptState& state, bstype x,
 		}
 	}
 
-	return 7 + numAffectors; // this must match the number of bytecodes emitted in generateBytecode
+	// this must match the number of bytecodes emitted in generateBytecode
+	return 7 + numAffectors; 
 }
 // --------------------------------------------------------------------------------
 

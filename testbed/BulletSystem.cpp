@@ -184,7 +184,7 @@ void BulletBattery::gravity(bs::UserTypeBase* object, float frameTime, const bs:
 	b->vy -= args[-1] * frameTime;
 }
 // --------------------------------------------------------------------------------
-int BulletBattery::update(float frameTime)
+int BulletBattery::update(float frameTime, int* numBullets)
 {
 	// Add recently spawned bullets
 	for (size_t i = 0; i < mSpawnedBullets.size(); ++i)
@@ -198,6 +198,7 @@ int BulletBattery::update(float frameTime)
 
 	int index = 0;
 	int count = 0;
+	int time1 = timeGetTime();
 	std::vector<Bullet>::iterator it = mBullets.begin();
 	while (it != mBullets.end())
 	{
@@ -225,7 +226,12 @@ int BulletBattery::update(float frameTime)
 		++index;
 	}
 
-	return count;
+	int time2 = timeGetTime();
+
+	if (numBullets)
+		*numBullets = count;
+
+	return time2 - time1;
 }
 // --------------------------------------------------------------------------------
 void BulletBattery::render(RendererGL *renderer)

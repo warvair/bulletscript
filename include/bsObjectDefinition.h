@@ -14,6 +14,9 @@ namespace BS_NMSP
 
 	public:
 
+		// If we can store 'value' contiguously, then we can use memcpy to
+		// set members in ControllerDefinition::createScriptRecord and
+		// EmitterDefinition::createScriptRecord
 		struct MemberVariable
 		{
 			String name;

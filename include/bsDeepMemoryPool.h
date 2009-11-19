@@ -9,17 +9,29 @@
 namespace BS_NMSP
 {
 
+	/**	\brief Base class for objects stored by a DeepMemoryPool
+	 */
 	class _BSAPI DeepMemoryPoolObject
 	{
 		template<class T, typename A1> friend class DeepMemoryPool;
+
+		// Internal 'active' bits
 		int __dmpoIndex;
+
 		bool __dmpoActive;
 	
 	public:
 
+	/**	\brief Callback function for when a DeepMemoryPool releases a DeepMemoryPoolObject.
+	 */
 		virtual void onRelease() {}
 	};
 
+	/**	\brief Simple class for pooling often-used types.
+	 *
+	 *	Currently only holds objects which take one constructor argument, but luckily
+	 *	all the objects that it uses only need one argument.
+	 */
 	template<typename T, typename A1>
 	class DeepMemoryPool
 	{
@@ -30,6 +42,8 @@ namespace BS_NMSP
 		A1 mArg1;
 
 		std::list<int> mFreeList;
+
+	private:
 
 		void recreatePool(size_t newSize)
 		{
@@ -74,6 +88,10 @@ namespace BS_NMSP
 
 	public:
 
+		/**	\brief Constructor.
+		 *	\param initialSize initial size of pool.
+		 *	\param a1 argument to use for object construction.  Must be copy-constructable.
+		 */
 		DeepMemoryPool(size_t initialSize, A1 a1) :
 			mPool(0),
 			mPoolSize(0),
@@ -82,11 +100,16 @@ namespace BS_NMSP
 			recreatePool(initialSize);
 		}
 
+		/**	\brief Destructor.
+		 */
 		~DeepMemoryPool()
 		{
 			destroyPool();
 		}
 
+		/**	\brief Get a free object from the pool.
+		 *	\return the requested object.
+		 */
 		T* acquire()
 		{
 			if (mFreeList.empty())
@@ -100,6 +123,9 @@ namespace BS_NMSP
 			return obj;
 		}
 
+		/**	\brief Return an object to the pool.
+		 *	\param obj the object to be returned.
+		 */
 		void release(T* obj)
 		{
 			mFreeList.push_back(obj->__dmpoIndex);
@@ -107,11 +133,18 @@ namespace BS_NMSP
 			obj->onRelease();
 		}
 
+		/**	\brief Get the first active object in the pool.
+		 *	\return the object.
+		 */
 		T* getFirst() const
 		{
 			return _getFrom(0);
 		}
 
+		/**	\brief Get the next active object in the pool after the specified object.
+		 *	\param obj the previous object.
+		 *	\return the object.
+		 */
 		T* getNext(T* obj) const
 		{
 			return _getFrom(obj->__dmpoIndex + 1);

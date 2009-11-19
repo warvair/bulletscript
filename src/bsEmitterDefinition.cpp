@@ -43,7 +43,7 @@ int EmitterDefinition::getNumFunctions() const
 	return (int) mFunctions.size();
 }
 // --------------------------------------------------------------------------------
-ScriptRecord* EmitterDefinition::createScriptRecord(ScriptMachine* sm)
+ScriptRecord* EmitterDefinition::createScriptRecord(ScriptMachine* machine)
 {
 	ScriptRecord* record = new ScriptRecord(mMaxLocals);
 
@@ -59,7 +59,7 @@ ScriptRecord* EmitterDefinition::createScriptRecord(ScriptMachine* sm)
 	// Run construction code, if there is any
 	if (mConstructSize > 0)
 	{
-		sm->interpretCode(mConstructCode, mConstructSize, record->scriptState,
+		machine->interpretCode(mConstructCode, mConstructSize, record->scriptState,
 			record->members);
 
 		record->scriptState.stackHead = 0;

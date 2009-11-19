@@ -16,6 +16,8 @@ Affector::Affector(const String& name, ScriptMachine* machine, AffectorFunction 
 	mBytecode(0),
 	mBytecodeSize(0)
 {
+	// Copy bytecode.
+	// Todo: use memcpy?
 	if (!code.empty())
 	{
 		mBytecodeSize = code.size();

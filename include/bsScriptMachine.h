@@ -7,7 +7,7 @@
 #include "bsPrerequisites.h"
 #include "bsCore.h"
 #include "bsScriptVariables.h"
-#include "bsFireType.h"
+#include "bsEmitType.h"
 #include "bsEmitter.h"
 #include "bsEmitterDefinition.h"
 #include "bsController.h"
@@ -56,7 +56,7 @@ namespace BS_NMSP
 		{
 			String name;
 			EmitterDefinition* def;
-			DeepMemoryPool<FireTypeControl, int>* pool;
+			DeepMemoryPool<EmitTypeControl, int>* pool;
 		};
 		
 		typedef std::vector<EmitterRecord> EmitterRecordList;
@@ -69,9 +69,6 @@ namespace BS_NMSP
 		ControllerDefinitionMap mControllerDefinitions;
 
 		DeepMemoryPool<Controller, ScriptMachine*>* mControllers;
-
-		// Events
-//		DeepMemoryPool<ScriptState, int>* mEventScriptStates;
 
 		// Global property list
 		std::vector<String> mProperties;
@@ -130,10 +127,10 @@ namespace BS_NMSP
 
 		int getNumCodeRecords() const;
 
-		// FireTypeScriptRecords
-		FireTypeControl* getFireTypeRecord(int index);
+		// EmitTypeScriptRecords
+		EmitTypeControl* getEmitTypeRecord(int index);
 
-		void releaseFireTypeRecord(int index, FireTypeControl* rec);
+		void releaseEmitTypeRecord(int index, EmitTypeControl* rec);
 
 		// Native functions
 		void registerNativeFunction(const String& name, NativeFunction func);
@@ -142,8 +139,8 @@ namespace BS_NMSP
 
 		NativeFunction getNativeFunction(int index) const;
 
-		// Fire types
-		FireType* getFireType(const String& name) const;
+		// Emit types
+		EmitType* getEmitType(const String& name) const;
 
 		// Properties
 		void addProperty(const String& prop);

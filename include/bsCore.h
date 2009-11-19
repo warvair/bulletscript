@@ -8,16 +8,23 @@
 
 namespace BS_NMSP
 {
-	struct FireTypeControl;
+	struct EmitTypeControl;
 
-	// Base type for users to subclass from
+	/**	\brief Base class for users to derive their object types from.
+	 *
+	 *	bulletscript lets users use their own structures, for maximum flexibility
+	 *	and speed/size.  The only concession is that they include a pointer to an
+	 *	EmitTypeControl, which is used by bulletscript to control the object.
+	 */
 	struct UserTypeBase
 	{
-		FireTypeControl* __ft;		
+		EmitTypeControl* __ft;		
 	};
 
-	// Structure for declaring member variables
-	struct _BSAPI MemberVariableDeclaration
+	/**	\brief Structure to let users define member variables for Controllers via
+	 *	code.  This is for internal use.
+	 */
+	struct MemberVariableDeclaration
 	{
 		String name;
 		bstype value;
@@ -25,92 +32,159 @@ namespace BS_NMSP
 
 	typedef std::multimap<String, MemberVariableDeclaration> MemberVariableDeclarationMap;
 
-	// Class for bytecode storage/access
+	/**	\brief Class to hold bytecode for states, functions and events.
+	 *
+	 *	Bytecode blocks are stored in the ScriptMachine and shared by instances that need it.
+	 */
 	class _BSAPI CodeRecord
 	{
+		// Todo: should locals really be here?  Would be better to put them elsewhere.
 		std::vector<String> mVariables;
 
 		String mName;
 
 	public:
 
+		/** 
+         *	Bytecode array.  Public for convenience, however it is for internal use only.
+		 */
 		uint32* byteCode;
+
+		/** 
+         *	Size of bytecode array.  Public for convenience, however it is for internal use only.
+		 */
 		size_t byteCodeSize;
 
+		/**	\brief Constructor.
+		 *	\param name name of record.
+		 */
 		explicit CodeRecord(const String& name);
 
+		/**	\brief Destructor.
+		 */
 		~CodeRecord();
 
+		/**	\brief Returns Affector instance name.
+		 *
+		 *	\return the Affector instance name.
+		 */
 		const String& getName() const;
 
+		/**	\brief Add a named local variable to this CodeRecord.
+		 *
+		 *	\param name name of record.
+		 */
 		void addVariable(const String& name);
 
+		/**	\brief Get the name of a local variable.
+		 *	
+		 *	\param index index of the  variable.
+		 *	\return the local variable name.
+		 */
 		const String& getVariable(int index) const;
 
+		/**	\brief Get a local variable index.
+		 *	
+		 *	\param name name of the local variable.
+		 */		
 		int getVariableIndex(const String& name) const;
 
+		/**	\brief Get the number of local variables.
+		 *	
+		 *	\return number of local variables.
+		 */		
 		int getNumVariables() const;
 	};
 
-	struct _BSAPI ScriptState
+	struct ScriptState
 	{
+		// Index into CodeRecord::byteCode
 		uint16 curInstruction;
+
+		// Index into stack
 		uint16 stackHead;
 
+		// Stack.  BS_SCRIPT_STACK_SIZE is defined in bsConfig.h
 		bstype stack[BS_SCRIPT_STACK_SIZE];
 
 		// Time to wait when the script is suspended
 		bstype suspendTime;				
 
-		// Local variables for whichever is the current emitter state
+		// Local variables for whichever is the current emitter state.
+		// ScriptState itself is not responsible for managing this.
 		bstype* locals;					
 
-		// Functions
+		// Constructor
 		ScriptState();
 	};
 
 	// Instance classes
 	struct _BSAPI ScriptRecord
 	{
+		// Member variables of the object that owns this ScriptRecord.
+		// Todo: in a poor example of RAII, this is allocated by <Object>Definition::createScriptRecord,
+		// and deallocated in ~ScriptRecord, which is called by <Object>::onRelease
 		bstype* members;
 
+		// Index into owning object's state list.
 		int curState;
 
-		// Script state for virtual machine
+		// Script state for virtual machine.
 		ScriptState scriptState;		
 
-		// Functions
-		ScriptRecord(int numLocals);
+		// Constructor
+		explicit ScriptRecord(int numLocals);
 		
+		// Destructor
 		~ScriptRecord();
 	};
 
-	// Callback function types
+	/**
+	 *	User function prototype for emitting an object.
+	 */
 #ifdef BS_Z_DIMENSION
-	typedef UserTypeBase* (*FireFunction) (bstype, bstype, bstype, const bstype*);
+	typedef UserTypeBase* (*EmitFunction) (bstype, bstype, bstype, const bstype*);
 #else
-	typedef UserTypeBase* (*FireFunction) (bstype, bstype, const bstype*);
+	typedef UserTypeBase* (*EmitFunction) (bstype, bstype, const bstype*);
 #endif
 
+	/**
+	 *	User function prototype for destroying an object.
+	 */
 	typedef void (*DieFunction) (UserTypeBase*);
 
+	/**
+	 *	User function prototype for setting an object's properties.
+	 */
 	typedef void (*SetFunction) (UserTypeBase*, bstype);
 
+	/**
+	 *	User function prototype for getting an object's properties.
+	 */
 	typedef bstype (*GetFunction) (UserTypeBase*);
 
+	/**
+	 *	User function prototype for an Affector.
+	 */
 	typedef void (*AffectorFunction) (UserTypeBase*, float, const bstype*);
 
+	/**
+	 *	User function prototype for a native script function.
+	 */
 	typedef void (*NativeFunction)(ScriptState&);
 
-	// Predefined member variables
+	/** 
+     * Predefined member variables.
+     * These are the built-in member variables available to a Controller or Emitter.
+     */
 	enum
 	{
-		Member_X,
-		Member_Y,
+		Member_X,			/**< X position. */  
+		Member_Y,			/**< Y position. */  
 #ifdef BS_Z_DIMENSION
-		Member_Z,
+		Member_Z,			/**< Y position. */  
 #endif
-		Member_Angle,
+		Member_Angle,		/**< Angle. */  
 		NUM_SPECIAL_MEMBERS
 	};
 

@@ -702,7 +702,7 @@ function_statement
 		{
 			$$ = $1;
 		}
-	| fire_statement
+	| emit_statement
 		{
 			$$ = $1;
 		}
@@ -792,7 +792,7 @@ emitter_state_statement
 		{
 			$$ = $1;
 		}
-	| fire_statement
+	| emit_statement
 		{
 			$$ = $1;
 		}
@@ -1205,10 +1205,10 @@ wait_statement
 		}
 	;
 	
-fire_statement
+emit_statement
 	: identifier identifier function_call_arguments ':' controller_list ';'
 		{
-			$$ = AST->createNode(PT_FireStatement, yylineno);
+			$$ = AST->createNode(PT_EmitStatement, yylineno);
 			$$->setString($2->getStringData().c_str());
 			delete $2;
 			
@@ -1218,7 +1218,7 @@ fire_statement
 		}
 	| identifier identifier function_call_arguments ';'
 		{
-			$$ = AST->createNode(PT_FireStatement, yylineno);
+			$$ = AST->createNode(PT_EmitStatement, yylineno);
 			$$->setString($2->getStringData().c_str());
 			delete $2;
 			
