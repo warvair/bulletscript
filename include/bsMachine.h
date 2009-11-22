@@ -39,7 +39,7 @@ namespace BS_NMSP
 
 		void setGlobalVariableValue(const String& name, bstype value);
 
-		int compileScript(uint8* buffer, size_t bufferSize);
+		int compileScript(const uint8* buffer, size_t bufferSize);
 
 		void update(float frameTime);
 
@@ -64,17 +64,21 @@ namespace BS_NMSP
 
 		void registerAffector(const String& type, const String& name, AffectorFunction func);
 
+		void declareMemberVariable(const String& ctrl, const String& var, bstype value);
+
 		// Emitter management
 		Emitter* createEmitter(const String& definition);
 
 		void destroyEmitter(Emitter* emit);
+
+		bool emitterExists(const String& name) const;
 
 		// Controller management
 		Controller* createController(const String& definition);
 
 		void destroyController(Controller* ctrl);
 
-		void declareMemberVariable(const String& ctrl, const String& var, bstype value);
+		bool controllerExists(const String& name) const;
 
 	};
 

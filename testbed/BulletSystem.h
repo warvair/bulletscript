@@ -70,6 +70,8 @@ public:
 	// Scripting
 	static bs::UserTypeBase* emitAngle(bs::bstype x, bs::bstype y, const bs::bstype* args);
 
+	static bs::UserTypeBase* emitTarget(bs::bstype x, bs::bstype y, const bs::bstype* args);
+
 	static void killBullet(bs::UserTypeBase* object);
 
 	static void setAngle(bs::UserTypeBase* object, bs::bstype value);

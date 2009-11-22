@@ -6,6 +6,11 @@ namespace BS_NMSP
 const String Log::END = "";
 
 // --------------------------------------------------------------------------------
+Log::Log()
+{
+	clear();
+}
+// --------------------------------------------------------------------------------
 void Log::addEntry(const String& str)
 {
 	mEntries.push_back(str);

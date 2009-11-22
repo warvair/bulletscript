@@ -85,8 +85,42 @@ bs::UserTypeBase* BulletBattery::emitAngle(bs::bstype x, bs::bstype y, const bs:
 	b.y = y;
 	b.speed = args[-1];
 	b.angle = args[-2];
+	if (b.angle < 0.0f)
+		b.angle += 360.0f;
 
-	int index = (int) (args[-2] * 10) % 3600;
+	int index = (int) (b.angle * 10) % 3600;
+	b.vx = sinTable[index] * args[-1];
+	b.vy = cosTable[index] * args[-1];
+
+	b.alpha = 1;
+	b.red = 1;
+	b.green = 1;
+	b.blue = 1;
+
+	size_t count = mSpawnedBullets.size();
+	mSpawnedBullets.push_back(b);
+
+	return &(mSpawnedBullets[count]);
+}
+// --------------------------------------------------------------------------------
+bs::UserTypeBase* BulletBattery::emitTarget(bs::bstype x, bs::bstype y, const bs::bstype* args)
+{
+	Bullet b;
+	b.__active = true;
+	b.__time = 0;
+
+	b.x = x;
+	b.y = y;
+	b.speed = args[-1];
+
+	float dx = args[-4] - x;
+	float dy = args[-3] - y;
+	float angle = (float) atan2(dy, -dx) * bs::RAD_TO_DEG - 90.0f + args[-2];
+	if (angle < 0.0f)
+		angle += 360.0f;
+	b.angle = angle;
+
+	int index = (int) (angle * 10) % 3600;
 	b.vx = sinTable[index] * args[-1];
 	b.vy = cosTable[index] * args[-1];
 

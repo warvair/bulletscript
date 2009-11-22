@@ -57,9 +57,17 @@ public:
 		mMachine(machine),
 		mAlive(true)
 	{
+
 		if (false/*rand() & 1*/)
 		{
 			mGunNotCtrl = true;
+
+			mGun = machine->createEmitter("SmartBomb");
+			mGun->setX(50);
+			mGun->setY(50);
+			return;
+
+
 			int rr = rand() % 4;
 			if (rr == 0)
 			{
@@ -91,9 +99,9 @@ public:
 		else
 		{
 			mGunNotCtrl = false;
-			mCtrl = machine->createController("Boss1");
-			mCtrl->setX(100 + rand() % 600);
-			mCtrl->setY(100 + rand() % 400);
+			mCtrl = machine->createController("BombController");
+			mCtrl->setX(0);
+			mCtrl->setY(0);
 			mCtrl->setAngle(180);
 		}
 	}
@@ -284,6 +292,7 @@ int main (int argc, char **argv)
 	machine.createType("bullet");
 
 	machine.registerEmitFunction("bullet", "fireA", 2, BulletBattery::emitAngle);
+	machine.registerEmitFunction("bullet", "fireT", 4, BulletBattery::emitTarget);
 	machine.setDieFunction("bullet", BulletBattery::killBullet);
 	machine.registerProperty("bullet", "angle",	BulletBattery::setAngle, BulletBattery::getAngle);
 	machine.registerProperty("bullet", "red", BulletBattery::setRed, BulletBattery::getRed);

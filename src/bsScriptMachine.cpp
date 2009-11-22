@@ -35,6 +35,12 @@ void bm_rand(ScriptState& state)
 	state.stack[state.stackHead - 1] = r;
 }
 
+void bm_sqrt(ScriptState& state)
+{
+	bstype value = state.stack[state.stackHead - 1];
+	state.stack[state.stackHead - 1] = (bstype) sqrt(value);
+}
+
 // --------------------------------------------------------------------------------
 ScriptMachine::ScriptMachine(Log* _log) :
 	mTypeManager(0),
@@ -44,6 +50,7 @@ ScriptMachine::ScriptMachine(Log* _log) :
 {
 	// Register functions
 	registerNativeFunction("rand", bm_rand);
+	registerNativeFunction("sqrt", bm_sqrt);
 
 	// Create pools
 	mEmitters = new DeepMemoryPool<Emitter, ScriptMachine*>(32, this);
@@ -402,9 +409,9 @@ int ScriptMachine::getNumControllerDefinitions() const
 	return (int) mControllerDefinitions.size();
 }
 // --------------------------------------------------------------------------------
-int ScriptMachine::compileScript(uint8* buffer, size_t bufferSize)
+int ScriptMachine::compileScript(const uint8* buffer, size_t bufferSize)
 {
-	String strBuf((char*) buffer, bufferSize);
+	String strBuf((const char*) buffer, bufferSize);
 
 	int numParseErrors = -1;
 
