@@ -9,24 +9,72 @@ span.code {font-family:monospace}
 </head><body>
 <h1>BulletScript language reference</h1>
 
-BulletScript uses two fundamental objects: <span class="code">controller</span> and <span class="code">emitter</span>.  Both are simple state
+BulletScript is a pseudo-object oriented language.  It has a basic concept of classes, but does not use a lot of the functionality found in OO languages
+such as Java, C++, etc.  It has two class types, three basic variable types, and two more slightly different variable types.
+
+<h2>Data types</h2>
+BulletScript has one data type.  As such it is an untyped language.  By default, the data type is a 32-bit float, although this can be changed (but it is
+not recommended that this is done!) by modifying the relevant <span class="code">#define</span> in bsConfig.h.  For the default floating point data
+type, literal values are expressed as:
+<pre>
+	1
+	1.
+	1.2345
+	.2345
+</pre>	
+As long as the number contains at most one decimal point, and only numeric characters, it is valid.
+
+<h2>Expressions</h2>
+Expressions consist of literal values, variables and function calls, combined together with operators.  Some example expressions:
+<pre>
+	w = 5;
+	x = 12 + w;
+	y = rand(360) + (x / 2) > 100;
+	z = foo(bar(z, 12));
+</pre>
+
+BulletScript uses the following operators.  Operators are not user-definable.
+<span class="code">+ - * / % > < >= <= == != && ||</span>
+
+Some notes: 
+
+<list>
+<li>Despite using floating point, the modulus (%) operator can be used.  However it will convert the values to integer before calculation.
+BulletScript does not currently support fractional modulus calculation.</li>
+<li>The equivalence operators (> < >= <= == !=) and the logical operators (&& ||) return 1 if the condition is true, and 0 if false.
+</list>
+<p>
+Assignment operators exist, but they are statements, and cannot be used in expressions:
+<span class="code">+= -= *= /=</span>
+
+<h2>Variables</h2>
+Like other OO languages, BulletScript has local, member and global variables.  Local variables only exist within the scope of the declaring
+<span class="code">state</span>, <span class="code">function</span> or <span class="code">event</span>.  Member variables exist within the scope
+of the class which declares them, and global variables are accessible from anywhere within the system.  Global variables may only be declared from
+code, and not script, and unlike locals and members may be declared constant, and hence read-only to the script.
+
+<h2>Class types</h2>
+BulletScript uses two classes: <span class="code">controller</span> and <span class="code">emitter</span>.  Both are simple state
 machines, but they differ slightly in how they can be controlled, and what they control themselves.  Emitters are responsible for actually creating
 objects, and for controlling the behaviour of those objects afterwards.  Controllers are used to group and control emitters, synchronising them.
 
-<h2>Emitters</h2>
+<h3>Emitters</h3>
 
 Emitters are defined in the following form:<p>
 <pre>
-emitter <i>emitter_name</i>
-{
-	[member_variable_list]
-	[affector_instance_list]
-	[function_list]
-	state_list
-}
+	emitter <i>emitter_name</i>
+	{
+		[member_variable_list]
+		[affector_instance_list]
+		[function_list]
+		state_list
+	}
 </pre>
 
-Member variables
+Member variables are declared as follows:<p>
+<pre>
+	<i>var_name</i> = constant_expression;
+</pre>
 
 </body>
 </html>

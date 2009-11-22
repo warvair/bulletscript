@@ -22,13 +22,13 @@ void Log::clear()
 	mIterator = mEntries.begin();
 }
 // --------------------------------------------------------------------------------
-const String& Log::getFirst() const
+const String& Log::getFirstEntry() const
 {
 	mIterator = mEntries.begin();
-	return getNext();
+	return getNextEntry();
 }
 // --------------------------------------------------------------------------------
-const String& Log::getNext() const
+const String& Log::getNextEntry() const
 {
 	if (mIterator == mEntries.end())
 		return END;

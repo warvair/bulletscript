@@ -1783,8 +1783,7 @@ void ParseTree::generateEmitTail(EmitterDefinition* def, ParseTreeNode* node,
 			instanceIndex = ft->addAffectorInstance(instanceName, 
 													ft->getAffectorFunction(affFunction), 
 													mAffectors[affIndex].numArgs,
-													argCode,
-													mScriptMachine);
+													argCode);
 
 			// Check if the affector arguments use functions, global or member variables.
 			Affector* affector = ft->getAffectorInstance(instanceIndex);
