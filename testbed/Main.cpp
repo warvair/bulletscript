@@ -347,11 +347,11 @@ int main (int argc, char **argv)
 			std::cout << "Could not compile " << scriptFiles[i] << std::endl;
 			const Log& _log = machine.getLog();
 
-			String msg = _log.getFirst();
+			String msg = _log.getFirstEntry();
 			while (msg != Log::END)
 			{
 				std::cout << msg << std::endl;
-				msg = _log.getNext();
+				msg = _log.getNextEntry();
 			}
 
 			delete[] fileBuf;
