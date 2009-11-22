@@ -1,0 +1,32 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8">
+<title>BulletScript language reference</title>
+
+<style type="text/css">
+span.code {font-family:monospace} 
+</style>
+
+</head><body>
+<h1>BulletScript language reference</h1>
+
+BulletScript uses two fundamental objects: <span class="code">controller</span> and <span class="code">emitter</span>.  Both are simple state
+machines, but they differ slightly in how they can be controlled, and what they control themselves.  Emitters are responsible for actually creating
+objects, and for controlling the behaviour of those objects afterwards.  Controllers are used to group and control emitters, synchronising them.
+
+<h2>Emitters</h2>
+
+Emitters are defined in the following form:<p>
+<pre>
+emitter <i>emitter_name</i>
+{
+	[member_variable_list]
+	[affector_instance_list]
+	[function_list]
+	state_list
+}
+</pre>
+
+Member variables
+
+</body>
+</html>

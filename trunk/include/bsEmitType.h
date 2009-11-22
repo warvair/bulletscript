@@ -317,6 +317,20 @@ namespace BS_NMSP
 			BytecodeBlock* code, const String& funcName);
 
 #ifdef BS_Z_DIMENSION
+		/**	\brief Process a BC_EMIT opcode.
+		 *
+		 *	This is used during runtime interpretation.  It for is internal use.
+		 *
+		 *	\param code bytecode array.
+		 *	\param state script record to be used.
+		 *	\param x x-position of the emitting object.
+		 *	\param y y-position of the emitting object.
+		 *	\param z z-position of the emitting object.
+		 *	\param members the member variables of the emitting object.
+		 *	
+		 *	\return the number of bytecodes that the BC_EMIT opcode used.
+		 */
+
 		int processCode(const uint32* code, ScriptState& state, bstype x, 
 			bstype y, bstype z, bstype* members);
 #else
@@ -324,26 +338,72 @@ namespace BS_NMSP
 		 *
 		 *	This is used during runtime interpretation.  It for is internal use.
 		 *
-		 *	\param def the EmitterDefinition in use.
-		 *	\param node the ParseTreeNode in the abstract syntax tree.
-		 *	\param code the block of bytecode to append to.
-		 *	\param funcName the name of the EmitFunction
+		 *	\param code bytecode array.
+		 *	\param state script record to be used.
+		 *	\param x x-position of the emitting object.
+		 *	\param y y-position of the emitting object.
+		 *	\param members the member variables of the emitting object.
+		 *	
+		 *	\return the number of bytecodes that the BC_EMIT opcode used.
 		 */
 		int processCode(const uint32* code, ScriptState& state, bstype x, 
 			bstype y, bstype* members);
 #endif
 
+		/**	\brief Registers a user AffectorFunction with this type.
+		 *
+		 *	Affector functions are stored per-EmitType.  If the name is already in use, it
+		 *	will be overwritten.
+		 *
+		 *	\param name name of the function in script.
+		 *	\param func AffectorFunction function pointer.
+		 */
 		void registerAffector(const String& name, AffectorFunction func);
 
+		/**	\brief Returns the named AffectorFunction.
+		 *
+		 *	\param name name of the AffectorFunction.
+		 *
+		 *	\return the AffectorFunction, or 0 if it is not found.
+		 */
 		AffectorFunction getAffectorFunction(const String& name);
 
+		/**	\brief Adds an Affector instance to this EmitType, to be used in script.
+		 *
+		 *	\param name name of the instance, which is specified in script as a variable.
+		 *	\param func the AffectorFunction that it calls.
+		 *	\param numArgs number of arguments, for compile-time semantic checking.
+		 *	\param code the bytecode for generating the arguments.
+		 *
+		 *	\return the index of the Affector instance, or -1 if the name was already taken.
+		 */
 		int addAffectorInstance(const String& name, AffectorFunction func, int numArgs, 
-			const BytecodeBlock& code, ScriptMachine* machine);
+			const BytecodeBlock& code);
 
+		/**	\brief Retrieve the Affector instance index by name.
+		 *
+		 *	\param name name of the instance.
+		 *
+		 *	\return the index of the Affector instance, or -1 if it is not found.
+		 */
 		int getAffectorInstanceIndex(const String& name) const;
 
+		/**	\brief Retrieve the Affector instance by index.
+		 *
+		 *	\param index index of the Affector.  It can be found using EmitType::getAffectorInstanceIndex().
+		 *
+		 *	\return the Affector instance, or 0 if it is not found.
+		 */
 		Affector* getAffectorInstance(int index) const;
 
+		/**	\brief Apply an affector instance to a user object.
+		 *
+		 *	\param object the user object.
+		 *	\param index the index of the Affector instance.
+		 *	\param frameTime the time interval since last update, in seconds.
+		 *
+		 *	\return the Affector instance, or 0 if it is not found.
+		 */
 		inline void applyAffector(UserTypeBase* object, int index, float frameTime)
 		{
 			mAffectorInstances[index]->execute(object, frameTime);

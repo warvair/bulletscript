@@ -176,9 +176,15 @@ AffectorFunction EmitType::getAffectorFunction(const String& name)
 }
 // --------------------------------------------------------------------------------
 int EmitType::addAffectorInstance(const String& name, AffectorFunction func, int numArgs,
-								  const BytecodeBlock& code, ScriptMachine* machine)
+								  const BytecodeBlock& code)
 {
-	Affector* aff = new Affector(name, machine, func, numArgs, code);
+	for (size_t i = 0; i < mAffectorInstances.size(); ++i)
+	{
+		if (mAffectorInstances[i]->getName() == name)
+			return -1;
+	}
+
+	Affector* aff = new Affector(name, mScriptMachine, func, numArgs, code);
 	mAffectorInstances.push_back(aff);
 	return (int) (mAffectorInstances.size() - 1);
 }

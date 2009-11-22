@@ -1,0 +1,64 @@
+controller BombController
+{
+	wait_time = 4.8;
+
+	bomb = emitter SmartBomb(150, 150, 0);
+
+	Setup = state
+	{
+		$bomb.wait_time = wait_time;
+		goto Fire;
+	}
+
+	Fire = state
+	{
+		wait(wait_time / 2);
+		$bomb.This_X = rand(ScreenSize_X);
+		$bomb.This_Y = rand(ScreenSize_Y);
+		wait(wait_time / 2);
+	}
+}
+
+
+
+emitter SmartBomb
+{
+	// members
+	speed = 120;
+	wait_time = 10;
+
+	// functions
+	expand = function()
+	{
+		$width = {ScreenSize_X + 100, 0.4};
+		$height = {ScreenSize_X + 100, 0.4};
+		$iwidth += {50, 0.4};
+		$iheight += {50, 0.4};
+		wait(0.3);
+		$alpha = {0, 0.1};
+		wait(0.1);
+		die();
+	}
+
+	delayExplode = function(time)
+	{
+		wait(time);
+		arc area(30, 30, 0, 360, 20) : expand();
+		die();
+	}
+
+	// states
+	Fire = state
+	{
+		tx = ScreenSize_X / 2;
+		ty = ScreenSize_Y / 2;
+
+		dist = (This_X - tx) * (This_X - tx) + (This_Y - ty) * (This_Y - ty);
+		dist = sqrt(dist);
+
+		time = dist / speed;
+		fireT bullet(tx, ty, 0, speed) : delayExplode(time);
+		wait(wait_time);
+	}
+
+}

@@ -178,7 +178,7 @@ namespace BS_NMSP
 		void processScriptRecord(ScriptRecord* gsr, void* object);
 
 		// Compilation
-		int compileScript(uint8* buffer, size_t bufferSize);
+		int compileScript(const uint8* buffer, size_t bufferSize);
 
 		void declareMemberVariable(const String& ctrl, const String& var, bstype value);
 

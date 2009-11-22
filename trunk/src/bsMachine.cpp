@@ -46,7 +46,7 @@ void Machine::setGlobalVariableValue(const String& name, bstype value)
 	mScriptMachine->setGlobalVariableValue(name, value);
 }
 // --------------------------------------------------------------------------------
-int Machine::compileScript(uint8* buffer, size_t bufferSize)
+int Machine::compileScript(const uint8* buffer, size_t bufferSize)
 {
 	int compileErrors = mScriptMachine->compileScript(buffer, bufferSize);
 	mNumErrors += compileErrors;
@@ -114,6 +114,11 @@ void Machine::destroyEmitter(Emitter* emit)
 	mScriptMachine->destroyEmitter(emit);
 }
 // --------------------------------------------------------------------------------
+bool Machine::emitterExists(const String& name) const
+{
+	return mScriptMachine->getEmitterDefinition(name) != 0;
+}
+// --------------------------------------------------------------------------------
 Controller* Machine::createController(const String& definition)
 {
 	return mScriptMachine->createController(definition);
@@ -122,6 +127,11 @@ Controller* Machine::createController(const String& definition)
 void Machine::destroyController(Controller* ctrl)
 {
 	mScriptMachine->destroyController(ctrl);
+}
+// --------------------------------------------------------------------------------
+bool Machine::controllerExists(const String& name) const
+{
+	return mScriptMachine->getControllerDefinition(name) != 0;
 }
 // --------------------------------------------------------------------------------
 void Machine::declareMemberVariable(const String& ctrl, const String& var, bstype value)
