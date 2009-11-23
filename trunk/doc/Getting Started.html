@@ -26,7 +26,10 @@ BulletScript emits and (optionally) controls objects.  These objects can be more
 others.  Particles, shapes, bullets, even sound effects are all good candidates.  In order to use BulletScript, the user must create a system which can
 interface with it.  For each system, a core "type" is declared, and then the uers sets BulletScript to interface with this type's system by specifying
 function callbacks.  The implementation of these callbacks is entirely up to the user, although there will in practice be a general pattern to them.  This
-is discussed in the tutorial section.
+is discussed in the tutorial section.<p>
+Once user systems have been bound to BulletScript, and scripts written and compiled, the user must create some BulletScript objects in order to do any work.
+These two objects are <i>emitter</i> and <i>controller</i> and are explained in the next section.  These objects are then updated once a frame, or at
+whatever interval the user wants.
 
 <p>
 <hr />
