@@ -7,7 +7,7 @@ emitter ShipSpawner
 		wait(0.3);
 		$alpha = {0, 0.6};
 		wait(0.6);
-		die();
+		die;
 	}
 
 	grow = function(dir, time)
@@ -29,7 +29,7 @@ emitter ShipSpawner
 		$iwidth = {$iwidth + 100, 0.1};
 		$iheight = {$iheight + 100, 0.1};
 		wait(0.3);
-		die();
+		die;
 	}
 
 	// States

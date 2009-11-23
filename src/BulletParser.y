@@ -428,12 +428,6 @@ emitter
 			$$->setChild(0, $1);
 			$$->setChild(1, $4);
 		}
-	| identifier '=' KEYWORD_EMITTER identifier '(' ')' ';'
-		{
-			$$ = AST->createNode(PT_Emitter, yylineno);
-			$$->setChild(0, $1);
-			$$->setChild(1, $4);
-		}
 	| identifier '=' KEYWORD_EMITTER identifier '(' constant_arg_list ')' ';'
 		{
 			$$ = AST->createNode(PT_Emitter, yylineno);
@@ -1290,11 +1284,7 @@ controller_entry
 	;
 	
 die_statement
-	: KEYWORD_DIE '(' ')' ';'
-		{	
-			$$ = AST->createNode(PT_DieStatement, yylineno);
-		}
-	| KEYWORD_DIE ';'
+	: KEYWORD_DIE ';'
 		{	
 			$$ = AST->createNode(PT_DieStatement, yylineno);
 		}

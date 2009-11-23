@@ -77,7 +77,7 @@ emitter Fireworks
 	{
 		$alpha = {0, time};
 		wait(time);
-		die();
+		die;
 	}
 
 	explode = function(time)
@@ -89,7 +89,7 @@ emitter Fireworks
 			i++;
 			fireA bullet(rand(360), 100) : death(0.5), gravity;
 		}
-		die();
+		die;
 	}
 
 	// states

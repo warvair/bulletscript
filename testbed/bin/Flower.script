@@ -14,7 +14,7 @@ emitter Flower
 		$blue = 0.2;
 		$alpha = {0, time};
 		wait(time);
-		die();
+		die;
 	}
 
 	petal_o = function(dir)
@@ -32,7 +32,7 @@ emitter Flower
 			fireA bullet(rand(360), 100) : death(0.5)/*, gravity*/;
 		}
 
-		die();
+		die;
 	}
 
 	petal_i = function(dir)
@@ -42,7 +42,7 @@ emitter Flower
 		wait(0.2);
 		$angle += {60 * dir, 2};
 		wait(1.2);
-		die();
+		die;
 	}
 
 	// states
