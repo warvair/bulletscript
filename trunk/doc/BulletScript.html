@@ -10,9 +10,17 @@ span.code {font-family:monospace}
 <h1>BulletScript language reference</h1>
 
 BulletScript is a pseudo-object oriented language.  It has a basic concept of classes, but does not use a lot of the functionality found in OO languages
-such as Java, C++, etc.  It has two class types, three basic variable types, and two more slightly different variable types.
+such as Java, C++, etc.  It has two class types, three basic variable types, and two more slightly different variable types.  The first section gives a
+general overview of the language features, and the second explains how and where they should be used.<p>
 
-<h2>Data types</h2>
+<a href="#lang">Language features</a><br>
+<a href="#classes">Controllers and emitters</a>
+
+<p>
+<hr />
+<p>
+<a name="lang"><h1>Language features</h1></a>
+<h3>Data types</h3>
 BulletScript has one data type.  As such it is an untyped language.  By default, the data type is a 32-bit float, although this can be changed (but it is
 not recommended that this is done!) by modifying the relevant <span class="code">#define</span> in bsConfig.h.  For the default floating point data
 type, literal values are expressed as:
@@ -24,57 +32,195 @@ type, literal values are expressed as:
 </pre>	
 As long as the number contains at most one decimal point, and only numeric characters, it is valid.
 
-<h2>Expressions</h2>
-Expressions consist of literal values, variables and function calls, combined together with operators.  Some example expressions:
+<h3>Expressions</h3>
+Expressions consist of literal values, variables and function calls, combined together with operators.  
+Some example expressions:
 <pre>
-	w = 5;
-	x = 12 + w;
-	y = rand(360) + (x / 2) > 100;
-	z = foo(bar(z, 12));
+	5
+	12 + var
+	rand(360) + (x / 2) > 100
+	foo(bar(z, 12))
 </pre>
 
-BulletScript uses the following operators.  Operators are not user-definable.
-<span class="code">+ - * / % > < >= <= == != && ||</span>
-
-Some notes: 
-
+BulletScript uses the following operators.  Operators cannot be overloaded by users.
+<pre>	+ - * / % > < >= <= == != && ||</pre>
+Notes: 
 <list>
-<li>Despite using floating point, the modulus (%) operator can be used.  However it will convert the values to integer before calculation.
-BulletScript does not currently support fractional modulus calculation.</li>
-<li>The equivalence operators (> < >= <= == !=) and the logical operators (&& ||) return 1 if the condition is true, and 0 if false.
+<li>Despite using floating point, the modulus (<span class="code">%</span>) operator can be used.  However it will convert the values to integers before 
+calculation.  BulletScript does not currently support fractional modulus calculation.</li>
+<li>The equivalence operators (<span class="code">> < >= <= == !=</span>) and the logical operators (<span class="code">&& ||</span>) return 1 if the 
+condition is true, and 0 if false.
 </list>
 <p>
-Assignment operators exist, but they are statements, and cannot be used in expressions:
-<span class="code">+= -= *= /=</span>
 
-<h2>Variables</h2>
+<h3>Comments</h3>
+BulletScript uses standard comments: <span class="code">//</span> for single line comments and <span class="code">/* */</span> to enclose multiple-line ones.
+<pre>
+	// single line comment
+	/* multiple
+	   line
+	   comment
+	*/
+</pre>
+
+<h3>Variables</h3>
 Like other OO languages, BulletScript has local, member and global variables.  Local variables only exist within the scope of the declaring
-<span class="code">state</span>, <span class="code">function</span> or <span class="code">event</span>.  Member variables exist within the scope
+<span class="code">state</span>, <span class="code">function</span> or <span class="code">event</span>.  They do not need special syntax for declaration
+and are declared as soon as they are used for the first time on the left hand side of an expression.  Member variables exist within the scope
 of the class which declares them, and global variables are accessible from anywhere within the system.  Global variables may only be declared from
-code, and not script, and unlike locals and members may be declared constant, and hence read-only to the script.
+code, and not script, and unlike locals and members may be declared constant, and hence read-only to the script.  Variables are assigned expressions
+like so:
+<pre>
+	x = 5;
+</pre>
+There are also other assignment operators:  <span class="code">+= -= *= /= ++ --</span><br>
+These are statements and not expressions.
+<pre>
+	x += 5; 	// ok (x = x + 5)
+	x++;		// ok (x = x + 1)
+	x = y += 5; 	// error
+</pre>
 
-<h2>Class types</h2>
+Note: the <span class="code">++ --</span> operators are <i>post-increment</i> only.
+
+<h3>Functions</h3>
+There are actually two types of functions: emitters have their own special type to control emitted objects, and there are more classical functions which can
+be used in expressions.  Emitter functions will be discussed later.  'Expression' functions are used as follows:
+<pre>
+	<i>function_name</i>(expression_list);
+	<i>value</i> = <i>function_name</i>(expression_list);
+</pre>
+
+For instance:
+<pre>
+	ret = get_value();
+	r = rand(360 * time);
+</pre>
+
+Functions may return a single value, or nothing, and take a list of comma-separated expressions as arguments.  They can only be defined in native code, 
+and then exposed to BulletScript, they cannot be defined within the script itself.
+
+<h3>Conditional statements</h3>
+Conditional statements take the form of an if-else chain.
+<pre>
+	if (<i>expression_statement</i>)
+	{
+		statement_list
+	}
+	else if(<i>expression_statement</i>)
+	{
+		statement_list
+	}
+	else
+	{
+		statement_list
+	}
+</pre>
+Enclosing braces must be used for every block of code, even if it only has one line.
+
+<h3>Iteration statements</h3>
+Iteration is achieved with <span class="code">while</span>:
+<pre>
+	while(<i>expression_statement</i>)
+	{
+		statement_list
+	}
+</pre>
+The list statements is executed as long as the expression evalulates to non-zero.  Example:
+<pre>
+	i = 0;
+	while(i < 10)
+	{
+		// do something
+
+		i++;
+	}
+</pre>
+
+There are two special keywords for iteration statements which control its flow: <span class="code">break</span> and <span class="code">continue</span>.
+<span class="code">break</span> immediately jumps out of the loop and carries on straight after the closing brace.  <span class="code">continue</span>
+jumps forward to the start of the next iteration of the loop.
+
+<h3>Wait statements</h3>
+Wait statements are used to stop processing the script and leave it for a certain period of time.
+<pre>
+	wait(<i>expression_statement</i>);
+</pre>
+This waits for the specified number of seconds.  If the value is less than or equal to zero, it has no effect.
+
+<h3>Emit statements</h3>
+Emit statements are the heart of BulletScript.  They may only be used by emitters, and are discussed below.
+
+<h3>Die statements</h3>
+Die statements are ontologically the opposite of emit.  They may only be used by emitters, and are discussed below.
+
+<p>
+<hr />
+<p>
+<a name="classes"><h1>Class types</h1></a>
 BulletScript uses two classes: <span class="code">controller</span> and <span class="code">emitter</span>.  Both are simple state
 machines, but they differ slightly in how they can be controlled, and what they control themselves.  Emitters are responsible for actually creating
 objects, and for controlling the behaviour of those objects afterwards.  Controllers are used to group and control emitters, synchronising them.
 
-<h3>Emitters</h3>
+<h2>Emitters</h2>
 
 Emitters are defined in the following form:<p>
 <pre>
 	emitter <i>emitter_name</i>
 	{
-		[member_variable_list]
-		[affector_instance_list]
-		[function_list]
+		member_variable_list
+		affector_instance_list
+		function_list
 		state_list
 	}
 </pre>
 
 Member variables are declared as follows:<p>
 <pre>
-	<i>var_name</i> = constant_expression;
+	<i>var_name</i> = expression;
 </pre>
+The expression must be evaluable at that point in the code.  That is, it cannot use member variables that have not been declared yet, or any functions
+or global variables that have not been bound to the system by the user.  It is important to note at this point that there are two different types of function
+in BulletScript.  This will be explained later.
+<p>
+Affector instances are declared as follows:<p>
+<pre>
+	<i>var_name</i> = affector <i>affector_function</i>(expression_list);
+</pre>
+The <span class="code">affector_function</span> is the name of the affector function pointer which has been bound using 
+<span class="code">Machine::registerAffector</span> in C++.  <span class="code">expression_list</span> is a comma-separated list of expressions.  It is
+important to note that member variables cannot be used for affector arguments.  They may be within lexical scope, but consider how affectors work: they
+are applied at each update to any emitted objects, and they need to resolve their arguments.  If an emitter is destroyed, any objects that it has emitted
+which are still active will not be able to resolve the arguments that use a member variable of that emitter.
+<p>
+The second type of functions (mentioned earlier) are emitter functions.  These are blocks of code used to control the behaviour of objects emitted by
+the emitter.  A function definition looks like this:
+<pre>
+	<i>func_name</i> = function(argument_list)
+	{
+		statement_list
+	}
+</pre>
+Here, <span class="code">argument_list</span> is a comma-separated list of argument names, matching values that the function requires to be passed in.  There
+are several special statements which can be used in emitter functions.  First are the aforementioned <span class="code">emit</span> and
+<span class="code">die</span> statements.
+
+<h3>Emit statements</h3>
+These take the form:
+<pre>
+	<i>emit_func emit_type</i> (expression_list) [: affector_instance_list <i>emitter_func</i>(expression_list)];
+</pre>
+Here, <span class="code">emit_func</span> is the named emission function specified in code by <span class="code">Machine::registerEmitFunction</span>.
+<span class="code">emit_type</span> is the named type created by <span class="code">Machine::createType</span>.  The <span class="code">expression_list</span>
+is the list of arguments (emit functions are like normal functions in this respect).  Of note are the optional parameters specified after the emit function.
+An emitted object can be controlled by BulletScript, and to do this you specify a list of affector instances and an optional emitter function.  An object
+can have as many affector instances as it needs, but at most only one control function.  An example:
+<pre>
+	fire bullet(180, 100) : gravity, control_func(20, 10);
+</pre>
+Like affector instances, emitter functions cannot take member variables as arguments.
+<h3>Die statements</h3>
+
 
 </body>
 </html>

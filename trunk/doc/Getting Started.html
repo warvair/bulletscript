@@ -1,0 +1,136 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8">
+<title>BulletScript guide and tutorial</title>
+
+<style type="text/css">
+span.code {font-family:monospace} 
+</style>
+
+<h1>Getting started</h1>
+In order to best get the feel of BulletScript, it's probably worth starting off by looking at various example scripts.  BulletScript is somewhat esoteric
+so the scripts may not make obvious sense at a high level, but the basic syntax is pretty regular and should be straightforward to people used to
+programming.  After that, either read the <a href="BulletScript.html">language reference</a> or start with this guide, whichever you are more comfortable 
+with.  The guide and the reference rely on each other to an extent, in order to not duplicate information.
+
+<p>
+<a href="#overview">Overview of the system</a><br>
+<a href="#structure">Script Structure</a><br>
+<a href="#tutorial">Tutorial</a>
+
+<p>
+<hr />
+<p>
+<a name="overview"><h2>Overview of the system</h2></a>
+
+BulletScript emits and (optionally) controls objects.  These objects can be more or less anything, although some things lend themselves better to it than
+others.  Particles, shapes, bullets, even sound effects are all good candidates.  In order to use BulletScript, the user must create a system which can
+interface with it.  For each system, a core "type" is declared, and then the uers sets BulletScript to interface with this type's system by specifying
+function callbacks.  The implementation of these callbacks is entirely up to the user, although there will in practice be a general pattern to them.  This
+is discussed in the tutorial section.
+
+<p>
+<hr />
+<p>
+<a name="structure"><h2>Script structure</h2>
+
+Everything in the language is built around making emission and subsequent control as flexible and powerful as possible.  An <i>emitter</i> is the core object that performs these tasks.  Emitters contain
+at least one <i>state</i>.  A state is essentially a function which takes no arguments, and which loops back to the beginning once it is complete, rather
+than returning.  An emitter always has a current state, and when updated, it executes the code until either it changes state or it is told to suspend
+execution.  A simple state might look like this:
+<pre>
+	Main = state
+	{
+		emit bullet();
+		wait(1);
+	}
+</pre>
+This state will emit a bullet every second, until either the emitter is destroyed, or a controller changes its state (this is discussed later).  The
+script suspends execution for a second after every emission.  Note that if the wait statement were not that, execution would never stop and the virtual
+machine would most likely crash or enter an infinite loop.  States can be switched between using the <span class="code">goto</span> statement.  This
+changes state and immediately starts executing it.
+<pre>
+	Stage1 = state
+	{
+		emit bullet(180);
+		goto Stage2;
+	}
+
+	Stage2 = state
+	{
+		emit bullet(135);
+		goto Stage1;
+	}
+</pre>
+One can use the control structures defined in the <a href="BulletScript.html">language reference</a> to make things more complex:
+<pre>
+	Stage1 = state
+	{
+		// emit bullet at angle 0
+		emit bullet(0);
+		goto Stage2;
+	}
+
+	Stage2 = state
+	{
+		// declare and set local variable
+		i = 0;
+
+		// emit 10 bullets, spaced evenly from 0 to 180 degrees, with an increasing delay between each one
+		while (i < 10)
+		{
+			emit bullet(i * 20);
+			wait(i / 10);
+			i++;
+		}
+
+		// 30% chance that we change state at this point
+		if (rand(10) < 3)
+		{
+	
+			goto Stage1;
+		}
+	}
+</pre>
+
+Emitters can also have special functions, which are declared inline.  These are used to control the behaviour of emitted objects.
+<pre>
+	Explode = function(time)
+	{
+		// tell the object to suspend script execution for <i>time</i> seconds.
+		wait(time);
+
+		// emit 10 'explosion particles'
+		i = 0;
+		while (i < 10)
+		{
+			emit bullet(i * 40);
+			i++;
+		}
+
+		// and tell the object to kill itself.
+		die;
+
+		// at this point, do not do anything which requires the object!  It is alright to set locals, member variables, etc,
+		// but pretty much anything else will probably cause a crash.
+	}
+
+	Stage1 = state
+	{
+		// emit a bullet, telling it to use the Explode function.  Thus, any bullets emitted by this line will die after 5 seconds.
+		emit bullet() : Explode(5);
+		wait(1);
+	}
+</pre>
+An emitted object can have at most one function.  Emitter functions have a normal control flow: when they reach the end of their statement list, they
+return, and do not loop back like states do.  It is important to note that when a function ends, the emitted object that it is controlling does not get
+killed.  The only way to kill an object from script is explicitly via the <span class="code">die</span> statement in a function.
+
+
+<p>
+<hr />
+<p>
+<a name="tutorial"><h2>Tutorial</h2>
+
+</body>
+</html>
+

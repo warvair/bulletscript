@@ -37,14 +37,14 @@ emitter SmartBomb
 		wait(0.3);
 		$alpha = {0, 0.1};
 		wait(0.1);
-		die();
+		die;
 	}
 
 	delayExplode = function(time)
 	{
 		wait(time);
 		arc area(30, 30, 0, 360, 20) : expand();
-		die();
+		die;
 	}
 
 	// states

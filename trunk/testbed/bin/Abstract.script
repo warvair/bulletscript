@@ -13,7 +13,7 @@ emitter Abstract
 		fireA bullet(-angle, speed) : Func2(2, speed, angle + 50);
 		$alpha = {0, 2};
 		wait(2);
-		die();
+		die;
 
 	}
 
@@ -28,7 +28,7 @@ emitter Abstract
 		fireA bullet(angle, speed) : Func1(2, speed, angle - 50);
 		$alpha = {0, 2};
 		wait(2);
-		die();
+		die;
 	}
 
 	Main = state
