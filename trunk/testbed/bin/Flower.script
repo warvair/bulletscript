@@ -29,7 +29,7 @@ emitter Flower
 		while(i < 8)
 		{
 			i++;
-			fireA bullet(rand(360), 100) : death(0.5), gravity;
+//			fireA bullet(rand(360), 100) : death(0.5), gravity;
 		}
 
 		die;

@@ -356,7 +356,7 @@ bool ScriptMachine::addEmitterDefinition(const String& name, EmitterDefinition* 
 
 	// Create pool
 	int maxLocals = def->getMaxLocalVariables();
-	rec.pool = new DeepMemoryPool<EmitTypeControl, int>(128, maxLocals);
+	rec.pool = new DeepMemoryPool<EmitTypeControl, int>(256, maxLocals);
 
 	mEmitterRecords.push_back(rec);
 
@@ -1266,8 +1266,6 @@ void ScriptMachine::print_debug()
 
 		++it;
 	}
-
-	fprintf(stderr, "type size: %d %d\n", size, etsize);
 }
 // --------------------------------------------------------------------------------
 

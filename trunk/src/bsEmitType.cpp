@@ -7,12 +7,10 @@ namespace BS_NMSP
 {
 
 // --------------------------------------------------------------------------------
-EmitType::EmitType(const String& name, int type, TypeManager* typeMan,
-				   ScriptMachine* machine) :
+EmitType::EmitType(const String& name, int type, ScriptMachine* machine) :
 	mName(name),
 	mType(type),
 	mNumProperties(0),
-	mTypeManager(typeMan),
 	mScriptMachine(machine),
 	mDieFunction(0)
 {

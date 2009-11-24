@@ -147,7 +147,7 @@ int main (int argc, char **argv)
 //		emit->setX(rand() % (SCREEN_WIDTH - 200) + 100);
 //		emit->setY(rand() % (SCREEN_HEIGHT - 200) + 100);
 	}
-	for (int i = 0; i < 200; ++i)
+	for (int i = 0; i < 1; ++i)
 	{
 		Emitter* emit = machine.createEmitter("Flower");
 		emit->setX(rand() % (SCREEN_WIDTH - 200) + 100);
@@ -180,8 +180,6 @@ int main (int argc, char **argv)
 			float updateMS = (updateTime / (float) numFrames);
 			fprintf(stderr, "T: %2.1f update time: %4.3f FPS: %d C: %d/%d\n", totalTime / 1000.0f, updateMS,
 				fps, numBullets, numObjects);
-			fprintf(stderr, "%d\n", g_bullets->getCapacity() * sizeof(Bullet));
-			machine.print_debug();
 			numFrames = 0;
 			updateTime = 0;
 		}
@@ -209,7 +207,7 @@ int main (int argc, char **argv)
 		renderer.startRendering();
 
 		g_bullets->render(&renderer);
-//		g_areas->render(&renderer);
+		g_areas->render(&renderer);
 
 		renderer.finishRendering();
 

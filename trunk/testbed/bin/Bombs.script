@@ -25,7 +25,7 @@ emitter SmartBomb
 {
 	// members
 	speed = 120;
-	wait_time = 10;
+	wait_time = 1;
 
 	// functions
 	expand = function()

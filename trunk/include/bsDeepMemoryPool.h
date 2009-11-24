@@ -1,6 +1,7 @@
 #ifndef __BS_DEEPMEMORYPOOL_H__
 #define __BS_DEEPMEMORYPOOL_H__
 
+#include <iostream>
 #include <vector>
 #include <list>
 #include "bsPrerequisites.h"
@@ -17,7 +18,6 @@ namespace BS_NMSP
 
 		// Internal 'active' bits
 		int __dmpoIndex;
-
 		bool __dmpoActive;
 	
 	public:
@@ -65,7 +65,7 @@ namespace BS_NMSP
 		void destroyPool()
 		{
 			for (size_t i = 0; i < mPoolSize; ++i)
-				delete mPool[i];
+			delete mPool[i];
 
 			free(mPool);
 			mFreeList.clear();
@@ -78,13 +78,14 @@ namespace BS_NMSP
 			while (index < size)
 			{
 				if (mPool[index]->__dmpoActive)
-					return mPool[index];
+				return mPool[index];
 
 				++index;
 			}
 
 			return 0;
 		}
+
 
 	public:
 
