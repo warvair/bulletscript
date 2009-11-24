@@ -53,9 +53,13 @@ namespace BS_NMSP
 		 */
 		explicit Emitter(ScriptMachine* machine);
 
-		/**	\brief Destructor.
+		/**	\brief Callback for when the Emitter is no longer needed.
+		 *
+		 *	Emitter are managed by a pool, and so need to be reused without being destroyed
+		 *	and recreated.  This function overrides DeepMemoryPoolObject::onRelease to tidy up
+		 *	the parts of Controller that need it.
 		 */
-		~Emitter();
+		void onRelease();
 
 		/**	\brief Set an Emitter instance to use the specified EmitterDefinition.
 		 *	

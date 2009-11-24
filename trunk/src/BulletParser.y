@@ -16,9 +16,63 @@ extern int yylineno;
 
 static ParseTree* AST = ParseTree::instancePtr ();
 
+static const String gs_tokens[] = {
+	"KEYWORD_CONTROLLER",				"controller",
+	"KEYWORD_EMITTER",					"emitter",
+	"KEYWORD_AFFECTOR",					"affector",
+	"KEYWORD_FUNCTION",					"function",
+	"KEYWORD_STATE",					"state",
+	"KEYWORD_EVENT",					"event",
+	"KEYWORD_RAISE",					"raise",
+	"KEYWORD_ENABLE",					"enable",
+	"KEYWORD_DISABLE",					"disable",
+	"KEYWORD_WHILE",					"while",
+	"KEYWORD_BREAK"						"break",
+	"KEYWORD_CONTINUE"					"continue",
+	"KEYWORD_IF",						"if",
+	"KEYWORD_GOTO"						"goto"
+	"KEYWORD_WAIT"						"wait"	
+	"KEYWORD_ELSE",						"else",
+	"KEYWORD_SUSPEND"					"suspend",
+	"KEYWORD_SIGNAL"					"signal",
+	"KEYWORD_DIE"						"die",
+	"INTEGER"							"an integral value",
+	"REAL"								"a value",
+	"IDENTIFIER"						"an identifier"
+	"SYMBOL_LTE",						"<=",
+	"SYMBOL_GTE",						">=",
+	"SYMBOL_EQ",						"==",
+	"SYMBOL_NEQ",						"!=",
+	"SYMBOL_LOG_AND",					"&&",
+	"SYMBOL_LOG_OR",					"||",
+	"SYMBOL_INC",						"++",
+	"SYMBOL_DEC",						"--",
+	"SYMBOL_ADD_A",						"+=",
+	"SYMBOL_SUB_A",						"-=",
+	"SYMBOL_MUL_A",						"*=",
+	"SYMBOL_DIV_A",						"/=",
+};
+
+void replaceVerboseTokens(String& a_string)
+{
+	for (int i = 0; i < 68; i += 2)
+	{
+		int startPos = (int) a_string.find(gs_tokens[i]);
+		if (startPos < 0)
+			continue;
+
+		size_t count = gs_tokens[i].length();
+
+		a_string.replace(startPos, count, gs_tokens[i + 1]);
+	}
+}
+
 void yyerror (char *a_msg)
 {
-	AST->addError(yylineno, a_msg);
+	String msgString = a_msg;
+	replaceVerboseTokens(msgString);
+
+	AST->addError(yylineno, msgString);
 }
 
 void generate_affector_list(YYSTYPE parentNode, YYSTYPE affNode)

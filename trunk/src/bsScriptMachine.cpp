@@ -1252,5 +1252,23 @@ void ScriptMachine::processScriptRecord(ScriptRecord* gsr, void* object)
 #endif
 }
 // --------------------------------------------------------------------------------
+void ScriptMachine::print_debug()
+{
+	size_t size = 0;
+	size_t etsize;
+	EmitterRecordList::iterator it = mEmitterRecords.begin();
+	while (it != mEmitterRecords.end())
+	{
+		size_t psize = (*it).pool->size();
+		etsize = sizeof(EmitTypeControl);
+
+		size += (psize * (4 + etsize));		
+
+		++it;
+	}
+
+	fprintf(stderr, "type size: %d %d\n", size, etsize);
+}
+// --------------------------------------------------------------------------------
 
 }

@@ -18,20 +18,14 @@ Controller::Controller(ScriptMachine* machine) :
 	mEventState.locals = 0;
 }
 // --------------------------------------------------------------------------------
-Controller::~Controller()
-{
-	// Controllers will be released by their pool, and have their memory cleaned
-	// up there.
-}
-// --------------------------------------------------------------------------------
 void Controller::onRelease()
 {
 	for (int i = 0; i < mNumEmitters; ++i)
 		mScriptMachine->destroyEmitter(mEmitters[i].emitter);
-	
-	// Note: it would be nice if we didn't do any dealloc here.
+
 	mBlocks.clear();
 
+	// Note: it would be nice if we didn't do any dealloc here.
 	delete[] mEmitters;
 	delete[] mEvents;
 	delete[] mEventState.locals;
@@ -40,7 +34,7 @@ void Controller::onRelease()
 // --------------------------------------------------------------------------------
 void Controller::setDefinition(ControllerDefinition* def)
 {
-	// Note: it would be nice if we didn't do any alloc here.
+	delete mRecord;
 	mRecord = def->createScriptRecord(mScriptMachine);
 
 	// Create the emitters that this Controller uses.

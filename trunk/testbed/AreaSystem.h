@@ -16,12 +16,12 @@ enum AreaType
 struct Area : public bs::UserTypeBase
 {
 	int type;			// quad or ellipse
-	bs::bstype x, y;	// centre
-	bs::bstype w, h;	// width, height.  Also used for ellipse
-	bs::bstype angle;
-	bs::bstype start, end; // generic, can be used for arcs
-	bs::bstype innerw, innerh;
-	bs::bstype alpha;
+	float x, y;	// centre
+	float w, h;	// width, height.  Also used for ellipse
+	float angle;
+	float start, end; // generic, can be used for arcs
+	float innerw, innerh;
+	float alpha;
 
 	// Internal variables, do not modify in affector function!
 	int __index;
@@ -43,71 +43,118 @@ class AreaBattery
 		}
 	};
 
-	static bs::Machine* mMachine;
-
 	static const int BATTERY_SIZE = 128;
 
-	static std::vector<Area> mAreas;
-	static std::vector<unsigned int> mFreeList[2];
-	static int mStoreIndex;
-	static int mUseIndex;
+	bs::Machine* mMachine;
 
-	static std::vector<Area> mSpawnedAreas;
+	std::vector<Area> mAreas;
 
-	static unsigned int getFreeAreaSlot();
+	std::vector<unsigned int> mFreeList[2];
 
-	static void killArea(Area* a);
+	int mStoreIndex, mUseIndex;
+
+	std::vector<Area> mSpawnedAreas;
+
+private:
+
+	unsigned int getFreeAreaSlot();
+
+	void killArea(Area* a);
 	
 public:
 
-	static void initialise(bs::Machine* machine);
+	AreaBattery(bs::Machine* machine);
 
-	static int update(float frameTime);
+	int update(float frameTime);
 
-	static void render(RendererGL* renderer);
+	void render(RendererGL* renderer);
 
 	// Scripting
-	static bs::UserTypeBase* emitQuadC(bs::bstype x, bs::bstype y, const bs::bstype* args);
+	bs::UserTypeBase* emitQuadC(float x, float y, const float* args);
 
-	static bs::UserTypeBase* emitQuadB(bs::bstype x, bs::bstype y, const bs::bstype* args);
+	bs::UserTypeBase* emitQuadB(float x, float y, const float* args);
 
-	static bs::UserTypeBase* emitEllipse(bs::bstype x, bs::bstype y, const bs::bstype* args);
+	bs::UserTypeBase* emitEllipse(float x, float y, const float* args);
 
-	static bs::UserTypeBase* emitArc(bs::bstype x, bs::bstype y, const bs::bstype* args);
+	bs::UserTypeBase* emitArc(float x, float y, const float* args);
 
-	static void killArea(bs::UserTypeBase* object);
+	void killArea(bs::UserTypeBase* object);
 
-	static void setWidth(bs::UserTypeBase* object, bs::bstype value);
+	void setWidth(bs::UserTypeBase* object, float value);
 
-	static bs::bstype getWidth(bs::UserTypeBase* object);
+	float getWidth(bs::UserTypeBase* object);
 
-	static void setHeight(bs::UserTypeBase* object, bs::bstype value);
+	void setHeight(bs::UserTypeBase* object, float value);
 
-	static bs::bstype getHeight(bs::UserTypeBase* object);
+	float getHeight(bs::UserTypeBase* object);
 
-	static void setInnerWidth(bs::UserTypeBase* object, bs::bstype value);
+	void setInnerWidth(bs::UserTypeBase* object, float value);
 
-	static bs::bstype getInnerWidth(bs::UserTypeBase* object);
+	float getInnerWidth(bs::UserTypeBase* object);
 
-	static void setInnerHeight(bs::UserTypeBase* object, bs::bstype value);
+	void setInnerHeight(bs::UserTypeBase* object, float value);
 
-	static bs::bstype getInnerHeight(bs::UserTypeBase* object);
+	float getInnerHeight(bs::UserTypeBase* object);
 
-	static void setAngle(bs::UserTypeBase* object, bs::bstype value);
+	void setAngle(bs::UserTypeBase* object, float value);
 
-	static bs::bstype getAngle(bs::UserTypeBase* object);
+	float getAngle(bs::UserTypeBase* object);
 
-	static void setStart(bs::UserTypeBase* object, bs::bstype value);
+	void setStart(bs::UserTypeBase* object, float value);
 
-	static bs::bstype getStart(bs::UserTypeBase* object);
+	float getStart(bs::UserTypeBase* object);
 
-	static void setEnd(bs::UserTypeBase* object, bs::bstype value);
+	void setEnd(bs::UserTypeBase* object, float value);
 
-	static bs::bstype getEnd(bs::UserTypeBase* object);
+	float getEnd(bs::UserTypeBase* object);
 
-	static void setFade(bs::UserTypeBase* object, bs::bstype value);
+	void setAlpha(bs::UserTypeBase* object, float value);
 
-	static bs::bstype getFade(bs::UserTypeBase* object);
+	float getAlpha(bs::UserTypeBase* object);
 };
+
+// Function hooks
+bs::UserTypeBase* area_emitQuadC(float x, float y, const float* args);
+
+bs::UserTypeBase* area_emitQuadB(float x, float y, const float* args);
+
+bs::UserTypeBase* area_emitEllipse(float x, float y, const float* args);
+
+bs::UserTypeBase* area_emitArc(float x, float y, const float* args);
+
+void area_kill(bs::UserTypeBase* object);
+
+void area_setWidth(bs::UserTypeBase* object, float value);
+
+float area_getWidth(bs::UserTypeBase* object);
+
+void area_setHeight(bs::UserTypeBase* object, float value);
+
+float area_getHeight(bs::UserTypeBase* object);
+
+void area_setInnerWidth(bs::UserTypeBase* object, float value);
+
+float area_getInnerWidth(bs::UserTypeBase* object);
+
+void area_setInnerHeight(bs::UserTypeBase* object, float value);
+
+float area_getInnerHeight(bs::UserTypeBase* object);
+
+void area_setAngle(bs::UserTypeBase* object, float value);
+
+float area_getAngle(bs::UserTypeBase* object);
+
+void area_setStart(bs::UserTypeBase* object, float value);
+
+float area_getStart(bs::UserTypeBase* object);
+
+void area_setEnd(bs::UserTypeBase* object, float value);
+
+float area_getEnd(bs::UserTypeBase* object);
+
+void area_setAlpha(bs::UserTypeBase* object, float value);
+
+float area_getAlpha(bs::UserTypeBase* object);
+
 
 #endif

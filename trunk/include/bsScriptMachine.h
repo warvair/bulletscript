@@ -184,6 +184,8 @@ namespace BS_NMSP
 
 		// Errors
 		void addErrorMsg (const String& msg);
+
+		void print_debug();
 	};
 
 }

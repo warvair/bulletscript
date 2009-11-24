@@ -15,17 +15,14 @@ Emitter::Emitter(ScriptMachine* machine) :
 {
 }
 // --------------------------------------------------------------------------------
-Emitter::~Emitter()
+void Emitter::onRelease()
 {
-	// Todo: fix RAII, see bsCore.h/ScriptRecord
 	delete mRecord;
 }
 // --------------------------------------------------------------------------------
 void Emitter::setDefinition(EmitterDefinition* def)
 {
-	if (mRecord)
-		delete mRecord;
-
+	delete mRecord;
 	mRecord = def->createScriptRecord(mScriptMachine);
 
 	mNumUserMembers = def->getNumMemberVariables() - NUM_SPECIAL_MEMBERS;
