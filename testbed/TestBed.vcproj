@@ -201,10 +201,6 @@
 				RelativePath=".\RendererGL.cpp"
 				>
 			</File>
-			<File
-				RelativePath=".\UnitSystem.cpp"
-				>
-			</File>
 		</Filter>
 		<Filter
 			Name="Header Files"
@@ -229,10 +225,6 @@
 			</File>
 			<File
 				RelativePath=".\RendererGL.h"
-				>
-			</File>
-			<File
-				RelativePath=".\UnitSystem.h"
 				>
 			</File>
 		</Filter>

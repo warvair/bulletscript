@@ -48,17 +48,17 @@ namespace BS_NMSP
 		// object can use is BS_MAX_EMITTER_AFFECTORS, defined in bsConfig.h.
 		int affectors[BS_MAX_EMITTER_AFFECTORS];
 
-		int numAffectors;
+		uint16 numAffectors;
+
+		// The index of the EmitterDefinition (stored in the ScriptMachine), used to index into
+		// the DeepMemoryPool that holds this instance.  EmitTypeControls are pooled per EmitterDefinition.
+		uint16 __emitterDefinition;		
 
 		// Pointer to the EmitType that the object is a type of.
 		EmitType* __type;
 
 		// Pointer to the current object that owns this EmitTypeControl
 		UserTypeBase* __object;			
-
-		// The index of the EmitterDefinition (stored in the ScriptMachine), used to index into
-		// the DeepMemoryPool that holds this instance.  EmitTypeControls are pooled per EmitterDefinition.
-		int __emitterDefinition;		
 
 		// Constructor.  This simply allocates enough memory for the local variables of the EmitterDefinition
 		// which will use it.  An EmitterDefinition will have a collection of states and functions, with a 

@@ -49,7 +49,7 @@ namespace BS_NMSP
 		{
 			if (newSize > mPoolSize)
 			{
-				mPool = (T**) realloc(mPool, newSize * sizeof(T**));
+				mPool = (T**) realloc(mPool, newSize * sizeof(T*));
 				for (size_t i = mPoolSize; i < newSize; ++i)
 				{
 					mPool[i] = new T(mArg1);
@@ -150,6 +150,13 @@ namespace BS_NMSP
 			return _getFrom(obj->__dmpoIndex + 1);
 		}
 
+		/**	\brief Get size of pool, in bytes.
+		 *	\return pool size.
+		 */
+		size_t size() const
+		{
+			return mPoolSize;
+		}
 	};
 
 }

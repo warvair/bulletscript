@@ -29,12 +29,31 @@ function callbacks.  The implementation of these callbacks is entirely up to the
 is discussed in the tutorial section.<p>
 Once user systems have been bound to BulletScript, and scripts written and compiled, the user must create some BulletScript objects in order to do any work.
 These two objects are <i>emitter</i> and <i>controller</i> and are explained in the next section.  These objects are then updated once a frame, or at
-whatever interval the user wants.
+whatever interval the user wants.  This will control object emission.  If the user wants BulletScript to control the objects after emission, then for each
+object, the user must manually call an update function from BulletScript.  This is essentially all the interaction needed to use BulletScript.  The system
+will update controllers and emitters automatically, and the user can choose to have objects controlled by BulletScript with one line of code when they
+update the objects.
+<p>
+BulletScript by default uses 2d positions: x & y.  If you wish to use 3d coordinates then uncomment <span class="code">BS_Z_DIMENSION</span> in bsConfig.h.
 
 <p>
 <hr />
 <p>
 <a name="structure"><h2>Script structure</h2>
+
+<h3>Emitter states</h3>
+
+An emitter definition looks like this:
+<pre>
+	<i>emit_name</i> = emitter
+	{
+		// 0 or more member variables
+		// 0 or more affector instances
+		// 0 or more functions
+		// 1 or more states
+	}
+</pre>
+
 
 Everything in the language is built around making emission and subsequent control as flexible and powerful as possible.  An <i>emitter</i> is the core object that performs these tasks.  Emitters contain
 at least one <i>state</i>.  A state is essentially a function which takes no arguments, and which loops back to the beginning once it is complete, rather
@@ -95,7 +114,10 @@ One can use the control structures defined in the <a href="BulletScript.html">la
 	}
 </pre>
 
-Emitters can also have special functions, which are declared inline.  These are used to control the behaviour of emitted objects.
+<h3>Emitter functions</h3>
+
+Emitters can also have special functions, which are declared inline, and must be declared before states.  These are used to control the behaviour of
+emitted objects.
 <pre>
 	Explode = function(time)
 	{
@@ -126,13 +148,108 @@ Emitters can also have special functions, which are declared inline.  These are 
 </pre>
 An emitted object can have at most one function.  Emitter functions have a normal control flow: when they reach the end of their statement list, they
 return, and do not loop back like states do.  It is important to note that when a function ends, the emitted object that it is controlling does not get
-killed.  The only way to kill an object from script is explicitly via the <span class="code">die</span> statement in a function.
+killed.  The only way to kill an object from script is explicitly via the <span class="code">die</span> statement in a function.  You may not use member
+variables as arguments to functions, see the language reference for an explanation why.
 
+<h3>Emitter properties</h3>
+
+Emitted objects can have properties defined.  Properties are values of BulletScript's value type (normally 32-bit float), which can be controlled by
+BulletScript.  They can be set in one of two ways, either instantly or gradually.  Properties are prefixed with <span class="code">$</span>.
+<pre>
+	Aim = function(dir)
+	{
+		$angle = 10; 			// set 'angle' property to 10
+		$angle = {10 + dir, 2}; 	// set 'angle' property to (10 + dir) over 2 seconds
+		$angle += {5, 3};		// increase 'angle' property by 5 over 2 seconds
+		var = $angle;			// get angle
+	}
+</pre>
+In the case of setting a property over time, subsequent sets will override this command, unless it has completed:
+<pre>
+	$angle = {10, 5};
+	$angle = {20, 4}; // this overrides the first command
+
+	// this is the proper way to do it
+	$angle = {10, 5};
+	wait(5);
+	$angle = {20, 4};
+</pre>
+Properties can only be used in emitter functions.  Apart from their extended 'set value over time' functionality, they can be used in the same way as
+any normal variable.  The number of properties definable per type is limited due to performance reasons.  The value can be set by changing
+<span class="code">BS_MAX_PROPERTIES</span> in bsConfig.h.
+
+<h3>Affectors and affector instances</h3>
+Affectors are C++ functions supplied by the user which take an object, and a number of arguments.  Each update, the function is run on the object with
+the arguments.  Affectors are different from emitter functions in that a) the arguments update as necessary over time and b) the function is run in its
+entirity every update, whereas an emitter function may take several updates to run just the once, and then never again.  Thus, affectors are useful for
+implementing things such as gravity, homing missiles, etc.  Alternatively they can be used for performance-critical control, where script is just not fast
+enough.  Affectors may only take a limited number of arguments.  This value is set by <span class="code">BS_MAX_AFFECTOR_ARGS</span> in bsConfig.h.
+<p>
+Thus, in addition to an emitter function, emitted objects can use a number of affector instances as well.  Affector instances are simply a call of the
+specified affector function, with specific arguments.  They are defined per emitter, and due to performance reasons the number allowed is limited.  Its 
+value can be set by changing <span class="code">BS_MAX_EMITTER_AFFECTORS</span> in bsConfig.h.  Affector instance declarations must be declared before any 
+functions, and look like this:
+<pre>
+	grav = affector Gravity(9.81);
+</pre>
+This declares <span class="code">grav</span> as an affector instance which can be used in an emit statement.  You can have different-named instances which
+use the same affector function, with the same or different arguments, although of course the number of arguments must match those required by the C++
+affector function.  As mentioned, arguments update, thus if you use member or global variables in an argument, the value of the argument will change whenever
+the variable changes.  As an example, you could have modifiable gravity, simply by defining a global <span class="code">g_gravity</span>, and an affector
+instance <span class="code">grav = affector Gravity(g_gravity);</span>.  Then all that is required is to modify the global from C++ code.<p>
+Simple examples:
+<pre>
+	emit bullet() : grav,
+	emit bullet() : grav, track, aim_func(10); 
+</pre>
+Using an expression function as an argument will cause the argument to be updated every time, because BulletScript cannot predict the return value of the
+function.  Like emitter functions, you may not use member variables as arguments to functions.
+
+<h3>Emitter member variables</h3>
+
+Emitters are vaguely similar to classes in object-oriented languages, and as such have a persistent state.  This partially takes the form of variables which
+persist over the course of the emitter's lifetime.  Member variables must be declared before anything else; they are accessible to all parts of the emitter,
+with the limitation of not being usable in function or affector arguments.  Their declaration is simple:
+<pre>
+	foo = emitter
+	{
+		mem_var = 10 * rand(30);
+		speed = g_gravity * 5;
+	}
+</pre>
+There are several built-in members: X, Y and angle.  Z as well if <span class="code">BS_Z_DIMENSION</span> is defined.  These are read-only to the emitter.
+They are named <span class="code">This_X</span>, <span class="code">This_Y</span>, <span class="code">This_Z</span> and <span class="code">This_Angle</span>.
+
+<h3>Controller emitter variables</h3>
+Controllers are used to control emitters.  They provide several high-level mechanisms to do this, namely events and event-driven suspend/resume.  A
+controller definition looks like this:
+<pre>
+	<i>emit_name</i> = controller
+	{
+		// 0 or more member variables
+		// 0 or more emitter variables
+		// 0 or more events
+		// 1 or more states
+	}
+</pre>
+
+Controller member variables are used the same way as emitter member variables.  Emitter variables on the other hand, here, refers to instances of emitters
+that this controller manages.  If there was an emitter named <i>foo</i>, then a controller might declare instances of as like so:
+<pre>
+ctrl = controller
+{
+	f1 = emitter foo(-16, 0, 45);
+	f2 = emitter foo(16, 0, -45);
+}
+</pre>
+This creates two emitter instances, and sets their built-in member variables (X, Y, angle).  These arguments are <i>offsets</i> to the position/angle of
+the controller!  Thus when the user changes the position/angle of the controller, it will update the emitter position/angle correctly.
 
 <p>
 <hr />
 <p>
 <a name="tutorial"><h2>Tutorial</h2>
+Write a minimal example, with stub callbacks...
 
 </body>
 </html>

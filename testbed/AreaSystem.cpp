@@ -3,24 +3,119 @@
 #include "Main.h"
 #include "AreaSystem.h"
 
-// --------------------------------------------------------------------------------
-// AreaBattery
-// --------------------------------------------------------------------------------
-bs::Machine* AreaBattery::mMachine = 0;
-std::vector<Area> AreaBattery::mAreas;
-std::vector<unsigned int> AreaBattery::mFreeList[2];
-int AreaBattery::mStoreIndex;
-int AreaBattery::mUseIndex;
-std::vector<Area> AreaBattery::mSpawnedAreas;
+AreaBattery* g_areas = 0;
 
-// --------------------------------------------------------------------------------
-void AreaBattery::initialise(bs::Machine* machine)
+bs::UserTypeBase* area_emitQuadC(float x, float y, const float* args)
 {
-	mMachine = machine;
-	
-	mStoreIndex = 0;
-	mUseIndex = 1;
+	return g_areas->emitQuadC(x, y, args);
+}
 
+bs::UserTypeBase* area_emitQuadB(float x, float y, const float* args)
+{
+	return g_areas->emitQuadB(x, y, args);
+}
+
+bs::UserTypeBase* area_emitEllipse(float x, float y, const float* args)
+{
+	return g_areas->emitEllipse(x, y, args);
+}
+
+bs::UserTypeBase* area_emitArc(float x, float y, const float* args)
+{
+	return g_areas->emitArc(x, y, args);
+}
+
+void area_kill(bs::UserTypeBase* object)
+{
+	g_areas->killArea(object);
+}
+
+void area_setWidth(bs::UserTypeBase* object, float value)
+{
+	g_areas->setWidth(object, value);
+}
+
+float area_getWidth(bs::UserTypeBase* object)
+{
+	return g_areas->getWidth(object);
+}
+
+void area_setHeight(bs::UserTypeBase* object, float value)
+{
+	g_areas->setHeight(object, value);
+}
+
+float area_getHeight(bs::UserTypeBase* object)
+{
+	return g_areas->getWidth(object);
+}
+
+void area_setInnerWidth(bs::UserTypeBase* object, float value)
+{
+	g_areas->setInnerWidth(object, value);
+}
+
+float area_getInnerWidth(bs::UserTypeBase* object)
+{
+	return g_areas->getInnerWidth(object);
+}
+
+void area_setInnerHeight(bs::UserTypeBase* object, float value)
+{
+	g_areas->setInnerHeight(object, value);
+}
+
+float area_getInnerHeight(bs::UserTypeBase* object)
+{
+	return g_areas->getInnerHeight(object);
+}
+
+void area_setAngle(bs::UserTypeBase* object, float value)
+{
+	g_areas->setAngle(object, value);
+}
+
+float area_getAngle(bs::UserTypeBase* object)
+{
+	return g_areas->getAngle(object);
+}
+
+void area_setStart(bs::UserTypeBase* object, float value)
+{
+	g_areas->setStart(object, value);
+}
+
+float area_getStart(bs::UserTypeBase* object)
+{
+	return g_areas->getStart(object);
+}
+
+void area_setEnd(bs::UserTypeBase* object, float value)
+{
+	g_areas->setEnd(object, value);
+}
+
+float area_getEnd(bs::UserTypeBase* object)
+{
+	return g_areas->getEnd(object);
+}
+
+void area_setAlpha(bs::UserTypeBase* object, float value)
+{
+	g_areas->setAlpha(object, value);
+}
+
+float area_getAlpha(bs::UserTypeBase* object)
+{
+	return g_areas->getAlpha(object);
+}
+
+// --------------------------------------------------------------------------------
+AreaBattery::AreaBattery(bs::Machine* machine) :
+	mMachine(machine),
+	mStoreIndex(0),
+	mUseIndex(1)
+{
 	mAreas.resize(BATTERY_SIZE);
 	mFreeList[mStoreIndex].reserve(BATTERY_SIZE);
 	mFreeList[mUseIndex].reserve(BATTERY_SIZE);
@@ -62,7 +157,7 @@ unsigned int AreaBattery::getFreeAreaSlot()
 	return id;
 }
 // --------------------------------------------------------------------------------
-bs::UserTypeBase* AreaBattery::emitQuadC(bs::bstype x, bs::bstype y, const bs::bstype* args)
+bs::UserTypeBase* AreaBattery::emitQuadC(float x, float y, const float* args)
 {
 	Area a;
 	a.__active = true;
@@ -84,7 +179,7 @@ bs::UserTypeBase* AreaBattery::emitQuadC(bs::bstype x, bs::bstype y, const bs::b
 	return &(mSpawnedAreas[count]);
 }
 // --------------------------------------------------------------------------------
-bs::UserTypeBase* AreaBattery::emitQuadB(bs::bstype x, bs::bstype y, const bs::bstype* args)
+bs::UserTypeBase* AreaBattery::emitQuadB(float x, float y, const float* args)
 {
 	Area a;
 	a.__active = true;
@@ -106,7 +201,7 @@ bs::UserTypeBase* AreaBattery::emitQuadB(bs::bstype x, bs::bstype y, const bs::b
 	return &(mSpawnedAreas[count]);
 }
 // --------------------------------------------------------------------------------
-bs::UserTypeBase* AreaBattery::emitEllipse(bs::bstype x, bs::bstype y, const bs::bstype* args)
+bs::UserTypeBase* AreaBattery::emitEllipse(float x, float y, const float* args)
 {
 	Area a;
 	a.__active = true;
@@ -128,7 +223,7 @@ bs::UserTypeBase* AreaBattery::emitEllipse(bs::bstype x, bs::bstype y, const bs:
 	return &(mSpawnedAreas[count]);
 }
 // --------------------------------------------------------------------------------
-bs::UserTypeBase* AreaBattery::emitArc(bs::bstype x, bs::bstype y, const bs::bstype* args)
+bs::UserTypeBase* AreaBattery::emitArc(float x, float y, const float* args)
 {
 	Area a;
 	a.__active = true;
@@ -163,97 +258,97 @@ void AreaBattery::killArea(bs::UserTypeBase* object)
 	killArea(static_cast<Area*>(object));
 }
 // --------------------------------------------------------------------------------
-void AreaBattery::setWidth(bs::UserTypeBase* object, bs::bstype value)
+void AreaBattery::setWidth(bs::UserTypeBase* object, float value)
 {
 	Area* a = static_cast<Area*>(object);
 	a->w = value;
 }
 // --------------------------------------------------------------------------------
-bs::bstype AreaBattery::getWidth(bs::UserTypeBase* object)
+float AreaBattery::getWidth(bs::UserTypeBase* object)
 {
 	Area* a = static_cast<Area*>(object);
 	return a->w;
 }
 // --------------------------------------------------------------------------------
-void AreaBattery::setHeight(bs::UserTypeBase* object, bs::bstype value)
+void AreaBattery::setHeight(bs::UserTypeBase* object, float value)
 {
 	Area* a = static_cast<Area*>(object);
 	a->h = value;
 }
 // --------------------------------------------------------------------------------
-bs::bstype AreaBattery::getHeight(bs::UserTypeBase* object)
+float AreaBattery::getHeight(bs::UserTypeBase* object)
 {
 	Area* a = static_cast<Area*>(object);
 	return a->h;
 }
 // --------------------------------------------------------------------------------
-void AreaBattery::setInnerWidth(bs::UserTypeBase* object, bs::bstype value)
+void AreaBattery::setInnerWidth(bs::UserTypeBase* object, float value)
 {
 	Area* a = static_cast<Area*>(object);
 	a->innerw = value;
 }
 // --------------------------------------------------------------------------------
-bs::bstype AreaBattery::getInnerWidth(bs::UserTypeBase* object)
+float AreaBattery::getInnerWidth(bs::UserTypeBase* object)
 {
 	Area* a = static_cast<Area*>(object);
 	return a->innerw;
 }
 // --------------------------------------------------------------------------------
-void AreaBattery::setInnerHeight(bs::UserTypeBase* object, bs::bstype value)
+void AreaBattery::setInnerHeight(bs::UserTypeBase* object, float value)
 {
 	Area* a = static_cast<Area*>(object);
 	a->innerh = value;
 }
 // --------------------------------------------------------------------------------
-bs::bstype AreaBattery::getInnerHeight(bs::UserTypeBase* object)
+float AreaBattery::getInnerHeight(bs::UserTypeBase* object)
 {
 	Area* a = static_cast<Area*>(object);
 	return a->innerh;
 }
 // --------------------------------------------------------------------------------
-void AreaBattery::setAngle(bs::UserTypeBase* object, bs::bstype value)
+void AreaBattery::setAngle(bs::UserTypeBase* object, float value)
 {
 	Area* a = static_cast<Area*>(object);
 	a->angle = value;
 }
 // --------------------------------------------------------------------------------
-bs::bstype AreaBattery::getAngle(bs::UserTypeBase* object)
+float AreaBattery::getAngle(bs::UserTypeBase* object)
 {
 	Area* a = static_cast<Area*>(object);
 	return a->angle;
 }
 // --------------------------------------------------------------------------------
-void AreaBattery::setFade(bs::UserTypeBase* object, bs::bstype value)
+void AreaBattery::setAlpha(bs::UserTypeBase* object, float value)
 {
 	Area* a = static_cast<Area*>(object);
 	a->alpha = value;
 }
 // --------------------------------------------------------------------------------
-bs::bstype AreaBattery::getFade(bs::UserTypeBase* object)
+float AreaBattery::getAlpha(bs::UserTypeBase* object)
 {
 	Area* a = static_cast<Area*>(object);
 	return a->alpha;
 }
 // --------------------------------------------------------------------------------
-void AreaBattery::setStart(bs::UserTypeBase* object, bs::bstype value)
+void AreaBattery::setStart(bs::UserTypeBase* object, float value)
 {
 	Area* a = static_cast<Area*>(object);
 	a->start = value;
 }
 // --------------------------------------------------------------------------------
-bs::bstype AreaBattery::getStart(bs::UserTypeBase* object)
+float AreaBattery::getStart(bs::UserTypeBase* object)
 {
 	Area* a = static_cast<Area*>(object);
 	return a->start;
 }
 // --------------------------------------------------------------------------------
-void AreaBattery::setEnd(bs::UserTypeBase* object, bs::bstype value)
+void AreaBattery::setEnd(bs::UserTypeBase* object, float value)
 {
 	Area* a = static_cast<Area*>(object);
 	a->end = value;
 }
 // --------------------------------------------------------------------------------
-bs::bstype AreaBattery::getEnd(bs::UserTypeBase* object)
+float AreaBattery::getEnd(bs::UserTypeBase* object)
 {
 	Area* a = static_cast<Area*>(object);
 	return a->end;

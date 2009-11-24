@@ -1,6 +1,8 @@
 #ifndef __PLATFORM_H__
 #define __PLATFORM_H__
 
+#include <vector>
+#include <string>
 #include "Main.h"
 
 #ifndef MINIMAL_APP
@@ -11,20 +13,14 @@ bool processMessages();
 
 bool keyDown(int key);
 
-float getHorzMovement();
-
-float getVertMovement();
-
-float getBulletCount();
-
 bool inFocus();
 
 bool debugging();
 
 bool paused();
 
-int getCurBullet();
+unsigned int getTicks();
 
-void setCurBullet(int val);
+std::vector<std::string> getDirectoryListing(const std::string &dir, const std::string &pattern);
 
 #endif

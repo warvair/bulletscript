@@ -7,12 +7,12 @@ class RendererGL;
 
 struct Bullet : public bs::UserTypeBase
 {
-	bs::bstype x, y;
-	bs::bstype angle;
-	bs::bstype vx, vy;
-	bs::bstype speed;
-	bs::bstype alpha;
-	bs::bstype red, green, blue;
+	float x, y;
+	float angle;
+	float vx, vy;
+	float speed;
+	float alpha;
+	float red, green, blue;
 
 	// Internal variables, do not modify in affector function!
 	int __index;
@@ -24,9 +24,8 @@ struct Bullet : public bs::UserTypeBase
 	Bullet() : __active(false) {}
 };
 
-/* This class is based off code from motorherp, posted on the SHMUP-DEV forums
-	at http://www.shmup-dev.com/forum
-*/
+// This class is based off code from motorherp, posted on the SHMUP-DEV forums
+// at http://www.shmup-dev.com/forum
 
 class BulletBattery
 {
@@ -38,63 +37,93 @@ class BulletBattery
 		}
 	};
 
-	static bs::Machine* mMachine;
-
 	static const int BATTERY_SIZE = 2048;
 
-	static std::vector<Bullet> mBullets;
-	static std::vector<unsigned int> mFreeList[2];
-	static int mStoreIndex;
-	static int mUseIndex;
+	bs::Machine* mMachine;
 
-	static float sinTable[3600], cosTable[3600];
+	std::vector<Bullet> mBullets;
 
-	static std::vector<Bullet> mSpawnedBullets;
+	std::vector<unsigned int> mFreeList[2];
 
-	static unsigned int getFreeBulletSlot();
+	int mStoreIndex, mUseIndex;
 
-	static void killBullet(Bullet* b);
+	float mSinTable[3600], mCosTable[3600];
+
+	std::vector<Bullet> mSpawnedBullets; // should be queue
+
+private:
+
+	unsigned int getFreeBulletSlot();
+
+	void killBullet(Bullet* b);
 
 public:
 
-	static void initialise(bs::Machine* machine);
+	BulletBattery(bs::Machine* machine);
 
-	static int update(float frameTime, int* numBullets = 0);
+	int update(float frameTime);
 
-	static void render(RendererGL* renderer);
+	void render(RendererGL* renderer);
 
-	static Bullet* getBullet(int index);
-
-	static int getNumBullets();
+	int getCapacity() const;
 
 	// Scripting
-	static bs::UserTypeBase* emitAngle(bs::bstype x, bs::bstype y, const bs::bstype* args);
+	bs::UserTypeBase* emitAngle(float x, float y, const float* args);
 
-	static bs::UserTypeBase* emitTarget(bs::bstype x, bs::bstype y, const bs::bstype* args);
+	bs::UserTypeBase* emitTarget(float x, float y, const float* args);
 
-	static void killBullet(bs::UserTypeBase* object);
+	void killBullet(bs::UserTypeBase* object);
 
-	static void setAngle(bs::UserTypeBase* object, bs::bstype value);
+	void setAngle(bs::UserTypeBase* object, float value);
 
-	static bs::bstype getAngle(bs::UserTypeBase* object);
+	float getAngle(bs::UserTypeBase* object);
 
-	static void setFade(bs::UserTypeBase* object, bs::bstype value);
+	void setAlpha(bs::UserTypeBase* object, float value);
 
-	static bs::bstype getFade(bs::UserTypeBase* object);
+	float getAlpha(bs::UserTypeBase* object);
 
-	static void setRed(bs::UserTypeBase* object, bs::bstype value);
+	void setRed(bs::UserTypeBase* object, float value);
 
-	static bs::bstype getRed(bs::UserTypeBase* object);
+	float getRed(bs::UserTypeBase* object);
 
-	static void setGreen(bs::UserTypeBase* object, bs::bstype value);
+	void setGreen(bs::UserTypeBase* object, float value);
 
-	static bs::bstype getGreen(bs::UserTypeBase* object);
+	float getGreen(bs::UserTypeBase* object);
 
-	static void setBlue(bs::UserTypeBase* object, bs::bstype value);
+	void setBlue(bs::UserTypeBase* object, float value);
 
-	static bs::bstype getBlue(bs::UserTypeBase* object);
+	float getBlue(bs::UserTypeBase* object);
 
-	static void gravity(bs::UserTypeBase* object, float frameTime, const bs::bstype* args);
+	void gravity(bs::UserTypeBase* object, float frameTime, const float* args);
 };
+
+// Function hooks
+bs::UserTypeBase* bullet_emitAngle(float x, float y, const float* args);
+
+bs::UserTypeBase* bullet_emitTarget(float x, float y, const float* args);
+
+void bullet_kill(bs::UserTypeBase* object);
+
+void bullet_setAngle(bs::UserTypeBase* object, float value);
+
+float bullet_getAngle(bs::UserTypeBase* object);
+
+void bullet_setRed(bs::UserTypeBase* object, float value);
+
+float bullet_getRed(bs::UserTypeBase* object);
+
+void bullet_setGreen(bs::UserTypeBase* object, float value);
+
+float bullet_getGreen(bs::UserTypeBase* object);
+
+void bullet_setBlue(bs::UserTypeBase* object, float value);
+
+float bullet_getBlue(bs::UserTypeBase* object);
+
+void bullet_setAlpha(bs::UserTypeBase* object, float value);
+
+float bullet_getAlpha(bs::UserTypeBase* object);
+
+void bullet_gravity(bs::UserTypeBase* object, float frameTime, const float* args);
 
 #endif

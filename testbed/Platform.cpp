@@ -1,26 +1,21 @@
 #include "Platform.h"
-
-static float gHorz = 0;
-static float gVert = 0;
-
-static float gCount = 1;
+#include "bsBulletScript.h"
 
 static bool gInFocus = true;
-
 static bool gDebug = false;
-
 static bool gPaused = false;
 
-static int gCurBullet = -1;
-
-static int gKeys[SDLK_LAST];
-
+//
+// Input/message handling
+//
 #ifdef MINIMAL_APP
 bool processMessages()
 {
 	return true;
 }
 #else
+static int gKeys[SDLK_LAST];
+
 bool processMessages()
 {
 	// Only check for key presses
@@ -63,27 +58,15 @@ bool processMessages()
 
 	return true;
 }
-#endif
 
 bool keyDown(int key)
 {
 	return (gKeys[key] == 1);
 }
 
-float getHorzMovement()
-{
-	return gHorz;
-}
+#endif
 
-float getVertMovement()
-{
-	return gVert;
-}
 
-float getBulletCount()
-{
-	return gCount;
-}
 
 bool inFocus()
 {
@@ -100,12 +83,86 @@ bool paused()
 	return gPaused;
 }
 
-int getCurBullet()
+//
+// Timing
+//
+#if BS_PLATFORM == BS_PLATFORM_LINUX
+#	include <stdlib.h>
+#	include <sys/time.h>
+#	include <time.h>
+
+timeval start_time;
+
+unsigned int timeGetTime()
 {
-	return gCurBullet;
+	timeval now;
+	unsigned int ticks;
+	
+	gettimeofday(&now, NULL);
+	ticks = (now.tv_sec - start_time.tv_sec) * 1000 + (now.tv_usec - start_time.tv_usec) / 1000;
+	return ticks;
+}
+#endif
+
+#if BS_PLATFORM == BS_PLATFORM_WIN32
+#	include <windows.h>
+#	include <direct.h>
+#	include <io.h>
+#endif
+
+#include <sys/types.h>
+#include <sys/stat.h>
+
+unsigned int getTicks()
+{
+#ifdef MINIMAL_APP
+	return timeGetTime();
+#else
+	return SDL_GetTicks();
+#endif
 }
 
-void setCurBullet(int val)
+//
+// File utils
+//
+#if BS_PLATFORM == BS_PLATFORM_WIN32
+std::vector<std::string> getDirectoryListing(const std::string &dir, const std::string &pattern)
 {
-	gCurBullet = val;
+	std::vector<std::string> fileList;
+	
+	long lHandle, res;
+	struct _finddata_t tagData;
+
+	std::string fullPath = dir + "/" + pattern;
+
+	lHandle = (long) _findfirst (fullPath.c_str (), &tagData);
+	res = 0;
+	while (lHandle != -1 && res != -1)
+	{
+		// Don't add directories
+		if ((tagData.attrib & _A_SUBDIR) == 0 &&
+			(strcmp (tagData.name, ".") && strcmp (tagData.name, "..")))
+		{
+			std::string fileName = std::string (tagData.name);
+			fileList.push_back (fileName);
+		}
+
+		res = _findnext (lHandle, &tagData);
+	}
+
+	// Close if we found any files
+	if (lHandle != -1)
+		_findclose (lHandle);
+
+	return fileList;
 }
+#elif BS_PLATFORM == BS_PLATFORM_LINUX
+std::vector<std::string> getDirectoryListing(const std::string &dir, const std::string &pattern)
+{
+	std::vector<std::string> fileList;
+	
+	return fileList;
+}
+#endif
+
+

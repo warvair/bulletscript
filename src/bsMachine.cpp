@@ -145,5 +145,10 @@ void Machine::update(float frameTime)
 	mScriptMachine->updateEmitters(frameTime);
 }
 // --------------------------------------------------------------------------------
+void Machine::print_debug()
+{
+	mScriptMachine->print_debug();
+}
+// --------------------------------------------------------------------------------
 
 }

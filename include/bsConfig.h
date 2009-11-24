@@ -33,7 +33,7 @@ namespace BS_NMSP
 #define BS_MAX_USER_EMITTER_MEMBERS		16
 
 // size of virtual machine stack
-#define BS_SCRIPT_STACK_SIZE			32
+#define BS_SCRIPT_STACK_SIZE			16
 
 // wait time for suspend().  This is not the most elegant way of implementing suspend, but
 // it is the most efficient.  It is unlikely that the user will leave the program running for

@@ -39,7 +39,7 @@ emitter ShipSpawner
 		arc area(64, 64, 270, 270, 32) : grow(1, time);
 
 		wait(time);
-		ship1 unit();
+//		ship1 unit();
 
 		wait(2);
 	}

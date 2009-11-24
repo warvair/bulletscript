@@ -76,10 +76,6 @@ namespace BS_NMSP
 		 */
 		explicit Controller(ScriptMachine* machine);
 
-		/**	\brief Destructor.
-		 */
-		~Controller();
-
 		/**	\brief Callback for when the Controller is no longer needed.
 		 *
 		 *	Controllers are managed by a pool, and so need to be reused without being destroyed

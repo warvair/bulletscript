@@ -80,6 +80,8 @@ namespace BS_NMSP
 
 		bool controllerExists(const String& name) const;
 
+		void print_debug();
+
 	};
 
 }
