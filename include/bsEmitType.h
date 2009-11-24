@@ -88,7 +88,6 @@ namespace BS_NMSP
 	};
 
 	class ScriptMachine;
-	class TypeManager;
 
 	/**	\brief Class to store the definition of an emitted object.
 	 *
@@ -98,7 +97,7 @@ namespace BS_NMSP
 	class _BSAPI EmitType
 	{
 		friend class TypeManager;
-				
+
 		// Functions
 		struct FunctionEntry
 		{
@@ -130,8 +129,6 @@ namespace BS_NMSP
 		// control of it.
 		int mType;
 
-		TypeManager* mTypeManager;
-
 		ScriptMachine* mScriptMachine;
 		
 		// List of emission functions.
@@ -156,10 +153,9 @@ namespace BS_NMSP
 		/**	\brief Constructor.
 		 *	\param name name of EmitType, used in script.
 		 *	\param type unique ID, generated internally.
-		 *	\param typeMan pointer to TypeManager instance.
 		 *	\param machine pointer to ScriptMachine instance.
 		 */
-		EmitType(const String& name, int type, TypeManager* typeMan, ScriptMachine* machine);
+		EmitType(const String& name, int type, ScriptMachine* machine);
 
 		/**	\brief Destructor.
 		 */

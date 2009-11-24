@@ -16,7 +16,7 @@ TypeManager::~TypeManager()
 // --------------------------------------------------------------------------------
 void TypeManager::createType(const String& type)
 {
-	EmitType* ft = new EmitType(type, (int) mTypes.size(), this, mScriptMachine);
+	EmitType* ft = new EmitType(type, (int) mTypes.size(), mScriptMachine);
 	mTypes.push_back(ft);
 }
 // --------------------------------------------------------------------------------
@@ -85,7 +85,7 @@ int TypeManager::updateType(UserTypeBase* ft, bstype x, bstype y, float frameTim
 	EmitTypeControl* rec = ft->__ft;
 	EmitType* emitType = rec->__type;
 
-	// Update pointer to the user object
+	// Update pointer to the user object because it may have been moved by the user
 	rec->__object = ft;
 
 	// Update changing properties before script, because they are independent of script status
