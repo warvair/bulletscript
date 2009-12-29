@@ -1,6 +1,7 @@
 #include <cmath>
 #include <fstream>
 #include <iostream>
+#include <sstream>
 #include <assert.h>
 #include "bsScriptMachine.h"
 #include "bsParseTree.h"
@@ -94,7 +95,8 @@ ScriptMachine::~ScriptMachine()
 		while (it != mEmitterRecords.end())
 		{
 			delete (*it).def;
-			delete (*it).pool;
+			delete (*it).typePool;
+//			delete (*it).emitterPool;
 			++it;
 		}
 	}
@@ -115,7 +117,7 @@ void ScriptMachine::setTypeManager(TypeManager* typeMan)
 	mTypeManager = typeMan;
 }
 // --------------------------------------------------------------------------------
-Emitter* ScriptMachine::createEmitter(const String& definition)
+Emitter* ScriptMachine::createEmitter(const String& definition, void* userObject)
 {
 	EmitterDefinition* def = getEmitterDefinition(definition);
 
@@ -124,6 +126,7 @@ Emitter* ScriptMachine::createEmitter(const String& definition)
 	{
 		emit = mEmitters->acquire();
 		emit->setDefinition(def);
+		emit->setUserObject(userObject);
 	}
 	else
 	{
@@ -149,7 +152,7 @@ void ScriptMachine::updateEmitters(float frameTime)
 	}
 }
 // --------------------------------------------------------------------------------
-Controller* ScriptMachine::createController(const String& definition)
+Controller* ScriptMachine::createController(const String& definition, void* userObject)
 {
 	ControllerDefinition* def = getControllerDefinition(definition);
 
@@ -158,6 +161,7 @@ Controller* ScriptMachine::createController(const String& definition)
 	{
 		ctrl = mControllers->acquire();
 		ctrl->setDefinition(def);
+		ctrl->setUserObject(userObject);
 	}
 	else
 	{
@@ -208,7 +212,7 @@ EmitTypeControl* ScriptMachine::getEmitTypeRecord(int index)
 	assert(index >= 0 && index < mEmitterRecords.size() && 
 		"ScriptMachine::getEmitTypeRecord: out of bounds.");
 
-	EmitTypeControl* rec = mEmitterRecords[index].pool->acquire();
+	EmitTypeControl* rec = mEmitterRecords[index].typePool->acquire();
 	rec->__emitterDefinition = index;
 	rec->activeProperties = 0;
 	rec->state.curInstruction = 0;
@@ -222,16 +226,24 @@ void ScriptMachine::releaseEmitTypeRecord(int index, EmitTypeControl* rec)
 	assert(index >= 0 && index < mEmitterRecords.size() && 
 		"ScriptMachine::releaseEmitTypeRecord: out of bounds.");
 
-	mEmitterRecords[index].pool->release(rec);
+	mEmitterRecords[index].typePool->release(rec);
 }
 // --------------------------------------------------------------------------------
-void ScriptMachine::registerNativeFunction(const String& name, NativeFunction func)
+int ScriptMachine::registerNativeFunction(const String& name, NativeFunction func)
 {
+	// Make sure it isn't already registered
+	for (size_t i = 0; i < mNativeFunctions.size(); ++i)
+	{
+		if (mNativeFunctions[i].name == name)
+			return BS_NativeFunctionExists;
+	}
+
 	NativeFunctionRecord rec;
 	rec.name = name;
 	rec.function = func;
 
 	mNativeFunctions.push_back(rec);
+	return BS_OK;
 }
 // --------------------------------------------------------------------------------
 int ScriptMachine::getNativeFunctionIndex(const String &name) const
@@ -242,7 +254,7 @@ int ScriptMachine::getNativeFunctionIndex(const String &name) const
 			return (int) i;
 	}
 
-	return -1;
+	return BS_NotFound;
 }
 // --------------------------------------------------------------------------------
 NativeFunction ScriptMachine::getNativeFunction(int index) const
@@ -258,9 +270,16 @@ EmitType* ScriptMachine::getEmitType(const String& name) const
 	return mTypeManager->getType(name);
 }
 // --------------------------------------------------------------------------------
-void ScriptMachine::addProperty(const String& prop)
+int ScriptMachine::addProperty(const String& prop)
 {
+	for (size_t i = 0; i < mProperties.size(); ++i)
+	{
+		if (mProperties[i] == prop)
+			return BS_PropertyExists;
+	}
+
 	mProperties.push_back(prop);
+	return BS_OK;
 }
 // --------------------------------------------------------------------------------
 int ScriptMachine::getPropertyIndex(const String& prop) const
@@ -269,7 +288,7 @@ int ScriptMachine::getPropertyIndex(const String& prop) const
 		if (prop == mProperties[i])
 			return (int) i;
 
-	return -1;
+	return BS_NotFound;
 }
 // --------------------------------------------------------------------------------
 const String& ScriptMachine::getProperty(int index) const
@@ -277,10 +296,17 @@ const String& ScriptMachine::getProperty(int index) const
 	return mProperties[index];
 }
 // --------------------------------------------------------------------------------
-void ScriptMachine::registerGlobalVariable(const String& name, bool readOnly, bstype initialValue)
+int ScriptMachine::registerGlobalVariable(const String& name, bool readOnly, bstype initialValue)
 {
+	for (size_t i = 0; i < mGlobals.size(); ++i)
+	{
+		if (mGlobals[i]->getName() == name)
+			return BS_GlobalVariableExists;
+	}
+
 	GlobalVariable *var = new GlobalVariable(name, readOnly, initialValue);
 	mGlobals.push_back(var);
+	return BS_OK;
 }
 // --------------------------------------------------------------------------------
 int ScriptMachine::getGlobalVariableIndex(const String& name) const
@@ -291,7 +317,7 @@ int ScriptMachine::getGlobalVariableIndex(const String& name) const
 			return (int) i;
 	}
 
-	return -1;
+	return BS_NotFound;
 }
 // --------------------------------------------------------------------------------
 bstype ScriptMachine::getGlobalVariableValue(int index) const
@@ -340,13 +366,13 @@ GlobalVariable* ScriptMachine::getGlobalVariable(int index)
 	return mGlobals[index];
 }
 // --------------------------------------------------------------------------------
-bool ScriptMachine::addEmitterDefinition(const String& name, EmitterDefinition* def)
+int ScriptMachine::addEmitterDefinition(const String& name, EmitterDefinition* def)
 {
 	EmitterRecordList::iterator it = mEmitterRecords.begin();
 	while (it != mEmitterRecords.end())
 	{
 		if ((*it).name == def->getName())
-			return false;
+			return BS_EmitterExists;
 		++it;
 	}
 
@@ -354,13 +380,13 @@ bool ScriptMachine::addEmitterDefinition(const String& name, EmitterDefinition* 
 	rec.name = def->getName();
 	rec.def = def;
 
-	// Create pool
+	// Create pools
 	int maxLocals = def->getMaxLocalVariables();
-	rec.pool = new DeepMemoryPool<EmitTypeControl, int>(256, maxLocals);
+	rec.typePool = new DeepMemoryPool<EmitTypeControl, int>(256, maxLocals);
 
 	mEmitterRecords.push_back(rec);
 
-	return true;
+	return BS_OK;
 }
 // --------------------------------------------------------------------------------
 EmitterDefinition* ScriptMachine::getEmitterDefinition(const String& name) const
@@ -381,27 +407,20 @@ int ScriptMachine::getNumEmitterDefinitions() const
 	return (int) mEmitterRecords.size();
 }
 // --------------------------------------------------------------------------------
-bool ScriptMachine::addControllerDefinition(const String &name, ControllerDefinition* def)
+int ScriptMachine::addControllerDefinition(const String &name, ControllerDefinition* def)
 {
 	ControllerDefinitionMap::iterator it = mControllerDefinitions.find(name);
 	if (it != mControllerDefinitions.end())
-		return false;
+		return BS_ControllerExists;
 
 	mControllerDefinitions[name] = def;
-	return true;
+	return BS_OK;
 }
 // --------------------------------------------------------------------------------
 ControllerDefinition* ScriptMachine::getControllerDefinition(const String &name) const
 {
 	ControllerDefinitionMap::const_iterator it = mControllerDefinitions.find(name);
-	if (it == mControllerDefinitions.end())
-	{
-		return 0;
-	}
-	else
-	{
-		return it->second;
-	}
+	return (it == mControllerDefinitions.end()) ? 0 : it->second;
 }
 // --------------------------------------------------------------------------------
 int ScriptMachine::getNumControllerDefinitions() const
@@ -436,6 +455,51 @@ int ScriptMachine::compileScript(const uint8* buffer, size_t bufferSize)
 
 	ast->foldConstants();
 
+	// Now build constant list
+	ParseTree::ConstantDefinitionList defList;
+	ast->preprocess(defList);
+
+	// For each constant, replace every instance except the first.
+	ParseTree::ConstantDefinitionList::iterator it = defList.begin();
+	while (it != defList.end())
+	{
+		size_t iLength = it->first.length();
+		size_t iPos = strBuf.find(it->first);
+
+		iPos = strBuf.find(it->first, iPos + iLength);
+		while (iPos != strBuf.npos)
+		{
+			std::stringstream valueStr;
+			valueStr << it->second;
+
+			strBuf.replace(iPos, iLength, valueStr.str());
+			iPos = strBuf.find(it->first, iPos + iLength);
+		}
+
+		++it;
+	}
+/*
+	// And parse again
+	ast->reset();
+
+	parseBuffer = yy_scan_string(strBuf.c_str());
+	if (parseBuffer)
+	{
+		yylineno = 1;
+		numParseErrors = yyparse();
+		yy_delete_buffer(parseBuffer);
+	}
+	else
+	{
+		addErrorMsg("ScriptMachine: internal error (couldn't allocate parse buffer).");
+		return -1;
+	}
+
+	if (numParseErrors > 0)
+		return numParseErrors;
+
+	ast->foldConstants();
+*/
 //	ast->print(ast->getRootNode(), 0);
 
 	ast->createDefinitions(ast->getRootNode(), mMemberVariableDeclarations);
@@ -447,7 +511,7 @@ int ScriptMachine::compileScript(const uint8* buffer, size_t bufferSize)
 	return 0;
 }
 // --------------------------------------------------------------------------------
-void ScriptMachine::declareMemberVariable(const String& ctrl, const String& var, bstype value)
+int ScriptMachine::declareMemberVariable(const String& ctrl, const String& var, bstype value)
 {
 	// Add a declaration to the named emitter
 	MemberVariableDeclarationMap::iterator it = mMemberVariableDeclarations.find(ctrl);
@@ -468,11 +532,7 @@ void ScriptMachine::declareMemberVariable(const String& ctrl, const String& var,
 		while (range.first != range.second)
 		{
 			if (range.first->second.name == var)
-			{
-				// Print to error log
-				addErrorMsg("Member variable '" + var + "' already declared in '" + ctrl + "'.");
-				return;
-			}
+				return BS_MemberVariableExists;
 
 			range.first++;
 		}
@@ -482,6 +542,8 @@ void ScriptMachine::declareMemberVariable(const String& ctrl, const String& var,
 		decl.value = value;
 		mMemberVariableDeclarations.insert(std::pair<String, MemberVariableDeclaration>(ctrl, decl));
 	}	
+
+	return BS_OK;
 }
 // --------------------------------------------------------------------------------
 void ScriptMachine::addErrorMsg(const String& msg)
@@ -509,7 +571,7 @@ int ScriptMachine::interpretCode(const uint32* code, size_t length, ScriptState&
 #ifdef BS_Z_DIMENSION
 								  bstype z, 
 #endif
-								  bstype* members, bool loop)
+								  bstype* members, bool loop, void* userObject)
 {
 	if (st.curInstruction >= length)
 		return ScriptFinished;
@@ -842,9 +904,9 @@ int ScriptMachine::interpretCode(const uint32* code, size_t length, ScriptState&
 				int emitType = code[st.curInstruction + 1];
 				EmitType* ft = mTypeManager->getType(emitType);
 #ifdef BS_Z_DIMENSION
-				st.curInstruction += ft->processCode(code, st, x, y, z, members);
+				st.curInstruction += ft->processCode(code, st, x, y, z, members, userObject);
 #else
-				st.curInstruction += ft->processCode(code, st, x, y, members);
+				st.curInstruction += ft->processCode(code, st, x, y, members, userObject);
 #endif
 			}
 			break;
@@ -901,7 +963,7 @@ int ScriptMachine::interpretCode(const uint32* code, size_t length, ScriptState&
 				assert(ftc->__object != 0 &&
 					"ScriptMachine::interpretCode ftc->object is null");
 
-				ftc->__type->callDieFunction(ftc->__object);
+				ftc->__type->callDieFunction(ftc->__object, userObject);
 				st.curInstruction++;
 			}
 			break;
@@ -914,7 +976,7 @@ int ScriptMachine::interpretCode(const uint32* code, size_t length, ScriptState&
 				Controller* ctrl = static_cast<Controller*>(object);
 				
 				// If the event changes the state then we want to bail now
-				if (ctrl->raiseEvent(evtIndex, &st.stack[st.stackHead - numArgs]))
+				if (ctrl->_raiseEvent(evtIndex, &st.stack[st.stackHead - numArgs]))
 					return ScriptFinished;
 
 				st.curInstruction += 3;
@@ -1235,7 +1297,7 @@ int ScriptMachine::interpretCode(const uint32* code, size_t length, ScriptState&
 	return ScriptFinished;
 }
 // --------------------------------------------------------------------------------
-void ScriptMachine::processScriptRecord(ScriptRecord* gsr, void* object)
+void ScriptMachine::processScriptRecord(ScriptRecord* gsr, void* object, void* userObject)
 {
 	// Assume that we're not suspended.
 
@@ -1245,10 +1307,11 @@ void ScriptMachine::processScriptRecord(ScriptRecord* gsr, void* object)
 
 #ifdef BS_Z_DIMENSION
 	interpretCode(bytecode, bytecodeLen, gsr->scriptState, &gsr->curState, object,
-		gsr->members[Member_X], gsr->members[Member_Y], gsr->members[Member_Z], gsr->members, true);
+		gsr->members[Member_X], gsr->members[Member_Y], gsr->members[Member_Z], 
+		gsr->members, true, userObject);
 #else
 	interpretCode(bytecode, bytecodeLen, gsr->scriptState, &gsr->curState, object,
-		gsr->members[Member_X], gsr->members[Member_Y], gsr->members, true);
+		gsr->members[Member_X], gsr->members[Member_Y], gsr->members, true, userObject);
 #endif
 }
 // --------------------------------------------------------------------------------
@@ -1259,7 +1322,7 @@ void ScriptMachine::print_debug()
 	EmitterRecordList::iterator it = mEmitterRecords.begin();
 	while (it != mEmitterRecords.end())
 	{
-		size_t psize = (*it).pool->size();
+		size_t psize = (*it).typePool->size();
 		etsize = sizeof(EmitTypeControl);
 
 		size += (psize * (4 + etsize));		

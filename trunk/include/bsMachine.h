@@ -13,8 +13,6 @@ namespace BS_NMSP
 	{
 		Log mLog;
 
-		int mNumErrors;
-
 		ScriptMachine* mScriptMachine;
 
 		TypeManager* mTypeManager;
@@ -32,10 +30,8 @@ namespace BS_NMSP
 
 		const Log& getLog() const;
 
-		int getErrorCount() const;
-
 		// General stuff
-		void registerGlobalVariable(const String& name, bool readOnly, bstype initialValue);
+		int registerGlobalVariable(const String& name, bool readOnly, bstype initialValue);
 
 		void setGlobalVariableValue(const String& name, bstype value);
 
@@ -56,25 +52,25 @@ namespace BS_NMSP
 		int updateType(UserTypeBase* ft, bstype x, bstype y, float frameTime);
 #endif
 
-		void registerEmitFunction(const String& type, const String& name, int numArgs, EmitFunction func);
+		int registerEmitFunction(const String& type, const String& name, int numArgs, EmitFunction func);
 
 		void setDieFunction(const String& type, DieFunction func);
 
-		void registerProperty(const String& type, const String& name, SetFunction set, GetFunction get);
+		int registerProperty(const String& type, const String& name, SetFunction set, GetFunction get);
 
-		void registerAffector(const String& type, const String& name, AffectorFunction func);
+		int registerAffector(const String& type, const String& name, AffectorFunction func);
 
-		void declareMemberVariable(const String& ctrl, const String& var, bstype value);
+		int declareMemberVariable(const String& ctrl, const String& var, bstype value);
 
 		// Emitter management
-		Emitter* createEmitter(const String& definition);
+		Emitter* createEmitter(const String& definition, void* userObject = 0);
 
 		void destroyEmitter(Emitter* emit);
 
 		bool emitterExists(const String& name) const;
 
 		// Controller management
-		Controller* createController(const String& definition);
+		Controller* createController(const String& definition, void* userObject = 0);
 
 		void destroyController(Controller* ctrl);
 

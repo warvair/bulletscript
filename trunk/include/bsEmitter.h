@@ -42,6 +42,9 @@ namespace BS_NMSP
 
 		ScriptRecord* mRecord;
 
+		// Weak pointer to user-supplied object.
+		void* mUserObject;
+
 	private:
 
 		void runScript(float frameTime);
@@ -147,6 +150,25 @@ namespace BS_NMSP
 		 *	\return the value of the Emitter member variable.
 		 */
 		bstype getMember(int member) const;
+
+		void addAnchoredObject(int anchor, UserTypeBase* object);
+
+		/**	\brief Set the user-supplied object for this Emitter.
+		 *	
+		 *	\param userObject pointer to a user-supplied object, which is passed back into any
+					emit function that this emitter calls.
+		*/
+		void setUserObject(void* userObject);
+
+		/**	\brief Get the user-supplied object for this Emitter.
+		 *	
+		 *	The user object can be used to pass information to the emit function.  This is useful because
+		 *	Emitters are updated by the bulletscript machine in one go, and the user is otherwise unable
+		 *	to intercept the update to set Emitter-specific parameters in their application.
+		 *
+		 *	\return the user object.
+		 */
+		void* getUserObject() const;
 
 		/**	\brief Set the Emitter's state.
 		 *	

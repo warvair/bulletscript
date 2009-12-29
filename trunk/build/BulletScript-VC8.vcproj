@@ -91,7 +91,7 @@
 			/>
 			<Tool
 				Name="VCPostBuildEventTool"
-				CommandLine="copy $(SolutionDir)\..\bin\BulletScriptd.dll $(SolutionDir)\..\testbed\bin&#x0D;&#x0A;copy $(SolutionDir)\..\bin\BulletScript.dll C:\Code\Shmuppet\client\bin\release&#x0D;&#x0A;"
+				CommandLine="copy $(SolutionDir)\..\bin\BulletScriptd.dll $(SolutionDir)\..\testbed\bin&#x0D;&#x0A;copy $(SolutionDir)\..\bin\BulletScriptd.dll C:\Code\Shmuppet\client\bin\debug&#x0D;&#x0A;"
 			/>
 		</Configuration>
 		<Configuration
@@ -226,6 +226,10 @@
 				>
 			</File>
 			<File
+				RelativePath="..\src\bsError.cpp"
+				>
+			</File>
+			<File
 				RelativePath="..\src\bsLog.cpp"
 				>
 			</File>
@@ -317,6 +321,10 @@
 			</File>
 			<File
 				RelativePath="..\include\bsEmitType.h"
+				>
+			</File>
+			<File
+				RelativePath="..\include\bsError.h"
 				>
 			</File>
 			<File

@@ -1,5 +1,5 @@
 #include "bsEmitterDefinition.h"
-#include "bsScriptMachine.h"
+#include "bsError.h"
 
 namespace BS_NMSP
 {
@@ -35,40 +35,12 @@ int EmitterDefinition::getFunctionIndex(const String& name) const
 			return i;
 	}
 
-	return -1;
+	return BS_NotFound;
 }
 // --------------------------------------------------------------------------------
 int EmitterDefinition::getNumFunctions() const
 {
 	return (int) mFunctions.size();
-}
-// --------------------------------------------------------------------------------
-ScriptRecord* EmitterDefinition::createScriptRecord(ScriptMachine* machine)
-{
-	ScriptRecord* record = new ScriptRecord(mMaxLocals);
-
-	// Allocate space for member vars, and set where possible
-	int numMembers = getNumMemberVariables();
-	if (numMembers > 0)
-	{
-		record->members = new bstype[numMembers];
-		for (int i = 0; i < numMembers; ++i)
-			record->members[i] = mMemberVariables[i].value;
-	}
-
-	// Run construction code, if there is any
-	if (mConstructSize > 0)
-	{
-		machine->interpretCode(mConstructCode, mConstructSize, record->scriptState,
-			record->members);
-
-		record->scriptState.stackHead = 0;
-		record->scriptState.curInstruction = 0;
-	}
-
-	record->curState = mInitialState;
-
-	return record;
 }
 // --------------------------------------------------------------------------------
 

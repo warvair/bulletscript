@@ -57,7 +57,7 @@ emitter SmartBomb
 		dist = sqrt(dist);
 
 		time = dist / speed;
-		fireT bullet(tx, ty, 0, speed) : delayExplode(time);
+		fireT bullet(tx, ty, 0, speed) : delayExplode(time), $x, $y;
 		wait(wait_time);
 	}
 

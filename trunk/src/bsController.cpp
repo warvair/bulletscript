@@ -8,12 +8,14 @@ namespace BS_NMSP
 
 // --------------------------------------------------------------------------------
 Controller::Controller(ScriptMachine* machine) :
+	mEnabled(true),
 	mScriptMachine(machine),
 	mEmitters(0),
 	mNumEmitters(0),
 	mEvents(0),
 	mNumEvents(0),
-	mRecord(0)
+	mRecord(0),
+	mUserObject(0)
 {
 	mEventState.locals = 0;
 }
@@ -30,6 +32,19 @@ void Controller::onRelease()
 	delete[] mEvents;
 	delete[] mEventState.locals;
 	delete mRecord;
+}
+// --------------------------------------------------------------------------------
+void Controller::enable(bool enable)
+{
+	mEnabled = enable;
+
+	for (int i = 0; i < mNumEmitters; ++i)
+		mEmitters[i].emitter->enable(enable);
+}
+// --------------------------------------------------------------------------------
+bool Controller::isEnabled() const
+{
+	return mEnabled;
 }
 // --------------------------------------------------------------------------------
 void Controller::setDefinition(ControllerDefinition* def)
@@ -56,7 +71,7 @@ void Controller::setDefinition(ControllerDefinition* def)
 
 		inst.special[Member_Angle] = var.angle;
 
-		inst.emitter = mScriptMachine->createEmitter(var.emitter);
+		inst.emitter = mScriptMachine->createEmitter(var.emitter, mUserObject);
 		inst.emitter->setX(mRecord->members[Member_X] + inst.special[Member_X]);
 		inst.emitter->setY(mRecord->members[Member_Y] + inst.special[Member_Y]);
 #ifdef BS_Z_DIMENSION
@@ -94,6 +109,19 @@ void Controller::setState(int state)
 	mRecord->curState = state;
 	mRecord->scriptState.curInstruction = 0;
 	mRecord->scriptState.stackHead = 0;
+}
+// --------------------------------------------------------------------------------
+void Controller::setUserObject(void* userObject)
+{
+	mUserObject = userObject;
+
+	for (int i = 0; i < mNumEmitters; ++i)
+		mEmitters[i].emitter->setUserObject(userObject);
+}
+// --------------------------------------------------------------------------------
+void* Controller::getUserObject() const
+{
+	return mUserObject;
 }
 // --------------------------------------------------------------------------------
 void Controller::setX(bstype x)
@@ -188,19 +216,27 @@ void Controller::setEmitterMemberState(int emitter, int state)
 	mEmitters[emitter].emitter->setState(state);
 }
 // --------------------------------------------------------------------------------
-bool Controller::raiseEvent(const String& evt, const bstype* args)
+int Controller::raiseEvent(const String& evt, const bstype* args)
 {
 	// Note: this isn't great, but Controllers likely won't have too many events.
 	for (int i = 0; i < mNumEvents; ++i)
 	{
 		if (mEvents[i].name == evt)
-			return raiseEvent((int) i, args);
+		{
+			if (_raiseEvent((int) i, args))
+			{
+				// Suspend the Controller's script if the event has changed the state?
+				// ...
+			}
+
+			return BS_OK;
+		}
 	}
 
-	return false;
+	return BS_BadEvent;
 }
 // --------------------------------------------------------------------------------
-bool Controller::raiseEvent(int index, const bstype* args)
+bool Controller::_raiseEvent(int index, const bstype* args)
 {
 	// Reset our script state for the event.
 	mEventState.curInstruction = 0;
@@ -213,7 +249,7 @@ bool Controller::raiseEvent(int index, const bstype* args)
 	int oldState = mRecord->curState;
 	mScriptMachine->interpretCode(mEvents[index].code->byteCode, mEvents[index].code->byteCodeSize,
 		mEventState, 0, this, mRecord->members[Member_X], mRecord->members[Member_Y], 
-		mRecord->members, false);
+		mRecord->members, false, 0);
 
 	// We need to know if the event changed the state because if it has then we should suspend the
 	// script.  Otherwise the Controller's script state will be undefined.
@@ -259,7 +295,7 @@ void Controller::runScript(float frameTime)
 	if (mRecord->scriptState.suspendTime <= 0)
 	{
 		if (mBlocks.empty())
-			mScriptMachine->processScriptRecord(mRecord, this);
+			mScriptMachine->processScriptRecord(mRecord, this, 0);
 	}
 	else
 	{
@@ -269,6 +305,9 @@ void Controller::runScript(float frameTime)
 // --------------------------------------------------------------------------------
 void Controller::update(float frameTime)
 {
+	if (!mEnabled)
+		return;
+
 	// Update special MemberControllers.  These must be stored in the Controller, not
 	// the Emitter because the Emitter's members depend on the Controller's members, as
 	// they are stored as offsets.

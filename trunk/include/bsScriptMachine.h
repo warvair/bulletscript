@@ -56,7 +56,8 @@ namespace BS_NMSP
 		{
 			String name;
 			EmitterDefinition* def;
-			DeepMemoryPool<EmitTypeControl, int>* pool;
+			DeepMemoryPool<EmitTypeControl, int>* typePool;
+//			DeepMemoryPool<Emitter, ScriptMachine*>* emitterPool;
 		};
 		
 		typedef std::vector<EmitterRecord> EmitterRecordList;
@@ -93,28 +94,28 @@ namespace BS_NMSP
 		~ScriptMachine();
 
 		// Emitter Definitions
-		bool addEmitterDefinition(const String &name, EmitterDefinition* def);
+		int addEmitterDefinition(const String &name, EmitterDefinition* def);
 
 		EmitterDefinition* getEmitterDefinition(const String &name) const;
 
 		int getNumEmitterDefinitions() const;
 
 		// Emitters
-		Emitter* createEmitter(const String& definition);
+		Emitter* createEmitter(const String& definition, void* userObject);
 
 		void destroyEmitter(Emitter* ctrl);
 
 		void updateEmitters(float frameTime);
 
 		// Controller Definitions
-		bool addControllerDefinition(const String &name, ControllerDefinition* def);
+		int addControllerDefinition(const String &name, ControllerDefinition* def);
 
 		ControllerDefinition* getControllerDefinition(const String &name) const;
 
 		int getNumControllerDefinitions() const;
 
 		// Controllers
-		Controller* createController(const String& definition);
+		Controller* createController(const String& definition, void* userObject);
 
 		void destroyController(Controller* emit);
 
@@ -133,7 +134,7 @@ namespace BS_NMSP
 		void releaseEmitTypeRecord(int index, EmitTypeControl* rec);
 
 		// Native functions
-		void registerNativeFunction(const String& name, NativeFunction func);
+		int registerNativeFunction(const String& name, NativeFunction func);
 
 		int getNativeFunctionIndex(const String &name) const;
 
@@ -143,14 +144,14 @@ namespace BS_NMSP
 		EmitType* getEmitType(const String& name) const;
 
 		// Properties
-		void addProperty(const String& prop);
+		int addProperty(const String& prop);
 
 		int getPropertyIndex(const String& prop) const;
 
 		const String& getProperty(int index) const;
 
 		// Global variables
-		void registerGlobalVariable(const String& name, bool readOnly, bstype initialValue);
+		int registerGlobalVariable(const String& name, bool readOnly, bstype initialValue);
 
 		int getGlobalVariableIndex(const String& name) const;
 
@@ -167,20 +168,20 @@ namespace BS_NMSP
 		// Script state processing
 #ifdef BS_Z_DIMENSION
 		int interpretCode(const uint32* code, size_t length, ScriptState& st, int* curState, 
-			void* object, bstype x, bstype y, bstype z, bstype* members, bool loop);
+			void* object, bstype x, bstype y, bstype z, bstype* members, bool loop, void* userObject);
 #else
 		int interpretCode(const uint32* code, size_t length, ScriptState& st, int* curState, 
-			void* object, bstype x, bstype y, bstype* members, bool loop);
+			void* object, bstype x, bstype y, bstype* members, bool loop, void* userObject);
 #endif
 
 		int interpretCode(const uint32* code, size_t length, ScriptState& st, bstype* members = 0);
 
-		void processScriptRecord(ScriptRecord* gsr, void* object);
+		void processScriptRecord(ScriptRecord* gsr, void* object, void* userObject);
 
 		// Compilation
 		int compileScript(const uint8* buffer, size_t bufferSize);
 
-		void declareMemberVariable(const String& ctrl, const String& var, bstype value);
+		int declareMemberVariable(const String& ctrl, const String& var, bstype value);
 
 		// Errors
 		void addErrorMsg (const String& msg);

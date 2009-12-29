@@ -17,6 +17,7 @@ extern int yylineno;
 static ParseTree* AST = ParseTree::instancePtr ();
 
 static const String gs_tokens[] = {
+	"KEYWORD_CONSTANT",					"constant",
 	"KEYWORD_CONTROLLER",				"controller",
 	"KEYWORD_EMITTER",					"emitter",
 	"KEYWORD_AFFECTOR",					"affector",
@@ -27,18 +28,18 @@ static const String gs_tokens[] = {
 	"KEYWORD_ENABLE",					"enable",
 	"KEYWORD_DISABLE",					"disable",
 	"KEYWORD_WHILE",					"while",
-	"KEYWORD_BREAK"						"break",
-	"KEYWORD_CONTINUE"					"continue",
+	"KEYWORD_BREAK",					"break",
+	"KEYWORD_CONTINUE",					"continue",
 	"KEYWORD_IF",						"if",
-	"KEYWORD_GOTO"						"goto"
-	"KEYWORD_WAIT"						"wait"	
+	"KEYWORD_GOTO",						"goto",
+	"KEYWORD_WAIT",						"wait",	
 	"KEYWORD_ELSE",						"else",
-	"KEYWORD_SUSPEND"					"suspend",
-	"KEYWORD_SIGNAL"					"signal",
-	"KEYWORD_DIE"						"die",
-	"INTEGER"							"an integral value",
-	"REAL"								"a value",
-	"IDENTIFIER"						"an identifier"
+	"KEYWORD_SUSPEND",					"suspend",
+	"KEYWORD_SIGNAL",					"signal",
+	"KEYWORD_DIE",						"die",
+	"INTEGER",							"integral value",
+	"REAL",								"value",
+	"IDENTIFIER",						"identifier",
 	"SYMBOL_LTE",						"<=",
 	"SYMBOL_GTE",						">=",
 	"SYMBOL_EQ",						"==",
@@ -55,7 +56,7 @@ static const String gs_tokens[] = {
 
 void replaceVerboseTokens(String& a_string)
 {
-	for (int i = 0; i < 68; i += 2)
+	for (int i = 0; i < 70; i += 2)
 	{
 		int startPos = (int) a_string.find(gs_tokens[i]);
 		if (startPos < 0)
@@ -176,6 +177,7 @@ void generate_inc_expr(int value, int nodeType, YYSTYPE parentNode, YYSTYPE idNo
 
 %}
 
+%token KEYWORD_CONSTANT
 %token KEYWORD_CONTROLLER
 %token KEYWORD_EMITTER
 %token KEYWORD_AFFECTOR
@@ -218,6 +220,33 @@ script_file
 	: definition_list
 		{
 			AST->getRootNode()->setChild(0, $1);
+		}
+	| constantdef_list definition_list
+		{
+			AST->getRootNode()->setChild(0, $2);
+			AST->getRootNode()->setChild(1, $1);
+		}
+	;
+	
+constantdef_list
+	: constantdef
+		{
+			$$ = $1;
+		}
+	| constantdef_list constantdef
+		{
+			$$ = AST->createNode(PT_ConstantDefinitionList, yylineno);
+			$$->setChild(0, $1);
+			$$->setChild(1, $2);
+		}
+	;
+	
+constantdef
+	: identifier '=' KEYWORD_CONSTANT signed_constant ';'
+		{
+			$$ = AST->createNode(PT_ConstantDefinition, yylineno);
+			$$->setChild(0, $1);
+			$$->setChild(1, $4);
 		}
 	;
 
@@ -1334,6 +1363,10 @@ controller_entry
 		{
 			$$ = $1;
 			$$->_setType(PT_AffectorCall);
+		}
+	| property
+		{
+			$$ = $1;
 		}
 	;
 	

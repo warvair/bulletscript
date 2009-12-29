@@ -1,6 +1,5 @@
 #include <iostream>
 #include "bsControllerDefinition.h"
-#include "bsScriptMachine.h"
 
 namespace BS_NMSP
 {
@@ -46,7 +45,7 @@ int ControllerDefinition::getEmitterVariableIndex(const String& name) const
 			return i;
 	}
 
-	return -1;
+	return BS_NotFound;
 }
 // --------------------------------------------------------------------------------
 int ControllerDefinition::getNumEmitterVariables() const
@@ -79,7 +78,7 @@ int ControllerDefinition::getEventIndex(const String& name) const
 			return i;
 	}
 
-	return -1;
+	return BS_NotFound;
 }
 // --------------------------------------------------------------------------------
 int ControllerDefinition::getNumEvents() const
@@ -105,34 +104,6 @@ void ControllerDefinition::setMaxBlocks(int count)
 int ControllerDefinition::getMaxBlocks() const
 {
 	return mMaxBlocks;
-}
-// --------------------------------------------------------------------------------
-ScriptRecord* ControllerDefinition::createScriptRecord(ScriptMachine* machine)
-{
-	ScriptRecord* record = new ScriptRecord(mMaxLocals);
-
-	// Allocate space for member vars, and set where possible
-	int numMembers = getNumMemberVariables();
-	if (numMembers > 0)
-	{
-		record->members = new bstype[numMembers];
-		for (int i = 0; i < numMembers; ++i)
-			record->members[i] = mMemberVariables[i].value;
-	}
-
-	// Run construction code, if there is any
-	if (mConstructSize > 0)
-	{
-		machine->interpretCode(mConstructCode, mConstructSize, record->scriptState,
-			record->members);
-
-		record->scriptState.stackHead = 0;
-		record->scriptState.curInstruction = 0;
-	}
-
-	record->curState = mInitialState;
-
-	return record;
 }
 // --------------------------------------------------------------------------------
 

@@ -9,7 +9,6 @@
 namespace BS_NMSP
 {
 
-	class ScriptMachine;
 	class ParseTreeNode;
 
 	/**	\brief Class to store a definition for instantiating Emitter objects.
@@ -65,13 +64,6 @@ namespace BS_NMSP
 		 *	\return number of function definitions.
 		 */
 		int getNumFunctions() const;
-
-		/**	\brief Create a ScriptRecord for an Emitter to use.
-		 *	
-		 *	\param machine pointer to an active ScriptMachine.
-		 *	\return ScriptRecord for an Emitter.
-		 */
-		ScriptRecord* createScriptRecord(ScriptMachine* machine);
 
 	private:
 

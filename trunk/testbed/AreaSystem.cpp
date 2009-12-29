@@ -5,27 +5,27 @@
 
 AreaBattery* g_areas = 0;
 
-bs::UserTypeBase* area_emitQuadC(float x, float y, const float* args)
+bs::UserTypeBase* area_emitQuadC(float x, float y, const float* args, void* userObj)
 {
-	return g_areas->emitQuadC(x, y, args);
+	return g_areas->emitQuadC(x, y, args, userObj);
 }
 
-bs::UserTypeBase* area_emitQuadB(float x, float y, const float* args)
+bs::UserTypeBase* area_emitQuadB(float x, float y, const float* args, void* userObj)
 {
-	return g_areas->emitQuadB(x, y, args);
+	return g_areas->emitQuadB(x, y, args, userObj);
 }
 
-bs::UserTypeBase* area_emitEllipse(float x, float y, const float* args)
+bs::UserTypeBase* area_emitEllipse(float x, float y, const float* args, void* userObj)
 {
-	return g_areas->emitEllipse(x, y, args);
+	return g_areas->emitEllipse(x, y, args, userObj);
 }
 
-bs::UserTypeBase* area_emitArc(float x, float y, const float* args)
+bs::UserTypeBase* area_emitArc(float x, float y, const float* args, void* userObj)
 {
-	return g_areas->emitArc(x, y, args);
+	return g_areas->emitArc(x, y, args, userObj);
 }
 
-void area_kill(bs::UserTypeBase* object)
+void area_kill(bs::UserTypeBase* object, void* userObj)
 {
 	g_areas->killArea(object);
 }
@@ -157,7 +157,7 @@ unsigned int AreaBattery::getFreeAreaSlot()
 	return id;
 }
 // --------------------------------------------------------------------------------
-bs::UserTypeBase* AreaBattery::emitQuadC(float x, float y, const float* args)
+bs::UserTypeBase* AreaBattery::emitQuadC(float x, float y, const float* args, void* userObj)
 {
 	Area a;
 	a.__active = true;
@@ -179,7 +179,7 @@ bs::UserTypeBase* AreaBattery::emitQuadC(float x, float y, const float* args)
 	return &(mSpawnedAreas[count]);
 }
 // --------------------------------------------------------------------------------
-bs::UserTypeBase* AreaBattery::emitQuadB(float x, float y, const float* args)
+bs::UserTypeBase* AreaBattery::emitQuadB(float x, float y, const float* args, void* userObj)
 {
 	Area a;
 	a.__active = true;
@@ -201,7 +201,7 @@ bs::UserTypeBase* AreaBattery::emitQuadB(float x, float y, const float* args)
 	return &(mSpawnedAreas[count]);
 }
 // --------------------------------------------------------------------------------
-bs::UserTypeBase* AreaBattery::emitEllipse(float x, float y, const float* args)
+bs::UserTypeBase* AreaBattery::emitEllipse(float x, float y, const float* args, void* userObj)
 {
 	Area a;
 	a.__active = true;
@@ -223,7 +223,7 @@ bs::UserTypeBase* AreaBattery::emitEllipse(float x, float y, const float* args)
 	return &(mSpawnedAreas[count]);
 }
 // --------------------------------------------------------------------------------
-bs::UserTypeBase* AreaBattery::emitArc(float x, float y, const float* args)
+bs::UserTypeBase* AreaBattery::emitArc(float x, float y, const float* args, void* userObj)
 {
 	Area a;
 	a.__active = true;

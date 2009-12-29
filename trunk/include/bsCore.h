@@ -18,7 +18,11 @@ namespace BS_NMSP
 	 */
 	struct UserTypeBase
 	{
-		EmitTypeControl* __ft;		
+		EmitTypeControl* __ft;	
+		float x, y;
+#ifdef BS_Z_DIMENSION
+		float z;
+#endif
 	};
 
 	/**	\brief Structure to let users define member variables for Controllers via
@@ -143,15 +147,15 @@ namespace BS_NMSP
 	 *	User function prototype for emitting an object.
 	 */
 #ifdef BS_Z_DIMENSION
-	typedef UserTypeBase* (*EmitFunction) (bstype, bstype, bstype, const bstype*);
+	typedef UserTypeBase* (*EmitFunction) (bstype, bstype, bstype, const bstype*, void*);
 #else
-	typedef UserTypeBase* (*EmitFunction) (bstype, bstype, const bstype*);
+	typedef UserTypeBase* (*EmitFunction) (bstype, bstype, const bstype*, void*);
 #endif
 
 	/**
 	 *	User function prototype for destroying an object.
 	 */
-	typedef void (*DieFunction) (UserTypeBase*);
+	typedef void (*DieFunction) (UserTypeBase*, void*);
 
 	/**
 	 *	User function prototype for setting an object's properties.
@@ -182,10 +186,24 @@ namespace BS_NMSP
 		Member_X,			/**< X position. */  
 		Member_Y,			/**< Y position. */  
 #ifdef BS_Z_DIMENSION
-		Member_Z,			/**< Y position. */  
+		Member_Z,			/**< Z position. */  
 #endif
 		Member_Angle,		/**< Angle. */  
 		NUM_SPECIAL_MEMBERS
+	};
+
+	/** 
+     * Predefined properties.
+     * These are the built-in properties available to an emitted object.
+     */
+	enum
+	{
+		Property_X,			/**< X position. */
+		Property_Y,			/**< Y position. */
+#ifdef BS_Z_DIMENSION
+		Property_Z,			/**< Z position. */  
+#endif
+		NUM_SPECIAL_PROPERTIES
 	};
 
 }

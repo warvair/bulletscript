@@ -97,7 +97,7 @@ int main (int argc, char **argv)
 	{
 		size_t fileSize;
 		uint8* fileBuf = loadFile(scriptFiles[i], fileSize);
-		if(machine.compileScript (fileBuf, fileSize) != 0)
+		if(machine.compileScript (fileBuf, fileSize) != BS_OK)
 		{
 			std::cout << "Could not compile " << scriptFiles[i] << std::endl;
 			const Log& _log = machine.getLog();
@@ -136,7 +136,7 @@ int main (int argc, char **argv)
 
 	// create some objects
 	int numObjects = 25;
-	for (int i = 0; i < 10; ++i)
+	for (int i = 0; i < 1; ++i)
 	{
 //		machine.createController("BombController");
 	}
@@ -150,8 +150,8 @@ int main (int argc, char **argv)
 	for (int i = 0; i < 1; ++i)
 	{
 		Emitter* emit = machine.createEmitter("Flower");
-		emit->setX(rand() % (SCREEN_WIDTH - 200) + 100);
-		emit->setY(rand() % (SCREEN_HEIGHT - 200) + 100);
+		emit->setX(SCREEN_WIDTH / 2);
+		emit->setY(SCREEN_HEIGHT / 2);
 	}
 
 	while (true)

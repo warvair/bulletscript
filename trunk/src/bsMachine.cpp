@@ -6,7 +6,6 @@ namespace BS_NMSP
 
 // --------------------------------------------------------------------------------
 Machine::Machine() :
-	mNumErrors(0),
 	mScriptMachine(0),
 	mTypeManager(0)
 {
@@ -31,14 +30,9 @@ const Log& Machine::getLog() const
 	return mLog;
 }
 // --------------------------------------------------------------------------------
-int Machine::getErrorCount() const
+int Machine::registerGlobalVariable(const String& name, bool readOnly, bstype initialValue)
 {
-	return mNumErrors;
-}
-// --------------------------------------------------------------------------------
-void Machine::registerGlobalVariable(const String& name, bool readOnly, bstype initialValue)
-{
-	mScriptMachine->registerGlobalVariable(name, readOnly, initialValue);
+	return mScriptMachine->registerGlobalVariable(name, readOnly, initialValue);
 }
 // --------------------------------------------------------------------------------
 void Machine::setGlobalVariableValue(const String& name, bstype value)
@@ -49,8 +43,10 @@ void Machine::setGlobalVariableValue(const String& name, bstype value)
 int Machine::compileScript(const uint8* buffer, size_t bufferSize)
 {
 	int compileErrors = mScriptMachine->compileScript(buffer, bufferSize);
-	mNumErrors += compileErrors;
-	return compileErrors;
+	if (compileErrors > 0)
+		return BS_CompileErrors;
+	else 
+		return BS_OK;
 }
 // --------------------------------------------------------------------------------
 void Machine::createType(const String& type)
@@ -80,9 +76,9 @@ int Machine::updateType(UserTypeBase* ft, bstype x, bstype y, float frameTime)
 }
 #endif
 // --------------------------------------------------------------------------------
-void Machine::registerEmitFunction(const String& type, const String& name, int numArgs, EmitFunction func)
+int Machine::registerEmitFunction(const String& type, const String& name, int numArgs, EmitFunction func)
 {
-	mTypeManager->registerEmitFunction(type, name, numArgs, func);
+	return mTypeManager->registerEmitFunction(type, name, numArgs, func);
 }
 // --------------------------------------------------------------------------------
 void Machine::setDieFunction(const String& type, DieFunction func)
@@ -90,23 +86,19 @@ void Machine::setDieFunction(const String& type, DieFunction func)
 	mTypeManager->setDieFunction(type, func);
 }
 // --------------------------------------------------------------------------------
-void Machine::registerProperty(const String& type, const String& name, SetFunction set, GetFunction get)
+int Machine::registerProperty(const String& type, const String& name, SetFunction set, GetFunction get)
 {
-	if (!mTypeManager->registerProperty(type, name, set, get))
-	{
-		mLog.addEntry("Error: couldn't register property '" + name + "' for type '" + type + "'.");
-		mNumErrors++;
-	}
+	return mTypeManager->registerProperty(type, name, set, get);
 }
 // --------------------------------------------------------------------------------
-void Machine::registerAffector(const String& type, const String& name, AffectorFunction func)
+int Machine::registerAffector(const String& type, const String& name, AffectorFunction func)
 {
-	mTypeManager->registerAffector(type, name, func);
+	return mTypeManager->registerAffector(type, name, func);
 }
 // --------------------------------------------------------------------------------
-Emitter* Machine::createEmitter(const String& definition)
+Emitter* Machine::createEmitter(const String& definition, void* userObject)
 {
-	return mScriptMachine->createEmitter(definition);
+	return mScriptMachine->createEmitter(definition, userObject);
 }
 // --------------------------------------------------------------------------------
 void Machine::destroyEmitter(Emitter* emit)
@@ -119,9 +111,9 @@ bool Machine::emitterExists(const String& name) const
 	return mScriptMachine->getEmitterDefinition(name) != 0;
 }
 // --------------------------------------------------------------------------------
-Controller* Machine::createController(const String& definition)
+Controller* Machine::createController(const String& definition, void* userObject)
 {
-	return mScriptMachine->createController(definition);
+	return mScriptMachine->createController(definition, userObject);
 }
 // --------------------------------------------------------------------------------
 void Machine::destroyController(Controller* ctrl)
@@ -134,9 +126,9 @@ bool Machine::controllerExists(const String& name) const
 	return mScriptMachine->getControllerDefinition(name) != 0;
 }
 // --------------------------------------------------------------------------------
-void Machine::declareMemberVariable(const String& ctrl, const String& var, bstype value)
+int Machine::declareMemberVariable(const String& ctrl, const String& var, bstype value)
 {
-	mScriptMachine->declareMemberVariable(ctrl, var, value);
+	return mScriptMachine->declareMemberVariable(ctrl, var, value);
 }
 // --------------------------------------------------------------------------------
 void Machine::update(float frameTime)
