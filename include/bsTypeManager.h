@@ -53,13 +53,13 @@ namespace BS_NMSP
 		int updateType(UserTypeBase* ft, bstype x, bstype y, float frameTime);
 #endif
 
-		void registerEmitFunction(const String& type, const String& name, int numArgs, EmitFunction func);
+		int registerEmitFunction(const String& type, const String& name, int numArgs, EmitFunction func);
 
 		void setDieFunction(const String& type, DieFunction func);
 
-		bool registerProperty(const String& type, const String& name, SetFunction set, GetFunction get);
+		int registerProperty(const String& type, const String& name, SetFunction set, GetFunction get);
 
-		void registerAffector(const String& type, const String& name, AffectorFunction func);
+		int registerAffector(const String& type, const String& name, AffectorFunction func);
 
 	};
 

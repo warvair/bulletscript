@@ -3,12 +3,12 @@
 
 #include <vector>
 #include "bsPrerequisites.h"
+#include "bsError.h"
 #include "bsObjectDefinition.h"
 
 namespace BS_NMSP
 {
 
-	class ScriptMachine;
 	class ParseTreeNode;
 
 	/**	\brief Class to store a definition for instantiating Controller objects.
@@ -72,7 +72,7 @@ namespace BS_NMSP
 		 *	definition by name.
 		 *
 		 *	\param name name of the emitter variable.
-		 *	\return reference to the emitter variable definition.
+		 *	\return index, or BS_NotFound if not found.
 		 */
 		int getEmitterVariableIndex(const String& name) const;
 
@@ -81,7 +81,6 @@ namespace BS_NMSP
 		 *	\return number of emitter variable definitions.
 		 */
 		int getNumEmitterVariables() const;
-
 
 		/**	\brief Add an event definition.
 		 *	
@@ -103,7 +102,7 @@ namespace BS_NMSP
 		 *	This is used in conjunction with getEvent to retrieve an event definition by name.
 		 *
 		 *	\param name name of the event.
-		 *	\return reference to the event definition.
+		 *	\return index, or BS_NotFound if not found.
 		 */
 		int getEventIndex(const String& name) const;
 
@@ -140,13 +139,6 @@ namespace BS_NMSP
 		 *	\return maximum number of blocks.
 		 */
 		int getMaxBlocks() const;
-
-		/**	\brief Create a ScriptRecord for a Controller to use.
-		 *	
-		 *	\param machine pointer to an active ScriptMachine.
-		 *	\return ScriptRecord for a Controller.
-		 */
-		ScriptRecord* createScriptRecord(ScriptMachine* machine);
 
 	private:
 

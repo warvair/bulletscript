@@ -11,7 +11,8 @@ Emitter::Emitter(ScriptMachine* machine) :
 	mActiveControllers(0),
 	mNumUserMembers(0),
 	mScriptMachine(machine),
-	mRecord(0)
+	mRecord(0),
+	mUserObject(0)
 {
 }
 // --------------------------------------------------------------------------------
@@ -90,6 +91,10 @@ bstype Emitter::getMember(int member) const
 	return mRecord->members[member + NUM_SPECIAL_MEMBERS];
 }
 // --------------------------------------------------------------------------------
+void Emitter::addAnchoredObject(int anchor, UserTypeBase* object)
+{
+}
+// --------------------------------------------------------------------------------
 void Emitter::setState(int state)
 {
 	mRecord->curState = state;
@@ -97,17 +102,40 @@ void Emitter::setState(int state)
 	mRecord->scriptState.stackHead = 0;
 }
 // --------------------------------------------------------------------------------
+void Emitter::setUserObject(void* userObject)
+{
+	mUserObject = userObject;
+}
+// --------------------------------------------------------------------------------
+void* Emitter::getUserObject() const
+{
+	return mUserObject;
+}
+// --------------------------------------------------------------------------------
 void Emitter::runScript(float frameTime)
 {
 	// Either run the script or update the suspend time.
 	if (mRecord->scriptState.suspendTime <= 0)
-		mScriptMachine->processScriptRecord(mRecord, this);
+		mScriptMachine->processScriptRecord(mRecord, this, mUserObject);
 	else
 		mRecord->scriptState.suspendTime -= frameTime;
 }
 // --------------------------------------------------------------------------------
 void Emitter::update(float frameTime)
 {
+	// Update anchored objects first
+	// Go through X list
+	// Go through Y list
+	// Go through angle list
+
+	// Rather, we need a way to give Emitters properties.  They have x, y and angle, but we may
+	// want them to have red/green/blue as well?  What could this be used for?  It means that we
+	// could change a property of an emitted object externally by changing the Emitter, and thus
+	// Emitters can control objects like Controllers control Emitters.
+
+	// Need a way to tie property names to indices.  We can tie x and y easily enough because they
+	// are built in, but angle will need something else because it is defined by the user.
+
 	if (!mEnabled)
 		return;
 	

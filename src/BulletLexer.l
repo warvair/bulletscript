@@ -36,6 +36,7 @@ BINARY    	[0-1]
 
 "//"[^\n]*                      { /* process comments */ }
 
+"constant"						{ return (KEYWORD_CONSTANT); }
 "controller"					{ return (KEYWORD_CONTROLLER); }
 "emitter"						{ return (KEYWORD_EMITTER); }
 "affector"						{ return (KEYWORD_AFFECTOR); }

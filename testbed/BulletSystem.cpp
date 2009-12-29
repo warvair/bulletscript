@@ -7,17 +7,17 @@
 
 BulletBattery* g_bullets = 0;
 
-bs::UserTypeBase* bullet_emitAngle(float x, float y, const float* args)
+bs::UserTypeBase* bullet_emitAngle(float x, float y, const float* args, void* userObj)
 {
-	return g_bullets->emitAngle(x, y, args);
+	return g_bullets->emitAngle(x, y, args, userObj);
 }
 
-bs::UserTypeBase* bullet_emitTarget(float x, float y, const float* args)
+bs::UserTypeBase* bullet_emitTarget(float x, float y, const float* args, void* userObj)
 {
-	return g_bullets->emitTarget(x, y, args);
+	return g_bullets->emitTarget(x, y, args, userObj);
 }
 
-void bullet_kill(bs::UserTypeBase* object)
+void bullet_kill(bs::UserTypeBase* object, void* userObj)
 {
 	g_bullets->killBullet(object);
 }
@@ -136,7 +136,7 @@ int BulletBattery::getCapacity() const
 	return (int) mBullets.capacity();
 }
 // --------------------------------------------------------------------------------
-bs::UserTypeBase* BulletBattery::emitAngle(float x, float y, const float* args)
+bs::UserTypeBase* BulletBattery::emitAngle(float x, float y, const float* args, void* user)
 {
 	Bullet b;
 	b.__active = true;
@@ -164,7 +164,7 @@ bs::UserTypeBase* BulletBattery::emitAngle(float x, float y, const float* args)
 	return &(mSpawnedBullets[count]);
 }
 // --------------------------------------------------------------------------------
-bs::UserTypeBase* BulletBattery::emitTarget(float x, float y, const float* args)
+bs::UserTypeBase* BulletBattery::emitTarget(float x, float y, const float* args, void* user)
 {
 	Bullet b;
 	b.__active = true;

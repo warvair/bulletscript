@@ -42,7 +42,7 @@ int CodeRecord::getVariableIndex(const String& name) const
 			return i;
 	}
 
-	return -1;
+	return BS_NotFound;
 }
 // --------------------------------------------------------------------------------
 int CodeRecord::getNumVariables() const
@@ -65,16 +65,12 @@ ScriptRecord::ScriptRecord(int numLocals) :
 	members(0)
 {
 	if (numLocals > 0)
-	{
-//		scriptState.locals = (bstype*) SmallAllocator::alloc(numLocals * sizeof(bstype));
 		scriptState.locals = new bstype[numLocals];
-	}
 }
 // --------------------------------------------------------------------------------
 ScriptRecord::~ScriptRecord()
 {
 	delete[] members;
-//	SmallAllocator::release(scriptState.locals);
 	delete[] scriptState.locals;
 }
 // --------------------------------------------------------------------------------

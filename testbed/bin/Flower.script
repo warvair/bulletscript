@@ -1,3 +1,5 @@
+DEFAULT_GRAV = constant 98;
+
 emitter Flower
 {
 	// member variables
@@ -19,19 +21,11 @@ emitter Flower
 
 	petal_o = function(dir)
 	{
-		fireA bullet($angle + 5 * dir, 70) : petal_i(dir);
 		$blue = 0.2;
 		wait(0.4);
-		$angle += {60 * dir, 2};
+		$angle += {50 * dir, 1.7};
+
 		wait(1.7);
-
-		i = 0;
-		while(i < 8)
-		{
-			i++;
-//			fireA bullet(rand(360), 100) : death(0.5), gravity;
-		}
-
 		die;
 	}
 
@@ -40,7 +34,8 @@ emitter Flower
 		$blue = 0.6;
 		$green = 0.2;
 		wait(0.2);
-		$angle += {60 * dir, 2};
+		$angle += {35 * dir, 1.2};
+
 		wait(1.2);
 		die;
 	}
@@ -48,27 +43,23 @@ emitter Flower
 	// states
 	Grow = state
 	{
-		fireA bullet(fl_angle + 40, 70) : petal_o(1);
-		fireA bullet(fl_angle + 80, 70) : petal_o(-1);
+		// spawn
+		i = 0;
+		while (i < 6)
+		{
+			angle1 = fl_angle + 40 + i * 60;
+			angle2 = angle1 + 40;
+			fireA bullet(angle1, 70) : petal_o(1);
+			fireA bullet(angle2, 70) : petal_o(-1);
 
-		fireA bullet(fl_angle + 100, 70) : petal_o(1);
-		fireA bullet(fl_angle + 140, 70) : petal_o(-1);
+			fireA bullet(angle1 + 5, 70) : petal_i(1);
+			fireA bullet(angle2 - 5, 70) : petal_i(-1);
 
-		fireA bullet(fl_angle + 160, 70) : petal_o(1);
-		fireA bullet(fl_angle + 200, 70) : petal_o(-1);
+			i++;
+		}
 
-		fireA bullet(fl_angle + 220, 70) : petal_o(1);
-		fireA bullet(fl_angle + 260, 70) : petal_o(-1);
-
-		fireA bullet(fl_angle + 280, 70) : petal_o(1);
-		fireA bullet(fl_angle + 320, 70) : petal_o(-1);
-
-		fireA bullet(fl_angle + 340, 70) : petal_o(1);
-		fireA bullet(fl_angle + 20, 70) : petal_o(-1);
-
-		wait(0.1);
-
-		fl_speed += 0.2 * fl_dir;
+		// update speed/rotation
+		fl_speed += 0.1 * fl_dir;
 		if (fl_speed < 1 || fl_speed > 10)
 		{
 			fl_dir *= -1;
@@ -81,6 +72,9 @@ emitter Flower
 		}
 
 		fl_angle++;
+
+		// wait
+		wait(0.05);
 	}
 
 }

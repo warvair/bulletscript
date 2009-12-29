@@ -65,7 +65,7 @@ namespace BS_NMSP
 		void destroyPool()
 		{
 			for (size_t i = 0; i < mPoolSize; ++i)
-			delete mPool[i];
+				delete mPool[i];
 
 			free(mPool);
 			mFreeList.clear();

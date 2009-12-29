@@ -16,10 +16,9 @@ enum AreaType
 struct Area : public bs::UserTypeBase
 {
 	int type;			// quad or ellipse
-	float x, y;	// centre
-	float w, h;	// width, height.  Also used for ellipse
+	float w, h;			// width, height.  Also used for ellipse
 	float angle;
-	float start, end; // generic, can be used for arcs
+	float start, end;	// generic, can be used for arcs
 	float innerw, innerh;
 	float alpha;
 
@@ -70,13 +69,13 @@ public:
 	void render(RendererGL* renderer);
 
 	// Scripting
-	bs::UserTypeBase* emitQuadC(float x, float y, const float* args);
+	bs::UserTypeBase* emitQuadC(float x, float y, const float* args, void* userObj);
 
-	bs::UserTypeBase* emitQuadB(float x, float y, const float* args);
+	bs::UserTypeBase* emitQuadB(float x, float y, const float* args, void* userObj);
 
-	bs::UserTypeBase* emitEllipse(float x, float y, const float* args);
+	bs::UserTypeBase* emitEllipse(float x, float y, const float* args, void* userObj);
 
-	bs::UserTypeBase* emitArc(float x, float y, const float* args);
+	bs::UserTypeBase* emitArc(float x, float y, const float* args, void* userObj);
 
 	void killArea(bs::UserTypeBase* object);
 
@@ -114,15 +113,15 @@ public:
 };
 
 // Function hooks
-bs::UserTypeBase* area_emitQuadC(float x, float y, const float* args);
+bs::UserTypeBase* area_emitQuadC(float x, float y, const float* args, void* userObj);
 
-bs::UserTypeBase* area_emitQuadB(float x, float y, const float* args);
+bs::UserTypeBase* area_emitQuadB(float x, float y, const float* args, void* userObj);
 
-bs::UserTypeBase* area_emitEllipse(float x, float y, const float* args);
+bs::UserTypeBase* area_emitEllipse(float x, float y, const float* args, void* userObj);
 
-bs::UserTypeBase* area_emitArc(float x, float y, const float* args);
+bs::UserTypeBase* area_emitArc(float x, float y, const float* args, void* userObj);
 
-void area_kill(bs::UserTypeBase* object);
+void area_kill(bs::UserTypeBase* object, void* userObj);
 
 void area_setWidth(bs::UserTypeBase* object, float value);
 

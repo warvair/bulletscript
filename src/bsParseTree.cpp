@@ -330,6 +330,32 @@ void ParseTree::foldConstants()
 	mRoot->foldConstants();
 }
 // --------------------------------------------------------------------------------
+void ParseTree::buildConstantDefineList(ParseTreeNode* node, ConstantDefinitionList& defList)
+{
+	if (node->getType() == PT_ConstantDefinition)
+	{
+		String defName = node->getChild(0)->getStringData();
+		bstype defValue = node->getChild(1)->getValueData();
+
+		defList[defName] = defValue;
+		return;
+	}
+
+	for (int i = 0; i < ParseTreeNode::MAX_CHILDREN; ++ i)
+	{
+		ParseTreeNode* child = node->getChild(i);
+		if (child)
+			buildConstantDefineList(child, defList);
+	}
+}
+// --------------------------------------------------------------------------------
+void ParseTree::preprocess(ConstantDefinitionList& defList)
+{
+	// Do constant-definition replacing
+	if (mRoot->getChild(1))
+		buildConstantDefineList(mRoot->getChild(1), defList);
+}
+// --------------------------------------------------------------------------------
 void ParseTree::addError(int line, const String& msg)
 {
 	std::stringstream ss;
@@ -354,9 +380,10 @@ bool ParseTree::checkConstantExpression(ObjectDefinition* def, CodeBlockType typ
 		{
 			String funcName = node->getChild(0)->getStringData();
 			int index = mScriptMachine->getNativeFunctionIndex(funcName);
-			if (index < 0)
+			if (index == BS_NotFound)
 			{
-				addError(node->getLine(), "Function '" + funcName + "' not found.");
+				String errMsg = getErrorMessage(index);
+				addError(node->getLine(), errMsg + ": function '" + funcName + "'.");
 				return false;
 			}
 		}
@@ -372,7 +399,7 @@ bool ParseTree::checkConstantExpression(ObjectDefinition* def, CodeBlockType typ
 			case CBT_AffectorArgument:
 				{
 					// only globals allowed here.
-					if (mScriptMachine->getGlobalVariableIndex(varName) < 0)
+					if (mScriptMachine->getGlobalVariableIndex(varName) == BS_NotFound)
 					{
 						addError(node->getLine(), "Variable '" + varName + "' is either undeclared or inaccessible.");
 						return false;
@@ -384,13 +411,13 @@ bool ParseTree::checkConstantExpression(ObjectDefinition* def, CodeBlockType typ
 			case CBT_ControllerState:
 				{
 					CodeRecord* rec = getCodeRecord(def->getType(), def->getName(), "State", name);
-					if (rec->getVariableIndex(varName) < 0)
+					if (rec->getVariableIndex(varName) == BS_NotFound)
 					{
-						if (def->getMemberVariableIndex(varName) < 0)
+						if (def->getMemberVariableIndex(varName) == BS_NotFound)
 						{
-							if (mScriptMachine->getGlobalVariableIndex(varName) < 0)
+							if (mScriptMachine->getGlobalVariableIndex(varName) == BS_NotFound)
 							{
-								addError(node->getLine(), "Variable '" + varName + "' is not declared1.");
+								addError(node->getLine(), "Variable '" + varName + "' is not declared.");
 								return false;
 							}
 						}
@@ -402,9 +429,9 @@ bool ParseTree::checkConstantExpression(ObjectDefinition* def, CodeBlockType typ
 				{
 					// cannot use member variables in functions
 					CodeRecord* rec = getCodeRecord("Emitter", def->getName(), "Function", name);
-					if (rec->getVariableIndex(varName) < 0)
+					if (rec->getVariableIndex(varName) == BS_NotFound)
 					{
-						if (mScriptMachine->getGlobalVariableIndex(varName) < 0)
+						if (mScriptMachine->getGlobalVariableIndex(varName) == BS_NotFound)
 						{
 							addError(node->getLine(), "Variable '" + varName + "' is not declared2.");
 							return false;
@@ -416,11 +443,11 @@ bool ParseTree::checkConstantExpression(ObjectDefinition* def, CodeBlockType typ
 			case CBT_Event:
 				{
 					CodeRecord* rec = getCodeRecord(def->getType(), def->getName(), "Event", name);
-					if (rec->getVariableIndex(varName) < 0)
+					if (rec->getVariableIndex(varName) == BS_NotFound)
 					{
-						if (def->getMemberVariableIndex(varName) < 0)
+						if (def->getMemberVariableIndex(varName) == BS_NotFound)
 						{
-							if (mScriptMachine->getGlobalVariableIndex(varName) < 0)
+							if (mScriptMachine->getGlobalVariableIndex(varName) == BS_NotFound)
 							{
 								addError(node->getLine(), "Variable '" + varName + "' is not declared1.");
 								return false;
@@ -444,7 +471,7 @@ bool ParseTree::checkConstantExpression(ObjectDefinition* def, CodeBlockType typ
 
 			// Add to global property list
 			String propName = node->getStringData();
-			if (mScriptMachine->getPropertyIndex(propName) < 0)
+			if (mScriptMachine->getPropertyIndex(propName) == BS_NotFound)
 				mScriptMachine->addProperty(propName);
 
 			// Properties are not known yet, check later...
@@ -463,7 +490,7 @@ bool ParseTree::checkConstantExpression(ObjectDefinition* def, CodeBlockType typ
 			}
 
 			ControllerDefinition* cDef = static_cast<ControllerDefinition*>(def);
-			if (cDef->getEmitterVariableIndex(varName) < 0)
+			if (cDef->getEmitterVariableIndex(varName) == BS_NotFound)
 			{
 				addError(node->getLine(), "Emitter variable '" + varName + "' is not declared3.");
 				return false;
@@ -501,11 +528,14 @@ void ParseTree::createMemberVariables(ObjectDefinition* def, ParseTreeNode* node
 		}
 
 		// Make sure it doesn't already exist
-		if (def->getMemberVariableIndex(varName) >= 0)
+		if (def->getMemberVariableIndex(varName) != BS_NotFound)
 			addError(node->getLine(), "Member variable '" + varName + "' already declared.");
 
-		if (!def->addMemberVariable(varName, false))
+		int errCode = def->addMemberVariable(varName, false);
+		if (errCode != BS_OK)
 		{
+			// Get error code message
+			// ...
 			addError(node->getLine(), "Too many member variables defined for '" + def->getName() + "'.");
 			return;
 		}
@@ -581,6 +611,12 @@ void ParseTree::createAffectors(EmitterDefinition* def, ParseTreeNode* node)
 {
 	if (node->getType() == PT_AffectorDecl)
 	{
+		if (mAffectors.size() >= BS_MAX_EMITTER_AFFECTORS)
+		{
+			addError(node->getLine(), "Too many emitter affectors declared.");
+			return;
+		}
+
 		// Create temporary structure with the node.  We don't actually want to
 		// create any instances yet because we don't know which EmitTypes are
 		// going to use them.
@@ -719,7 +755,7 @@ void ParseTree::checkEmitControllers(EmitterDefinition* def, ParseTreeNode* node
 		
 		// Make sure ctrlName exists
 		int fIndex = def->getFunctionIndex(ctrlName);
-		if (fIndex < 0)
+		if (fIndex == BS_NotFound)
 		{
 			addError(node->getLine(), "Function '" + ctrlName + "' is not declared4.");
 			return;
@@ -761,7 +797,7 @@ void ParseTree::checkEmitControllers(EmitterDefinition* def, ParseTreeNode* node
 		// Named affectors
 		String affector = node->getStringData();
 
-		int index = -1;
+		int index = BS_NotFound;
 		for (size_t i = 0; i < mAffectors.size(); ++i)
 		{
 			if (mAffectors[i].name == affector)
@@ -771,7 +807,7 @@ void ParseTree::checkEmitControllers(EmitterDefinition* def, ParseTreeNode* node
 			}
 		}
 
-		if (index < 0)
+		if (index == BS_NotFound)
 		{
 			addError(node->getLine(), "Affector '" + affector + "' is not declared.");
 			return;
@@ -784,6 +820,13 @@ void ParseTree::checkEmitControllers(EmitterDefinition* def, ParseTreeNode* node
 		}
 
 		return;
+	}
+	else if (nodeType == PT_Property)
+	{
+		// Make sure this EmitType has the property
+		String propertyName = node->getStringData();
+		if (ft->getPropertyIndex(propertyName) == BS_NotFound)
+			addError(node->getLine(), "Property '" + propertyName + "' not registered for " + ft->getName());
 	}
 
 	for (int i = 0; i < ParseTreeNode::MAX_CHILDREN; ++ i)
@@ -947,7 +990,7 @@ void ParseTree::buildFunctions(EmitterDefinition* def, ParseTreeNode* node)
 	case PT_SetStatement:
 		{
 			String propName = node->getChild(0)->getStringData();
-			if (mScriptMachine->getPropertyIndex(propName) < 0)
+			if (mScriptMachine->getPropertyIndex(propName) == BS_NotFound)
 				mScriptMachine->addProperty(propName);
 
 			checkConstantExpression(def, CBT_Function, s_curFunc->name, node->getChild(1));
@@ -1134,7 +1177,7 @@ void ParseTree::buildEvents(ControllerDefinition* def, ParseTreeNode* node)
 
 			// Check that they exist
 			int emitIndex = def->getEmitterVariableIndex(emitName);
-			if (emitIndex < 0)
+			if (emitIndex == BS_NotFound)
 			{
 				addError(node->getLine(), "Emitter '" + emitName + "' is not declared.");
 				return;
@@ -1142,7 +1185,7 @@ void ParseTree::buildEvents(ControllerDefinition* def, ParseTreeNode* node)
 
 			const ControllerDefinition::EmitterVariable& var = def->getEmitterVariable(emitIndex);
 			EmitterDefinition* eDef = mScriptMachine->getEmitterDefinition(var.emitter);
-			if (eDef->getMemberVariableIndex(memberName) < 0)
+			if (eDef->getMemberVariableIndex(memberName) == BS_NotFound)
 			{
 				addError(node->getLine(), "Emitter type '" + var.emitter + 
 					"' has no member named '" + memberName + "'.");
@@ -1159,7 +1202,7 @@ void ParseTree::buildEvents(ControllerDefinition* def, ParseTreeNode* node)
 			if (gotoType == PT_Identifier)
 			{
 				String stateName = node->getChild(0)->getStringData();
-				if (def->getStateIndex(stateName) < 0)
+				if (def->getStateIndex(stateName) == BS_NotFound)
 					addError(node->getLine(), "State '" + stateName + "' has not been declared.");
 			}
 			else if (gotoType == PT_EmitterMember)
@@ -1169,7 +1212,7 @@ void ParseTree::buildEvents(ControllerDefinition* def, ParseTreeNode* node)
 
 				// Check that they exist
 				int emitIndex = def->getEmitterVariableIndex(emitName);
-				if (emitIndex < 0)
+				if (emitIndex == BS_NotFound)
 				{
 					addError(node->getLine(), "Emitter '" + emitName + "' is not declared.");
 					return;
@@ -1178,7 +1221,7 @@ void ParseTree::buildEvents(ControllerDefinition* def, ParseTreeNode* node)
 				const ControllerDefinition::EmitterVariable& var = def->getEmitterVariable(emitIndex);
 				EmitterDefinition* eDef = mScriptMachine->getEmitterDefinition(var.emitter);
 
-				if (eDef->getStateIndex(stateName) < 0)
+				if (eDef->getStateIndex(stateName) == BS_NotFound)
 					addError(node->getLine(), "Emitter type '" + var.emitter + 
 						"' has no state named '" + stateName + "'.");
 			}
@@ -1211,7 +1254,7 @@ void ParseTree::buildEvents(ControllerDefinition* def, ParseTreeNode* node)
 				eventName = funcNode->getChild(0)->getStringData();
 
 			int eventIndex = def->getEventIndex(eventName);
-			if (eventIndex < 0)
+			if (eventIndex == BS_NotFound)
 			{
 				addError(node->getLine(), "Event '" + eventName + "' is not registered.");
 			}
@@ -1235,7 +1278,7 @@ void ParseTree::buildEvents(ControllerDefinition* def, ParseTreeNode* node)
 	case PT_EnableStatement:
 		{
 			String varName = node->getChild(0)->getStringData();
-			if (def->getEmitterVariableIndex(varName) < 0)
+			if (def->getEmitterVariableIndex(varName) == BS_NotFound)
 				addError(node->getLine(), "Emitter variable '" + varName + "' is not declared.");
 		}
 		return;
@@ -1284,7 +1327,7 @@ void ParseTree::addStates(ObjectDefinition* def, ParseTreeNode* node)
 	{
 		String stateName = node->getChild(0)->getStringData();
 		
-		if (def->getStateIndex(stateName) >= 0)
+		if (def->getStateIndex(stateName) != BS_NotFound)
 		{
 			addError(node->getLine(), "State '" + stateName + "' has already been declared.");
 			return;
@@ -1386,7 +1429,7 @@ void ParseTree::buildStates(ObjectDefinition* def, ParseTreeNode* node)
 			// Check that they exist
 			ControllerDefinition* cDef = static_cast<ControllerDefinition*>(def);
 			int emitIndex = cDef->getEmitterVariableIndex(emitName);
-			if (emitIndex < 0)
+			if (emitIndex == BS_NotFound)
 			{
 				addError(node->getLine(), "Emitter '" + emitName + "' is not declared.");
 				return;
@@ -1394,7 +1437,7 @@ void ParseTree::buildStates(ObjectDefinition* def, ParseTreeNode* node)
 
 			const ControllerDefinition::EmitterVariable& var = cDef->getEmitterVariable(emitIndex);
 			EmitterDefinition* eDef = mScriptMachine->getEmitterDefinition(var.emitter);
-			if (eDef->getMemberVariableIndex(memberName) < 0)
+			if (eDef->getMemberVariableIndex(memberName) == BS_NotFound)
 			{
 				addError(node->getLine(), "Emitter type '" + var.emitter + 
 					"' has no member named '" + memberName + "'.");
@@ -1459,7 +1502,7 @@ void ParseTree::buildStates(ObjectDefinition* def, ParseTreeNode* node)
 			if (gotoType == PT_Identifier)
 			{
 				String stateName = node->getChild(0)->getStringData();
-				if (def->getStateIndex(stateName) < 0)
+				if (def->getStateIndex(stateName) == BS_NotFound)
 					addError(node->getLine(), "State '" + stateName + "' has not been declared.");
 			}
 			else if (gotoType == PT_EmitterMember)
@@ -1471,7 +1514,7 @@ void ParseTree::buildStates(ObjectDefinition* def, ParseTreeNode* node)
 				// Check that they exist
 				ControllerDefinition* cDef = static_cast<ControllerDefinition*>(def);
 				int emitIndex = cDef->getEmitterVariableIndex(emitName);
-				if (emitIndex < 0)
+				if (emitIndex == BS_NotFound)
 				{
 					addError(node->getLine(), "Emitter '" + emitName + "' is not declared.");
 					return;
@@ -1480,7 +1523,7 @@ void ParseTree::buildStates(ObjectDefinition* def, ParseTreeNode* node)
 				const ControllerDefinition::EmitterVariable& var = cDef->getEmitterVariable(emitIndex);
 				EmitterDefinition* eDef = mScriptMachine->getEmitterDefinition(var.emitter);
 
-				if (eDef->getStateIndex(stateName) < 0)
+				if (eDef->getStateIndex(stateName) == BS_NotFound)
 					addError(node->getLine(), "Emitter type '" + var.emitter + 
 						"' has no state named '" + stateName + "'.");
 			}
@@ -1527,7 +1570,7 @@ void ParseTree::buildStates(ObjectDefinition* def, ParseTreeNode* node)
 
 			ControllerDefinition* cDef = static_cast<ControllerDefinition*>(def);
 			int eventIndex = cDef->getEventIndex(eventName);
-			if (eventIndex < 0)
+			if (eventIndex == BS_NotFound)
 			{
 				addError(node->getLine(), "Event '" + eventName + "' is not registered.");
 			}
@@ -1552,7 +1595,7 @@ void ParseTree::buildStates(ObjectDefinition* def, ParseTreeNode* node)
 		{
 			String varName = node->getChild(0)->getStringData();
 			ControllerDefinition* cDef = static_cast<ControllerDefinition*>(def);
-			if (cDef->getEmitterVariableIndex(varName) < 0)
+			if (cDef->getEmitterVariableIndex(varName) == BS_NotFound)
 				addError(node->getLine(), "Emitter variable '" + varName + "' is not declared.");
 		}
 		return;
@@ -1754,7 +1797,6 @@ void ParseTree::generateEmitTail(EmitterDefinition* def, ParseTreeNode* node,
 	}
 	else if (nodeType == PT_AffectorCall)
 	{
-
 		// See if affector instance has been created in EmitType, and if it has, use 
 		// its index, otherwise add it and use its index.
 		String affector = node->getStringData();
@@ -1772,7 +1814,7 @@ void ParseTree::generateEmitTail(EmitterDefinition* def, ParseTreeNode* node,
 		String instanceName = def->getName() + "-" + affector;
 
 		int instanceIndex = ft->getAffectorInstanceIndex(instanceName);
-		if (instanceIndex < 0)
+		if (instanceIndex == BS_NotFound)
 		{
 			// Generate CodeRecord and give to EmitType
 			BytecodeBlock argCode;
@@ -2779,7 +2821,7 @@ int ParseTree::getCodeRecordIndex(const String& type, const String& typeName,
 		if (name == mCodeblockNames[i])
 			return (int) i;
 	
-	return -1;
+	return BS_NotFound;
 }
 // --------------------------------------------------------------------------------
 void ParseTree::print(ParseTreeNode* node, int indent)

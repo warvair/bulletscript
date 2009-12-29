@@ -220,7 +220,12 @@ can have as many affector instances as it needs, but at most only one control fu
 </pre>
 Like affector instances, emitter functions cannot take member variables as arguments.
 <h3>Die statements</h3>
-
+<span class="code">die</span> is used in an emitter function to destroy the object.  The syntax is simply:
+<pre>
+	die;
+</pre>
+Any code which follows this statement in a function may cause undefined effects, most likely crashing the system if it accesses the object which has just
+been destroyed.
 
 </body>
 </html>

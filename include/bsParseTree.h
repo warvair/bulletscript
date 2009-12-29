@@ -39,6 +39,8 @@ namespace BS_NMSP
 	enum PT_NodeType
 	{
 		PT_Null,
+		PT_ConstantDefinitionList,
+		PT_ConstantDefinition,
 		PT_DefinitionList,
 		PT_ControllerDefinition,
 		PT_EmitterDefinition,
@@ -183,6 +185,12 @@ namespace BS_NMSP
 
 	class ParseTree
 	{
+	public:
+
+		typedef std::map<String, bstype> ConstantDefinitionList;
+
+	private:
+
 		ScriptMachine* mScriptMachine;
 
 		ParseTreeNode* mRoot;
@@ -191,9 +199,12 @@ namespace BS_NMSP
 
 		static ParseTree* msInstance;
 
+		// Utility
 		void create();
 		
 		void destroy();
+
+		void buildConstantDefineList(ParseTreeNode* node, ConstantDefinitionList& defList);
 
 		// Core definition creation
 		void createEmitterDefinitions(ParseTreeNode* node);
@@ -296,6 +307,8 @@ namespace BS_NMSP
 		ParseTreeNode* createNode(int type, int line);
 
 		void foldConstants();
+
+		void preprocess(ConstantDefinitionList& defList);
 
 		int getNumErrors() const;
 

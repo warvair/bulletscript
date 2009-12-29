@@ -34,13 +34,14 @@ namespace BS_NMSP
 		{
 			float time;
 			bstype speed;
+//			bstype base;
 		};
 
-		Property properties[BS_MAX_PROPERTIES];
+		Property properties[BS_MAX_USER_PROPERTIES + NUM_SPECIAL_PROPERTIES];
 
 		// Bitfield for properties set.  This limits the number of properties to 32, but this is
 		// an acceptable limitation.  In reality, the user can only define up to 
-		// BS_MAX_PROPERTIES properties, defined in bsConfig.h.
+		// BS_MAX_USER_PROPERTIES properties, defined in bsConfig.h.
 		uint32 activeProperties; 
 
 		// Affectors.  These are stored as indices into a list of Affector instances, stored in
@@ -59,6 +60,9 @@ namespace BS_NMSP
 
 		// Pointer to the current object that owns this EmitTypeControl
 		UserTypeBase* __object;			
+
+		// Pointer to user object passed to pass back to emit function
+		void* __userObject;
 
 		// Constructor.  This simply allocates enough memory for the local variables of the EmitterDefinition
 		// which will use it.  An EmitterDefinition will have a collection of states and functions, with a 
@@ -135,7 +139,7 @@ namespace BS_NMSP
 		std::vector<FunctionEntry> mFunctions;
 
 		// List of properties that can be controlled.  See bsConfig.h.
-		Property mProperties[BS_MAX_PROPERTIES];
+		Property mProperties[BS_MAX_USER_PROPERTIES + NUM_SPECIAL_PROPERTIES];
 
 		int mNumProperties;
 
@@ -147,6 +151,25 @@ namespace BS_NMSP
 
 		// User-supplied 'kill' function, to destroy an emitted object.
 		DieFunction mDieFunction;
+
+	private:
+
+		// Setters & getters for built-in properties
+		static void setPropertyX(bs::UserTypeBase* object, float value);
+
+		static void setPropertyY(bs::UserTypeBase* object, float value);
+
+#ifdef BS_Z_DIMENSION
+		static void setPropertyZ(bs::UserTypeBase* object, float value);
+#endif
+
+		static float getPropertyX(bs::UserTypeBase* object);
+
+		static float getPropertyY(bs::UserTypeBase* object);
+
+#ifdef BS_Z_DIMENSION
+		static float getPropertyZ(bs::UserTypeBase* object);
+#endif
 
 	public:
 
@@ -190,20 +213,22 @@ namespace BS_NMSP
 		/**	\brief Calls the DieFunction on the supplied UserTypeBase.
 		 *
 		 *	\param object pointer to the UserTypeBase of the emitted object.
+		 *	\param userObject pointer to user object to pass back into die function.
 		 */
-		void callDieFunction(UserTypeBase* object);
+		void callDieFunction(UserTypeBase* object, void* userObject);
 
 		/**	\brief Register a controllable property for this EmitType.
 		 *
-		 *	You can only set BS_MAX_PROPERTIES properties, defined in bsConfig.h, due to
+		 *	You can only set BS_MAX_USER_PROPERTIES properties, defined in bsConfig.h, due to
 		 *	performance reasons.
 		 *
 		 *	\param name property name.
 		 *	\param set user-defined SetFunction.
 		 *	\param get user-defined GetFunction.
-		 *	\return false if the property already exists, or there are too many properties, true otherwise.
+		 *	\return BS_OK, BS_PropertyExists if the property already exists, BS_TooManyProperties if there 
+		 *			are too many properties.
 		 */
-		bool registerProperty(const String& name, SetFunction set, GetFunction get);
+		int registerProperty(const String& name, SetFunction set, GetFunction get);
 
 		/**	\brief Get the index of the named property.
 		 *
@@ -216,7 +241,7 @@ namespace BS_NMSP
 		 *	Todo: speed this up.
 		 *
 		 *	\param name name of the property to retrieve.
-		 *	\return the index of the property, or -1 if it does not exist.
+		 *	\return the index of the property, or BS_NotFound if it does not exist.
 		 */
 		int getPropertyIndex(const String& name) const;
 
@@ -260,9 +285,9 @@ namespace BS_NMSP
 		 *	\param name the name of the function in script.
 		 *	\param numArgs the number of arguments it takes (in script).
 		 *	\param func pointer to the supplied EmitFunction
-		 *	\return false if the named function already exists, true otherwise.
+		 *	\return BS_OK, or BS_EmitFunctionExists if the named function already exists.
 		 */
-		bool registerEmitFunction(const String& name, int numArgs, EmitFunction func);
+		int registerEmitFunction(const String& name, int numArgs, EmitFunction func);
 		
 		/**	\brief Test whether an EmitFunction has been registered with this EmitType.
 		 *
@@ -296,9 +321,10 @@ namespace BS_NMSP
 		 *	\param callName the name of the control function, if any.
 		 *	\param funcIndex the index of the control function, returned via reference.
 		 *	\param affectors list of Affector instances that the call uses, returned via reference.
+		 *	\param properties list of properties that the call uses as anchors, returned via reference.
 		 */
 		void getControllers(EmitterDefinition* def, ParseTreeNode* node,
-			String& callName, int& funcIndex, std::vector<int>& affectors);
+			String& callName, int& funcIndex, std::vector<int>& affectors, std::vector<String>& properties);
 
 		/**	\brief Generate bytecode for a given emission call.
 		 *
@@ -323,12 +349,13 @@ namespace BS_NMSP
 		 *	\param y y-position of the emitting object.
 		 *	\param z z-position of the emitting object.
 		 *	\param members the member variables of the emitting object.
+		 *	\param userObj pointer to user object to pass back into emit function.
 		 *	
 		 *	\return the number of bytecodes that the BC_EMIT opcode used.
 		 */
 
 		int processCode(const uint32* code, ScriptState& state, bstype x, 
-			bstype y, bstype z, bstype* members);
+			bstype y, bstype z, bstype* members, void* userObj);
 #else
 		/**	\brief Process a BC_EMIT opcode.
 		 *
@@ -339,11 +366,12 @@ namespace BS_NMSP
 		 *	\param x x-position of the emitting object.
 		 *	\param y y-position of the emitting object.
 		 *	\param members the member variables of the emitting object.
+		 *	\param userObj pointer to user object to pass back into emit function.
 		 *	
 		 *	\return the number of bytecodes that the BC_EMIT opcode used.
 		 */
 		int processCode(const uint32* code, ScriptState& state, bstype x, 
-			bstype y, bstype* members);
+			bstype y, bstype* members, void* userObj);
 #endif
 
 		/**	\brief Registers a user AffectorFunction with this type.
@@ -353,8 +381,9 @@ namespace BS_NMSP
 		 *
 		 *	\param name name of the function in script.
 		 *	\param func AffectorFunction function pointer.
+		 *	\return BS_OK currently, no checking done.
 		 */
-		void registerAffector(const String& name, AffectorFunction func);
+		int registerAffector(const String& name, AffectorFunction func);
 
 		/**	\brief Returns the named AffectorFunction.
 		 *

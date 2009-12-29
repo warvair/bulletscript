@@ -8,6 +8,7 @@
 
 namespace BS_NMSP
 {
+	class ScriptMachine;
 
 	class _BSAPI ObjectDefinition
 	{
@@ -50,7 +51,7 @@ namespace BS_NMSP
 		int getMaxLocalVariables() const;
 
 		// Member variables
-		bool addMemberVariable(const String& name, bool readOnly, bstype value = bsvalue0);
+		int addMemberVariable(const String& name, bool readOnly, bstype value = bsvalue0);
 
 		MemberVariable& getMemberVariable(int index);
 
@@ -72,6 +73,13 @@ namespace BS_NMSP
 		int getNumStates() const;
 
 		void setInitialState(int state);
+
+		/**	\brief Create a ScriptRecord for an instance to use.
+		 *	
+		 *	\param machine pointer to an active ScriptMachine.
+		 *	\return ScriptRecord object.
+		 */
+		ScriptRecord* createScriptRecord(ScriptMachine* machine);
 
 	private:
 

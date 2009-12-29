@@ -45,6 +45,8 @@ namespace BS_NMSP
 			CodeRecord* code;
 		};
 
+		bool mEnabled;
+
 		ScriptMachine* mScriptMachine;
 
 		// Array of Emitter instances.
@@ -64,6 +66,9 @@ namespace BS_NMSP
 		ScriptState mEventState;
 
 		ScriptRecord* mRecord;
+
+		// Weak pointer to user-supplied object.
+		void* mUserObject;
 
 	private:
 
@@ -94,6 +99,18 @@ namespace BS_NMSP
 		 */
 		void setDefinition(ControllerDefinition* def);
 		
+		/**	\brief Enables or disables the Controller, and its Emitters.
+		 *	
+		 *	\param enable enables if true, disables if false.
+		 */
+		void enable(bool enable);
+
+		/**	\brief Tests whether the Controller is currently enabled or disabled.
+		 *	
+		 *	\return true is enabled, false otherwise.
+		 */
+		bool isEnabled() const;
+
 		/**	\brief Set the X position of this Controller.
 		 *	
 		 *	\param x new x position.
@@ -129,6 +146,24 @@ namespace BS_NMSP
 		 *	\param value value to set it to.
 		 */
 		void setMember(int member, bstype value);
+
+		/**	\brief Set the user-supplied object for this Controller.
+		 *	
+		 *	\param userObject pointer to a user-supplied object, which is passed back into any
+					emit function that this Controller's Emitters call.
+		*/
+		void setUserObject(void* userObject);
+
+		/**	\brief Get the user-supplied object for this Controller.
+		 *	
+		 *	The user object can be used to pass information to the emit function.  This is useful because
+		 *	Controller are updated by the bulletscript machine in one go, and the user is otherwise unable
+		 *	to intercept the update to set Controller-specific parameters in their application.  All Emitters
+		 *	controlled by this Controller use the same, specified user object.
+		 *
+		 *	\return the user object.
+		 */
+		void* getUserObject() const;
 
 		/**	\brief Set the Controller state.
 		 *	
@@ -192,19 +227,19 @@ namespace BS_NMSP
 		 *
 		 *	\param evt name of the event to raise.
 		 *	\param args array of values to pass as arguments.
-		 *	\return true if the event was found, false otherwise.
+		 *	\return BS_OK or BS_BadEvent if the event was not found
 		 */
-		bool raiseEvent(const String& evt, const bstype* args);
+		int raiseEvent(const String& evt, const bstype* args);
 
 		/**	\brief Triggers an event in the Controller.
 		 *	
-		 *	This function is for internal use.  It is otherwise similar to the user raiseEvent function.
+		 *	This function is for internal use.
 		 *
 		 *	\param index index of the event to raise.
 		 *	\param args array of values to pass as arguments.
-		 *	\return true if the event changed the Controller state, or not.  This is for internal use.
+		 *	\return true if the event changed the Controller state, or not.
 		 */
-		bool raiseEvent(int index, const bstype* args);
+		bool _raiseEvent(int index, const bstype* args);
 
 		/**	\brief Adds a block to the Controller.
 		 *	

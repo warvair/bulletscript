@@ -45,7 +45,7 @@ int TypeManager::getTypeId(const String& name) const
 		if (mTypes[i]->getName() == name)
 			return mTypes[i]->getType();
 
-	return -1;
+	return BS_NotFound;
 }
 // --------------------------------------------------------------------------------
 bool TypeManager::emitFunctionExists(int type, const String& name) const
@@ -113,10 +113,10 @@ int TypeManager::updateType(UserTypeBase* ft, bstype x, bstype y, float frameTim
 		{
 #ifdef BS_Z_DIMENSION
 			mScriptMachine->interpretCode(rec->code->byteCode, rec->code->byteCodeSize, 
-				rec->state, 0, rec, ScriptMachine::VT_EmitTypeControl, x, y, z, 0, false);
+				rec->state, 0, rec, ScriptMachine::VT_EmitTypeControl, x, y, z, 0, false, rec->__userObject);
 #else
 			mScriptMachine->interpretCode(rec->code->byteCode, rec->code->byteCodeSize, 
-				rec->state, 0, rec, x, y, 0, false);
+				rec->state, 0, rec, x, y, 0, false, rec->__userObject);
 #endif
 		}
 		else
@@ -136,13 +136,13 @@ int TypeManager::updateType(UserTypeBase* ft, bstype x, bstype y, float frameTim
 	return 0;
 }
 // --------------------------------------------------------------------------------
-void TypeManager::registerEmitFunction(const String& type, const String& name, 
+int TypeManager::registerEmitFunction(const String& type, const String& name, 
 									   int numArgs, EmitFunction func)
 {
 	EmitType* ft = getType(type);
 	
 	assert(ft != 0 && "TypeManager::registerEmitFunction no type");
-	ft->registerEmitFunction(name, numArgs, func);
+	return ft->registerEmitFunction(name, numArgs, func);
 }
 // --------------------------------------------------------------------------------
 void TypeManager::setDieFunction(const String& type, DieFunction func)
@@ -153,7 +153,7 @@ void TypeManager::setDieFunction(const String& type, DieFunction func)
 	ft->setDieFunction(func);
 }
 // --------------------------------------------------------------------------------
-bool TypeManager::registerProperty(const String& type, const String& name, 
+int TypeManager::registerProperty(const String& type, const String& name, 
 								   SetFunction set, GetFunction get)
 {
 	EmitType* ft = getType(type);
@@ -162,12 +162,12 @@ bool TypeManager::registerProperty(const String& type, const String& name,
 	return ft->registerProperty(name, set, get);
 }
 // --------------------------------------------------------------------------------
-void TypeManager::registerAffector(const String& type, const String& name, AffectorFunction func)
+int TypeManager::registerAffector(const String& type, const String& name, AffectorFunction func)
 {
 	EmitType* ft = getType(type);
 	
 	assert(ft != 0 && "TypeManager::registerAffector no type");
-	ft->registerAffector(name, func);
+	return ft->registerAffector(name, func);
 }
 // --------------------------------------------------------------------------------
 
