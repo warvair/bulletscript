@@ -52,19 +52,20 @@
      INTEGER = 278,
      REAL = 279,
      IDENTIFIER = 280,
-     SYMBOL_LTE = 281,
-     SYMBOL_GTE = 282,
-     SYMBOL_EQ = 283,
-     SYMBOL_NEQ = 284,
-     SYMBOL_LOG_AND = 285,
-     SYMBOL_LOG_OR = 286,
-     SYMBOL_INC = 287,
-     SYMBOL_DEC = 288,
-     SYMBOL_ADD_A = 289,
-     SYMBOL_SUB_A = 290,
-     SYMBOL_MUL_A = 291,
-     SYMBOL_DIV_A = 292,
-     TOKEN_ERROR = 293
+     SYMBOL_LINK = 281,
+     SYMBOL_LTE = 282,
+     SYMBOL_GTE = 283,
+     SYMBOL_EQ = 284,
+     SYMBOL_NEQ = 285,
+     SYMBOL_LOG_AND = 286,
+     SYMBOL_LOG_OR = 287,
+     SYMBOL_INC = 288,
+     SYMBOL_DEC = 289,
+     SYMBOL_ADD_A = 290,
+     SYMBOL_SUB_A = 291,
+     SYMBOL_MUL_A = 292,
+     SYMBOL_DIV_A = 293,
+     TOKEN_ERROR = 294
    };
 #endif
 /* Tokens.  */
@@ -91,19 +92,20 @@
 #define INTEGER 278
 #define REAL 279
 #define IDENTIFIER 280
-#define SYMBOL_LTE 281
-#define SYMBOL_GTE 282
-#define SYMBOL_EQ 283
-#define SYMBOL_NEQ 284
-#define SYMBOL_LOG_AND 285
-#define SYMBOL_LOG_OR 286
-#define SYMBOL_INC 287
-#define SYMBOL_DEC 288
-#define SYMBOL_ADD_A 289
-#define SYMBOL_SUB_A 290
-#define SYMBOL_MUL_A 291
-#define SYMBOL_DIV_A 292
-#define TOKEN_ERROR 293
+#define SYMBOL_LINK 281
+#define SYMBOL_LTE 282
+#define SYMBOL_GTE 283
+#define SYMBOL_EQ 284
+#define SYMBOL_NEQ 285
+#define SYMBOL_LOG_AND 286
+#define SYMBOL_LOG_OR 287
+#define SYMBOL_INC 288
+#define SYMBOL_DEC 289
+#define SYMBOL_ADD_A 290
+#define SYMBOL_SUB_A 291
+#define SYMBOL_MUL_A 292
+#define SYMBOL_DIV_A 293
+#define TOKEN_ERROR 294
 
 
 

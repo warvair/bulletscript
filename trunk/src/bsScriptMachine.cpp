@@ -189,6 +189,59 @@ void ScriptMachine::updateControllers(float frameTime)
 	}
 }
 // --------------------------------------------------------------------------------
+void ScriptMachine::addAnchoredObject(UserTypeBase* userType, Emitter* emitter, uint32 member, uint32 prop)
+{
+	AnchoredObject obj;
+	obj.userType = userType;
+	obj.emitter = emitter;
+	obj.member = member;
+	obj.prop = prop;
+
+	mAnchors.push_back(obj);
+}
+// --------------------------------------------------------------------------------
+void ScriptMachine::removeAnchoredObject(UserTypeBase* userType)
+{
+	std::list<AnchoredObject>::iterator it = mAnchors.begin();
+	while (it != mAnchors.end())
+	{
+		AnchoredObject& obj = *it;
+		if (obj.userType == userType)
+		{
+			mAnchors.erase(it);
+			return;
+		}
+
+		++it;
+	}
+}
+// --------------------------------------------------------------------------------
+void ScriptMachine::removeAnchoredObjects(Emitter* emitter)
+{
+	std::list<AnchoredObject>::iterator it = mAnchors.begin();
+	std::list<AnchoredObject>::iterator next = it;
+	while (it != mAnchors.end())
+	{
+		++next;
+		
+		AnchoredObject& obj = *it;
+		if (obj.emitter == emitter)
+			mAnchors.erase(it);
+
+		it = next;
+	}
+}
+// --------------------------------------------------------------------------------
+void ScriptMachine::updateAnchoredObjects(float frameTime)
+{
+	std::list<AnchoredObject>::iterator it = mAnchors.begin();
+	while (it != mAnchors.end())
+	{
+		AnchoredObject& obj = *it;
+		++it;
+	}
+}
+// --------------------------------------------------------------------------------
 void ScriptMachine::createCodeRecord(const String& name)
 {
 	mCodeRecords.push_back(new CodeRecord(name));
@@ -732,7 +785,7 @@ int ScriptMachine::interpretCode(const uint32* code, size_t length, ScriptState&
 				const String& propName = getProperty(index);
 				EmitTypeControl* ftc = static_cast<EmitTypeControl*>(object);
 
-				st.stack[st.stackHead] = ftc->__type->getProperty(ftc->__object, propName);
+				st.stack[st.stackHead] = ftc->__type->getProperty(ftc, propName);
 				st.stackHead++;
 				st.curInstruction += 2;
 
@@ -903,10 +956,15 @@ int ScriptMachine::interpretCode(const uint32* code, size_t length, ScriptState&
 			{
 				int emitType = code[st.curInstruction + 1];
 				EmitType* ft = mTypeManager->getType(emitType);
+
+				// When emitted by a function and not an emitter, this cast will fail, but this is OK
+				// because we only use it for anchors, and anchors are only set in emitters.
+				Emitter* emitter = static_cast<Emitter*>(object);
+
 #ifdef BS_Z_DIMENSION
-				st.curInstruction += ft->processCode(code, st, x, y, z, members, userObject);
+				st.curInstruction += ft->_processCode(code, st, x, y, z, members, userObject, emitter);
 #else
-				st.curInstruction += ft->processCode(code, st, x, y, members, userObject);
+				st.curInstruction += ft->_processCode(code, st, x, y, members, userObject, emitter);
 #endif
 			}
 			break;

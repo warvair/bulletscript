@@ -34,9 +34,10 @@ namespace BS_NMSP
 		{
 			float time;
 			bstype speed;
-//			bstype base;
 		};
 
+		// The bases are stored separately, so that they can be reset quickly without having
+		// to reset the whole Property structure.
 		Property properties[BS_MAX_USER_PROPERTIES + NUM_SPECIAL_PROPERTIES];
 
 		// Bitfield for properties set.  This limits the number of properties to 32, but this is
@@ -138,11 +139,6 @@ namespace BS_NMSP
 		// List of emission functions.
 		std::vector<FunctionEntry> mFunctions;
 
-		// List of properties that can be controlled.  See bsConfig.h.
-		Property mProperties[BS_MAX_USER_PROPERTIES + NUM_SPECIAL_PROPERTIES];
-
-		int mNumProperties;
-
 		// List of Affector functions
 		std::vector<AffectorEntry> mAffectors;
 
@@ -153,6 +149,15 @@ namespace BS_NMSP
 		DieFunction mDieFunction;
 
 	private:
+
+		struct AnchorLink
+		{
+			int member;
+			int prop;
+		};
+
+		void getControllers(EmitterDefinition* def, ParseTreeNode* node, String& callName, 
+			int& funcIndex, std::list<int>& affectors, std::list<AnchorLink>& anchors);
 
 		// Setters & getters for built-in properties
 		static void setPropertyX(bs::UserTypeBase* object, float value);
@@ -170,6 +175,13 @@ namespace BS_NMSP
 #ifdef BS_Z_DIMENSION
 		static float getPropertyZ(bs::UserTypeBase* object);
 #endif
+
+	public:
+
+		// List of properties that can be controlled.  See bsConfig.h.
+		Property mProperties[BS_MAX_USER_PROPERTIES + NUM_SPECIAL_PROPERTIES];
+
+		int mNumProperties;
 
 	public:
 
@@ -271,11 +283,11 @@ namespace BS_NMSP
 		 *
 		 *	This uses the user-supplied GetFunction to get the named property.
 		 *
-		 *	\param object the emitted object.
+		 *	\param record the EmitTypeControl controlling the emitted object.
 		 *	\param prop the name of the property.
 		 *	\return the value of the property.
 		 */
-		bstype getProperty(UserTypeBase* object, const String& prop) const;
+		bstype getProperty(EmitTypeControl* record, const String& prop) const;
 
 		/**	\brief Register a user-supplied EmitFunction
 		 *
@@ -312,20 +324,6 @@ namespace BS_NMSP
 		 */
 		int getNumEmitFunctionArguments(const String& name) const;
 
-		/**	\brief Retrieve the indices of control functions and Affectors that an emit call has specified.
-		 *
-		 *	This is used in semantic checking during compilation.  It for is internal use.
-		 *
-		 *	\param def the EmitterDefinition in use.
-		 *	\param node the ParseTreeNode in the abstract syntax tree.
-		 *	\param callName the name of the control function, if any.
-		 *	\param funcIndex the index of the control function, returned via reference.
-		 *	\param affectors list of Affector instances that the call uses, returned via reference.
-		 *	\param properties list of properties that the call uses as anchors, returned via reference.
-		 */
-		void getControllers(EmitterDefinition* def, ParseTreeNode* node,
-			String& callName, int& funcIndex, std::vector<int>& affectors, std::vector<String>& properties);
-
 		/**	\brief Generate bytecode for a given emission call.
 		 *
 		 *	This is used during compilation.  It for is internal use.
@@ -350,12 +348,13 @@ namespace BS_NMSP
 		 *	\param z z-position of the emitting object.
 		 *	\param members the member variables of the emitting object.
 		 *	\param userObj pointer to user object to pass back into emit function.
+		 *	\param emitter this pointer will be invalid when object is emitted by a function
 		 *	
 		 *	\return the number of bytecodes that the BC_EMIT opcode used.
 		 */
 
-		int processCode(const uint32* code, ScriptState& state, bstype x, 
-			bstype y, bstype z, bstype* members, void* userObj);
+		int _processCode(const uint32* code, ScriptState& state, bstype x, 
+			bstype y, bstype z, bstype* members, void* userObj, Emitter* emitter);
 #else
 		/**	\brief Process a BC_EMIT opcode.
 		 *
@@ -367,11 +366,12 @@ namespace BS_NMSP
 		 *	\param y y-position of the emitting object.
 		 *	\param members the member variables of the emitting object.
 		 *	\param userObj pointer to user object to pass back into emit function.
+		 *	\param emitter this pointer will be invalid when object is emitted by a function
 		 *	
 		 *	\return the number of bytecodes that the BC_EMIT opcode used.
 		 */
-		int processCode(const uint32* code, ScriptState& state, bstype x, 
-			bstype y, bstype* members, void* userObj);
+		int _processCode(const uint32* code, ScriptState& state, bstype x, 
+			bstype y, bstype* members, void* userObj, Emitter* emitter);
 #endif
 
 		/**	\brief Registers a user AffectorFunction with this type.

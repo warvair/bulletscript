@@ -147,11 +147,11 @@ ScriptRecord* ObjectDefinition::createScriptRecord(ScriptMachine* machine)
 	ScriptRecord* record = new ScriptRecord(mMaxLocals);
 
 	// Allocate space for member vars, and set where possible
-	int numMembers = getNumMemberVariables();
-	if (numMembers > 0)
+	record->numMembers = getNumMemberVariables();
+	if (record->numMembers > 0)
 	{
-		record->members = new bstype[numMembers];
-		for (int i = 0; i < numMembers; ++i)
+		record->members = new bstype[record->numMembers];
+		for (int i = 0; i < record->numMembers; ++i)
 			record->members[i] = mMemberVariables[i].value;
 	}
 

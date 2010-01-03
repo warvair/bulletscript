@@ -401,7 +401,8 @@ bool ParseTree::checkConstantExpression(ObjectDefinition* def, CodeBlockType typ
 					// only globals allowed here.
 					if (mScriptMachine->getGlobalVariableIndex(varName) == BS_NotFound)
 					{
-						addError(node->getLine(), "Variable '" + varName + "' is either undeclared or inaccessible.");
+						String errMsg = getErrorMessage(BS_NotFound);
+						addError(node->getLine(), errMsg + ": variable '" + varName + "'.");
 						return false;
 					}
 				}
@@ -417,7 +418,8 @@ bool ParseTree::checkConstantExpression(ObjectDefinition* def, CodeBlockType typ
 						{
 							if (mScriptMachine->getGlobalVariableIndex(varName) == BS_NotFound)
 							{
-								addError(node->getLine(), "Variable '" + varName + "' is not declared.");
+								String errMsg = getErrorMessage(BS_NotFound);
+								addError(node->getLine(), errMsg + ": variable '" + varName + "'.");
 								return false;
 							}
 						}
@@ -433,7 +435,8 @@ bool ParseTree::checkConstantExpression(ObjectDefinition* def, CodeBlockType typ
 					{
 						if (mScriptMachine->getGlobalVariableIndex(varName) == BS_NotFound)
 						{
-							addError(node->getLine(), "Variable '" + varName + "' is not declared2.");
+							String errMsg = getErrorMessage(BS_NotFound);
+							addError(node->getLine(), errMsg + ": variable '" + varName + "'.");
 							return false;
 						}
 					}
@@ -449,7 +452,8 @@ bool ParseTree::checkConstantExpression(ObjectDefinition* def, CodeBlockType typ
 						{
 							if (mScriptMachine->getGlobalVariableIndex(varName) == BS_NotFound)
 							{
-								addError(node->getLine(), "Variable '" + varName + "' is not declared1.");
+								String errMsg = getErrorMessage(BS_NotFound);
+								addError(node->getLine(), errMsg + ": variable '" + varName + "'.");
 								return false;
 							}
 						}
@@ -492,7 +496,8 @@ bool ParseTree::checkConstantExpression(ObjectDefinition* def, CodeBlockType typ
 			ControllerDefinition* cDef = static_cast<ControllerDefinition*>(def);
 			if (cDef->getEmitterVariableIndex(varName) == BS_NotFound)
 			{
-				addError(node->getLine(), "Emitter variable '" + varName + "' is not declared3.");
+				String errMsg = getErrorMessage(BS_NotFound);
+				addError(node->getLine(), errMsg + ": variable '" + varName + "'.");
 				return false;
 			}
 
@@ -528,15 +533,18 @@ void ParseTree::createMemberVariables(ObjectDefinition* def, ParseTreeNode* node
 		}
 
 		// Make sure it doesn't already exist
-		if (def->getMemberVariableIndex(varName) != BS_NotFound)
-			addError(node->getLine(), "Member variable '" + varName + "' already declared.");
+		int errCode = def->getMemberVariableIndex(varName);
+		if (errCode != BS_NotFound)
+		{
+			String errMsg = getErrorMessage(errCode);
+			addError(node->getLine(), errMsg + ": member variable '" + varName + "'.");
+		}
 
-		int errCode = def->addMemberVariable(varName, false);
+		errCode = def->addMemberVariable(varName, false);
 		if (errCode != BS_OK)
 		{
-			// Get error code message
-			// ...
-			addError(node->getLine(), "Too many member variables defined for '" + def->getName() + "'.");
+			String errMsg = getErrorMessage(errCode);
+			addError(node->getLine(), errMsg + ": " + def->getName() + "'.");
 			return;
 		}
 	}
@@ -571,9 +579,11 @@ void ParseTree::addMemberVariables(ObjectDefinition* def,
 		while (range.first != range.second)
 		{
 			String varName = range.first->second.name;
-			if (def->getMemberVariableIndex(varName) >= 0)
+			int errCode = def->getMemberVariableIndex(varName);
+			if (errCode != BS_NotFound)
 			{
-				addError(0, "Member variable '" + varName + "' already declared.");
+				String errMsg = getErrorMessage(errCode);
+				addError(0, errMsg + ": variable '" + varName + "'.");
 			}
 			else
 			{
@@ -659,7 +669,7 @@ void ParseTree::createEmitterVariables(ControllerDefinition* def, ParseTreeNode*
 		String emitType = emitNode->getStringData();
 		
 		// Make sure that a) the variable name doesn't exist, and that b) the emitter name does
-		if (def->getEmitterVariableIndex(varName) >= 0)
+		if (def->getEmitterVariableIndex(varName) != BS_NotFound)
 		{
 			addError(node->getLine(), "Variable '" + varName + "' already declared.");
 			return;
@@ -757,7 +767,7 @@ void ParseTree::checkEmitControllers(EmitterDefinition* def, ParseTreeNode* node
 		int fIndex = def->getFunctionIndex(ctrlName);
 		if (fIndex == BS_NotFound)
 		{
-			addError(node->getLine(), "Function '" + ctrlName + "' is not declared4.");
+			addError(node->getLine(), "Function '" + ctrlName + "' is not declared.");
 			return;
 		}
 
@@ -821,12 +831,30 @@ void ParseTree::checkEmitControllers(EmitterDefinition* def, ParseTreeNode* node
 
 		return;
 	}
-	else if (nodeType == PT_Property)
+	else if (nodeType == PT_AnchorLink)
 	{
-		// Make sure this EmitType has the property
-		String propertyName = node->getStringData();
-		if (ft->getPropertyIndex(propertyName) == BS_NotFound)
-			addError(node->getLine(), "Property '" + propertyName + "' not registered for " + ft->getName());
+		if (type == CBT_Function)
+		{
+			addError(node->getLine(), "Anchors cannot be used from functions, only states.");
+			return;
+		}
+
+		// Make sure that member variable exists, and property exists
+		String memberName = node->getChild(0)->getStringData();
+		if (def->getMemberVariableIndex(memberName) == BS_NotFound)
+		{
+			String errMsg = getErrorMessage(BS_NotFound);
+			addError(0, errMsg + ": member variable '" + memberName + "'.");
+		}
+		
+		String propName = node->getChild(1)->getStringData();
+		if (ft->getPropertyIndex(propName) == BS_NotFound)
+		{
+			String errMsg = getErrorMessage(BS_NotFound);
+			addError(0, errMsg + ": property '" + propName + "'.");
+		}
+
+		return;
 	}
 
 	for (int i = 0; i < ParseTreeNode::MAX_CHILDREN; ++ i)
@@ -1003,6 +1031,10 @@ void ParseTree::buildFunctions(EmitterDefinition* def, ParseTreeNode* node)
 			{
 				// Error, must have arguments
 				addError(node->getLine(), "Wait statement has no arguments.");
+			}
+			else
+			{
+				checkConstantExpression(def, CBT_Function, s_curFunc->name, node->getChild(0));
 			}
 		}
 		return;

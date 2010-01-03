@@ -32,7 +32,7 @@ namespace BS_NMSP
 #define BS_MAX_USER_PROPERTIES			8
 
 // max number of user-defined member variables that can be defined for a particular Emitter
-// this cannot be more than 32
+// this cannot be more than 32 - NUM_SPECIAL_MEMBERS
 #define BS_MAX_USER_EMITTER_MEMBERS		16
 
 // size of virtual machine stack

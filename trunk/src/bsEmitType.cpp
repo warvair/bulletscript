@@ -169,10 +169,10 @@ void EmitType::setProperty2(EmitTypeControl* record, const String& prop,
 	record->properties[index].speed = (value - curValue) / time;
 }
 // --------------------------------------------------------------------------------
-bstype EmitType::getProperty(UserTypeBase* object, const String& prop) const
+bstype EmitType::getProperty(EmitTypeControl* record, const String& prop) const
 {
 	int index = getPropertyIndex(prop);
-	return mProperties[index].getter(object);
+	return mProperties[index].getter(record->__object);
 }
 // --------------------------------------------------------------------------------
 bool EmitType::emitFunctionExists(const String& name) const
@@ -245,7 +245,7 @@ Affector* EmitType::getAffectorInstance(int index) const
 }
 // --------------------------------------------------------------------------------
 void EmitType::getControllers(EmitterDefinition* def, ParseTreeNode* node, String& callName, 
-							  int& funcIndex, std::vector<int>& affectors, std::vector<String>& properties)
+							  int& funcIndex, std::list<int>& affectors, std::list<AnchorLink>& anchors)
 {
 	int nodeType = node->getType();
 	if (nodeType == PT_FunctionCall)
@@ -262,32 +262,37 @@ void EmitType::getControllers(EmitterDefinition* def, ParseTreeNode* node, Strin
 		int index = getAffectorInstanceIndex(instanceName);
 		affectors.push_back(index);
 	}
-	else if (nodeType == PT_Property)
+	else if (nodeType == PT_AnchorLink)
 	{
-		// Make sure we a) do not have too many properties and b) we don't have duplicates
-		if (properties.size() >= BS_MAX_EMITTED_ANCHORS)
-		{
-			node->getTree()->addError(node->getLine(), "Too many anchor properties.");
-			return;
-		}
+		String var = node->getChild(0)->getStringData();
+		String prop = node->getChild(1)->getStringData();
 
-		String propName = node->getStringData();
-		for (size_t i = 0; i < properties.size(); ++i)
+		AnchorLink al;
+		al.member = def->getMemberVariableIndex(var);
+		al.prop = getPropertyIndex(prop);
+
+		// If al.prop is already in the list, then error, because we cannot map more than one
+		// member onto the same property
+		std::list<AnchorLink>::iterator it = anchors.begin();
+		while (it != anchors.end())
 		{
-			if (properties[i] == propName)
+			AnchorLink& link = *it;
+			if (link.prop == al.prop)
 			{
-				node->getTree()->addError(node->getLine(), "Anchor property '" + propName + "' already used.");
+				node->getTree()->addError(node->getLine(), "Anchor property '" + prop + "' linked to more than once.");
 				return;
 			}
+
+			++it;
 		}
 
-		properties.push_back(propName);
+		anchors.push_back(al);
 	}
 
 	for (int i = 0; i < ParseTreeNode::MAX_CHILDREN; ++ i)
 	{
 		if (node->getChild(i))
-			getControllers(def, node->getChild(i), callName, funcIndex, affectors, properties);
+			getControllers(def, node->getChild(i), callName, funcIndex, affectors, anchors);
 	}
 }
 // --------------------------------------------------------------------------------
@@ -304,8 +309,8 @@ void EmitType::generateBytecode(EmitterDefinition* def, ParseTreeNode* node,
 	control function number of arguments
 	number of affectors
 	[affectors]
-	number of anchored properties
-	[properties]
+	number of anchors
+	[anchors]
 	EmitterDefinition id
 */
 
@@ -323,12 +328,12 @@ void EmitType::generateBytecode(EmitterDefinition* def, ParseTreeNode* node,
 	// control parameters
 	uint32 controlType = 0;
 	int ftFuncIndex = -1;
-	std::vector<int> affectors;
-	std::vector<String> properties;
+	std::list<int> affectors;
+	std::list<AnchorLink> anchors;
 	String callName = "";
 	ParseTreeNode* tNode = node->getChild(3);
 	if (tNode)
-		getControllers(def, tNode, callName, ftFuncIndex, affectors, properties);
+		getControllers(def, tNode, callName, ftFuncIndex, affectors, anchors);
 
 	// +1 because 0 means no function
 	controlType = ftFuncIndex + 1;
@@ -343,19 +348,26 @@ void EmitType::generateBytecode(EmitterDefinition* def, ParseTreeNode* node,
 	else
 		code->push_back(0);
 
-	// Push number of affectors
+	// Push affectors
 	int numAffectors = (int) affectors.size();
 	code->push_back(numAffectors);
-	for (int i = 0; i < numAffectors; ++i)
-		code->push_back(affectors[i]);
-	
-	// Push number of anchored properties
-	int numProperties = (int) properties.size();
-	code->push_back(numProperties);
-	for (int i = 0; i < numProperties; ++i)
+	std::list<int>::iterator affIt = affectors.begin();
+	while (affIt != affectors.end())
 	{
-		int propIndex = mScriptMachine->getPropertyIndex(properties[i]);
-		code->push_back(propIndex);
+		code->push_back(*affIt);
+		++affIt;
+	}
+
+	// Push anchors
+	int numAnchors = (int) anchors.size();
+	code->push_back(numAnchors);
+	std::list<AnchorLink>::iterator ancIt = anchors.begin();
+	while (ancIt != anchors.end())
+	{
+		AnchorLink& al = *ancIt;
+		code->push_back(al.member);
+		code->push_back(al.prop);
+		++ancIt;
 	}
 
 	// This is very hacky, but works.  This is because, at the point that this function is
@@ -365,14 +377,14 @@ void EmitType::generateBytecode(EmitterDefinition* def, ParseTreeNode* node,
 	code->push_back((uint32) index);
 }
 // --------------------------------------------------------------------------------
-int EmitType::processCode(const uint32* code, ScriptState& state, bstype x, bstype y, 
+int EmitType::_processCode(const uint32* code, ScriptState& state, bstype x, bstype y, 
 #ifdef BS_Z_DIMENSION
 						  bstype z, 
 #endif
-						  bstype* members, void* userObj)
+						  bstype* members, void* userObj, Emitter* emitter)
 {
 	int funcIndex = code[state.curInstruction + 2];
-	uint32 numAffectors = 0, numProperties = 0;
+	uint32 numAffectors = 0, numAnchors = 0;
 
 	EmitFunction func = mFunctions[funcIndex].func;
 
@@ -389,49 +401,47 @@ int EmitType::processCode(const uint32* code, ScriptState& state, bstype x, bsty
 		// If specified, set up control stuff
 		uint32 controlFunc = code[state.curInstruction + 3];
 		numAffectors = code[state.curInstruction + 5];
-		numProperties = code[state.curInstruction + 6 + numAffectors];
+		numAnchors = code[state.curInstruction + 6 + numAffectors];
 
 		// Should create EmitTypeControl if it uses a controller function,
 		// or affectors.
-		if (controlFunc == 0 && numAffectors == 0 && numProperties == 0)
+		if (controlFunc == 0 && numAffectors == 0 && numAnchors == 0)
 		{
-			type->__ft = 0;
+			type->__et = 0;
 		}
 		else
 		{
 			// Request a EmitTypeControl from pool
-			int emitDef = code[state.curInstruction + 7 + numAffectors + numProperties];
-			type->__ft = mScriptMachine->getEmitTypeRecord(emitDef);
-			type->__ft->__type = this;
-			type->__ft->__userObject = userObj;
+			int emitDef = code[state.curInstruction + 7 + numAffectors + numAnchors * 2];
+			type->__et = mScriptMachine->getEmitTypeRecord(emitDef);
+			type->__et->__type = this;
+			type->__et->__userObject = userObj;
 
 			// Set up control function
 			if (controlFunc != 0)
 			{
 				int numArgs = code[state.curInstruction + 4];
 
-				type->__ft->code = mScriptMachine->getCodeRecord(controlFunc - 1);
+				type->__et->code = mScriptMachine->getCodeRecord(controlFunc - 1);
 				
 				state.stackHead -= numArgs;
-				memcpy(type->__ft->state.locals, state.stack + state.stackHead, numArgs * sizeof(bstype));
+				memcpy(type->__et->state.locals, state.stack + state.stackHead, numArgs * sizeof(bstype));
 			}
 
 			// Set up affectors
-			type->__ft->numAffectors = numAffectors;
+			type->__et->numAffectors = numAffectors;
 			for (uint32 i = 0; i < numAffectors; ++i)
-				type->__ft->affectors[i] = (int) code[state.curInstruction + 6 + i];
+				type->__et->affectors[i] = (int) code[state.curInstruction + 6 + i];
 
-			// Set up anchored properties: these should be set on the Emitter, not the emitted object!
-			// Ie, we want to add this UserTypeBase to the Emitter's list for that property, or whatever.
-			for (uint32 i = 0; i < numProperties; ++i)
-			{
-				// ...
-			}
+			// Set up anchors
+			uint32 ancOffset = state.curInstruction + 7 + numAffectors;
+			for (uint32 i = 0; i < numAnchors; ++i, ancOffset += 2)
+				mScriptMachine->addAnchoredObject(type, emitter, code[ancOffset], code[ancOffset + 1]);
 		}
 	}
 
 	// this must match the number of bytecodes emitted in generateBytecode
-	return 8 + numAffectors + numProperties;
+	return 8 + numAffectors + numAnchors * 2;
 }
 // --------------------------------------------------------------------------------
 
