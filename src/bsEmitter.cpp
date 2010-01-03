@@ -6,6 +6,17 @@ namespace BS_NMSP
 {
 
 // --------------------------------------------------------------------------------
+void Emitter::AnchorList::update(bstype value) 
+{
+	std::list<Entry>::iterator it = entries.begin();
+	while (it != entries.end())
+	{
+		Entry& ent = *it;
+		++it;
+	}
+}
+// --------------------------------------------------------------------------------
+// --------------------------------------------------------------------------------
 Emitter::Emitter(ScriptMachine* machine) :
 	mEnabled(true),
 	mActiveControllers(0),
@@ -91,8 +102,13 @@ bstype Emitter::getMember(int member) const
 	return mRecord->members[member + NUM_SPECIAL_MEMBERS];
 }
 // --------------------------------------------------------------------------------
-void Emitter::addAnchoredObject(int anchor, UserTypeBase* object)
+void Emitter::addAnchoredObject(int anchor, int prop, EmitTypeControl* ctrl)
 {
+	AnchorList::Entry entry;
+	entry.propertyIndex = prop;
+	entry.control = ctrl;
+	
+	mAnchors[anchor].entries.push_back(entry);
 }
 // --------------------------------------------------------------------------------
 void Emitter::setState(int state)
@@ -128,6 +144,10 @@ void Emitter::update(float frameTime)
 	// Go through Y list
 	// Go through angle list
 
+	// Set each FireTypeRecord::properties[propIndex].base to the matching member variable, in
+	// mRecord::members
+	// Need then, to know propIndex and member variable index
+
 	// Rather, we need a way to give Emitters properties.  They have x, y and angle, but we may
 	// want them to have red/green/blue as well?  What could this be used for?  It means that we
 	// could change a property of an emitted object externally by changing the Emitter, and thus
@@ -135,6 +155,11 @@ void Emitter::update(float frameTime)
 
 	// Need a way to tie property names to indices.  We can tie x and y easily enough because they
 	// are built in, but angle will need something else because it is defined by the user.
+
+	for (int i = 0; i < mRecord->numMembers; ++i)
+	{
+		mAnchors[i].update(mRecord->members[i]);
+	}
 
 	if (!mEnabled)
 		return;

@@ -57,7 +57,6 @@ namespace BS_NMSP
 			String name;
 			EmitterDefinition* def;
 			DeepMemoryPool<EmitTypeControl, int>* typePool;
-//			DeepMemoryPool<Emitter, ScriptMachine*>* emitterPool;
 		};
 		
 		typedef std::vector<EmitterRecord> EmitterRecordList;
@@ -77,6 +76,17 @@ namespace BS_NMSP
 		// CodeRecords
 		typedef std::vector<CodeRecord*> CodeList;
 		CodeList mCodeRecords;
+
+		// Anchored objects
+		struct AnchoredObject
+		{
+			UserTypeBase* userType;
+			Emitter* emitter;
+			uint32 member;
+			uint32 prop;
+		};
+
+		std::list<AnchoredObject> mAnchors;
 
 	private:
 
@@ -120,6 +130,15 @@ namespace BS_NMSP
 		void destroyController(Controller* emit);
 
 		void updateControllers(float frameTime);
+
+		// Anchored objects
+		void addAnchoredObject(UserTypeBase* userType, Emitter* emitter, uint32 member, uint32 prop);
+
+		void removeAnchoredObject(UserTypeBase* userType);
+
+		void removeAnchoredObjects(Emitter* emitter);
+
+		void updateAnchoredObjects(float frameTime);
 
 		// CodeRecords
 		void createCodeRecord(const String& name);

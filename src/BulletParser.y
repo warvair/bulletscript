@@ -40,6 +40,7 @@ static const String gs_tokens[] = {
 	"INTEGER",							"integral value",
 	"REAL",								"value",
 	"IDENTIFIER",						"identifier",
+	"SYMBOL_LINK",						"->",
 	"SYMBOL_LTE",						"<=",
 	"SYMBOL_GTE",						">=",
 	"SYMBOL_EQ",						"==",
@@ -56,7 +57,7 @@ static const String gs_tokens[] = {
 
 void replaceVerboseTokens(String& a_string)
 {
-	for (int i = 0; i < 70; i += 2)
+	for (int i = 0; i < 72; i += 2)
 	{
 		int startPos = (int) a_string.find(gs_tokens[i]);
 		if (startPos < 0)
@@ -200,6 +201,7 @@ void generate_inc_expr(int value, int nodeType, YYSTYPE parentNode, YYSTYPE idNo
 %token INTEGER
 %token REAL
 %token IDENTIFIER
+%token SYMBOL_LINK
 %token SYMBOL_LTE
 %token SYMBOL_GTE
 %token SYMBOL_EQ
@@ -1364,9 +1366,18 @@ controller_entry
 			$$ = $1;
 			$$->_setType(PT_AffectorCall);
 		}
-	| property
+	| anchor_link
 		{
 			$$ = $1;
+		}
+	;
+	
+anchor_link
+	: identifier SYMBOL_LINK property
+		{
+			$$ = AST->createNode(PT_AnchorLink, yylineno);
+			$$->setChild(0, $1);
+			$$->setChild(1, $3);
 		}
 	;
 	

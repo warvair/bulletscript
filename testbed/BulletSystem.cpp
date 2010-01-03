@@ -32,6 +32,16 @@ float bullet_getAngle(bs::UserTypeBase* object)
 	return g_bullets->getAngle(object);
 }
 
+void bullet_setSpeed(bs::UserTypeBase* object, float value)
+{
+	g_bullets->setSpeed(object, value);
+}
+
+float bullet_getSpeed(bs::UserTypeBase* object)
+{
+	return g_bullets->getSpeed(object);
+}
+
 void bullet_setRed(bs::UserTypeBase* object, float value)
 {
 	g_bullets->setRed(object, value);
@@ -222,6 +232,22 @@ float BulletBattery::getAngle(bs::UserTypeBase* object)
 {
 	Bullet* b = static_cast<Bullet*>(object);
 	return b->angle;
+}
+// --------------------------------------------------------------------------------
+void BulletBattery::setSpeed(bs::UserTypeBase* object, float value)
+{
+	Bullet* b = static_cast<Bullet*>(object);
+
+	b->speed = value;
+	int index = (int) (b->angle * 10) % 3600;
+	b->vx = mSinTable[index] * value;
+	b->vy = mCosTable[index] * value;
+}
+// --------------------------------------------------------------------------------
+float BulletBattery::getSpeed(bs::UserTypeBase* object)
+{
+	Bullet* b = static_cast<Bullet*>(object);
+	return b->speed;
 }
 // --------------------------------------------------------------------------------
 void BulletBattery::setAlpha(bs::UserTypeBase* object, float value)

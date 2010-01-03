@@ -66,27 +66,27 @@ bool TypeManager::affectorFunctionExists(int type, const String& name) const
 // --------------------------------------------------------------------------------
 void TypeManager::releaseType(UserTypeBase* ft)
 {
-	if (ft->__ft)
+	if (ft->__et)
 	{
-		mScriptMachine->releaseEmitTypeRecord(ft->__ft->__emitterDefinition, ft->__ft);
-		ft->__ft = 0;
+		mScriptMachine->releaseEmitTypeRecord(ft->__et->__emitterDefinition, ft->__et);
+		ft->__et = 0;
 	}
 }
 // --------------------------------------------------------------------------------
 #ifdef BS_Z_DIMENSION
-int TypeManager::updateType(UserTypeBase* ft, bstype x, bstype y, bstype z, float frameTime)
+int TypeManager::updateType(UserTypeBase* userType, bstype x, bstype y, bstype z, float frameTime)
 #else
-int TypeManager::updateType(UserTypeBase* ft, bstype x, bstype y, float frameTime)
+int TypeManager::updateType(UserTypeBase* userType, bstype x, bstype y, float frameTime)
 #endif
 {
-	if (!ft->__ft)
+	if (!userType->__et)
 		return 0;
 
-	EmitTypeControl* rec = ft->__ft;
+	EmitTypeControl* rec = userType->__et;
 	EmitType* emitType = rec->__type;
 
 	// Update pointer to the user object because it may have been moved by the user
-	rec->__object = ft;
+	rec->__object = userType;
 
 	// Update changing properties before script, because they are independent of script status
 	int numProperties = emitType->mNumProperties;
@@ -125,12 +125,12 @@ int TypeManager::updateType(UserTypeBase* ft, bstype x, bstype y, float frameTim
 		}
 	}
 
-	// Then affectors, if it has not been killed by the script.  Check ft->__ft rather
+	// Then affectors, if it has not been killed by the script.  Check userType->__et rather
 	// than rec because rec will still be pointing at the old record.
-	if (ft->__ft)
+	if (userType->__et)
 	{
-		for (int i = 0; i < ft->__ft->numAffectors; ++i)
-			ft->__ft->__type->applyAffector(ft, ft->__ft->affectors[i], frameTime);
+		for (int i = 0; i < userType->__et->numAffectors; ++i)
+			userType->__et->__type->applyAffector(userType, userType->__et->affectors[i], frameTime);
 	}
 
 	return 0;

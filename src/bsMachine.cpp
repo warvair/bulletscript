@@ -135,6 +135,7 @@ void Machine::update(float frameTime)
 {
 	mScriptMachine->updateControllers(frameTime);
 	mScriptMachine->updateEmitters(frameTime);
+	mScriptMachine->updateAnchoredObjects(frameTime);
 }
 // --------------------------------------------------------------------------------
 void Machine::print_debug()

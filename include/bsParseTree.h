@@ -98,6 +98,7 @@ namespace BS_NMSP
 		PT_FunctionCallArgList,
 		PT_Identifier,
 		PT_Property,
+		PT_AnchorLink,
 		PT_EmitterMember,
 		PT_Constant
 	};

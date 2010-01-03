@@ -18,7 +18,7 @@ namespace BS_NMSP
 	 */
 	struct UserTypeBase
 	{
-		EmitTypeControl* __ft;	
+		EmitTypeControl* __et;	
 		float x, y;
 #ifdef BS_Z_DIMENSION
 		float z;
@@ -129,6 +129,8 @@ namespace BS_NMSP
 		// Todo: in a poor example of RAII, this is allocated by <Object>Definition::createScriptRecord,
 		// and deallocated in ~ScriptRecord, which is called by <Object>::onRelease
 		bstype* members;
+
+		int numMembers;
 
 		// Index into owning object's state list.
 		int curState;

@@ -77,6 +77,10 @@ public:
 
 	float getAngle(bs::UserTypeBase* object);
 
+	void setSpeed(bs::UserTypeBase* object, float value);
+
+	float getSpeed(bs::UserTypeBase* object);
+
 	void setAlpha(bs::UserTypeBase* object, float value);
 
 	float getAlpha(bs::UserTypeBase* object);
@@ -106,6 +110,10 @@ void bullet_kill(bs::UserTypeBase* object, void* userObj);
 void bullet_setAngle(bs::UserTypeBase* object, float value);
 
 float bullet_getAngle(bs::UserTypeBase* object);
+
+void bullet_setSpeed(bs::UserTypeBase* object, float value);
+
+float bullet_getSpeed(bs::UserTypeBase* object);
 
 void bullet_setRed(bs::UserTypeBase* object, float value);
 

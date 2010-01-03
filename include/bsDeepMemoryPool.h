@@ -17,8 +17,7 @@ namespace BS_NMSP
 		template<class T, typename A1> friend class DeepMemoryPool;
 
 		// Internal 'active' bits
-		int __dmpoIndex;
-		bool __dmpoActive;
+		uint32 __dmpoIndex;
 	
 	public:
 
@@ -41,7 +40,9 @@ namespace BS_NMSP
 
 		A1 mArg1;
 
-		std::list<int> mFreeList;
+		std::list<uint32> mFreeList;
+
+		static const uint32 ActiveBit = (1 << 31);
 
 	private:
 
@@ -53,8 +54,7 @@ namespace BS_NMSP
 				for (size_t i = mPoolSize; i < newSize; ++i)
 				{
 					mPool[i] = new T(mArg1);
-					mPool[i]->__dmpoIndex = (int) i;
-					mPool[i]->__dmpoActive = false;
+					mPool[i]->__dmpoIndex = (uint32) i;
 					mFreeList.push_back((int) i);
 				}
 
@@ -71,14 +71,14 @@ namespace BS_NMSP
 			mFreeList.clear();
 		}
 
-		inline T* _getFrom(size_t index) const
+		inline T* _getFrom(uint32 index) const
 		{
-			size_t size = mPoolSize;
+			uint32 size = (uint32) mPoolSize;
 
 			while (index < size)
 			{
-				if (mPool[index]->__dmpoActive)
-				return mPool[index];
+				if (mPool[index]->__dmpoIndex & ActiveBit)
+					return mPool[index];
 
 				++index;
 			}
@@ -120,7 +120,7 @@ namespace BS_NMSP
 			mFreeList.pop_front();
 
 			T* obj = mPool[index];
-			obj->__dmpoActive = true;
+			obj->__dmpoIndex |= ActiveBit;
 			return obj;
 		}
 
@@ -129,8 +129,8 @@ namespace BS_NMSP
 		 */
 		void release(T* obj)
 		{
+			obj->__dmpoIndex &= ~ActiveBit;
 			mFreeList.push_back(obj->__dmpoIndex);
-			obj->__dmpoActive = false;
 			obj->onRelease();
 		}
 
@@ -148,7 +148,8 @@ namespace BS_NMSP
 		 */
 		T* getNext(T* obj) const
 		{
-			return _getFrom(obj->__dmpoIndex + 1);
+			uint32 nextIndex = obj->__dmpoIndex & ~ActiveBit;
+			return _getFrom(nextIndex + 1);
 		}
 
 		/**	\brief Get size of pool, in bytes.

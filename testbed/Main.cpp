@@ -56,6 +56,7 @@ int main (int argc, char **argv)
 	machine.registerEmitFunction("bullet", "fireT", 4, bullet_emitTarget);
 	machine.setDieFunction("bullet", bullet_kill);
 	machine.registerProperty("bullet", "angle",	bullet_setAngle, bullet_getAngle);
+	machine.registerProperty("bullet", "speed",	bullet_setSpeed, bullet_getSpeed);
 	machine.registerProperty("bullet", "red", bullet_setRed, bullet_getRed);
 	machine.registerProperty("bullet", "green",	bullet_setGreen, bullet_getGreen);
 	machine.registerProperty("bullet", "blue", bullet_setBlue, bullet_getBlue);
@@ -149,7 +150,7 @@ int main (int argc, char **argv)
 	}
 	for (int i = 0; i < 1; ++i)
 	{
-		Emitter* emit = machine.createEmitter("Flower");
+		Emitter* emit = machine.createEmitter("AnchorTest");
 		emit->setX(SCREEN_WIDTH / 2);
 		emit->setY(SCREEN_HEIGHT / 2);
 	}

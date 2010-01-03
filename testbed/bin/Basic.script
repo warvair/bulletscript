@@ -4,7 +4,7 @@ controller Boss1
 	time = 3;
 
 	// emitters - all these values are offsets from controller values
-	left = emitter Test(0, 0, 0);
+	left = emitter AnchorTest(0, 0, 0);
 
 	TurnOn = event()
 	{
@@ -43,25 +43,29 @@ controller Boss1
 	}
 }
 
-emitter Test
+
+emitter AnchorTest
 {
-	time = 0.1;
-	Stage1 = state 
+	emit_time = 5;
+
+	stop = function(time, total)
+	{
+		wait(time);
+		$speed = 0;
+		wait(total - time);
+		die;
+	}
+	
+	Emit = state
 	{
 		i = 0;
 		while (i < 90)
 		{
-			fireA bullet(This_Angle + i - 45, 100);
-			wait(time);
+			fireA bullet(i * 4, 600) : stop(0.25, emit_time), This_X -> $x, This_Y -> $y, This_Angle -> $angle;
 			i++;
 		}
-		wait(time + 1);
-	}
 
-	Stage2 = state
-	{
-		fireA bullet(This_Angle + 90, 100);
-		wait(time);
+		wait(emit_time);
 	}
 }
 

@@ -69,6 +69,7 @@ BINARY    	[0-1]
 "!="							{ return (SYMBOL_NEQ); }
 "&&"							{ return (SYMBOL_LOG_AND); }
 "||"							{ return (SYMBOL_LOG_OR); }
+"->"							{ return (SYMBOL_LINK); }
 ";"								{ return (';'); }
 "$"								{ return ('$'); }
 ":"								{ return (':'); }
