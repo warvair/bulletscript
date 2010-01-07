@@ -48,14 +48,24 @@ namespace BS_NMSP
 		void releaseType(UserTypeBase* ft);
 
 #ifdef BS_Z_DIMENSION
-		int updateType(UserTypeBase* userType, bstype x, bstype y, bstype z, float frameTime);
+		void updateType(UserTypeBase* userType, bstype x, bstype y, bstype z, float frameTime);
 #else
-		int updateType(UserTypeBase* userType, bstype x, bstype y, float frameTime);
+		void updateType(UserTypeBase* userType, bstype x, bstype y, float frameTime);
 #endif
 
 		int registerEmitFunction(const String& type, const String& name, int numArgs, EmitFunction func);
 
 		void setDieFunction(const String& type, DieFunction func);
+
+		int setAnchorX(const String& type, SetFunction set, GetFunction get);
+
+		int setAnchorY(const String& type, SetFunction set, GetFunction get);
+
+#ifdef BS_Z_DIMENSION
+		int setAnchorZ(const String& type, SetFunction set, GetFunction get);
+#endif
+
+		int setAnchorAngle(const String& type, SetFunction set, GetFunction get);
 
 		int registerProperty(const String& type, const String& name, SetFunction set, GetFunction get);
 

@@ -1,6 +1,7 @@
 #include <iostream>
 #include <assert.h>
 #include <ctime>
+#include <cmath>
 #include <windows.h>
 #include "bsTypeManager.h"
 
@@ -74,13 +75,13 @@ void TypeManager::releaseType(UserTypeBase* ft)
 }
 // --------------------------------------------------------------------------------
 #ifdef BS_Z_DIMENSION
-int TypeManager::updateType(UserTypeBase* userType, bstype x, bstype y, bstype z, float frameTime)
+void TypeManager::updateType(UserTypeBase* userType, bstype x, bstype y, bstype z, float frameTime)
 #else
-int TypeManager::updateType(UserTypeBase* userType, bstype x, bstype y, float frameTime)
+void TypeManager::updateType(UserTypeBase* userType, bstype x, bstype y, float frameTime)
 #endif
 {
 	if (!userType->__et)
-		return 0;
+		return;
 
 	EmitTypeControl* rec = userType->__et;
 	EmitType* emitType = rec->__type;
@@ -88,9 +89,89 @@ int TypeManager::updateType(UserTypeBase* userType, bstype x, bstype y, float fr
 	// Update pointer to the user object because it may have been moved by the user
 	rec->__object = userType;
 
-	// Update changing properties before script, because they are independent of script status
-	int numProperties = emitType->mNumProperties;
-	for (int i = 0; i < numProperties; ++i)
+	// Apply anchors
+	if (rec->emitter)
+	{
+		int anchorIndex = rec->flags & 0xff;
+		if (rec->emitter->_getAnchorIndex() != anchorIndex)
+		{
+			if (rec->flags & EmitTypeControl::EF_AnchorKill)
+				emitType->callDieFunction(rec->__object, rec->__userObject);
+			else
+				rec->emitter = 0;
+
+			return;
+		}
+
+		bstype delta;
+		
+		// X
+		if (rec->flags & EmitTypeControl::EF_AnchorX)
+		{
+			delta = rec->emitter->_getDeltaX();
+			emitType->setAnchorValue1(rec, Property_X, delta + emitType->getAnchorValue(rec, Property_X));
+		}
+
+		// Y
+		if (rec->flags & EmitTypeControl::EF_AnchorY)
+		{
+			delta = rec->emitter->_getDeltaY();
+			emitType->setAnchorValue1(rec, Property_Y, delta + emitType->getAnchorValue(rec, Property_Y));
+		}
+
+#ifdef BS_Z_DIMENSION
+		// Z
+		if (rec->flags & EmitTypeControl::EF_AnchorZ)
+		{
+			delta = rec->emitter->_getDeltaZ();
+			emitType->setAnchorValue1(rec, Property_Z, delta + emitType->getAnchorValue(rec, Property_Z));
+		}
+#endif
+
+		// Angle
+		if (rec->flags & EmitTypeControl::EF_AnchorAngle)
+		{
+			delta = rec->emitter->_getDeltaAngle();
+			emitType->setAnchorValue1(rec, Property_Angle, delta + emitType->getAnchorValue(rec, Property_Angle));
+		}
+
+		// Orbit
+		if (rec->flags & EmitTypeControl::EF_AnchorOrbit)
+		{
+			delta = rec->emitter->_getDeltaAngle();
+
+			bstype bx = emitType->getAnchorValue(rec, Property_X);
+			bstype by = emitType->getAnchorValue(rec, Property_Y);
+
+			float sinAngle = sin(delta * DEG_TO_RAD);
+			float cosAngle = cos(delta * DEG_TO_RAD);
+			emitType->setAnchorValue1(rec, Property_X, bx * cosAngle - by * sinAngle);
+			emitType->setAnchorValue1(rec, Property_Y, by * cosAngle + bx * sinAngle);
+		}
+	}
+
+	// Apply affectors
+	for (int i = 0; i < rec->numAffectors; ++i)
+		emitType->applyAffector(userType, rec->affectors[i], frameTime);
+
+	// Update properties
+	int i, numProperties = emitType->mNumProperties;
+	for (i = 0; i < NUM_SPECIAL_PROPERTIES; ++i)
+	{
+		int mask = 1 << i;
+		if (rec->activeProperties & mask)
+		{
+			bstype curValue = emitType->mProperties[i].getter(rec->__object) - rec->anchors[i];
+			bstype newValue = curValue + rec->properties[i].speed * frameTime;
+
+			emitType->mProperties[i].setter(rec->__object, newValue + rec->anchors[i]);
+
+			rec->properties[i].time -= frameTime;
+			if (rec->properties[i].time <= 0)
+				rec->activeProperties &= ~mask;
+		}
+	}
+	for (;i < numProperties; ++i)
 	{
 		int mask = 1 << i;
 		if (rec->activeProperties & mask)
@@ -106,17 +187,17 @@ int TypeManager::updateType(UserTypeBase* userType, bstype x, bstype y, float fr
 		}
 	}
 
-	// Then functions
+	// Run script function
 	if (rec->code)
 	{
 		if (rec->state.suspendTime <= 0)
 		{
-#ifdef BS_Z_DIMENSION
-			mScriptMachine->interpretCode(rec->code->byteCode, rec->code->byteCodeSize, 
-				rec->state, 0, rec, ScriptMachine::VT_EmitTypeControl, x, y, z, 0, false, rec->__userObject);
-#else
+#ifndef BS_Z_DIMENSION
 			mScriptMachine->interpretCode(rec->code->byteCode, rec->code->byteCodeSize, 
 				rec->state, 0, rec, x, y, 0, false, rec->__userObject);
+#else
+			mScriptMachine->interpretCode(rec->code->byteCode, rec->code->byteCodeSize, 
+				rec->state, 0, rec, x, y, z, 0, false, rec->__userObject);
 #endif
 		}
 		else
@@ -125,15 +206,6 @@ int TypeManager::updateType(UserTypeBase* userType, bstype x, bstype y, float fr
 		}
 	}
 
-	// Then affectors, if it has not been killed by the script.  Check userType->__et rather
-	// than rec because rec will still be pointing at the old record.
-	if (userType->__et)
-	{
-		for (int i = 0; i < userType->__et->numAffectors; ++i)
-			userType->__et->__type->applyAffector(userType, userType->__et->affectors[i], frameTime);
-	}
-
-	return 0;
 }
 // --------------------------------------------------------------------------------
 int TypeManager::registerEmitFunction(const String& type, const String& name, 
@@ -151,6 +223,40 @@ void TypeManager::setDieFunction(const String& type, DieFunction func)
 	
 	assert(ft != 0 && "TypeManager::setDieFunction no type");
 	ft->setDieFunction(func);
+}
+// --------------------------------------------------------------------------------
+int TypeManager::setAnchorX(const String& type, SetFunction set, GetFunction get)
+{
+	EmitType* ft = getType(type);
+	
+	assert(ft != 0 && "TypeManager::setAnchorX no type");
+	return ft->setAnchorX(set, get);
+}
+// --------------------------------------------------------------------------------
+int TypeManager::setAnchorY(const String& type, SetFunction set, GetFunction get)
+{
+	EmitType* ft = getType(type);
+	
+	assert(ft != 0 && "TypeManager::setAnchorY no type");
+	return ft->setAnchorY(set, get);
+}
+// --------------------------------------------------------------------------------
+#ifdef BS_Z_DIMENSION
+int TypeManager::setAnchorZ(const String& type, SetFunction set, GetFunction get)
+{
+	EmitType* ft = getType(type);
+	
+	assert(ft != 0 && "TypeManager::setAnchorY no type");
+	return ft->setAnchorY(set, get);
+}
+#endif
+// --------------------------------------------------------------------------------
+int TypeManager::setAnchorAngle(const String& type, SetFunction set, GetFunction get)
+{
+	EmitType* ft = getType(type);
+	
+	assert(ft != 0 && "TypeManager::setAnchorAngle no type");
+	return ft->setAnchorAngle(set, get);
 }
 // --------------------------------------------------------------------------------
 int TypeManager::registerProperty(const String& type, const String& name, 

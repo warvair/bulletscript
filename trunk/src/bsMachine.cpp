@@ -9,9 +9,6 @@ Machine::Machine() :
 	mScriptMachine(0),
 	mTypeManager(0)
 {
-	// Memory allocation
-	SmallAllocator::initialise();
-
 	mScriptMachine = new ScriptMachine(&mLog);
 	mTypeManager = new TypeManager(&mLog, mScriptMachine);
 	mScriptMachine->setTypeManager(mTypeManager);
@@ -19,8 +16,6 @@ Machine::Machine() :
 // --------------------------------------------------------------------------------
 Machine::~Machine()
 {
-	SmallAllocator::destroy();
-
 	delete mScriptMachine;
 	delete mTypeManager;
 }
@@ -65,14 +60,14 @@ void Machine::releaseType(UserTypeBase* ft)
 }
 // --------------------------------------------------------------------------------
 #ifdef BS_Z_DIMENSION
-int Machine::updateType(UserTypeBase* ft, bstype x, bstype y, bstype z, float frameTime)
+void Machine::updateType(UserTypeBase* ft, bstype x, bstype y, bstype z, float frameTime)
 {
-	return mTypeManager->updateType(ft, x, y, z, frameTime);
+	mTypeManager->updateType(ft, x, y, z, frameTime);
 }
 #else
-int Machine::updateType(UserTypeBase* ft, bstype x, bstype y, float frameTime)
+void Machine::updateType(UserTypeBase* ft, bstype x, bstype y, float frameTime)
 {
-	return mTypeManager->updateType(ft, x, y, frameTime);
+	mTypeManager->updateType(ft, x, y, frameTime);
 }
 #endif
 // --------------------------------------------------------------------------------
@@ -86,6 +81,28 @@ void Machine::setDieFunction(const String& type, DieFunction func)
 	mTypeManager->setDieFunction(type, func);
 }
 // --------------------------------------------------------------------------------
+int Machine::setAnchorX(const String& type, SetFunction set, GetFunction get)
+{
+	return mTypeManager->setAnchorX(type, set, get);
+}
+// --------------------------------------------------------------------------------
+int Machine::setAnchorY(const String& type, SetFunction set, GetFunction get)
+{
+	return mTypeManager->setAnchorY(type, set, get);
+}
+// --------------------------------------------------------------------------------
+#ifdef BS_Z_DIMENSION
+int Machine::setAnchorZ(const String& type, SetFunction set, GetFunction get)
+{
+	return mTypeManager->setAnchorZ(type, set, get);
+}
+#endif
+// --------------------------------------------------------------------------------
+int Machine::setAnchorAngle(const String& type, SetFunction set, GetFunction get)
+{
+	return mTypeManager->setAnchorAngle(type, set, get);
+}
+// --------------------------------------------------------------------------------
 int Machine::registerProperty(const String& type, const String& name, SetFunction set, GetFunction get)
 {
 	return mTypeManager->registerProperty(type, name, set, get);
@@ -96,10 +113,19 @@ int Machine::registerAffector(const String& type, const String& name, AffectorFu
 	return mTypeManager->registerAffector(type, name, func);
 }
 // --------------------------------------------------------------------------------
-Emitter* Machine::createEmitter(const String& definition, void* userObject)
+#ifndef BS_Z_DIMENSION
+Emitter* Machine::createEmitter(const String& definition, bstype x, bstype y, bstype angle, void* userObject)
 {
-	return mScriptMachine->createEmitter(definition, userObject);
+	return mScriptMachine->createEmitter(definition, x, y, angle, userObject);
 }
+// --------------------------------------------------------------------------------
+#else
+Emitter* Machine::createEmitter(const String& definition, bstype x, bstype y, bstype z, 
+								bstype angle, void* userObject)
+{
+	return mScriptMachine->createEmitter(definition, x, y, z, angle, userObject);
+}
+#endif
 // --------------------------------------------------------------------------------
 void Machine::destroyEmitter(Emitter* emit)
 {
@@ -131,11 +157,15 @@ int Machine::declareMemberVariable(const String& ctrl, const String& var, bstype
 	return mScriptMachine->declareMemberVariable(ctrl, var, value);
 }
 // --------------------------------------------------------------------------------
-void Machine::update(float frameTime)
+void Machine::preUpdate(float frameTime)
 {
 	mScriptMachine->updateControllers(frameTime);
 	mScriptMachine->updateEmitters(frameTime);
-	mScriptMachine->updateAnchoredObjects(frameTime);
+}
+// --------------------------------------------------------------------------------
+void Machine::postUpdate(float frameTime)
+{
+	mScriptMachine->postUpdateEmitters();
 }
 // --------------------------------------------------------------------------------
 void Machine::print_debug()

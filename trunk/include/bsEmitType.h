@@ -36,6 +36,19 @@ namespace BS_NMSP
 			bstype speed;
 		};
 
+		enum
+		{
+			EF_AnchorIndex =	1 << 0,
+			EF_AnchorX =		1 << 16,
+			EF_AnchorY =		1 << 17,
+			EF_AnchorZ =		1 << 18,
+			EF_AnchorAngle =	1 << 19,
+			EF_AnchorOrbit =	1 << 20,
+			EF_AnchorKill =		1 << 21,
+		};
+
+		uint32 flags;
+
 		// The bases are stored separately, so that they can be reset quickly without having
 		// to reset the whole Property structure.
 		Property properties[BS_MAX_USER_PROPERTIES + NUM_SPECIAL_PROPERTIES];
@@ -43,7 +56,16 @@ namespace BS_NMSP
 		// Bitfield for properties set.  This limits the number of properties to 32, but this is
 		// an acceptable limitation.  In reality, the user can only define up to 
 		// BS_MAX_USER_PROPERTIES properties, defined in bsConfig.h.
-		uint32 activeProperties; 
+		uint32 activeProperties;
+
+		// Anchors
+		// We could store anchor bits (need 4) in the same place as affectors, because we won't need 32
+		// affectors.  Also numAffectors and __emitterDefinition?
+		static const bstype defaultAnchors[NUM_SPECIAL_PROPERTIES];
+
+		const bstype* anchors;
+
+		Emitter* emitter;
 
 		// Affectors.  These are stored as indices into a list of Affector instances, stored in
 		// the relevant EmitType.  For performance reasons, the maximum number of Affectors that an
@@ -75,7 +97,10 @@ namespace BS_NMSP
 		EmitTypeControl(int numLocals) :
 			DeepMemoryPoolObject(),
 			code(0),
+			flags(0),
 			activeProperties(0),
+			anchors(0),
+			emitter(0),
 			numAffectors(0),
 			__type(0),
 			__object(0),
@@ -150,31 +175,8 @@ namespace BS_NMSP
 
 	private:
 
-		struct AnchorLink
-		{
-			int member;
-			int prop;
-		};
-
 		void getControllers(EmitterDefinition* def, ParseTreeNode* node, String& callName, 
-			int& funcIndex, std::list<int>& affectors, std::list<AnchorLink>& anchors);
-
-		// Setters & getters for built-in properties
-		static void setPropertyX(bs::UserTypeBase* object, float value);
-
-		static void setPropertyY(bs::UserTypeBase* object, float value);
-
-#ifdef BS_Z_DIMENSION
-		static void setPropertyZ(bs::UserTypeBase* object, float value);
-#endif
-
-		static float getPropertyX(bs::UserTypeBase* object);
-
-		static float getPropertyY(bs::UserTypeBase* object);
-
-#ifdef BS_Z_DIMENSION
-		static float getPropertyZ(bs::UserTypeBase* object);
-#endif
+			int& funcIndex, std::list<int>& affectors, std::list<String>& anchors);
 
 	public:
 
@@ -228,6 +230,22 @@ namespace BS_NMSP
 		 *	\param userObject pointer to user object to pass back into die function.
 		 */
 		void callDieFunction(UserTypeBase* object, void* userObject);
+
+		int setAnchorX(SetFunction set, GetFunction get);
+
+		int setAnchorY(SetFunction set, GetFunction get);
+
+#ifdef BS_Z_DIMENSION
+		int setAnchorZ(SetFunction set, GetFunction get);
+#endif
+
+		int setAnchorAngle(SetFunction set, GetFunction get);
+
+		void setAnchorValue1(EmitTypeControl* et, int anchor, bstype value) const;
+
+		void setAnchorValue2(EmitTypeControl* et, int anchor, bstype value, bstype time) const;
+
+		bstype getAnchorValue(EmitTypeControl* et, int anchor) const;
 
 		/**	\brief Register a controllable property for this EmitType.
 		 *

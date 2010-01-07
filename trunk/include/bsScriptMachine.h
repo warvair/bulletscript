@@ -77,17 +77,6 @@ namespace BS_NMSP
 		typedef std::vector<CodeRecord*> CodeList;
 		CodeList mCodeRecords;
 
-		// Anchored objects
-		struct AnchoredObject
-		{
-			UserTypeBase* userType;
-			Emitter* emitter;
-			uint32 member;
-			uint32 prop;
-		};
-
-		std::list<AnchoredObject> mAnchors;
-
 	private:
 
 		bool checkInstructionPosition(ScriptState& st, size_t length, bool loop);
@@ -111,11 +100,19 @@ namespace BS_NMSP
 		int getNumEmitterDefinitions() const;
 
 		// Emitters
-		Emitter* createEmitter(const String& definition, void* userObject);
+#ifndef BS_Z_DIMENSION
+		Emitter* createEmitter(const String& definition, bstype x, bstype y, bstype angle, 
+			void* userObject);
+#else
+		Emitter* createEmitter(const String& definition, bstype x, bstype y, bstype z, 
+			bstype angle, void* userObject);
+#endif
 
 		void destroyEmitter(Emitter* ctrl);
 
 		void updateEmitters(float frameTime);
+
+		void postUpdateEmitters();
 
 		// Controller Definitions
 		int addControllerDefinition(const String &name, ControllerDefinition* def);
@@ -130,15 +127,6 @@ namespace BS_NMSP
 		void destroyController(Controller* emit);
 
 		void updateControllers(float frameTime);
-
-		// Anchored objects
-		void addAnchoredObject(UserTypeBase* userType, Emitter* emitter, uint32 member, uint32 prop);
-
-		void removeAnchoredObject(UserTypeBase* userType);
-
-		void removeAnchoredObjects(Emitter* emitter);
-
-		void updateAnchoredObjects(float frameTime);
 
 		// CodeRecords
 		void createCodeRecord(const String& name);

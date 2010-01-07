@@ -831,29 +831,25 @@ void ParseTree::checkEmitControllers(EmitterDefinition* def, ParseTreeNode* node
 
 		return;
 	}
-	else if (nodeType == PT_AnchorLink)
+	else if (nodeType == PT_Anchor)
 	{
 		if (type == CBT_Function)
 		{
-			addError(node->getLine(), "Anchors cannot be used from functions, only states.");
+			addError(node->getLine(), "Functions cannot emit anchored objects.");
 			return;
 		}
 
-		// Make sure that member variable exists, and property exists
-		String memberName = node->getChild(0)->getStringData();
-		if (def->getMemberVariableIndex(memberName) == BS_NotFound)
+		// Anchor must be x, y, z, angle or orbit
+		String ancName = node->getChild(0)->getStringData();
+		if (ancName != "x" && ancName != "y" &&
+#ifdef BS_Z_DIMENSION
+			ancName != "z" &&
+#endif
+			ancName != "angle" && ancName != "orbit" && ancName != "kill")
 		{
-			String errMsg = getErrorMessage(BS_NotFound);
-			addError(0, errMsg + ": member variable '" + memberName + "'.");
+			addError(node->getLine(), "Invalid anchor '" + ancName + "'.");
 		}
 		
-		String propName = node->getChild(1)->getStringData();
-		if (ft->getPropertyIndex(propName) == BS_NotFound)
-		{
-			String errMsg = getErrorMessage(BS_NotFound);
-			addError(0, errMsg + ": property '" + propName + "'.");
-		}
-
 		return;
 	}
 
@@ -2302,7 +2298,7 @@ void ParseTree::generateBytecode(ObjectDefinition* def, ParseTreeNode* node,
 		}
 		return;
 
-		    case PT_SetStatement:
+		case PT_SetStatement:
 		{
 			// This will only be used by emitters (functions).
 			// Generate constant expression for value

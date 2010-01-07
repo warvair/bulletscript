@@ -37,7 +37,9 @@ namespace BS_NMSP
 
 		int compileScript(const uint8* buffer, size_t bufferSize);
 
-		void update(float frameTime);
+		void preUpdate(float frameTime);
+
+		void postUpdate(float frameTime);
 
 		// Type management
 		void createType(const String& type);
@@ -47,14 +49,24 @@ namespace BS_NMSP
 		void releaseType(UserTypeBase* ft);
 
 #ifdef BS_Z_DIMENSION
-		int updateType(UserTypeBase* ft, bstype x, bstype y, bstype z, float frameTime);
+		void updateType(UserTypeBase* ft, bstype x, bstype y, bstype z, float frameTime);
 #else
-		int updateType(UserTypeBase* ft, bstype x, bstype y, float frameTime);
+		void updateType(UserTypeBase* ft, bstype x, bstype y, float frameTime);
 #endif
 
 		int registerEmitFunction(const String& type, const String& name, int numArgs, EmitFunction func);
 
 		void setDieFunction(const String& type, DieFunction func);
+
+		int setAnchorX(const String& type, SetFunction set, GetFunction get);
+
+		int setAnchorY(const String& type, SetFunction set, GetFunction get);
+
+#ifdef BS_Z_DIMENSION
+		int setAnchorZ(const String& type, SetFunction set, GetFunction get);
+#endif
+
+		int setAnchorAngle(const String& type, SetFunction set, GetFunction get);
 
 		int registerProperty(const String& type, const String& name, SetFunction set, GetFunction get);
 
@@ -63,7 +75,13 @@ namespace BS_NMSP
 		int declareMemberVariable(const String& ctrl, const String& var, bstype value);
 
 		// Emitter management
-		Emitter* createEmitter(const String& definition, void* userObject = 0);
+#ifndef BS_Z_DIMENSION
+		Emitter* createEmitter(const String& definition, bstype x, bstype y, bstype angle, 
+			void* userObject = 0);
+#else
+		Emitter* createEmitter(const String& definition, bstype x, bstype y, bstype z, 
+			bstype angle, void* userObject = 0);
+#endif
 
 		void destroyEmitter(Emitter* emit);
 

@@ -24,9 +24,6 @@ namespace BS_NMSP
 // max number of affectors that an emitter can use
 #define BS_MAX_EMITTER_AFFECTORS		4
 
-// max number of anchored properties that an emitted object can use
-#define BS_MAX_EMITTED_ANCHORS			4
-
 // max number of properties that can be defined for a particular EmitType
 // this cannot be more than 32
 #define BS_MAX_USER_PROPERTIES			8

@@ -71,14 +71,22 @@ void Controller::setDefinition(ControllerDefinition* def)
 
 		inst.special[Member_Angle] = var.angle;
 
-		inst.emitter = mScriptMachine->createEmitter(var.emitter, mUserObject);
-		inst.emitter->setX(mRecord->members[Member_X] + inst.special[Member_X]);
-		inst.emitter->setY(mRecord->members[Member_Y] + inst.special[Member_Y]);
-#ifdef BS_Z_DIMENSION
-		inst.emitter->setZ(mRecord->members[Member_Z] + inst.special[Member_Z]);
+#ifndef BS_Z_DIMENSION
+		inst.emitter = mScriptMachine->createEmitter(var.emitter, 
+			mRecord->members[Member_X] + inst.special[Member_X],
+			mRecord->members[Member_Y] + inst.special[Member_Y],
+			mRecord->members[Member_Angle] + inst.special[Member_Angle],
+			mUserObject);
+#else
+		inst.emitter = mScriptMachine->createEmitter(var.emitter, 
+			mRecord->members[Member_X] + inst.special[Member_X],
+			mRecord->members[Member_Y] + inst.special[Member_Y],
+			mRecord->members[Member_Z] + inst.special[Member_Z],
+			mRecord->members[Member_Angle] + inst.special[Member_Angle],
+			mUserObject);
+
 #endif
 
-		inst.emitter->setAngle(mRecord->members[Member_Angle] + inst.special[Member_Angle]);
 		inst.activeControllers = 0;
 	}
 

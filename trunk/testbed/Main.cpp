@@ -55,7 +55,10 @@ int main (int argc, char **argv)
 	machine.registerEmitFunction("bullet", "fireA", 2, bullet_emitAngle);
 	machine.registerEmitFunction("bullet", "fireT", 4, bullet_emitTarget);
 	machine.setDieFunction("bullet", bullet_kill);
-	machine.registerProperty("bullet", "angle",	bullet_setAngle, bullet_getAngle);
+
+	machine.setAnchorX("bullet", bullet_setX, bullet_getX);
+	machine.setAnchorY("bullet", bullet_setY, bullet_getY);
+	machine.setAnchorAngle("bullet", bullet_setAngle, bullet_getAngle);
 	machine.registerProperty("bullet", "speed",	bullet_setSpeed, bullet_getSpeed);
 	machine.registerProperty("bullet", "red", bullet_setRed, bullet_getRed);
 	machine.registerProperty("bullet", "green",	bullet_setGreen, bullet_getGreen);
@@ -76,7 +79,6 @@ int main (int argc, char **argv)
 	machine.registerProperty("area", "height", area_setHeight, area_getHeight);
 	machine.registerProperty("area", "iwidth", area_setInnerWidth, area_getInnerWidth);
 	machine.registerProperty("area", "iheight",	area_setInnerHeight, area_getInnerHeight);
-	machine.registerProperty("area", "angle", area_setAngle, area_getAngle);
 	machine.registerProperty("area", "start", area_setStart, area_getStart);
 	machine.registerProperty("area", "end", area_setEnd, area_getEnd);
 
@@ -136,24 +138,7 @@ int main (int argc, char **argv)
 	int numBullets = 0;
 
 	// create some objects
-	int numObjects = 25;
-	for (int i = 0; i < 1; ++i)
-	{
-//		machine.createController("BombController");
-	}
-
-	for (int i = 0; i < 10; ++i)
-	{
-//		Emitter* emit = machine.createEmitter("Abstract");
-//		emit->setX(rand() % (SCREEN_WIDTH - 200) + 100);
-//		emit->setY(rand() % (SCREEN_HEIGHT - 200) + 100);
-	}
-	for (int i = 0; i < 1; ++i)
-	{
-		Emitter* emit = machine.createEmitter("AnchorTest");
-		emit->setX(SCREEN_WIDTH / 2);
-		emit->setY(SCREEN_HEIGHT / 2);
-	}
+	Emitter* emit = machine.createEmitter("AnchorTest", SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2, 180);
 
 	while (true)
 	{
@@ -179,23 +164,39 @@ int main (int argc, char **argv)
 
 			int fps = numFrames;
 			float updateMS = (updateTime / (float) numFrames);
-			fprintf(stderr, "T: %2.1f update time: %4.3f FPS: %d C: %d/%d\n", totalTime / 1000.0f, updateMS,
-				fps, numBullets, numObjects);
+			fprintf(stderr, "T: %2.1f update time: %4.3f FPS: %d C: %d\n", totalTime / 1000.0f, updateMS,
+				fps, numBullets);
 			numFrames = 0;
 			updateTime = 0;
+		}
+
+		if (emit)
+		{
+			float xp = emit->getAngle();
+			emit->setAngle(xp + 30 * frameTime);
+
+			if (totalTime > 6000)
+			{
+				machine.destroyEmitter(emit);
+				emit = 0;
+			}
 		}
 
 		// Set script globals - this will update BulletAffector global arguments
 		machine.setGlobalVariableValue("Level_Time", totalTime / 1000.0f);
 
-		// Update machine
-		machine.update(frameTime);
-
 		unsigned int bsTime1 = getTicks();
+
+		// Update machine
+		// maybe all emitter/controller/etc update must come after here?
+		machine.preUpdate(frameTime);
 
 		// Update types
 		numBullets = g_bullets->update(frameTime);
 		g_areas->update(frameTime);
+
+		// Update machine again
+		machine.postUpdate(frameTime);
 
 		unsigned int bsTime2 = getTicks();
 		updateTime += (bsTime2 - bsTime1);
