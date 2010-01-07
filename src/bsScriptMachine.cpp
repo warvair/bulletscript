@@ -53,6 +53,15 @@ ScriptMachine::ScriptMachine(Log* _log) :
 	registerNativeFunction("rand", bm_rand);
 	registerNativeFunction("sqrt", bm_sqrt);
 
+	// Register anchor properties
+	addProperty("x");
+	addProperty("y");
+#ifdef BS_Z_DIMENSION
+	addProperty("z");
+#endif
+	addProperty("angle");
+
+
 	// Create pools
 	mEmitters = new DeepMemoryPool<Emitter, ScriptMachine*>(32, this);
 	mControllers = new DeepMemoryPool<Controller, ScriptMachine*>(32, this);
@@ -117,7 +126,13 @@ void ScriptMachine::setTypeManager(TypeManager* typeMan)
 	mTypeManager = typeMan;
 }
 // --------------------------------------------------------------------------------
-Emitter* ScriptMachine::createEmitter(const String& definition, void* userObject)
+#ifndef BS_Z_DIMENSION
+Emitter* ScriptMachine::createEmitter(const String& definition, bstype x, bstype y, 
+									  bstype angle, void* userObject)
+#else
+Emitter* ScriptMachine::createEmitter(const String& definition, bstype x, bstype y, 
+									  bstype z, bstype angle, void* userObject)
+#endif
 {
 	EmitterDefinition* def = getEmitterDefinition(definition);
 
@@ -125,7 +140,11 @@ Emitter* ScriptMachine::createEmitter(const String& definition, void* userObject
 	if (def)
 	{
 		emit = mEmitters->acquire();
-		emit->setDefinition(def);
+#ifndef BS_Z_DIMENSION
+		emit->setDefinition(def, x, y, angle);
+#else
+		emit->setDefinition(def, x, y, z, angle);
+#endif
 		emit->setUserObject(userObject);
 	}
 	else
@@ -148,6 +167,16 @@ void ScriptMachine::updateEmitters(float frameTime)
 	while (emit)
 	{
 		emit->update(frameTime);
+		emit = mEmitters->getNext(emit);
+	}
+}
+// --------------------------------------------------------------------------------
+void ScriptMachine::postUpdateEmitters()
+{
+	Emitter* emit = mEmitters->getFirst();
+	while (emit)
+	{
+		emit->setLastMembers();
 		emit = mEmitters->getNext(emit);
 	}
 }
@@ -186,59 +215,6 @@ void ScriptMachine::updateControllers(float frameTime)
 	{
 		ctrl->update(frameTime);
 		ctrl = mControllers->getNext(ctrl);
-	}
-}
-// --------------------------------------------------------------------------------
-void ScriptMachine::addAnchoredObject(UserTypeBase* userType, Emitter* emitter, uint32 member, uint32 prop)
-{
-	AnchoredObject obj;
-	obj.userType = userType;
-	obj.emitter = emitter;
-	obj.member = member;
-	obj.prop = prop;
-
-	mAnchors.push_back(obj);
-}
-// --------------------------------------------------------------------------------
-void ScriptMachine::removeAnchoredObject(UserTypeBase* userType)
-{
-	std::list<AnchoredObject>::iterator it = mAnchors.begin();
-	while (it != mAnchors.end())
-	{
-		AnchoredObject& obj = *it;
-		if (obj.userType == userType)
-		{
-			mAnchors.erase(it);
-			return;
-		}
-
-		++it;
-	}
-}
-// --------------------------------------------------------------------------------
-void ScriptMachine::removeAnchoredObjects(Emitter* emitter)
-{
-	std::list<AnchoredObject>::iterator it = mAnchors.begin();
-	std::list<AnchoredObject>::iterator next = it;
-	while (it != mAnchors.end())
-	{
-		++next;
-		
-		AnchoredObject& obj = *it;
-		if (obj.emitter == emitter)
-			mAnchors.erase(it);
-
-		it = next;
-	}
-}
-// --------------------------------------------------------------------------------
-void ScriptMachine::updateAnchoredObjects(float frameTime)
-{
-	std::list<AnchoredObject>::iterator it = mAnchors.begin();
-	while (it != mAnchors.end())
-	{
-		AnchoredObject& obj = *it;
-		++it;
 	}
 }
 // --------------------------------------------------------------------------------
@@ -756,10 +732,14 @@ int ScriptMachine::interpretCode(const uint32* code, size_t length, ScriptState&
 				int index = code[st.curInstruction + 1];
 				bstype value = st.stack[--st.stackHead];
 
-				const String& propName = getProperty(index);
-				EmitTypeControl* ftc = static_cast<EmitTypeControl*>(object);
-
-				ftc->__type->setProperty1(ftc, propName, value);
+				EmitTypeControl* etc = static_cast<EmitTypeControl*>(object);
+				if (index < NUM_SPECIAL_PROPERTIES)
+					etc->__type->setAnchorValue1(etc, index, value);
+				else
+				{
+					const String& propName = getProperty(index);
+					etc->__type->setProperty1(etc, propName, value);
+				}
 				st.curInstruction += 2;
 			}
 			break;
@@ -771,10 +751,18 @@ int ScriptMachine::interpretCode(const uint32* code, size_t length, ScriptState&
 				bstype value = st.stack[st.stackHead - 2];
 				st.stackHead -= 2;
 
-				const String& propName = getProperty(index);
-				EmitTypeControl* ftc = static_cast<EmitTypeControl*>(object);
+				EmitTypeControl* etc = static_cast<EmitTypeControl*>(object);
 
-				ftc->__type->setProperty2(ftc, propName, value, time);
+				if (index < NUM_SPECIAL_PROPERTIES)
+				{
+					etc->__type->setAnchorValue2(etc, index, value, time);
+				}
+				else
+				{
+					const String& propName = getProperty(index);
+					etc->__type->setProperty2(etc, propName, value, time);
+				}
+
 				st.curInstruction += 2;
 			}
 			break;
@@ -782,10 +770,18 @@ int ScriptMachine::interpretCode(const uint32* code, size_t length, ScriptState&
 		case BC_GETPROPERTY:
 			{
 				int index = code[st.curInstruction + 1];
-				const String& propName = getProperty(index);
-				EmitTypeControl* ftc = static_cast<EmitTypeControl*>(object);
+				EmitTypeControl* etc = static_cast<EmitTypeControl*>(object);
 
-				st.stack[st.stackHead] = ftc->__type->getProperty(ftc, propName);
+				if (index < NUM_SPECIAL_PROPERTIES)
+				{
+					st.stack[st.stackHead] = etc->__type->getAnchorValue(etc, index);
+				}
+				else
+				{
+					const String& propName = getProperty(index);
+					st.stack[st.stackHead] = etc->__type->getProperty(etc, propName);
+				}
+
 				st.stackHead++;
 				st.curInstruction += 2;
 

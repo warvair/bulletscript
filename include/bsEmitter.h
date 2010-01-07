@@ -54,18 +54,7 @@ namespace BS_NMSP
 	 */
 	class _BSAPI Emitter : public DeepMemoryPoolObject
 	{
-		struct AnchorList
-		{
-			struct Entry
-			{
-				EmitTypeControl* control;
-				int propertyIndex;
-			};
-
-			std::list<Entry> entries;
-
-			void update(bstype value);
-		};
+		friend class EmitType;
 
 		// Struct for controlling smooth interpolation of an Emitter member variable.
 		struct MemberController
@@ -77,11 +66,14 @@ namespace BS_NMSP
 		// Emitters can be enabled or disabled by Controllers.
 		bool mEnabled;
 
+		// Due to the way Emitters are recycled, we need to know if an Emitter has been deleted since
+		// the last time an EmitTypeControl used it (eg for anchors).  Thus, when an Emitter is created,
+		// its anchor index is set to 0, as is its last anchor index.  When it is acquired, the anchor index
+		// is set to last index + 1, as is the last index.  When it is released, the anchor index is reset to 0.
+		int mAnchorIndex, mLastAnchorIndex;
+
 		// Controllers for member variables.
 		MemberController mMemberControllers[BS_MAX_USER_EMITTER_MEMBERS];
-
-		// Anchor list
-		AnchorList mAnchors[NUM_SPECIAL_MEMBERS + BS_MAX_USER_EMITTER_MEMBERS];
 
 		// Bitfield for MemberControllers set.  This limits the number of member variables
 		// to 32, but this is an acceptable limitation.  In reality, the user can only define
@@ -89,6 +81,12 @@ namespace BS_NMSP
 		uint32 mActiveControllers;
 
 		int mNumUserMembers;
+
+		bstype mLastX, mLastY;
+#ifdef BS_Z_DIMENSION
+		bstpe mLastZ;
+#endif
+		bstype mLastAngle;
 
 		ScriptMachine* mScriptMachine;
 
@@ -116,6 +114,13 @@ namespace BS_NMSP
 		 */
 		void onRelease();
 
+		/**	\brief Internal method to return anchor index, for objects that are anchored to an Emitter.
+		 *	
+		 *	\return anchor index, or 0 if emitter is invalid.
+		 */
+		int _getAnchorIndex() const;
+
+#ifndef BS_Z_DIMENSION
 		/**	\brief Set an Emitter instance to use the specified EmitterDefinition.
 		 *	
 		 *	Sets the Emitter to use the given EmitterDefinition.  You do not
@@ -123,8 +128,26 @@ namespace BS_NMSP
 		 *	undefined state.  Use Machine::createEmitter instead.
 		 *
 		 *	\param def pointer to the EmitterDefinition to use to set the Emitter up.
+		 *	\param x initial x position
+		 *	\param y initial y position
+		 *	\param angle initial angle
 		 */
-		void setDefinition(EmitterDefinition* def);
+		void setDefinition(EmitterDefinition* def, bstype x, bstype y, bstype angle);
+#else
+		/**	\brief Set an Emitter instance to use the specified EmitterDefinition.
+		 *	
+		 *	Sets the Emitter to use the given EmitterDefinition.  You do not
+		 *	want to call this function directly: doing so will leave the Emitter in an
+		 *	undefined state.  Use Machine::createEmitter instead.
+		 *
+		 *	\param def pointer to the EmitterDefinition to use to set the Emitter up.
+		 *	\param x initial x position
+		 *	\param y initial y position
+		 *	\param z initial z position
+		 *	\param angle initial angle
+		 */
+		void setDefinition(EmitterDefinition* def, bstype x, bstype y, bstype z, bstype angle);
+#endif
 
 		/**	\brief Enables or disables the Emitter.
 		 *	
@@ -203,7 +226,43 @@ namespace BS_NMSP
 		 */
 		bstype getMember(int member) const;
 
-		void addAnchoredObject(int anchor, int prop, EmitTypeControl* ctrl);
+		/**	\brief Get the X position of this Emitter.
+		 *	
+		 *	\return x position.
+		 */
+		bstype getX() const;
+
+		/**	\brief Get the Y position of this Emitter.
+		 *	
+		 *	\return y position.
+		 */
+		bstype getY() const;
+
+#ifdef BS_Z_DIMENSION
+		/**	\brief Get the Z position of this Emitter.
+		 *	
+		 *	\return z position.
+		 */
+		bstype getZ() const;
+#endif
+
+		/**	\brief Get the angle of this Emitter, in degrees.
+		 *	
+		 *	\return angle.
+		 */
+		bstype getAngle() const;
+
+		bstype _getDeltaX() const;
+
+		bstype _getDeltaY() const;
+
+#ifdef BS_Z_DIMENSION
+		bstype _getDeltaZ() const;
+#endif
+
+		bstype _getDeltaAngle() const;
+
+		void setLastMembers();
 
 		/**	\brief Set the user-supplied object for this Emitter.
 		 *	

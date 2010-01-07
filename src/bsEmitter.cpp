@@ -6,21 +6,18 @@ namespace BS_NMSP
 {
 
 // --------------------------------------------------------------------------------
-void Emitter::AnchorList::update(bstype value) 
-{
-	std::list<Entry>::iterator it = entries.begin();
-	while (it != entries.end())
-	{
-		Entry& ent = *it;
-		++it;
-	}
-}
-// --------------------------------------------------------------------------------
-// --------------------------------------------------------------------------------
 Emitter::Emitter(ScriptMachine* machine) :
 	mEnabled(true),
+	mAnchorIndex(0),
+	mLastAnchorIndex(0),
 	mActiveControllers(0),
 	mNumUserMembers(0),
+	mLastX(bsvalue0),
+	mLastY(bsvalue0),
+#ifdef BS_Z_DIMENSION
+	mLastZ(bsvalue0),
+#endif
+	mLastAngle(bsvalue0),
 	mScriptMachine(machine),
 	mRecord(0),
 	mUserObject(0)
@@ -30,12 +27,40 @@ Emitter::Emitter(ScriptMachine* machine) :
 void Emitter::onRelease()
 {
 	delete mRecord;
+	mAnchorIndex = 0;
 }
 // --------------------------------------------------------------------------------
-void Emitter::setDefinition(EmitterDefinition* def)
+int Emitter::_getAnchorIndex() const
+{
+	return mAnchorIndex;
+}
+// --------------------------------------------------------------------------------
+#ifndef BS_Z_DIMENSION
+void Emitter::setDefinition(EmitterDefinition* def, bstype x, bstype y, bstype angle)
+#else
+void Emitter::setDefinition(EmitterDefinition* def, bstype x, bstype y, bstype z, bstype angle)
+#endif
 {
 	delete mRecord;
 	mRecord = def->createScriptRecord(mScriptMachine);
+
+	setX(x);
+	setY(y);
+	setAngle(angle);
+	mLastX = x;
+	mLastY = y;
+	mLastAngle = angle;
+
+#ifdef BS_Z_DIMENSION
+	setZ(z);
+	mLastZ = z;
+#endif
+
+	// Cut anchor index down to 8 bits, to store in EmitTypeControl::flags
+	mLastAnchorIndex++;
+	if (mLastAnchorIndex > 255)
+		mLastAnchorIndex = 1;
+	mAnchorIndex = mLastAnchorIndex;
 
 	mNumUserMembers = def->getNumMemberVariables() - NUM_SPECIAL_MEMBERS;
 }
@@ -102,13 +127,58 @@ bstype Emitter::getMember(int member) const
 	return mRecord->members[member + NUM_SPECIAL_MEMBERS];
 }
 // --------------------------------------------------------------------------------
-void Emitter::addAnchoredObject(int anchor, int prop, EmitTypeControl* ctrl)
+bstype Emitter::getX() const
 {
-	AnchorList::Entry entry;
-	entry.propertyIndex = prop;
-	entry.control = ctrl;
-	
-	mAnchors[anchor].entries.push_back(entry);
+	return mRecord->members[Member_X];
+}
+// --------------------------------------------------------------------------------
+bstype Emitter::getY() const
+{
+	return mRecord->members[Member_Y];
+}
+// --------------------------------------------------------------------------------
+#ifdef BS_Z_DIMENSION
+bstype Emitter::getZ() const
+{
+	return mRecord->members[Member_Z];
+}
+#endif
+// --------------------------------------------------------------------------------
+bstype Emitter::getAngle() const
+{
+	return mRecord->members[Member_Angle];
+}
+// --------------------------------------------------------------------------------
+bstype Emitter::_getDeltaX() const
+{
+	return mRecord->members[Member_X] - mLastX;
+}
+// --------------------------------------------------------------------------------
+bstype Emitter::_getDeltaY() const
+{
+	return mRecord->members[Member_Y] - mLastY;
+}
+// --------------------------------------------------------------------------------
+#ifdef BS_Z_DIMENSION
+bstype Emitter::_getDeltaZ() const
+{
+	return mRecord->members[Member_Z] - mLastZ;
+}
+#endif
+// --------------------------------------------------------------------------------
+bstype Emitter::_getDeltaAngle() const
+{
+	return mRecord->members[Member_Angle] - mLastAngle;
+}
+// --------------------------------------------------------------------------------
+void Emitter::setLastMembers()
+{
+	mLastX = mRecord->members[Member_X];
+	mLastY = mRecord->members[Member_Y];
+#ifdef BS_Z_DIMENSION
+	mLastZ = mRecord->members[Member_Z];
+#endif
+	mLastAngle = mRecord->members[Member_Angle];
 }
 // --------------------------------------------------------------------------------
 void Emitter::setState(int state)
@@ -139,31 +209,9 @@ void Emitter::runScript(float frameTime)
 // --------------------------------------------------------------------------------
 void Emitter::update(float frameTime)
 {
-	// Update anchored objects first
-	// Go through X list
-	// Go through Y list
-	// Go through angle list
-
-	// Set each FireTypeRecord::properties[propIndex].base to the matching member variable, in
-	// mRecord::members
-	// Need then, to know propIndex and member variable index
-
-	// Rather, we need a way to give Emitters properties.  They have x, y and angle, but we may
-	// want them to have red/green/blue as well?  What could this be used for?  It means that we
-	// could change a property of an emitted object externally by changing the Emitter, and thus
-	// Emitters can control objects like Controllers control Emitters.
-
-	// Need a way to tie property names to indices.  We can tie x and y easily enough because they
-	// are built in, but angle will need something else because it is defined by the user.
-
-	for (int i = 0; i < mRecord->numMembers; ++i)
-	{
-		mAnchors[i].update(mRecord->members[i]);
-	}
-
 	if (!mEnabled)
 		return;
-	
+
 	// Update user MemberControllers.
 	for (int i = 0; i < mNumUserMembers; ++i)
 	{

@@ -7,6 +7,7 @@ class RendererGL;
 
 struct Bullet : public bs::UserTypeBase
 {
+	float x, y;
 	float angle;
 	float vx, vy;
 	float speed;
@@ -73,6 +74,14 @@ public:
 
 	void killBullet(bs::UserTypeBase* object);
 
+	void setX(bs::UserTypeBase* object, float value);
+
+	float getX(bs::UserTypeBase* object);
+
+	void setY(bs::UserTypeBase* object, float value);
+
+	float getY(bs::UserTypeBase* object);
+
 	void setAngle(bs::UserTypeBase* object, float value);
 
 	float getAngle(bs::UserTypeBase* object);
@@ -106,6 +115,14 @@ bs::UserTypeBase* bullet_emitAngle(float x, float y, const float* args, void* us
 bs::UserTypeBase* bullet_emitTarget(float x, float y, const float* args, void* userObj);
 
 void bullet_kill(bs::UserTypeBase* object, void* userObj);
+
+void bullet_setX(bs::UserTypeBase* object, float value);
+
+float bullet_getX(bs::UserTypeBase* object);
+
+void bullet_setY(bs::UserTypeBase* object, float value);
+
+float bullet_getY(bs::UserTypeBase* object);
 
 void bullet_setAngle(bs::UserTypeBase* object, float value);
 

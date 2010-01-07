@@ -22,6 +22,26 @@ void bullet_kill(bs::UserTypeBase* object, void* userObj)
 	g_bullets->killBullet(object);
 }
 
+void bullet_setX(bs::UserTypeBase* object, float value)
+{
+	g_bullets->setX(object, value);
+}
+
+float bullet_getX(bs::UserTypeBase* object)
+{
+	return g_bullets->getX(object);
+}
+
+void bullet_setY(bs::UserTypeBase* object, float value)
+{
+	g_bullets->setY(object, value);
+}
+
+float bullet_getY(bs::UserTypeBase* object)
+{
+	return g_bullets->getY(object);
+}
+
 void bullet_setAngle(bs::UserTypeBase* object, float value)
 {
 	g_bullets->setAngle(object, value);
@@ -218,6 +238,30 @@ void BulletBattery::killBullet(bs::UserTypeBase* object)
 	killBullet(static_cast<Bullet*>(object));
 }
 // --------------------------------------------------------------------------------
+void BulletBattery::setX(bs::UserTypeBase* object, float value)
+{
+	Bullet* b = static_cast<Bullet*>(object);
+	b->x = value;
+}
+// --------------------------------------------------------------------------------
+float BulletBattery::getX(bs::UserTypeBase* object)
+{
+	Bullet* b = static_cast<Bullet*>(object);
+	return b->x;
+}
+// --------------------------------------------------------------------------------
+void BulletBattery::setY(bs::UserTypeBase* object, float value)
+{
+	Bullet* b = static_cast<Bullet*>(object);
+	b->y = value;
+}
+// --------------------------------------------------------------------------------
+float BulletBattery::getY(bs::UserTypeBase* object)
+{
+	Bullet* b = static_cast<Bullet*>(object);
+	return b->y;
+}
+// --------------------------------------------------------------------------------
 void BulletBattery::setAngle(bs::UserTypeBase* object, float value)
 {
 	Bullet* b = static_cast<Bullet*>(object);
@@ -310,7 +354,7 @@ int BulletBattery::update(float frameTime)
 	// Add recently spawned bullets
 	for (size_t i = 0; i < mSpawnedBullets.size(); ++i)
 	{
-		unsigned int slot = getFreeBulletSlot();
+		unsigned int slot = getFreeBulletSlot(); // UserTypeBase relocation occurs here
 		mBullets[slot] = mSpawnedBullets[i];
 	}
 

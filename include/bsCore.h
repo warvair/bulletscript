@@ -19,10 +19,6 @@ namespace BS_NMSP
 	struct UserTypeBase
 	{
 		EmitTypeControl* __et;	
-		float x, y;
-#ifdef BS_Z_DIMENSION
-		float z;
-#endif
 	};
 
 	/**	\brief Structure to let users define member variables for Controllers via
@@ -205,6 +201,7 @@ namespace BS_NMSP
 #ifdef BS_Z_DIMENSION
 		Property_Z,			/**< Z position. */  
 #endif
+		Property_Angle,
 		NUM_SPECIAL_PROPERTIES
 	};
 

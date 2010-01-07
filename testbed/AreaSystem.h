@@ -16,6 +16,7 @@ enum AreaType
 struct Area : public bs::UserTypeBase
 {
 	int type;			// quad or ellipse
+	float x, y;
 	float w, h;			// width, height.  Also used for ellipse
 	float angle;
 	float start, end;	// generic, can be used for arcs
