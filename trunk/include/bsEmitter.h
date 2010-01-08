@@ -5,45 +5,9 @@
 #include "bsCore.h"
 #include "bsEmitterDefinition.h"
 
-/*
-	When we emit an object with anchors, add a pointer to the object to the Emitter's list for
-	that anchor type.
-	Then, when we update the Emitter, go through each anchor list, and set the object's property
-	base to whatever member variable it is tied to.
-
-	when setting properties on a firetypecontrol, set it plus the base, when getting a property, get
-	the property, then subtract the base.  this means that the value in the firetypecontrol may not
-	actually correspond to the value in the script, because the script does not know whether the object
-	is being anchored.  ie:
-
-	test = function()
-	{
-		$angle = 45;
-		x = $angle;
-	}
-
-	if the object is anchored and the emitter has angle 90, then setting to 45 will actually set the
-	object's angle to 135 but when we get the angle in the next line, it will be 135 - 90, ie 45.
-	but this requires 40 odd bytes extra per firetypecontrol
-	if we limit it to x/y/angle then it's only 12
-
-*/
-
-
 namespace BS_NMSP
 {
 	class ScriptMachine;
-
-	// Have an AnchorList for every Emitter member variable, so if we emit an object with
-	// This_X -> $x
-	// then we place the EmitTypeControl into AnchorList[0].
-	// Also store, for each EmitTypeControl, the index of the property that the member variable
-	// is linked to, because Emitters can emit different objects, and different emit calls themselves
-	// can link the same member variable differently, eg:
-	// emit bullet() : This_X -> $x;
-	// emit bullet() : This_X -> $alpha;
-	// Then, when updating a list, we set the EmitTypeControl::propertyBases[propertyIndex] with
-	// Emitter::mRecord->members[memberIndex];
 
 	/**	\brief Class for controlling obejct emission.
 	 *

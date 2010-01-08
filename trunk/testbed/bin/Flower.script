@@ -1,5 +1,3 @@
-DEFAULT_GRAV = constant 98;
-
 emitter Flower
 {
 	// member variables
