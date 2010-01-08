@@ -138,7 +138,7 @@ int main (int argc, char **argv)
 	int numBullets = 0;
 
 	// create some objects
-	Emitter* emit = machine.createEmitter("AnchorTest", SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2, 180);
+	Emitter* emit = machine.createEmitter("Mandelbrot", SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2, 180);
 
 	while (true)
 	{
@@ -164,12 +164,13 @@ int main (int argc, char **argv)
 
 			int fps = numFrames;
 			float updateMS = (updateTime / (float) numFrames);
-			fprintf(stderr, "T: %2.1f update time: %4.3f FPS: %d C: %d\n", totalTime / 1000.0f, updateMS,
+			fprintf(stderr, "T: %2.1f update time: %4.3fms FPS: %d C: %d\n", totalTime / 1000.0f, updateMS,
 				fps, numBullets);
 			numFrames = 0;
 			updateTime = 0;
 		}
 
+/*
 		if (emit)
 		{
 			float xp = emit->getAngle();
@@ -181,6 +182,7 @@ int main (int argc, char **argv)
 				emit = 0;
 			}
 		}
+*/
 
 		// Set script globals - this will update BulletAffector global arguments
 		machine.setGlobalVariableValue("Level_Time", totalTime / 1000.0f);

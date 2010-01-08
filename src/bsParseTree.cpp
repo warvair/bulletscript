@@ -332,14 +332,7 @@ void ParseTree::foldConstants()
 // --------------------------------------------------------------------------------
 void ParseTree::buildConstantDefineList(ParseTreeNode* node, ConstantDefinitionList& defList)
 {
-	if (node->getType() == PT_ConstantDefinition)
-	{
-		String defName = node->getChild(0)->getStringData();
-		bstype defValue = node->getChild(1)->getValueData();
-
-		defList[defName] = defValue;
-		return;
-	}
+	// ...
 
 	for (int i = 0; i < ParseTreeNode::MAX_CHILDREN; ++ i)
 	{

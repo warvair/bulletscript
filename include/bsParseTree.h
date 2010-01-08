@@ -39,8 +39,6 @@ namespace BS_NMSP
 	enum PT_NodeType
 	{
 		PT_Null,
-		PT_ConstantDefinitionList,
-		PT_ConstantDefinition,
 		PT_DefinitionList,
 		PT_ControllerDefinition,
 		PT_EmitterDefinition,

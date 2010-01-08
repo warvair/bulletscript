@@ -39,7 +39,7 @@ void bm_rand(ScriptState& state)
 void bm_sqrt(ScriptState& state)
 {
 	bstype value = state.stack[state.stackHead - 1];
-	state.stack[state.stackHead - 1] = (bstype) sqrt(value);
+	state.stack[state.stackHead - 1] = (bstype) sqrtf(value);
 }
 
 // --------------------------------------------------------------------------------
@@ -60,7 +60,6 @@ ScriptMachine::ScriptMachine(Log* _log) :
 	addProperty("z");
 #endif
 	addProperty("angle");
-
 
 	// Create pools
 	mEmitters = new DeepMemoryPool<Emitter, ScriptMachine*>(32, this);
@@ -646,6 +645,7 @@ int ScriptMachine::interpretCode(const uint32* code, size_t length, ScriptState&
 			{
 				bstype value = st.stack[st.stackHead - 1];
 				int index = code[st.curInstruction + 1];
+
 				members[index] = value;
 				st.stackHead--;
 				st.curInstruction += 2;
