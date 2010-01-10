@@ -170,6 +170,9 @@ namespace BS_NMSP
 		// Affector Instances
 		std::vector<Affector*> mAffectorInstances;
 
+		// Mapping from global property names to EmitType property indices
+		int* mPropertyIndices;
+
 		// User-supplied 'kill' function, to destroy an emitted object.
 		DieFunction mDieFunction;
 
@@ -181,9 +184,9 @@ namespace BS_NMSP
 	public:
 
 		// List of properties that can be controlled.  See bsConfig.h.
-		Property mProperties[BS_MAX_USER_PROPERTIES + NUM_SPECIAL_PROPERTIES];
+		Property properties_[BS_MAX_USER_PROPERTIES + NUM_SPECIAL_PROPERTIES];
 
-		int mNumProperties;
+		int numProperties_;
 
 	public:
 
@@ -259,6 +262,18 @@ namespace BS_NMSP
 		 *			are too many properties.
 		 */
 		int registerProperty(const String& name, SetFunction set, GetFunction get);
+
+		/**	\brief Map global properties to properties specific to this EmitType
+		 *
+		 *	This function builds a lookup table which maps properties from the global list to those which
+		 *	are only used by this EmitType.  This is necessary because functions cannot know at compile time
+		 *	which EmitType they are operating on, and so do not know the indices of properties to generate.
+		 *	This function is internal, and should only be called once, when all properties for all EmitTypes
+		 *	have been declared.
+		 *
+		 *	\param properties list of properties to map.
+		 */
+		void mapProperties(const std::vector<String>& properties);
 
 		/**	\brief Get the index of the named property.
 		 *
@@ -372,7 +387,7 @@ namespace BS_NMSP
 		 */
 
 		int _processCode(const uint32* code, ScriptState& state, bstype x, 
-			bstype y, bstype z, bstype* members, void* userObj, Emitter* emitter);
+			bstype y, bstype z, bstype angle, bstype* members, void* userObj, Emitter* emitter);
 #else
 		/**	\brief Process a BC_EMIT opcode.
 		 *
@@ -389,7 +404,7 @@ namespace BS_NMSP
 		 *	\return the number of bytecodes that the BC_EMIT opcode used.
 		 */
 		int _processCode(const uint32* code, ScriptState& state, bstype x, 
-			bstype y, bstype* members, void* userObj, Emitter* emitter);
+			bstype y, bstype angle, bstype* members, void* userObj, Emitter* emitter);
 #endif
 
 		/**	\brief Registers a user AffectorFunction with this type.

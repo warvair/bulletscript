@@ -145,9 +145,9 @@ namespace BS_NMSP
 	 *	User function prototype for emitting an object.
 	 */
 #ifdef BS_Z_DIMENSION
-	typedef UserTypeBase* (*EmitFunction) (bstype, bstype, bstype, const bstype*, void*);
+	typedef UserTypeBase* (*EmitFunction) (bstype, bstype, bstype, bstype, const bstype*, void*);
 #else
-	typedef UserTypeBase* (*EmitFunction) (bstype, bstype, const bstype*, void*);
+	typedef UserTypeBase* (*EmitFunction) (bstype, bstype, bstype, const bstype*, void*);
 #endif
 
 	/**

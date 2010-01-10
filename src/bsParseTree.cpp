@@ -303,9 +303,7 @@ void ParseTree::reset()
 ParseTree *ParseTree::instancePtr()
 {
 	if (!msInstance)
-	{
 		msInstance = new ParseTree;
-	}
 
 	return msInstance;
 }

@@ -71,9 +71,15 @@ int main (int argc, char **argv)
 
 	machine.registerEmitFunction("area", "quadC", 3, area_emitQuadC);
 	machine.registerEmitFunction("area", "quadB", 3, area_emitQuadB);
+	machine.registerEmitFunction("area", "quadProj", 4, area_emitQuadProjected);
 	machine.registerEmitFunction("area", "ellipse", 2, area_emitEllipse);
 	machine.registerEmitFunction("area", "arc", 5, area_emitArc);
 	machine.setDieFunction("area", area_kill);
+
+	machine.setAnchorX("area", area_setX, area_getX);
+	machine.setAnchorY("area", area_setY, area_getY);
+	machine.setAnchorAngle("area", area_setAngle, area_getAngle);
+
 	machine.registerProperty("area", "alpha", area_setAlpha, area_getAlpha);
 	machine.registerProperty("area", "width", area_setWidth, area_getWidth);
 	machine.registerProperty("area", "height", area_setHeight, area_getHeight);
@@ -138,7 +144,8 @@ int main (int argc, char **argv)
 	int numBullets = 0;
 
 	// create some objects
-	Emitter* emit = machine.createEmitter("Mandelbrot", SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2, 180);
+	for (int i = 0; i < 1; ++i)
+		Emitter* emit = machine.createEmitter("Hell", SCREEN_WIDTH / 2, SCREEN_HEIGHT - 32, 180);
 
 	while (true)
 	{

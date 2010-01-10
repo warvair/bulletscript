@@ -257,7 +257,7 @@ bool Controller::_raiseEvent(int index, const bstype* args)
 	int oldState = mRecord->curState;
 	mScriptMachine->interpretCode(mEvents[index].code->byteCode, mEvents[index].code->byteCodeSize,
 		mEventState, 0, this, mRecord->members[Member_X], mRecord->members[Member_Y], 
-		mRecord->members, false, 0);
+		mRecord->members[Member_Angle],	mRecord->members, false, 0);
 
 	// We need to know if the event changed the state because if it has then we should suspend the
 	// script.  Otherwise the Controller's script state will be undefined.

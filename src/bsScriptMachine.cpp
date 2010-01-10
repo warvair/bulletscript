@@ -46,6 +46,7 @@ void bm_sqrt(ScriptState& state)
 ScriptMachine::ScriptMachine(Log* _log) :
 	mTypeManager(0),
 	mLog(_log),
+	mPropertiesMapped(false),
 	mEmitters(0),
 	mControllers(0)
 {
@@ -75,6 +76,7 @@ ScriptMachine::~ScriptMachine()
 	delete mControllers;
 	delete mEmitters;
 
+	// Delete parser, this should only be done here.
 	delete ParseTree::instancePtr();
 
 	// Delete globals
@@ -104,7 +106,6 @@ ScriptMachine::~ScriptMachine()
 		{
 			delete (*it).def;
 			delete (*it).typePool;
-//			delete (*it).emitterPool;
 			++it;
 		}
 	}
@@ -484,6 +485,7 @@ int ScriptMachine::compileScript(const uint8* buffer, size_t bufferSize)
 	ast->foldConstants();
 
 	// Now build constant list
+/*
 	ParseTree::ConstantDefinitionList defList;
 	ast->preprocess(defList);
 
@@ -506,7 +508,7 @@ int ScriptMachine::compileScript(const uint8* buffer, size_t bufferSize)
 
 		++it;
 	}
-/*
+
 	// And parse again
 	ast->reset();
 
@@ -529,6 +531,14 @@ int ScriptMachine::compileScript(const uint8* buffer, size_t bufferSize)
 	ast->foldConstants();
 */
 //	ast->print(ast->getRootNode(), 0);
+
+	// The first time we compile a script, we must map property definitions from
+	// the global list to specific EmitTypes.
+	if (!mPropertiesMapped)
+	{
+		mTypeManager->mapPropertiesToTypes(mProperties);
+		mPropertiesMapped = true;
+	}
 
 	ast->createDefinitions(ast->getRootNode(), mMemberVariableDeclarations);
 
@@ -599,7 +609,7 @@ int ScriptMachine::interpretCode(const uint32* code, size_t length, ScriptState&
 #ifdef BS_Z_DIMENSION
 								  bstype z, 
 #endif
-								  bstype* members, bool loop, void* userObject)
+								  bstype angle, bstype* members, bool loop, void* userObject)
 {
 	if (st.curInstruction >= length)
 		return ScriptFinished;
@@ -958,9 +968,9 @@ int ScriptMachine::interpretCode(const uint32* code, size_t length, ScriptState&
 				Emitter* emitter = static_cast<Emitter*>(object);
 
 #ifdef BS_Z_DIMENSION
-				st.curInstruction += ft->_processCode(code, st, x, y, z, members, userObject, emitter);
+				st.curInstruction += ft->_processCode(code, st, x, y, z, angle, members, userObject, emitter);
 #else
-				st.curInstruction += ft->_processCode(code, st, x, y, members, userObject, emitter);
+				st.curInstruction += ft->_processCode(code, st, x, y, angle, members, userObject, emitter);
 #endif
 			}
 			break;
@@ -1361,11 +1371,12 @@ void ScriptMachine::processScriptRecord(ScriptRecord* gsr, void* object, void* u
 
 #ifdef BS_Z_DIMENSION
 	interpretCode(bytecode, bytecodeLen, gsr->scriptState, &gsr->curState, object,
-		gsr->members[Member_X], gsr->members[Member_Y], gsr->members[Member_Z], 
-		gsr->members, true, userObject);
+		gsr->members[Member_X], gsr->members[Member_Y], gsr->members[Member_Z],
+		gsr->members[Member_Angle],	gsr->members, true, userObject);
 #else
 	interpretCode(bytecode, bytecodeLen, gsr->scriptState, &gsr->curState, object,
-		gsr->members[Member_X], gsr->members[Member_Y], gsr->members, true, userObject);
+		gsr->members[Member_X], gsr->members[Member_Y], gsr->members[Member_Angle], 
+		gsr->members, true, userObject);
 #endif
 }
 // --------------------------------------------------------------------------------
