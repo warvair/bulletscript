@@ -124,7 +124,6 @@ namespace BS_NMSP
 
 		int getNumControllerDefinitions() const;
 
-		// Controllers
 		Controller* createController(const String& definition, void* userObject);
 
 		void destroyController(Controller* emit);
@@ -160,7 +159,6 @@ namespace BS_NMSP
 
 		const String& getProperty(int index) const;
 
-		// Global variables
 		int registerGlobalVariable(const String& name, bool readOnly, bstype initialValue);
 
 		int getGlobalVariableIndex(const String& name) const;
@@ -192,12 +190,10 @@ namespace BS_NMSP
 		// Compilation
 		int compileScript(const uint8* buffer, size_t bufferSize);
 
-		int declareMemberVariable(const String& ctrl, const String& var, bstype value);
+		int declareControllerMemberVariable(const String& ctrl, const String& var, bstype value);
 
 		// Errors
 		void addErrorMsg (const String& msg);
-
-		void print_debug();
 	};
 
 }

@@ -185,8 +185,8 @@ unsigned int AreaBattery::getFreeAreaSlot()
 bs::UserTypeBase* AreaBattery::emitQuadC(float x, float y, float angle, const float* args, void* userObj)
 {
 	Area a;
-	a.__active = true;
-	a.__time = 0;
+	a._active = true;
+	a._time = 0;
 	a.type = AT_QuadCentred;
 
 	a.x = x;
@@ -207,8 +207,8 @@ bs::UserTypeBase* AreaBattery::emitQuadC(float x, float y, float angle, const fl
 bs::UserTypeBase* AreaBattery::emitQuadB(float x, float y, float angle, const float* args, void* userObj)
 {
 	Area a;
-	a.__active = true;
-	a.__time = 0;
+	a._active = true;
+	a._time = 0;
 	a.type = AT_QuadBased;
 
 	a.x = x;
@@ -229,8 +229,8 @@ bs::UserTypeBase* AreaBattery::emitQuadB(float x, float y, float angle, const fl
 bs::UserTypeBase* AreaBattery::emitQuadProjected(float x, float y, float angle, const float* args, void* userObj)
 {
 	Area a;
-	a.__active = true;
-	a.__time = 0;
+	a._active = true;
+	a._time = 0;
 	a.type = AT_QuadBased;
 
 	float dist = args[-4];
@@ -254,8 +254,8 @@ bs::UserTypeBase* AreaBattery::emitQuadProjected(float x, float y, float angle, 
 bs::UserTypeBase* AreaBattery::emitEllipse(float x, float y, float angle, const float* args, void* userObj)
 {
 	Area a;
-	a.__active = true;
-	a.__time = 0;
+	a._active = true;
+	a._time = 0;
 	a.type = AT_Ellipse;
 
 	a.x = x;
@@ -276,8 +276,8 @@ bs::UserTypeBase* AreaBattery::emitEllipse(float x, float y, float angle, const 
 bs::UserTypeBase* AreaBattery::emitArc(float x, float y, float angle, const float* args, void* userObj)
 {
 	Area a;
-	a.__active = true;
-	a.__time = 0;
+	a._active = true;
+	a._time = 0;
 	a.type = AT_Arc;
 
 	a.x = x;
@@ -298,8 +298,8 @@ bs::UserTypeBase* AreaBattery::emitArc(float x, float y, float angle, const floa
 // --------------------------------------------------------------------------------
 void AreaBattery::killArea(Area* a)
 {
-	mAreas[a->__index].__active = false;
-	mFreeList[mStoreIndex].push_back(a->__index);
+	mAreas[a->_index]._active = false;
+	mFreeList[mStoreIndex].push_back(a->_index);
 	mMachine->releaseType(a);
 }
 // --------------------------------------------------------------------------------
@@ -444,10 +444,10 @@ int AreaBattery::update(float frameTime)
 	while (it != mAreas.end())
 	{
 		Area &a = *it;
-		a.__index = index;
-		if (a.__active)
+		a._index = index;
+		if (a._active)
 		{
-			a.__time += frameTime;
+			a._time += frameTime;
 
 			// areascript: apply affectors and control functions
 			mMachine->updateType(&a, a.x, a.y, a.angle, frameTime);
@@ -473,7 +473,7 @@ void AreaBattery::render(RendererGL *renderer)
 	while (it != mAreas.end ())
 	{
 		Area &a = *it;
-		if (a.__active)
+		if (a._active)
 		{
 			if (a.type == AT_Ellipse)
 				renderer->addEllipseArea(&a);

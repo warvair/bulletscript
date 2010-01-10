@@ -18,7 +18,8 @@ namespace BS_NMSP
 	 */
 	struct UserTypeBase
 	{
-		EmitTypeControl* __et;	
+		//! bulletscript control
+		EmitTypeControl* _et_;	
 	};
 
 	/**	\brief Structure to let users define member variables for Controllers via
@@ -26,7 +27,9 @@ namespace BS_NMSP
 	 */
 	struct MemberVariableDeclaration
 	{
+		//! variable name
 		String name;
+		//! initial value
 		bstype value;
 	};
 
@@ -96,48 +99,61 @@ namespace BS_NMSP
 		int getNumVariables() const;
 	};
 
+	/**	\brief Script state.
+	 *
+	 *	This class is used by all objects that run on the VM
+	 */
 	struct ScriptState
 	{
-		// Index into CodeRecord::byteCode
+		//! Index into CodeRecord::byteCode
 		uint16 curInstruction;
 
-		// Index into stack
+		//! Index into stack
 		uint16 stackHead;
 
-		// Stack.  BS_SCRIPT_STACK_SIZE is defined in bsConfig.h
+		//! Stack.  BS_SCRIPT_STACK_SIZE is defined in bsConfig.h
 		bstype stack[BS_SCRIPT_STACK_SIZE];
 
-		// Time to wait when the script is suspended
+		//! Time to wait when the script is suspended
 		bstype suspendTime;				
 
-		// Local variables for whichever is the current emitter state.
-		// ScriptState itself is not responsible for managing this.
+		//! Local variables for whichever is the current emitter state.  ScriptState itself 
+		//! is not responsible for managing this.
 		bstype* locals;					
 
-		// Constructor
+	public:
+
+		/**	\brief Constructor.
+		 */		
 		ScriptState();
 	};
 
-	// Instance classes
+	/**	\brief Record of a scriptable object's internal state.
+	 */
 	struct _BSAPI ScriptRecord
 	{
-		// Member variables of the object that owns this ScriptRecord.
+		//! Member variables of the object that owns this ScriptRecord.
+		bstype* members;
 		// Todo: in a poor example of RAII, this is allocated by <Object>Definition::createScriptRecord,
 		// and deallocated in ~ScriptRecord, which is called by <Object>::onRelease
-		bstype* members;
 
+		//! number of member variables
 		int numMembers;
 
-		// Index into owning object's state list.
+		//! Index into owning object's state list.
 		int curState;
 
-		// Script state for virtual machine.
+		//! Script state for virtual machine.
 		ScriptState scriptState;		
 
-		// Constructor
+	public:
+
+		/**	\brief Constructor.
+		 */		
 		explicit ScriptRecord(int numLocals);
 		
-		// Destructor
+		/**	\brief Destructor.
+		 */		
 		~ScriptRecord();
 	};
 

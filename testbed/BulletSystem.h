@@ -15,13 +15,13 @@ struct Bullet : public bs::UserTypeBase
 	float red, green, blue;
 
 	// Internal variables, do not modify in affector function!
-	int __index;
-	float __time;
+	int _index;
+	float _time;
 
-	bool __active;
+	bool _active;
 	char padding[11]; // pad to 64 bytes
 
-	Bullet() : __active(false) {}
+	Bullet() : _active(false) {}
 };
 
 // This class is based off code from motorherp, posted on the SHMUP-DEV forums

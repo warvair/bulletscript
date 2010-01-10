@@ -10,11 +10,11 @@ emitter Hell
 		wait(t);
 		$angle = {270 + a, 1};
 		wait(2);
-		$red = {0, 1};
-		$blue = {1, 1};
+//		$red = {0, 1};
+//		$blue = {1, 1};
 		$angle -= {100, 0.5};
 		wait(0.75);
-		$red = {1 - c, 0.5};
+//		$red = {1 - c, 0.5};
 		$angle -= {100, 0.5};
 		wait(1.25);
 		$angle += {100, 0.5};
@@ -45,15 +45,15 @@ emitter Hell
 		while (i < count)
 		{
 			fireA bullet(100 + i, 320) : Swirl1(i / c1, 0.5 + 0.5 * (i / c1), i * 2);
-			fireA bullet(260 - i, 300) : Swirl2(i / c1, 0.5 + 0.5 * (i / c1), i * 2);
-			fireA bullet(130 + i, 320) : Swirl1(i / c1, 0.5 + 0.5 * (i / c1), i * 2);
-			fireA bullet(230 - i, 300) : Swirl2(i / c1, 0.5 + 0.5 * (i / c1), i * 2);
-			fireA bullet(80 + i, 320) : Swirl1(i / c1, 0.5 + 0.5 * (i / c1), i * 2);
-			fireA bullet(280 - i, 300) : Swirl2(i / c1, 0.5 + 0.5 * (i / c1), i * 2);
-			fireA bullet(150 + i, 320) : Swirl1(i / c1, 0.5 + 0.5 * (i / c1), i * 2);
-			fireA bullet(210 - i, 300) : Swirl2(i / c1, 0.5 + 0.5 * (i / c1), i * 2);
+//			fireA bullet(260 - i, 300) : Swirl2(i / c1, 0.5 + 0.5 * (i / c1), i * 2);
+//			fireA bullet(130 + i, 320) : Swirl1(i / c1, 0.5 + 0.5 * (i / c1), i * 2);
+//			fireA bullet(230 - i, 300) : Swirl2(i / c1, 0.5 + 0.5 * (i / c1), i * 2);
+//			fireA bullet(80 + i, 320) : Swirl1(i / c1, 0.5 + 0.5 * (i / c1), i * 2);
+//			fireA bullet(280 - i, 300) : Swirl2(i / c1, 0.5 + 0.5 * (i / c1), i * 2);
+//			fireA bullet(150 + i, 320) : Swirl1(i / c1, 0.5 + 0.5 * (i / c1), i * 2);
+//			fireA bullet(210 - i, 300) : Swirl2(i / c1, 0.5 + 0.5 * (i / c1), i * 2);
 			i++;
 		}
-		wait(0.05);
+		wait(0.1);
 	}
 }

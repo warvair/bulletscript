@@ -169,8 +169,8 @@ int BulletBattery::getCapacity() const
 bs::UserTypeBase* BulletBattery::emitAngle(float x, float y, float angle, const float* args, void* user)
 {
 	Bullet b;
-	b.__active = true;
-	b.__time = 0;
+	b._active = true;
+	b._time = 0;
 
 	b.x = x;
 	b.y = y;
@@ -197,8 +197,8 @@ bs::UserTypeBase* BulletBattery::emitAngle(float x, float y, float angle, const 
 bs::UserTypeBase* BulletBattery::emitTarget(float x, float y, float angle, const float* args, void* user)
 {
 	Bullet b;
-	b.__active = true;
-	b.__time = 0;
+	b._active = true;
+	b._time = 0;
 
 	b.x = x;
 	b.y = y;
@@ -228,8 +228,8 @@ bs::UserTypeBase* BulletBattery::emitTarget(float x, float y, float angle, const
 // --------------------------------------------------------------------------------
 void BulletBattery::killBullet(Bullet* b)
 {
-	mBullets[b->__index].__active = false;
-	mFreeList[mStoreIndex].push_back(b->__index);
+	mBullets[b->_index]._active = false;
+	mFreeList[mStoreIndex].push_back(b->_index);
 	mMachine->releaseType(b);
 }
 // --------------------------------------------------------------------------------
@@ -370,10 +370,10 @@ int BulletBattery::update(float frameTime)
 	while (it != mBullets.end())
 	{
 		Bullet &b = *it;
-		b.__index = index;
-		if (b.__active)
+		b._index = index;
+		if (b._active)
 		{
-			b.__time += frameTime;
+			b._time += frameTime;
 			
 			// Apply normal movement update
 			b.x += b.vx * frameTime;
@@ -404,7 +404,7 @@ void BulletBattery::render(RendererGL *renderer)
 	while (it != mBullets.end ())
 	{
 		Bullet &b = *it;
-		if (b.__active)
+		if (b._active)
 			renderer->addBullet(b);
 
 		++ it;

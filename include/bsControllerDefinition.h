@@ -20,25 +20,37 @@ namespace BS_NMSP
 	{
 	public:
 
-		// Information for Emitter variables.
+		/**	\brief Emitter compile information
+		 */
 		struct EmitterVariable
 		{
-			String name;
+			//! variable name
+			String name; 
+			//! EmitterDefinition name
 			String emitter;
+			//! x offset
 			bstype x;
+			//! y offset
 			bstype y;
 #ifdef BS_Z_DIMENSION
+			//! z offset
 			bstype z;
 #endif
+			//! angle offset
 			bstype angle;
 		};
 
-		// Information for events.
+		/**	\brief Event compile information
+		 */
 		struct Event
 		{
+			//! event name
 			String name;
+			//! number of arguments
 			int numArguments;
+			//! ParseTreeNode object to speed up compilation
 			ParseTreeNode* node;
+			//! bytecode
 			CodeRecord* code;
 		};
 

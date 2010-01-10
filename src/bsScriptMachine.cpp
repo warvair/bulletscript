@@ -176,7 +176,7 @@ void ScriptMachine::postUpdateEmitters()
 	Emitter* emit = mEmitters->getFirst();
 	while (emit)
 	{
-		emit->setLastMembers();
+		emit->_updateLastMembers();
 		emit = mEmitters->getNext(emit);
 	}
 }
@@ -242,7 +242,7 @@ EmitTypeControl* ScriptMachine::getEmitTypeRecord(int index)
 		"ScriptMachine::getEmitTypeRecord: out of bounds.");
 
 	EmitTypeControl* rec = mEmitterRecords[index].typePool->acquire();
-	rec->__emitterDefinition = index;
+	rec->_emitterDefinition_ = index;
 	rec->activeProperties = 0;
 	rec->state.curInstruction = 0;
 	rec->state.stackHead = 0;
@@ -549,7 +549,7 @@ int ScriptMachine::compileScript(const uint8* buffer, size_t bufferSize)
 	return 0;
 }
 // --------------------------------------------------------------------------------
-int ScriptMachine::declareMemberVariable(const String& ctrl, const String& var, bstype value)
+int ScriptMachine::declareControllerMemberVariable(const String& ctrl, const String& var, bstype value)
 {
 	// Add a declaration to the named emitter
 	MemberVariableDeclarationMap::iterator it = mMemberVariableDeclarations.find(ctrl);
@@ -744,9 +744,9 @@ int ScriptMachine::interpretCode(const uint32* code, size_t length, ScriptState&
 
 				EmitTypeControl* etc = static_cast<EmitTypeControl*>(object);
 				if (index < NUM_SPECIAL_PROPERTIES)
-					etc->__type->setAnchorValue1(etc, index, value);
+					etc->_type_->setAnchorValue1(etc, index, value);
 				else
-					etc->__type->setProperty1(etc, index, value);
+					etc->_type_->setProperty1(etc, index, value);
 
 				st.curInstruction += 2;
 			}
@@ -762,9 +762,9 @@ int ScriptMachine::interpretCode(const uint32* code, size_t length, ScriptState&
 				EmitTypeControl* etc = static_cast<EmitTypeControl*>(object);
 
 				if (index < NUM_SPECIAL_PROPERTIES)
-					etc->__type->setAnchorValue2(etc, index, value, time);
+					etc->_type_->setAnchorValue2(etc, index, value, time);
 				else
-					etc->__type->setProperty2(etc, index, value, time);
+					etc->_type_->setProperty2(etc, index, value, time);
 
 				st.curInstruction += 2;
 			}
@@ -776,9 +776,9 @@ int ScriptMachine::interpretCode(const uint32* code, size_t length, ScriptState&
 				EmitTypeControl* etc = static_cast<EmitTypeControl*>(object);
 
 				if (index < NUM_SPECIAL_PROPERTIES)
-					st.stack[st.stackHead] = etc->__type->getAnchorValue(etc, index);
+					st.stack[st.stackHead] = etc->_type_->getAnchorValue(etc, index);
 				else
-					st.stack[st.stackHead] = etc->__type->getProperty(etc, index);
+					st.stack[st.stackHead] = etc->_type_->getProperty(etc, index);
 
 				st.stackHead++;
 				st.curInstruction += 2;
@@ -1012,10 +1012,10 @@ int ScriptMachine::interpretCode(const uint32* code, size_t length, ScriptState&
 			{
 				EmitTypeControl* ftc = static_cast<EmitTypeControl*>(object);
 
-				assert(ftc->__object != 0 &&
+				assert(ftc->_object_ != 0 &&
 					"ScriptMachine::interpretCode ftc->object is null");
 
-				ftc->__type->callDieFunction(ftc->__object, userObject);
+				ftc->_type_->callDieFunction(ftc->_object_, userObject);
 				st.curInstruction++;
 			}
 			break;
@@ -1366,22 +1366,6 @@ void ScriptMachine::processScriptRecord(ScriptRecord* gsr, void* object, void* u
 		gsr->members[Member_X], gsr->members[Member_Y], gsr->members[Member_Angle], 
 		gsr->members, true, userObject);
 #endif
-}
-// --------------------------------------------------------------------------------
-void ScriptMachine::print_debug()
-{
-	size_t size = 0;
-	size_t etsize;
-	EmitterRecordList::iterator it = mEmitterRecords.begin();
-	while (it != mEmitterRecords.end())
-	{
-		size_t psize = (*it).typePool->size();
-		etsize = sizeof(EmitTypeControl);
-
-		size += (psize * (4 + etsize));		
-
-		++it;
-	}
 }
 // --------------------------------------------------------------------------------
 

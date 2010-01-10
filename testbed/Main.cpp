@@ -95,7 +95,7 @@ int main (int argc, char **argv)
 	machine.registerGlobalVariable("Test_Global", false, 0);
 
 	// User member variables must be declared before compiling scripts
-	machine.declareMemberVariable("Boss1", "health", 1); // 100%
+	machine.declareControllerMemberVariable("Boss1", "health", 1); // 100%
 
 	std::cout << "Compiling..." << std::endl;
 

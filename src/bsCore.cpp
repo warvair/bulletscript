@@ -1,7 +1,6 @@
 #include <iostream>
 #include "bsCore.h"
 #include "bsScriptMachine.h"
-#include "bsAlloc.h"
 
 namespace BS_NMSP
 {
@@ -65,13 +64,13 @@ ScriptRecord::ScriptRecord(int numLocals) :
 	members(0)
 {
 	if (numLocals > 0)
-		scriptState.locals = new bstype[numLocals];
+		scriptState.locals = BS_NEWA(bstype, numLocals);
 }
 // --------------------------------------------------------------------------------
 ScriptRecord::~ScriptRecord()
 {
-	delete[] members;
-	delete[] scriptState.locals;
+	BS_DELETEA(members);
+	BS_DELETEA(scriptState.locals);
 }
 // --------------------------------------------------------------------------------
 }

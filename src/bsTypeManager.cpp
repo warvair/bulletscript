@@ -15,15 +15,15 @@ TypeManager::~TypeManager()
 		delete mTypes[i];
 }
 // --------------------------------------------------------------------------------
-void TypeManager::createType(const String& type)
-{
-	EmitType* ft = new EmitType(type, (int) mTypes.size(), mScriptMachine);
-	mTypes.push_back(ft);
-}
-// --------------------------------------------------------------------------------
 void TypeManager::addErrorMsg(const String& msg)
 {
 	mLog->addEntry(msg);
+}
+// --------------------------------------------------------------------------------
+void TypeManager::createType(const String& name)
+{
+	EmitType* ft = new EmitType(name, (int) mTypes.size(), mScriptMachine);
+	mTypes.push_back(ft);
 }
 // --------------------------------------------------------------------------------
 EmitType* TypeManager::getType(const String& name) const
@@ -73,29 +73,29 @@ void TypeManager::mapPropertiesToTypes(const std::vector<String>& properties)
 	}
 }
 // --------------------------------------------------------------------------------
-void TypeManager::releaseType(UserTypeBase* ft)
+void TypeManager::releaseType(UserTypeBase* object)
 {
-	if (ft->__et)
+	if (object->_et_)
 	{
-		mScriptMachine->releaseEmitTypeRecord(ft->__et->__emitterDefinition, ft->__et);
-		ft->__et = 0;
+		mScriptMachine->releaseEmitTypeRecord(object->_et_->_emitterDefinition_, object->_et_);
+		object->_et_ = 0;
 	}
 }
 // --------------------------------------------------------------------------------
 #ifdef BS_Z_DIMENSION
-void TypeManager::updateType(UserTypeBase* userType, bstype x, bstype y, bstype z, bstype angle, float frameTime)
+void TypeManager::updateType(UserTypeBase* object, bstype x, bstype y, bstype z, bstype angle, float frameTime)
 #else
-void TypeManager::updateType(UserTypeBase* userType, bstype x, bstype y, bstype angle, float frameTime)
+void TypeManager::updateType(UserTypeBase* object, bstype x, bstype y, bstype angle, float frameTime)
 #endif
 {
-	if (!userType->__et)
+	if (!object->_et_)
 		return;
 
-	EmitTypeControl* rec = userType->__et;
-	EmitType* emitType = rec->__type;
+	EmitTypeControl* rec = object->_et_;
+	EmitType* emitType = rec->_type_;
 
 	// Update pointer to the user object because it may have been moved by the user
-	rec->__object = userType;
+	rec->_object_ = object;
 
 	// Apply anchors
 	if (rec->emitter)
@@ -104,7 +104,7 @@ void TypeManager::updateType(UserTypeBase* userType, bstype x, bstype y, bstype 
 		if (rec->emitter->_getAnchorIndex() != anchorIndex)
 		{
 			if (rec->flags & EmitTypeControl::EF_AnchorKill)
-				emitType->callDieFunction(rec->__object, rec->__userObject);
+				emitType->callDieFunction(rec->_object_, rec->_userObject_);
 			else
 				rec->emitter = 0;
 
@@ -160,7 +160,7 @@ void TypeManager::updateType(UserTypeBase* userType, bstype x, bstype y, bstype 
 
 	// Apply affectors
 	for (int i = 0; i < rec->numAffectors; ++i)
-		emitType->applyAffector(userType, rec->affectors[i], frameTime);
+		emitType->applyAffector(object, rec->affectors[i], frameTime);
 
 	// Update properties
 	int i, numProperties = emitType->numProperties_;
@@ -169,10 +169,10 @@ void TypeManager::updateType(UserTypeBase* userType, bstype x, bstype y, bstype 
 		int mask = 1 << i;
 		if (rec->activeProperties & mask)
 		{
-			bstype curValue = emitType->properties_[i].getter(rec->__object) - rec->anchors[i];
+			bstype curValue = emitType->properties_[i].getter(rec->_object_) - rec->anchors[i];
 			bstype newValue = curValue + rec->properties[i].speed * frameTime;
 
-			emitType->properties_[i].setter(rec->__object, newValue + rec->anchors[i]);
+			emitType->properties_[i].setter(rec->_object_, newValue + rec->anchors[i]);
 
 			rec->properties[i].time -= frameTime;
 			if (rec->properties[i].time <= 0)
@@ -184,10 +184,10 @@ void TypeManager::updateType(UserTypeBase* userType, bstype x, bstype y, bstype 
 		int mask = 1 << i;
 		if (rec->activeProperties & mask)
 		{
-			bstype curValue = emitType->properties_[i].getter(rec->__object);
+			bstype curValue = emitType->properties_[i].getter(rec->_object_);
 			bstype newValue = curValue + rec->properties[i].speed * frameTime;
 
-			emitType->properties_[i].setter(rec->__object, newValue);
+			emitType->properties_[i].setter(rec->_object_, newValue);
 
 			rec->properties[i].time -= frameTime;
 			if (rec->properties[i].time <= 0)
@@ -202,10 +202,10 @@ void TypeManager::updateType(UserTypeBase* userType, bstype x, bstype y, bstype 
 		{
 #ifndef BS_Z_DIMENSION
 			mScriptMachine->interpretCode(rec->code->byteCode, rec->code->byteCodeSize, 
-				rec->state, 0, rec, x, y, angle, 0, false, rec->__userObject);
+				rec->state, 0, rec, x, y, angle, 0, false, rec->_userObject_);
 #else
 			mScriptMachine->interpretCode(rec->code->byteCode, rec->code->byteCodeSize, 
-				rec->state, 0, rec, x, y, z, angle, 0, false, rec->__userObject);
+				rec->state, 0, rec, x, y, z, angle, 0, false, rec->_userObject_);
 #endif
 		}
 		else
@@ -219,10 +219,10 @@ void TypeManager::updateType(UserTypeBase* userType, bstype x, bstype y, bstype 
 int TypeManager::registerEmitFunction(const String& type, const String& name, 
 									   int numArgs, EmitFunction func)
 {
-	EmitType* ft = getType(type);
+	EmitType* et = getType(type);
 	
-	assert(ft != 0 && "TypeManager::registerEmitFunction no type");
-	return ft->registerEmitFunction(name, numArgs, func);
+	assert(et != 0 && "TypeManager::registerEmitFunction no type");
+	return et->registerEmitFunction(name, numArgs, func);
 }
 // --------------------------------------------------------------------------------
 void TypeManager::setDieFunction(const String& type, DieFunction func)
@@ -235,36 +235,36 @@ void TypeManager::setDieFunction(const String& type, DieFunction func)
 // --------------------------------------------------------------------------------
 int TypeManager::setAnchorX(const String& type, SetFunction set, GetFunction get)
 {
-	EmitType* ft = getType(type);
+	EmitType* et = getType(type);
 	
-	assert(ft != 0 && "TypeManager::setAnchorX no type");
-	return ft->setAnchorX(set, get);
+	assert(et != 0 && "TypeManager::setAnchorX no type");
+	return et->setAnchorX(set, get);
 }
 // --------------------------------------------------------------------------------
 int TypeManager::setAnchorY(const String& type, SetFunction set, GetFunction get)
 {
-	EmitType* ft = getType(type);
+	EmitType* et = getType(type);
 	
-	assert(ft != 0 && "TypeManager::setAnchorY no type");
-	return ft->setAnchorY(set, get);
+	assert(et != 0 && "TypeManager::setAnchorY no type");
+	return et->setAnchorY(set, get);
 }
 // --------------------------------------------------------------------------------
 #ifdef BS_Z_DIMENSION
 int TypeManager::setAnchorZ(const String& type, SetFunction set, GetFunction get)
 {
-	EmitType* ft = getType(type);
+	EmitType* et = getType(type);
 	
-	assert(ft != 0 && "TypeManager::setAnchorY no type");
-	return ft->setAnchorY(set, get);
+	assert(et != 0 && "TypeManager::setAnchorY no type");
+	return et->setAnchorY(set, get);
 }
 #endif
 // --------------------------------------------------------------------------------
 int TypeManager::setAnchorAngle(const String& type, SetFunction set, GetFunction get)
 {
-	EmitType* ft = getType(type);
+	EmitType* et = getType(type);
 	
-	assert(ft != 0 && "TypeManager::setAnchorAngle no type");
-	return ft->setAnchorAngle(set, get);
+	assert(et != 0 && "TypeManager::setAnchorAngle no type");
+	return et->setAnchorAngle(set, get);
 }
 // --------------------------------------------------------------------------------
 int TypeManager::registerProperty(const String& type, const String& name, 
@@ -278,10 +278,10 @@ int TypeManager::registerProperty(const String& type, const String& name,
 // --------------------------------------------------------------------------------
 int TypeManager::registerAffector(const String& type, const String& name, AffectorFunction func)
 {
-	EmitType* ft = getType(type);
+	EmitType* et = getType(type);
 	
-	assert(ft != 0 && "TypeManager::registerAffector no type");
-	return ft->registerAffector(name, func);
+	assert(et != 0 && "TypeManager::registerAffector no type");
+	return et->registerAffector(name, func);
 }
 // --------------------------------------------------------------------------------
 

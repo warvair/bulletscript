@@ -16,6 +16,8 @@ EmitType::EmitType(const String& name, int type, ScriptMachine* machine) :
 	mPropertyIndices(0),
 	mDieFunction(0)
 {
+	// These need to be registered here with empty functions, so that the user can
+	// set them without disturbing the order of properties.
 	registerProperty("x", 0, 0);
 	registerProperty("y", 0, 0);
 #ifdef BS_Z_DIMENSION
@@ -119,30 +121,6 @@ int EmitType::setAnchorAngle(SetFunction set, GetFunction get)
 	return BS_OK;
 }
 // --------------------------------------------------------------------------------
-void EmitType::setAnchorValue1(EmitTypeControl* et, uint32 anchor, bstype value) const
-{
-	properties_[anchor].setter(et->__object, value + et->anchors[anchor]);
-
-	// Unset if it is currently active
-	et->activeProperties &= ~(1 << anchor);
-}
-// --------------------------------------------------------------------------------
-void EmitType::setAnchorValue2(EmitTypeControl* et, uint32 anchor, bstype value, bstype time) const
-{
-	// Set up EmitTypeControl to change property gradually
-	et->activeProperties |= (1 << anchor);
-	et->properties[anchor].time = time;
-
-	bstype curValue = properties_[anchor].getter(et->__object) - et->anchors[anchor];
-	et->properties[anchor].speed = (value - curValue) / time;
-}
-// --------------------------------------------------------------------------------
-bstype EmitType::getAnchorValue(EmitTypeControl* et, uint32 anchor) const
-{
-	bstype value = properties_[anchor].getter(et->__object);
-	return value - et->anchors[anchor];
-}
-// --------------------------------------------------------------------------------
 int EmitType::registerProperty(const String& name, SetFunction set, GetFunction get)
 {
 	if (numProperties_ == (BS_MAX_USER_PROPERTIES + NUM_SPECIAL_PROPERTIES))
@@ -160,6 +138,7 @@ int EmitType::registerProperty(const String& name, SetFunction set, GetFunction 
 	properties_[numProperties_].getter = get;
 	numProperties_++;
 
+	// Add property to global list, for codegen and runtime global->EmitType mapping.
 	if (mScriptMachine->getPropertyIndex(name) == BS_NotFound)
 		mScriptMachine->addProperty(name);
 
@@ -174,6 +153,9 @@ void EmitType::mapProperties(const std::vector<String>& properties)
 	int count = (int) properties.size();
 	mPropertyIndices = new int[count];
 	
+	// Set up a mapping from global index (which is stored in bytecode) to the index
+	// for this particular EmitType, because different EmitTypes may have the same name
+	// properties, but in a different order, and we cannot know this at script compile time.
 	for (int i = 0; i < count; ++i)
 	{
 		mPropertyIndices[i] = -1;
@@ -202,7 +184,7 @@ int EmitType::getPropertyIndex(const String& name) const
 void EmitType::setProperty1(EmitTypeControl* record, uint32 prop, bstype value) const
 {
 	int index = mPropertyIndices[prop];
-	properties_[index].setter(record->__object, value);
+	properties_[index].setter(record->_object_, value);
 
 	// Unset if it is currently active
 	record->activeProperties &= ~(1 << index);
@@ -216,15 +198,38 @@ void EmitType::setProperty2(EmitTypeControl* record, uint32 prop, bstype value, 
 	record->activeProperties |= (1 << index);
 	record->properties[index].time = time;
 
-	bstype curValue = properties_[index].getter(record->__object);
+	bstype curValue = properties_[index].getter(record->_object_);
 	record->properties[index].speed = (value - curValue) / time;
 }
 // --------------------------------------------------------------------------------
 bstype EmitType::getProperty(EmitTypeControl* record, uint32 prop) const
 {
 	int index = mPropertyIndices[prop];
+	return properties_[index].getter(record->_object_);
+}
+// --------------------------------------------------------------------------------
+void EmitType::setAnchorValue1(EmitTypeControl* etc, uint32 anchor, bstype value) const
+{
+	properties_[anchor].setter(etc->_object_, value + etc->anchors[anchor]);
 
-	return properties_[index].getter(record->__object);
+	// Unset if it is currently active
+	etc->activeProperties &= ~(1 << anchor);
+}
+// --------------------------------------------------------------------------------
+void EmitType::setAnchorValue2(EmitTypeControl* etc, uint32 anchor, bstype value, bstype time) const
+{
+	// Set up EmitTypeControl to change property gradually
+	etc->activeProperties |= (1 << anchor);
+	etc->properties[anchor].time = time;
+
+	bstype curValue = properties_[anchor].getter(etc->_object_) - etc->anchors[anchor];
+	etc->properties[anchor].speed = (value - curValue) / time;
+}
+// --------------------------------------------------------------------------------
+bstype EmitType::getAnchorValue(EmitTypeControl* etc, uint32 anchor) const
+{
+	bstype value = properties_[anchor].getter(etc->_object_);
+	return value - etc->anchors[anchor];
 }
 // --------------------------------------------------------------------------------
 bool EmitType::emitFunctionExists(const String& name) const
@@ -460,49 +465,49 @@ int EmitType::_processCode(const uint32* code, ScriptState& state, bstype x, bst
 
 		if (controlFunc == 0 && numAffectors == 0 && anchored == 0)
 		{
-			type->__et = 0;
+			type->_et_ = 0;
 		}
 		else
 		{
 			// Request a EmitTypeControl from pool
 			int emitDef = code[state.curInstruction + 7 + numAffectors];
-			type->__et = mScriptMachine->getEmitTypeRecord(emitDef);
-			type->__et->__type = this;
-			type->__et->__userObject = userObj;
+			type->_et_ = mScriptMachine->getEmitTypeRecord(emitDef);
+			type->_et_->_type_ = this;
+			type->_et_->_userObject_ = userObj;
 
 			// Set up control function
 			if (controlFunc != 0)
 			{
 				int numArgs = code[state.curInstruction + 4];
 
-				type->__et->code = mScriptMachine->getCodeRecord(controlFunc - 1);
+				type->_et_->code = mScriptMachine->getCodeRecord(controlFunc - 1);
 				
 				state.stackHead -= numArgs;
-				memcpy(type->__et->state.locals, state.stack + state.stackHead, numArgs * sizeof(bstype));
+				memcpy(type->_et_->state.locals, state.stack + state.stackHead, numArgs * sizeof(bstype));
 			}
 
 			// Set up affectors
-			type->__et->numAffectors = numAffectors;
+			type->_et_->numAffectors = numAffectors;
 			for (uint32 i = 0; i < numAffectors; ++i)
-				type->__et->affectors[i] = (int) code[state.curInstruction + 6 + i];
+				type->_et_->affectors[i] = (int) code[state.curInstruction + 6 + i];
 
 			// Set up anchors
 			// flags will contain more information than just anchors, but we must set the anchor bits
 			// first, because it is quicker to set all 5 bits in one go like this.
-			type->__et->flags = anchored;
+			type->_et_->flags = anchored;
 			if (anchored)
 			{
-				type->__et->anchors = emitter->mRecord->members;
-				type->__et->emitter = emitter;
+				type->_et_->anchors = emitter->mRecord->members;
+				type->_et_->emitter = emitter;
 
 				// This will fit into 8 bits, so store in lowest 8 bits of flags
 				uint32 emitterIndex = (uint32) emitter->_getAnchorIndex();
-				type->__et->flags |= emitterIndex;
+				type->_et_->flags |= emitterIndex;
 			}
 			else
 			{
-				type->__et->anchors = EmitTypeControl::defaultAnchors;
-				type->__et->emitter = 0;
+				type->_et_->anchors = EmitTypeControl::defaultAnchors;
+				type->_et_->emitter = 0;
 			}
 		}
 	}

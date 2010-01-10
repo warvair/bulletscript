@@ -587,7 +587,12 @@ INPUT_ENCODING         = UTF-8
 
 FILE_PATTERNS          = bsController.h \
                          bsEmitter.h \
-                         bsMachine.h
+                         bsMachine.h \
+                         bsControllerDefinition.h \
+                         bsEmitterDefinition.h \
+                         bsLog.h \
+                         bsObjectDefinition.h \
+                         bsCore.h
 
 # The RECURSIVE tag can be used to turn specify whether or not subdirectories 
 # should be searched for input files as well. Possible values are YES and NO. 
