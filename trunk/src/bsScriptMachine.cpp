@@ -739,24 +739,22 @@ int ScriptMachine::interpretCode(const uint32* code, size_t length, ScriptState&
 
 		case BC_SETPROPERTY1:
 			{
-				int index = code[st.curInstruction + 1];
+				uint32 index = code[st.curInstruction + 1];
 				bstype value = st.stack[--st.stackHead];
 
 				EmitTypeControl* etc = static_cast<EmitTypeControl*>(object);
 				if (index < NUM_SPECIAL_PROPERTIES)
 					etc->__type->setAnchorValue1(etc, index, value);
 				else
-				{
-					const String& propName = getProperty(index);
-					etc->__type->setProperty1(etc, propName, value);
-				}
+					etc->__type->setProperty1(etc, index, value);
+
 				st.curInstruction += 2;
 			}
 			break;
 
 		case BC_SETPROPERTY2:
 			{
-				int index = code[st.curInstruction + 1];
+				uint32 index = code[st.curInstruction + 1];
 				bstype time = st.stack[st.stackHead - 1];
 				bstype value = st.stack[st.stackHead - 2];
 				st.stackHead -= 2;
@@ -764,14 +762,9 @@ int ScriptMachine::interpretCode(const uint32* code, size_t length, ScriptState&
 				EmitTypeControl* etc = static_cast<EmitTypeControl*>(object);
 
 				if (index < NUM_SPECIAL_PROPERTIES)
-				{
 					etc->__type->setAnchorValue2(etc, index, value, time);
-				}
 				else
-				{
-					const String& propName = getProperty(index);
-					etc->__type->setProperty2(etc, propName, value, time);
-				}
+					etc->__type->setProperty2(etc, index, value, time);
 
 				st.curInstruction += 2;
 			}
@@ -779,18 +772,13 @@ int ScriptMachine::interpretCode(const uint32* code, size_t length, ScriptState&
 
 		case BC_GETPROPERTY:
 			{
-				int index = code[st.curInstruction + 1];
+				uint32 index = code[st.curInstruction + 1];
 				EmitTypeControl* etc = static_cast<EmitTypeControl*>(object);
 
 				if (index < NUM_SPECIAL_PROPERTIES)
-				{
 					st.stack[st.stackHead] = etc->__type->getAnchorValue(etc, index);
-				}
 				else
-				{
-					const String& propName = getProperty(index);
-					st.stack[st.stackHead] = etc->__type->getProperty(etc, propName);
-				}
+					st.stack[st.stackHead] = etc->__type->getProperty(etc, index);
 
 				st.stackHead++;
 				st.curInstruction += 2;

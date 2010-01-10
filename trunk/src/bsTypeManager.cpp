@@ -270,10 +270,10 @@ int TypeManager::setAnchorAngle(const String& type, SetFunction set, GetFunction
 int TypeManager::registerProperty(const String& type, const String& name, 
 								   SetFunction set, GetFunction get)
 {
-	EmitType* ft = getType(type);
+	EmitType* et = getType(type);
 	
-	assert(ft != 0 && "TypeManager::registerProperty no type");
-	return ft->registerProperty(name, set, get);
+	assert(et != 0 && "TypeManager::registerProperty no type");
+	return et->registerProperty(name, set, get);
 }
 // --------------------------------------------------------------------------------
 int TypeManager::registerAffector(const String& type, const String& name, AffectorFunction func)
