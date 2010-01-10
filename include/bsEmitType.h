@@ -244,11 +244,11 @@ namespace BS_NMSP
 
 		int setAnchorAngle(SetFunction set, GetFunction get);
 
-		void setAnchorValue1(EmitTypeControl* et, int anchor, bstype value) const;
+		void setAnchorValue1(EmitTypeControl* et, uint32 anchor, bstype value) const;
 
-		void setAnchorValue2(EmitTypeControl* et, int anchor, bstype value, bstype time) const;
+		void setAnchorValue2(EmitTypeControl* et, uint32 anchor, bstype value, bstype time) const;
 
-		bstype getAnchorValue(EmitTypeControl* et, int anchor) const;
+		bstype getAnchorValue(EmitTypeControl* et, uint32 anchor) const;
 
 		/**	\brief Register a controllable property for this EmitType.
 		 *
@@ -295,21 +295,21 @@ namespace BS_NMSP
 		 *	This uses the user-supplied SetFunction to set the named property.
 		 *
 		 *	\param record the EmitTypeControl controlling the emitted object.
-		 *	\param prop the name of the property.
+		 *	\param prop the index of the property.
 		 *	\param value the new value to set it to.
 		 */
-		void setProperty1(EmitTypeControl* record, const String& prop, bstype value) const;
+		void setProperty1(EmitTypeControl* record, uint32 prop, bstype value) const;
 
 		/**	\brief Interpolate a property on an emitted object smoothly over time.
 		 *
 		 *	This uses the user-supplied SetFunction to set the named property.
 		 *
 		 *	\param record the EmitTypeControl controlling the emitted object.
-		 *	\param prop the name of the property.
+		 *	\param prop the index of the property.
 		 *	\param value the new value to set it to.
 		 *	\param time the time (in seconds) over which to change the property.
 		 */
-		void setProperty2(EmitTypeControl* record, const String& prop, 
+		void setProperty2(EmitTypeControl* record, uint32 prop, 
 			bstype value, bstype time) const;
 
 		/**	\brief Get the value of a property of an emitted object.
@@ -317,10 +317,10 @@ namespace BS_NMSP
 		 *	This uses the user-supplied GetFunction to get the named property.
 		 *
 		 *	\param record the EmitTypeControl controlling the emitted object.
-		 *	\param prop the name of the property.
+		 *	\param prop the index of the property.
 		 *	\return the value of the property.
 		 */
-		bstype getProperty(EmitTypeControl* record, const String& prop) const;
+		bstype getProperty(EmitTypeControl* record, uint32 prop) const;
 
 		/**	\brief Register a user-supplied EmitFunction
 		 *

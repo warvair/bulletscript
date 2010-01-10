@@ -463,13 +463,6 @@ bool ParseTree::checkConstantExpression(ObjectDefinition* def, CodeBlockType typ
 				addError(node->getLine(), "Properties can only be used in functions.");
 				return false;
 			}
-
-			// Add to global property list
-			String propName = node->getStringData();
-			if (mScriptMachine->getPropertyIndex(propName) == BS_NotFound)
-				mScriptMachine->addProperty(propName);
-
-			// Properties are not known yet, check later...
 		}
 		return true;
 
@@ -1004,10 +997,6 @@ void ParseTree::buildFunctions(EmitterDefinition* def, ParseTreeNode* node)
 
 	case PT_SetStatement:
 		{
-			String propName = node->getChild(0)->getStringData();
-			if (mScriptMachine->getPropertyIndex(propName) == BS_NotFound)
-				mScriptMachine->addProperty(propName);
-
 			checkConstantExpression(def, CBT_Function, s_curFunc->name, node->getChild(1));
 		}
 		return;

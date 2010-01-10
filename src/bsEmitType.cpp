@@ -119,7 +119,7 @@ int EmitType::setAnchorAngle(SetFunction set, GetFunction get)
 	return BS_OK;
 }
 // --------------------------------------------------------------------------------
-void EmitType::setAnchorValue1(EmitTypeControl* et, int anchor, bstype value) const
+void EmitType::setAnchorValue1(EmitTypeControl* et, uint32 anchor, bstype value) const
 {
 	properties_[anchor].setter(et->__object, value + et->anchors[anchor]);
 
@@ -127,7 +127,7 @@ void EmitType::setAnchorValue1(EmitTypeControl* et, int anchor, bstype value) co
 	et->activeProperties &= ~(1 << anchor);
 }
 // --------------------------------------------------------------------------------
-void EmitType::setAnchorValue2(EmitTypeControl* et, int anchor, bstype value, bstype time) const
+void EmitType::setAnchorValue2(EmitTypeControl* et, uint32 anchor, bstype value, bstype time) const
 {
 	// Set up EmitTypeControl to change property gradually
 	et->activeProperties |= (1 << anchor);
@@ -137,7 +137,7 @@ void EmitType::setAnchorValue2(EmitTypeControl* et, int anchor, bstype value, bs
 	et->properties[anchor].speed = (value - curValue) / time;
 }
 // --------------------------------------------------------------------------------
-bstype EmitType::getAnchorValue(EmitTypeControl* et, int anchor) const
+bstype EmitType::getAnchorValue(EmitTypeControl* et, uint32 anchor) const
 {
 	bstype value = properties_[anchor].getter(et->__object);
 	return value - et->anchors[anchor];
@@ -159,6 +159,10 @@ int EmitType::registerProperty(const String& name, SetFunction set, GetFunction 
 	properties_[numProperties_].setter = set;
 	properties_[numProperties_].getter = get;
 	numProperties_++;
+
+	if (mScriptMachine->getPropertyIndex(name) == BS_NotFound)
+		mScriptMachine->addProperty(name);
+
 	return BS_OK;
 }
 // --------------------------------------------------------------------------------
@@ -195,19 +199,18 @@ int EmitType::getPropertyIndex(const String& name) const
 	return BS_NotFound;
 }
 // --------------------------------------------------------------------------------
-void EmitType::setProperty1(EmitTypeControl* record, const String& prop, bstype value) const
+void EmitType::setProperty1(EmitTypeControl* record, uint32 prop, bstype value) const
 {
-	int index = getPropertyIndex(prop);
+	int index = mPropertyIndices[prop];
 	properties_[index].setter(record->__object, value);
 
 	// Unset if it is currently active
 	record->activeProperties &= ~(1 << index);
 }
 // --------------------------------------------------------------------------------
-void EmitType::setProperty2(EmitTypeControl* record, const String& prop, 
-							bstype value, bstype time) const
+void EmitType::setProperty2(EmitTypeControl* record, uint32 prop, bstype value, bstype time) const
 {
-	int index = getPropertyIndex(prop);
+	int index = mPropertyIndices[prop];
 
 	// Set up EmitTypeControl to change property gradually
 	record->activeProperties |= (1 << index);
@@ -217,9 +220,10 @@ void EmitType::setProperty2(EmitTypeControl* record, const String& prop,
 	record->properties[index].speed = (value - curValue) / time;
 }
 // --------------------------------------------------------------------------------
-bstype EmitType::getProperty(EmitTypeControl* record, const String& prop) const
+bstype EmitType::getProperty(EmitTypeControl* record, uint32 prop) const
 {
-	int index = getPropertyIndex(prop);
+	int index = mPropertyIndices[prop];
+
 	return properties_[index].getter(record->__object);
 }
 // --------------------------------------------------------------------------------
