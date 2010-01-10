@@ -45,12 +45,14 @@ namespace BS_NMSP
 
 		bool affectorFunctionExists(int type, const String& name) const;
 
+		void mapPropertiesToTypes(const std::vector<String>& properties);
+
 		void releaseType(UserTypeBase* ft);
 
 #ifdef BS_Z_DIMENSION
-		void updateType(UserTypeBase* userType, bstype x, bstype y, bstype z, float frameTime);
+		void updateType(UserTypeBase* userType, bstype x, bstype y, bstype z, bstype angle, float frameTime);
 #else
-		void updateType(UserTypeBase* userType, bstype x, bstype y, float frameTime);
+		void updateType(UserTypeBase* userType, bstype x, bstype y, bstype angle, float frameTime);
 #endif
 
 		int registerEmitFunction(const String& type, const String& name, int numArgs, EmitFunction func);

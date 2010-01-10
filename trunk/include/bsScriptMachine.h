@@ -36,6 +36,9 @@ namespace BS_NMSP
 		// Log
 		Log* mLog;
 
+		// Are global properties mapped to their EmitTypes?
+		bool mPropertiesMapped;
+
 		// Native functions callable by script
 		struct NativeFunctionRecord
 		{
@@ -175,10 +178,11 @@ namespace BS_NMSP
 		// Script state processing
 #ifdef BS_Z_DIMENSION
 		int interpretCode(const uint32* code, size_t length, ScriptState& st, int* curState, 
-			void* object, bstype x, bstype y, bstype z, bstype* members, bool loop, void* userObject);
+			void* object, bstype x, bstype y, bstype z, bstype angle, bstype* members, bool loop, 
+			void* userObject);
 #else
 		int interpretCode(const uint32* code, size_t length, ScriptState& st, int* curState, 
-			void* object, bstype x, bstype y, bstype* members, bool loop, void* userObject);
+			void* object, bstype x, bstype y, bstype angle, bstype* members, bool loop, void* userObject);
 #endif
 
 		int interpretCode(const uint32* code, size_t length, ScriptState& st, bstype* members = 0);

@@ -13,6 +13,7 @@ EmitType::EmitType(const String& name, int type, ScriptMachine* machine) :
 	mName(name),
 	mType(type),
 	mScriptMachine(machine),
+	mPropertyIndices(0),
 	mDieFunction(0)
 {
 	registerProperty("x", 0, 0);
@@ -22,7 +23,7 @@ EmitType::EmitType(const String& name, int type, ScriptMachine* machine) :
 #endif
 	registerProperty("angle", 0, 0);
 
-	mNumProperties = NUM_SPECIAL_PROPERTIES;
+	numProperties_ = NUM_SPECIAL_PROPERTIES;
 }
 // --------------------------------------------------------------------------------
 EmitType::~EmitType()
@@ -33,6 +34,8 @@ EmitType::~EmitType()
 		delete mAffectorInstances[i];
 
 	mAffectorInstances.clear();
+
+	delete[] mPropertyIndices;
 }
 // --------------------------------------------------------------------------------
 const String& EmitType::getName() const
@@ -88,37 +91,37 @@ void EmitType::callDieFunction(UserTypeBase* object, void* userObject)
 // --------------------------------------------------------------------------------
 int EmitType::setAnchorX(SetFunction set, GetFunction get)
 {
-	mProperties[Property_X].setter = set;
-	mProperties[Property_X].getter = get;
+	properties_[Property_X].setter = set;
+	properties_[Property_X].getter = get;
 	return BS_OK;
 }
 // --------------------------------------------------------------------------------
 int EmitType::setAnchorY(SetFunction set, GetFunction get)
 {
-	mProperties[Property_Y].setter = set;
-	mProperties[Property_Y].getter = get;
+	properties_[Property_Y].setter = set;
+	properties_[Property_Y].getter = get;
 	return BS_OK;
 }
 // --------------------------------------------------------------------------------
 #ifdef BS_Z_DIMENSION
 int EmitType::setAnchorZ(SetFunction set, GetFunction get)
 {
-	mProperties[Property_Z].setter = set;
-	mProperties[Property_Z].getter = get;
+	properties_[Property_Z].setter = set;
+	properties_[Property_Z].getter = get;
 	return BS_OK;
 }
 #endif
 // --------------------------------------------------------------------------------
 int EmitType::setAnchorAngle(SetFunction set, GetFunction get)
 {
-	mProperties[Property_Angle].setter = set;
-	mProperties[Property_Angle].getter = get;
+	properties_[Property_Angle].setter = set;
+	properties_[Property_Angle].getter = get;
 	return BS_OK;
 }
 // --------------------------------------------------------------------------------
 void EmitType::setAnchorValue1(EmitTypeControl* et, int anchor, bstype value) const
 {
-	mProperties[anchor].setter(et->__object, value + et->anchors[anchor]);
+	properties_[anchor].setter(et->__object, value + et->anchors[anchor]);
 
 	// Unset if it is currently active
 	et->activeProperties &= ~(1 << anchor);
@@ -130,40 +133,62 @@ void EmitType::setAnchorValue2(EmitTypeControl* et, int anchor, bstype value, bs
 	et->activeProperties |= (1 << anchor);
 	et->properties[anchor].time = time;
 
-	bstype curValue = mProperties[anchor].getter(et->__object) - et->anchors[anchor];
+	bstype curValue = properties_[anchor].getter(et->__object) - et->anchors[anchor];
 	et->properties[anchor].speed = (value - curValue) / time;
 }
 // --------------------------------------------------------------------------------
 bstype EmitType::getAnchorValue(EmitTypeControl* et, int anchor) const
 {
-	bstype value = mProperties[anchor].getter(et->__object);
+	bstype value = properties_[anchor].getter(et->__object);
 	return value - et->anchors[anchor];
 }
 // --------------------------------------------------------------------------------
 int EmitType::registerProperty(const String& name, SetFunction set, GetFunction get)
 {
-	if (mNumProperties == (BS_MAX_USER_PROPERTIES + NUM_SPECIAL_PROPERTIES))
+	if (numProperties_ == (BS_MAX_USER_PROPERTIES + NUM_SPECIAL_PROPERTIES))
 		return BS_TooManyProperties;
 
 	// Make sure it's not already registered
-	for (int i = 0; i < mNumProperties; ++i)
+	for (int i = 0; i < numProperties_; ++i)
 	{
-		if (mProperties[i].name == name)
+		if (properties_[i].name == name)
 			return BS_PropertyExists;
 	}
 
-	mProperties[mNumProperties].name = name;
-	mProperties[mNumProperties].setter = set;
-	mProperties[mNumProperties].getter = get;
-	mNumProperties++;
+	properties_[numProperties_].name = name;
+	properties_[numProperties_].setter = set;
+	properties_[numProperties_].getter = get;
+	numProperties_++;
 	return BS_OK;
+}
+// --------------------------------------------------------------------------------
+void EmitType::mapProperties(const std::vector<String>& properties)
+{
+	if (mPropertyIndices)
+		delete[] mPropertyIndices;
+
+	int count = (int) properties.size();
+	mPropertyIndices = new int[count];
+	
+	for (int i = 0; i < count; ++i)
+	{
+		mPropertyIndices[i] = -1;
+		for (int j = 0; j < numProperties_; ++j)
+		{
+			if (properties[i] == properties_[j].name)
+			{
+				mPropertyIndices[i] = j;
+				break;
+			}
+		}
+	}
 }
 // --------------------------------------------------------------------------------
 int EmitType::getPropertyIndex(const String& name) const
 {
-	for (int i = 0; i < mNumProperties; ++i)
+	for (int i = 0; i < numProperties_; ++i)
 	{
-		if (mProperties[i].name == name)
+		if (properties_[i].name == name)
 			return i;
 	}
 	
@@ -173,7 +198,7 @@ int EmitType::getPropertyIndex(const String& name) const
 void EmitType::setProperty1(EmitTypeControl* record, const String& prop, bstype value) const
 {
 	int index = getPropertyIndex(prop);
-	mProperties[index].setter(record->__object, value);
+	properties_[index].setter(record->__object, value);
 
 	// Unset if it is currently active
 	record->activeProperties &= ~(1 << index);
@@ -188,14 +213,14 @@ void EmitType::setProperty2(EmitTypeControl* record, const String& prop,
 	record->activeProperties |= (1 << index);
 	record->properties[index].time = time;
 
-	bstype curValue = mProperties[index].getter(record->__object);
+	bstype curValue = properties_[index].getter(record->__object);
 	record->properties[index].speed = (value - curValue) / time;
 }
 // --------------------------------------------------------------------------------
 bstype EmitType::getProperty(EmitTypeControl* record, const String& prop) const
 {
 	int index = getPropertyIndex(prop);
-	return mProperties[index].getter(record->__object);
+	return properties_[index].getter(record->__object);
 }
 // --------------------------------------------------------------------------------
 bool EmitType::emitFunctionExists(const String& name) const
@@ -365,7 +390,7 @@ void EmitType::generateBytecode(EmitterDefinition* def, ParseTreeNode* node,
 	}
 
 	// Anchored?
-	uint32 anchorFlags;
+	uint32 anchorFlags = 0;
 	std::list<String>::iterator ancIt = anchors.begin();
 	while (ancIt != anchors.end())
 	{
@@ -408,17 +433,16 @@ int EmitType::_processCode(const uint32* code, ScriptState& state, bstype x, bst
 #ifdef BS_Z_DIMENSION
 						  bstype z, 
 #endif
-						  bstype* members, void* userObj, Emitter* emitter)
+						  bstype angle, bstype* members, void* userObj, Emitter* emitter)
 {
 	int funcIndex = code[state.curInstruction + 2];
 	uint32 numAffectors = 0, anchored = 0;
 
 	EmitFunction func = mFunctions[funcIndex].func;
-
 #ifdef BS_Z_DIMENSION
-	UserTypeBase* type = func(x, y, z, &state.stack[state.stackHead], userObj);
+	UserTypeBase* type = func(x, y, z, angle, &state.stack[state.stackHead], userObj);
 #else
-	UserTypeBase* type = func(x, y, &state.stack[state.stackHead], userObj);
+	UserTypeBase* type = func(x, y, angle, &state.stack[state.stackHead], userObj);
 #endif
 
 	state.stackHead -= mFunctions[funcIndex].numArguments;

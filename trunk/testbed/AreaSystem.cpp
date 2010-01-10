@@ -1,28 +1,34 @@
 #include <iostream>
 #include <algorithm>
+#include <cmath>
 #include "Main.h"
 #include "AreaSystem.h"
 
 AreaBattery* g_areas = 0;
 
-bs::UserTypeBase* area_emitQuadC(float x, float y, const float* args, void* userObj)
+bs::UserTypeBase* area_emitQuadC(float x, float y, float angle, const float* args, void* userObj)
 {
-	return g_areas->emitQuadC(x, y, args, userObj);
+	return g_areas->emitQuadC(x, y, angle, args, userObj);
 }
 
-bs::UserTypeBase* area_emitQuadB(float x, float y, const float* args, void* userObj)
+bs::UserTypeBase* area_emitQuadB(float x, float y, float angle, const float* args, void* userObj)
 {
-	return g_areas->emitQuadB(x, y, args, userObj);
+	return g_areas->emitQuadB(x, y, angle, args, userObj);
 }
 
-bs::UserTypeBase* area_emitEllipse(float x, float y, const float* args, void* userObj)
+bs::UserTypeBase* area_emitQuadProjected(float x, float y, float angle, const float* args, void* userObj)
 {
-	return g_areas->emitEllipse(x, y, args, userObj);
+	return g_areas->emitQuadProjected(x, y, angle, args, userObj);
 }
 
-bs::UserTypeBase* area_emitArc(float x, float y, const float* args, void* userObj)
+bs::UserTypeBase* area_emitEllipse(float x, float y, float angle, const float* args, void* userObj)
 {
-	return g_areas->emitArc(x, y, args, userObj);
+	return g_areas->emitEllipse(x, y, angle, args, userObj);
+}
+
+bs::UserTypeBase* area_emitArc(float x, float y, float angle, const float* args, void* userObj)
+{
+	return g_areas->emitArc(x, y, angle, args, userObj);
 }
 
 void area_kill(bs::UserTypeBase* object, void* userObj)
@@ -30,6 +36,35 @@ void area_kill(bs::UserTypeBase* object, void* userObj)
 	g_areas->killArea(object);
 }
 
+void area_setX(bs::UserTypeBase* object, float value)
+{
+	g_areas->setX(object, value);
+}
+
+float area_getX(bs::UserTypeBase* object)
+{
+	return g_areas->getX(object);
+}
+
+void area_setY(bs::UserTypeBase* object, float value)
+{
+	g_areas->setY(object, value);
+}
+
+float area_getY(bs::UserTypeBase* object)
+{
+	return g_areas->getY(object);
+}
+
+void area_setAngle(bs::UserTypeBase* object, float value)
+{
+	g_areas->setAngle(object, value);
+}
+
+float area_getAngle(bs::UserTypeBase* object)
+{
+	return g_areas->getAngle(object);
+}
 void area_setWidth(bs::UserTypeBase* object, float value)
 {
 	g_areas->setWidth(object, value);
@@ -47,7 +82,7 @@ void area_setHeight(bs::UserTypeBase* object, float value)
 
 float area_getHeight(bs::UserTypeBase* object)
 {
-	return g_areas->getWidth(object);
+	return g_areas->getHeight(object);
 }
 
 void area_setInnerWidth(bs::UserTypeBase* object, float value)
@@ -68,16 +103,6 @@ void area_setInnerHeight(bs::UserTypeBase* object, float value)
 float area_getInnerHeight(bs::UserTypeBase* object)
 {
 	return g_areas->getInnerHeight(object);
-}
-
-void area_setAngle(bs::UserTypeBase* object, float value)
-{
-	g_areas->setAngle(object, value);
-}
-
-float area_getAngle(bs::UserTypeBase* object)
-{
-	return g_areas->getAngle(object);
 }
 
 void area_setStart(bs::UserTypeBase* object, float value)
@@ -157,7 +182,7 @@ unsigned int AreaBattery::getFreeAreaSlot()
 	return id;
 }
 // --------------------------------------------------------------------------------
-bs::UserTypeBase* AreaBattery::emitQuadC(float x, float y, const float* args, void* userObj)
+bs::UserTypeBase* AreaBattery::emitQuadC(float x, float y, float angle, const float* args, void* userObj)
 {
 	Area a;
 	a.__active = true;
@@ -179,7 +204,7 @@ bs::UserTypeBase* AreaBattery::emitQuadC(float x, float y, const float* args, vo
 	return &(mSpawnedAreas[count]);
 }
 // --------------------------------------------------------------------------------
-bs::UserTypeBase* AreaBattery::emitQuadB(float x, float y, const float* args, void* userObj)
+bs::UserTypeBase* AreaBattery::emitQuadB(float x, float y, float angle, const float* args, void* userObj)
 {
 	Area a;
 	a.__active = true;
@@ -201,7 +226,32 @@ bs::UserTypeBase* AreaBattery::emitQuadB(float x, float y, const float* args, vo
 	return &(mSpawnedAreas[count]);
 }
 // --------------------------------------------------------------------------------
-bs::UserTypeBase* AreaBattery::emitEllipse(float x, float y, const float* args, void* userObj)
+bs::UserTypeBase* AreaBattery::emitQuadProjected(float x, float y, float angle, const float* args, void* userObj)
+{
+	Area a;
+	a.__active = true;
+	a.__time = 0;
+	a.type = AT_QuadBased;
+
+	float dist = args[-4];
+
+	// Project x and y, 'dist' along the angle
+	a.x = x - sin(angle * bs::DEG_TO_RAD) * dist;
+	a.y = y + cos(angle * bs::DEG_TO_RAD) * dist;
+	a.w = args[-3];
+	a.h = args[-2];
+	a.angle = angle + args[-1];
+	a.start = 0.0f;
+	a.end = 0.0f;
+	a.alpha = 1;
+
+	size_t count = mSpawnedAreas.size();
+	mSpawnedAreas.push_back(a);
+
+	return &(mSpawnedAreas[count]);
+}
+// --------------------------------------------------------------------------------
+bs::UserTypeBase* AreaBattery::emitEllipse(float x, float y, float angle, const float* args, void* userObj)
 {
 	Area a;
 	a.__active = true;
@@ -223,7 +273,7 @@ bs::UserTypeBase* AreaBattery::emitEllipse(float x, float y, const float* args, 
 	return &(mSpawnedAreas[count]);
 }
 // --------------------------------------------------------------------------------
-bs::UserTypeBase* AreaBattery::emitArc(float x, float y, const float* args, void* userObj)
+bs::UserTypeBase* AreaBattery::emitArc(float x, float y, float angle, const float* args, void* userObj)
 {
 	Area a;
 	a.__active = true;
@@ -256,6 +306,42 @@ void AreaBattery::killArea(Area* a)
 void AreaBattery::killArea(bs::UserTypeBase* object)
 {
 	killArea(static_cast<Area*>(object));
+}
+// --------------------------------------------------------------------------------
+void AreaBattery::setX(bs::UserTypeBase* object, float value)
+{
+	Area* a = static_cast<Area*>(object);
+	a->x = value;
+}
+// --------------------------------------------------------------------------------
+float AreaBattery::getX(bs::UserTypeBase* object)
+{
+	Area* a = static_cast<Area*>(object);
+	return a->x;
+}
+// --------------------------------------------------------------------------------
+void AreaBattery::setY(bs::UserTypeBase* object, float value)
+{
+	Area* a = static_cast<Area*>(object);
+	a->y = value;
+}
+// --------------------------------------------------------------------------------
+float AreaBattery::getY(bs::UserTypeBase* object)
+{
+	Area* a = static_cast<Area*>(object);
+	return a->y;
+}
+// --------------------------------------------------------------------------------
+void AreaBattery::setAngle(bs::UserTypeBase* object, float value)
+{
+	Area* a = static_cast<Area*>(object);
+	a->angle = value;
+}
+// --------------------------------------------------------------------------------
+float AreaBattery::getAngle(bs::UserTypeBase* object)
+{
+	Area* a = static_cast<Area*>(object);
+	return a->angle;
 }
 // --------------------------------------------------------------------------------
 void AreaBattery::setWidth(bs::UserTypeBase* object, float value)
@@ -306,18 +392,6 @@ float AreaBattery::getInnerHeight(bs::UserTypeBase* object)
 	return a->innerh;
 }
 // --------------------------------------------------------------------------------
-void AreaBattery::setAngle(bs::UserTypeBase* object, float value)
-{
-	Area* a = static_cast<Area*>(object);
-	a->angle = value;
-}
-// --------------------------------------------------------------------------------
-float AreaBattery::getAngle(bs::UserTypeBase* object)
-{
-	Area* a = static_cast<Area*>(object);
-	return a->angle;
-}
-// --------------------------------------------------------------------------------
 void AreaBattery::setAlpha(bs::UserTypeBase* object, float value)
 {
 	Area* a = static_cast<Area*>(object);
@@ -364,7 +438,6 @@ int AreaBattery::update(float frameTime)
 	}
 
 	mSpawnedAreas.clear();
-
 	int index = 0;
 	int count = 0;
 	std::vector<Area>::iterator it = mAreas.begin();
@@ -376,8 +449,8 @@ int AreaBattery::update(float frameTime)
 		{
 			a.__time += frameTime;
 
-			// Bulletscript: apply affectors and control functions
-			mMachine->updateType(&a, a.x, a.y, frameTime);
+			// areascript: apply affectors and control functions
+			mMachine->updateType(&a, a.x, a.y, a.angle, frameTime);
 
 			// Check for death
 			if ((a.y + a.h) < 0 || (a.y - a.h) > SCREEN_HEIGHT || (a.x + a.w) < 0 || (a.x - a.w) > SCREEN_WIDTH)

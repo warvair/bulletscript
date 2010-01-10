@@ -65,6 +65,14 @@ bool TypeManager::affectorFunctionExists(int type, const String& name) const
 	return mTypes[type]->affectorFunctionExists(name);
 }
 // --------------------------------------------------------------------------------
+void TypeManager::mapPropertiesToTypes(const std::vector<String>& properties)
+{
+	for (size_t i = 0; i < mTypes.size(); ++i)
+	{
+		mTypes[i]->mapProperties(properties);
+	}
+}
+// --------------------------------------------------------------------------------
 void TypeManager::releaseType(UserTypeBase* ft)
 {
 	if (ft->__et)
@@ -75,9 +83,9 @@ void TypeManager::releaseType(UserTypeBase* ft)
 }
 // --------------------------------------------------------------------------------
 #ifdef BS_Z_DIMENSION
-void TypeManager::updateType(UserTypeBase* userType, bstype x, bstype y, bstype z, float frameTime)
+void TypeManager::updateType(UserTypeBase* userType, bstype x, bstype y, bstype z, bstype angle, float frameTime)
 #else
-void TypeManager::updateType(UserTypeBase* userType, bstype x, bstype y, float frameTime)
+void TypeManager::updateType(UserTypeBase* userType, bstype x, bstype y, bstype angle, float frameTime)
 #endif
 {
 	if (!userType->__et)
@@ -155,16 +163,16 @@ void TypeManager::updateType(UserTypeBase* userType, bstype x, bstype y, float f
 		emitType->applyAffector(userType, rec->affectors[i], frameTime);
 
 	// Update properties
-	int i, numProperties = emitType->mNumProperties;
+	int i, numProperties = emitType->numProperties_;
 	for (i = 0; i < NUM_SPECIAL_PROPERTIES; ++i)
 	{
 		int mask = 1 << i;
 		if (rec->activeProperties & mask)
 		{
-			bstype curValue = emitType->mProperties[i].getter(rec->__object) - rec->anchors[i];
+			bstype curValue = emitType->properties_[i].getter(rec->__object) - rec->anchors[i];
 			bstype newValue = curValue + rec->properties[i].speed * frameTime;
 
-			emitType->mProperties[i].setter(rec->__object, newValue + rec->anchors[i]);
+			emitType->properties_[i].setter(rec->__object, newValue + rec->anchors[i]);
 
 			rec->properties[i].time -= frameTime;
 			if (rec->properties[i].time <= 0)
@@ -176,10 +184,10 @@ void TypeManager::updateType(UserTypeBase* userType, bstype x, bstype y, float f
 		int mask = 1 << i;
 		if (rec->activeProperties & mask)
 		{
-			bstype curValue = emitType->mProperties[i].getter(rec->__object);
+			bstype curValue = emitType->properties_[i].getter(rec->__object);
 			bstype newValue = curValue + rec->properties[i].speed * frameTime;
 
-			emitType->mProperties[i].setter(rec->__object, newValue);
+			emitType->properties_[i].setter(rec->__object, newValue);
 
 			rec->properties[i].time -= frameTime;
 			if (rec->properties[i].time <= 0)
@@ -194,10 +202,10 @@ void TypeManager::updateType(UserTypeBase* userType, bstype x, bstype y, float f
 		{
 #ifndef BS_Z_DIMENSION
 			mScriptMachine->interpretCode(rec->code->byteCode, rec->code->byteCodeSize, 
-				rec->state, 0, rec, x, y, 0, false, rec->__userObject);
+				rec->state, 0, rec, x, y, angle, 0, false, rec->__userObject);
 #else
 			mScriptMachine->interpretCode(rec->code->byteCode, rec->code->byteCodeSize, 
-				rec->state, 0, rec, x, y, z, 0, false, rec->__userObject);
+				rec->state, 0, rec, x, y, z, angle, 0, false, rec->__userObject);
 #endif
 		}
 		else

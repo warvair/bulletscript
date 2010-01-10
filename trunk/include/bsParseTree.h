@@ -198,6 +198,8 @@ namespace BS_NMSP
 
 		static ParseTree* msInstance;
 
+	private:
+
 		// Utility
 		void create();
 		

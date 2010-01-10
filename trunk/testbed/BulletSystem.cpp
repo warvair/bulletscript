@@ -7,14 +7,14 @@
 
 BulletBattery* g_bullets = 0;
 
-bs::UserTypeBase* bullet_emitAngle(float x, float y, const float* args, void* userObj)
+bs::UserTypeBase* bullet_emitAngle(float x, float y, float angle, const float* args, void* userObj)
 {
-	return g_bullets->emitAngle(x, y, args, userObj);
+	return g_bullets->emitAngle(x, y, angle, args, userObj);
 }
 
-bs::UserTypeBase* bullet_emitTarget(float x, float y, const float* args, void* userObj)
+bs::UserTypeBase* bullet_emitTarget(float x, float y, float angle, const float* args, void* userObj)
 {
-	return g_bullets->emitTarget(x, y, args, userObj);
+	return g_bullets->emitTarget(x, y, angle, args, userObj);
 }
 
 void bullet_kill(bs::UserTypeBase* object, void* userObj)
@@ -166,7 +166,7 @@ int BulletBattery::getCapacity() const
 	return (int) mBullets.capacity();
 }
 // --------------------------------------------------------------------------------
-bs::UserTypeBase* BulletBattery::emitAngle(float x, float y, const float* args, void* user)
+bs::UserTypeBase* BulletBattery::emitAngle(float x, float y, float angle, const float* args, void* user)
 {
 	Bullet b;
 	b.__active = true;
@@ -194,7 +194,7 @@ bs::UserTypeBase* BulletBattery::emitAngle(float x, float y, const float* args, 
 	return &(mSpawnedBullets[count]);
 }
 // --------------------------------------------------------------------------------
-bs::UserTypeBase* BulletBattery::emitTarget(float x, float y, const float* args, void* user)
+bs::UserTypeBase* BulletBattery::emitTarget(float x, float y, float angle, const float* args, void* user)
 {
 	Bullet b;
 	b.__active = true;
@@ -206,12 +206,12 @@ bs::UserTypeBase* BulletBattery::emitTarget(float x, float y, const float* args,
 
 	float dx = args[-4] - x;
 	float dy = args[-3] - y;
-	float angle = (float) atan2(dy, -dx) * bs::RAD_TO_DEG - 90.0f + args[-2];
-	if (angle < 0.0f)
-		angle += 360.0f;
-	b.angle = angle;
+	float tgtAngle = (float) atan2(dy, -dx) * bs::RAD_TO_DEG - 90.0f + args[-2];
+	if (tgtAngle < 0.0f)
+		tgtAngle += 360.0f;
+	b.angle = tgtAngle;
 
-	int index = (int) (angle * 10) % 3600;
+	int index = (int) (tgtAngle * 10) % 3600;
 	b.vx = mSinTable[index] * args[-1];
 	b.vy = mCosTable[index] * args[-1];
 
@@ -267,6 +267,10 @@ void BulletBattery::setAngle(bs::UserTypeBase* object, float value)
 	Bullet* b = static_cast<Bullet*>(object);
 
 	b->angle = value;
+
+	if (value < 0.0f)
+		value += 360.0f;
+
 	int index = (int) (value * 10) % 3600;
 	b->vx = mSinTable[index] * b->speed;
 	b->vy = mCosTable[index] * b->speed;
@@ -376,7 +380,8 @@ int BulletBattery::update(float frameTime)
 			b.y += b.vy * frameTime;
 
 			// bulletscript: apply affectors and control functions
-			mMachine->updateType(&b, b.x, b.y, frameTime);
+			mMachine->updateType(&b, b.x, b.y, b.angle, frameTime);
+
 
 			// Check for death
 			if (b.y < 0 || b.y > SCREEN_HEIGHT || b.x < 0 || b.x > SCREEN_WIDTH)

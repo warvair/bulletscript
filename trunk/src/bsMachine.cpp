@@ -60,14 +60,14 @@ void Machine::releaseType(UserTypeBase* ft)
 }
 // --------------------------------------------------------------------------------
 #ifdef BS_Z_DIMENSION
-void Machine::updateType(UserTypeBase* ft, bstype x, bstype y, bstype z, float frameTime)
+void Machine::updateType(UserTypeBase* ft, bstype x, bstype y, bstype z, bstype angle, float frameTime)
 {
-	mTypeManager->updateType(ft, x, y, z, frameTime);
+	mTypeManager->updateType(ft, x, y, z, angle, frameTime);
 }
 #else
-void Machine::updateType(UserTypeBase* ft, bstype x, bstype y, float frameTime)
+void Machine::updateType(UserTypeBase* ft, bstype x, bstype y, bstype angle, float frameTime)
 {
-	mTypeManager->updateType(ft, x, y, frameTime);
+	mTypeManager->updateType(ft, x, y, angle, frameTime);
 }
 #endif
 // --------------------------------------------------------------------------------

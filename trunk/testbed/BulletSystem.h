@@ -68,9 +68,9 @@ public:
 	int getCapacity() const;
 
 	// Scripting
-	bs::UserTypeBase* emitAngle(float x, float y, const float* args, void* user);
+	bs::UserTypeBase* emitAngle(float x, float y, float angle, const float* args, void* user);
 
-	bs::UserTypeBase* emitTarget(float x, float y, const float* args, void* user);
+	bs::UserTypeBase* emitTarget(float x, float y, float angle, const float* args, void* user);
 
 	void killBullet(bs::UserTypeBase* object);
 
@@ -110,9 +110,9 @@ public:
 };
 
 // Function hooks
-bs::UserTypeBase* bullet_emitAngle(float x, float y, const float* args, void* userObj);
+bs::UserTypeBase* bullet_emitAngle(float x, float y, float angle, const float* args, void* userObj);
 
-bs::UserTypeBase* bullet_emitTarget(float x, float y, const float* args, void* userObj);
+bs::UserTypeBase* bullet_emitTarget(float x, float y, float angle, const float* args, void* userObj);
 
 void bullet_kill(bs::UserTypeBase* object, void* userObj);
 

@@ -70,15 +70,29 @@ public:
 	void render(RendererGL* renderer);
 
 	// Scripting
-	bs::UserTypeBase* emitQuadC(float x, float y, const float* args, void* userObj);
+	bs::UserTypeBase* emitQuadC(float x, float y, float angle, const float* args, void* userObj);
 
-	bs::UserTypeBase* emitQuadB(float x, float y, const float* args, void* userObj);
+	bs::UserTypeBase* emitQuadB(float x, float y, float angle, const float* args, void* userObj);
 
-	bs::UserTypeBase* emitEllipse(float x, float y, const float* args, void* userObj);
+	bs::UserTypeBase* emitQuadProjected(float x, float angle, float y, const float* args, void* userObj);
 
-	bs::UserTypeBase* emitArc(float x, float y, const float* args, void* userObj);
+	bs::UserTypeBase* emitEllipse(float x, float y, float angle, const float* args, void* userObj);
+
+	bs::UserTypeBase* emitArc(float x, float y, float angle, const float* args, void* userObj);
 
 	void killArea(bs::UserTypeBase* object);
+
+	void setX(bs::UserTypeBase* object, float value);
+
+	float getX(bs::UserTypeBase* object);
+
+	void setY(bs::UserTypeBase* object, float value);
+
+	float getY(bs::UserTypeBase* object);
+
+	void setAngle(bs::UserTypeBase* object, float value);
+
+	float getAngle(bs::UserTypeBase* object);
 
 	void setWidth(bs::UserTypeBase* object, float value);
 
@@ -96,10 +110,6 @@ public:
 
 	float getInnerHeight(bs::UserTypeBase* object);
 
-	void setAngle(bs::UserTypeBase* object, float value);
-
-	float getAngle(bs::UserTypeBase* object);
-
 	void setStart(bs::UserTypeBase* object, float value);
 
 	float getStart(bs::UserTypeBase* object);
@@ -114,15 +124,29 @@ public:
 };
 
 // Function hooks
-bs::UserTypeBase* area_emitQuadC(float x, float y, const float* args, void* userObj);
+bs::UserTypeBase* area_emitQuadC(float x, float y, float angle, const float* args, void* userObj);
 
-bs::UserTypeBase* area_emitQuadB(float x, float y, const float* args, void* userObj);
+bs::UserTypeBase* area_emitQuadB(float x, float y, float angle, const float* args, void* userObj);
 
-bs::UserTypeBase* area_emitEllipse(float x, float y, const float* args, void* userObj);
+bs::UserTypeBase* area_emitQuadProjected(float x, float y, float angle, const float* args, void* userObj);
 
-bs::UserTypeBase* area_emitArc(float x, float y, const float* args, void* userObj);
+bs::UserTypeBase* area_emitEllipse(float x, float y, float angle, const float* args, void* userObj);
+
+bs::UserTypeBase* area_emitArc(float x, float y, float angle, const float* args, void* userObj);
 
 void area_kill(bs::UserTypeBase* object, void* userObj);
+
+void area_setX(bs::UserTypeBase* object, float value);
+
+float area_getX(bs::UserTypeBase* object);
+
+void area_setY(bs::UserTypeBase* object, float value);
+
+float area_getY(bs::UserTypeBase* object);
+
+void area_setAngle(bs::UserTypeBase* object, float value);
+
+float area_getAngle(bs::UserTypeBase* object);
 
 void area_setWidth(bs::UserTypeBase* object, float value);
 
@@ -139,10 +163,6 @@ float area_getInnerWidth(bs::UserTypeBase* object);
 void area_setInnerHeight(bs::UserTypeBase* object, float value);
 
 float area_getInnerHeight(bs::UserTypeBase* object);
-
-void area_setAngle(bs::UserTypeBase* object, float value);
-
-float area_getAngle(bs::UserTypeBase* object);
 
 void area_setStart(bs::UserTypeBase* object, float value);
 
