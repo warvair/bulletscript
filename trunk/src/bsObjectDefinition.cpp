@@ -41,16 +41,16 @@ int ObjectDefinition::getMaxLocalVariables() const
 	return mMaxLocals;
 }
 // --------------------------------------------------------------------------------
-int ObjectDefinition::addMemberVariable(const String& name, bool readOnly, bstype value)
+int ObjectDefinition::addMemberVariable(const String& name, bool readOnly, bstype initialValue)
 {
 	int numVars = getNumMemberVariables();
-	if (numVars >= (BS_MAX_USER_EMITTER_MEMBERS + NUM_SPECIAL_MEMBERS))
+	if (numVars >= (BS_MAX_USER_MEMBERS + NUM_SPECIAL_MEMBERS))
 		return BS_TooManyMemberVariables;
 
 	MemberVariable var;
 	var.name = name;
 	var.readonly = readOnly;
-	var.value = value;
+	var.value = initialValue;
 
 	mMemberVariables.push_back(var);
 	return BS_OK;
@@ -144,13 +144,13 @@ void ObjectDefinition::finaliseConstructor()
 // --------------------------------------------------------------------------------
 ScriptRecord* ObjectDefinition::createScriptRecord(ScriptMachine* machine)
 {
-	ScriptRecord* record = new ScriptRecord(mMaxLocals);
+	ScriptRecord* record = BS_NEW(ScriptRecord)(mMaxLocals);
 
 	// Allocate space for member vars, and set where possible
 	record->numMembers = getNumMemberVariables();
 	if (record->numMembers > 0)
 	{
-		record->members = new bstype[record->numMembers];
+		record->members = BS_NEWA(bstype, record->numMembers);
 		for (int i = 0; i < record->numMembers; ++i)
 			record->members[i] = mMemberVariables[i].value;
 	}

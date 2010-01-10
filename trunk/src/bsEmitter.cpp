@@ -26,7 +26,7 @@ Emitter::Emitter(ScriptMachine* machine) :
 // --------------------------------------------------------------------------------
 void Emitter::onRelease()
 {
-	delete mRecord;
+	BS_DELETE(mRecord);
 	mAnchorIndex = 0;
 }
 // --------------------------------------------------------------------------------
@@ -41,7 +41,7 @@ void Emitter::setDefinition(EmitterDefinition* def, bstype x, bstype y, bstype a
 void Emitter::setDefinition(EmitterDefinition* def, bstype x, bstype y, bstype z, bstype angle)
 #endif
 {
-	delete mRecord;
+	BS_DELETE(mRecord);
 	mRecord = def->createScriptRecord(mScriptMachine);
 
 	setX(x);
@@ -171,7 +171,7 @@ bstype Emitter::_getDeltaAngle() const
 	return mRecord->members[Member_Angle] - mLastAngle;
 }
 // --------------------------------------------------------------------------------
-void Emitter::setLastMembers()
+void Emitter::_updateLastMembers()
 {
 	mLastX = mRecord->members[Member_X];
 	mLastY = mRecord->members[Member_Y];

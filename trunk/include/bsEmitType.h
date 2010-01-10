@@ -60,7 +60,7 @@ namespace BS_NMSP
 
 		// Anchors
 		// We could store anchor bits (need 4) in the same place as affectors, because we won't need 32
-		// affectors.  Also numAffectors and __emitterDefinition?
+		// affectors.  Also numAffectors and _emitterDefinition_?
 		static const bstype defaultAnchors[NUM_SPECIAL_PROPERTIES];
 
 		const bstype* anchors;
@@ -76,16 +76,16 @@ namespace BS_NMSP
 
 		// The index of the EmitterDefinition (stored in the ScriptMachine), used to index into
 		// the DeepMemoryPool that holds this instance.  EmitTypeControls are pooled per EmitterDefinition.
-		uint16 __emitterDefinition;		
+		uint16 _emitterDefinition_;		
 
 		// Pointer to the EmitType that the object is a type of.
-		EmitType* __type;
+		EmitType* _type_;
 
 		// Pointer to the current object that owns this EmitTypeControl
-		UserTypeBase* __object;			
+		UserTypeBase* _object_;			
 
 		// Pointer to user object passed to pass back to emit function
-		void* __userObject;
+		void* _userObject_;
 
 		// Constructor.  This simply allocates enough memory for the local variables of the EmitterDefinition
 		// which will use it.  An EmitterDefinition will have a collection of states and functions, with a 
@@ -102,18 +102,18 @@ namespace BS_NMSP
 			anchors(0),
 			emitter(0),
 			numAffectors(0),
-			__type(0),
-			__object(0),
-			__emitterDefinition(-1)
+			_type_(0),
+			_object_(0),
+			_emitterDefinition_(-1)
 		{
 			if (numLocals > 0)
-				state.locals = new bstype[numLocals];
+				state.locals = BS_NEWA(bstype, numLocals);
 		}
 
 		// Desstructor.  Destroy local variable array.
 		~EmitTypeControl()
 		{
-			delete[] state.locals;
+			BS_DELETEA(state.locals);
 		}
 	};
 
@@ -234,21 +234,47 @@ namespace BS_NMSP
 		 */
 		void callDieFunction(UserTypeBase* object, void* userObject);
 
+		/**	\brief Set the 'x' property for this EmitType,
+		 *
+		 *	This property must be set differently, because it is built-in, and used as an anchor.
+		 *
+		 *	\param set user-defined SetFunction.
+		 *	\param get user-defined GetFunction.
+		 *	\return BS_OK
+		 */
 		int setAnchorX(SetFunction set, GetFunction get);
 
+		/**	\brief Set the 'y' property for this EmitType,
+		 *
+		 *	This property must be set differently, because it is built-in, and used as an anchor.
+		 *
+		 *	\param set user-defined SetFunction.
+		 *	\param get user-defined GetFunction.
+		 *	\return BS_OK
+		 */
 		int setAnchorY(SetFunction set, GetFunction get);
 
 #ifdef BS_Z_DIMENSION
+		/**	\brief Set the 'z' property for this EmitType,
+		 *
+		 *	This property must be set differently, because it is built-in, and used as an anchor.
+		 *
+		 *	\param set user-defined SetFunction.
+		 *	\param get user-defined GetFunction.
+		 *	\return BS_OK
+		 */
 		int setAnchorZ(SetFunction set, GetFunction get);
 #endif
 
+		/**	\brief Set the 'angle' property for this EmitType,
+		 *
+		 *	This property must be set differently, because it is built-in, and used as an anchor.
+		 *
+		 *	\param set user-defined SetFunction.
+		 *	\param get user-defined GetFunction.
+		 *	\return BS_OK
+		 */
 		int setAnchorAngle(SetFunction set, GetFunction get);
-
-		void setAnchorValue1(EmitTypeControl* et, uint32 anchor, bstype value) const;
-
-		void setAnchorValue2(EmitTypeControl* et, uint32 anchor, bstype value, bstype time) const;
-
-		bstype getAnchorValue(EmitTypeControl* et, uint32 anchor) const;
 
 		/**	\brief Register a controllable property for this EmitType.
 		 *
@@ -290,6 +316,40 @@ namespace BS_NMSP
 		 */
 		int getPropertyIndex(const String& name) const;
 
+		/**	\brief Set an anchor property on an emitted object.
+		 *
+		 *	This uses the user-supplied SetFunction to set the named property.  It is analagous to
+		 *	setProperty1, except that it is for built-in anchor properties.
+		 *
+		 *	\param etc the EmitTypeControl controlling the emitted object.
+		 *	\param anchor the index of the property.
+		 *	\param value the new value to set it to.
+		 */
+		void setAnchorValue1(EmitTypeControl* etc, uint32 anchor, bstype value) const;
+
+		/**	\brief Interpolate an anchor property on an emitted object smoothly over time.
+		 *
+		 *	This uses the user-supplied SetFunction to set the named property.  It is analagous to
+		 *	setProperty2, except that it is for built-in anchor properties.
+		 *
+		 *	\param etc the EmitTypeControl controlling the emitted object.
+		 *	\param anchor the index of the property.
+		 *	\param value the new value to set it to.
+		 *	\param time the time (in seconds) over which to change the property.
+		 */
+		void setAnchorValue2(EmitTypeControl* etc, uint32 anchor, bstype value, bstype time) const;
+
+		/**	\brief Get the value of an anchor property of an emitted object.
+		 *
+		 *	This uses the user-supplied GetFunction to get the named property.  It is analagous to
+		 *	getProperty, except that it is for built-in anchor properties.
+		 *
+		 *	\param etc the EmitTypeControl controlling the emitted object.
+		 *	\param anchor the index of the property.
+		 *	\return the value of the property.
+		 */
+		bstype getAnchorValue(EmitTypeControl* etc, uint32 anchor) const;
+
 		/**	\brief Set a property on an emitted object.
 		 *
 		 *	This uses the user-supplied SetFunction to set the named property.
@@ -322,15 +382,14 @@ namespace BS_NMSP
 		 */
 		bstype getProperty(EmitTypeControl* record, uint32 prop) const;
 
-		/**	\brief Register a user-supplied EmitFunction
+		/**	\brief Register an EmitFunction for the specified type.
 		 *
-		 *	This lets the user give a named EmitFunction to be used in script.  The number of
-		 *	arguments is required for semantic checking during compilation.
+		 *	\param type name of the EmitType
+		 *	\param name function name to be used in script.
+		 *	\param numArgs number of arguments, to be used in parsing.
+		 *	\param func pointer to the EmitFunction to use.
 		 *
-		 *	\param name the name of the function in script.
-		 *	\param numArgs the number of arguments it takes (in script).
-		 *	\param func pointer to the supplied EmitFunction
-		 *	\return BS_OK, or BS_EmitFunctionExists if the named function already exists.
+		 *	\return BS_OK, or BS_EmitFunctionExists is the name is already being used.
 		 */
 		int registerEmitFunction(const String& name, int numArgs, EmitFunction func);
 		

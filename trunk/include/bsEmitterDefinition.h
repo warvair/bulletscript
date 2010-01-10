@@ -20,11 +20,15 @@ namespace BS_NMSP
 	{
 	public:
 
-		// Information for functions.
+		/**	\brief Function compile information
+		 */
 		struct Function
 		{
+			//! function name
 			String name;
+			//! number of arguments
 			int numArguments;
+			//! ParseTreeNode object to speed up compilation
 			ParseTreeNode* node;
 		};
 

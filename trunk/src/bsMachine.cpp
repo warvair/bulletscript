@@ -1,5 +1,4 @@
 #include "bsMachine.h"
-#include "bsAlloc.h"
 
 namespace BS_NMSP
 {
@@ -44,9 +43,9 @@ int Machine::compileScript(const uint8* buffer, size_t bufferSize)
 		return BS_OK;
 }
 // --------------------------------------------------------------------------------
-void Machine::createType(const String& type)
+void Machine::createType(const String& name)
 {
-	mTypeManager->createType(type);
+	mTypeManager->createType(name);
 }
 // --------------------------------------------------------------------------------
 int Machine::getTypeId(const String& name) const
@@ -54,20 +53,20 @@ int Machine::getTypeId(const String& name) const
 	return mTypeManager->getTypeId(name);
 }
 // --------------------------------------------------------------------------------
-void Machine::releaseType(UserTypeBase* ft)
+void Machine::releaseType(UserTypeBase* object)
 {
-	mTypeManager->releaseType(ft);
+	mTypeManager->releaseType(object);
 }
 // --------------------------------------------------------------------------------
 #ifdef BS_Z_DIMENSION
-void Machine::updateType(UserTypeBase* ft, bstype x, bstype y, bstype z, bstype angle, float frameTime)
+void Machine::updateType(UserTypeBase* object, bstype x, bstype y, bstype z, bstype angle, float frameTime)
 {
-	mTypeManager->updateType(ft, x, y, z, angle, frameTime);
+	mTypeManager->updateType(object, x, y, z, angle, frameTime);
 }
 #else
-void Machine::updateType(UserTypeBase* ft, bstype x, bstype y, bstype angle, float frameTime)
+void Machine::updateType(UserTypeBase* object, bstype x, bstype y, bstype angle, float frameTime)
 {
-	mTypeManager->updateType(ft, x, y, angle, frameTime);
+	mTypeManager->updateType(object, x, y, angle, frameTime);
 }
 #endif
 // --------------------------------------------------------------------------------
@@ -132,7 +131,7 @@ void Machine::destroyEmitter(Emitter* emit)
 	mScriptMachine->destroyEmitter(emit);
 }
 // --------------------------------------------------------------------------------
-bool Machine::emitterExists(const String& name) const
+bool Machine::emitterDefinitionExists(const String& name) const
 {
 	return mScriptMachine->getEmitterDefinition(name) != 0;
 }
@@ -147,14 +146,14 @@ void Machine::destroyController(Controller* ctrl)
 	mScriptMachine->destroyController(ctrl);
 }
 // --------------------------------------------------------------------------------
-bool Machine::controllerExists(const String& name) const
+bool Machine::controllerDefinitionExists(const String& name) const
 {
 	return mScriptMachine->getControllerDefinition(name) != 0;
 }
 // --------------------------------------------------------------------------------
-int Machine::declareMemberVariable(const String& ctrl, const String& var, bstype value)
+int Machine::declareControllerMemberVariable(const String& ctrl, const String& var, bstype value)
 {
-	return mScriptMachine->declareMemberVariable(ctrl, var, value);
+	return mScriptMachine->declareControllerMemberVariable(ctrl, var, value);
 }
 // --------------------------------------------------------------------------------
 void Machine::preUpdate(float frameTime)
@@ -166,11 +165,6 @@ void Machine::preUpdate(float frameTime)
 void Machine::postUpdate(float frameTime)
 {
 	mScriptMachine->postUpdateEmitters();
-}
-// --------------------------------------------------------------------------------
-void Machine::print_debug()
-{
-	mScriptMachine->print_debug();
 }
 // --------------------------------------------------------------------------------
 

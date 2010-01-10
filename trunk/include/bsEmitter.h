@@ -9,7 +9,7 @@ namespace BS_NMSP
 {
 	class ScriptMachine;
 
-	/**	\brief Class for controlling obejct emission.
+	/**	\brief Class for controlling object emission.
 	 *
 	 *	Emitters are script objects which control the way in which user objects are emitted.
 	 *	They are simple state machines which move between states dependent on various inputs.
@@ -37,11 +37,11 @@ namespace BS_NMSP
 		int mAnchorIndex, mLastAnchorIndex;
 
 		// Controllers for member variables.
-		MemberController mMemberControllers[BS_MAX_USER_EMITTER_MEMBERS];
+		MemberController mMemberControllers[BS_MAX_USER_MEMBERS];
 
 		// Bitfield for MemberControllers set.  This limits the number of member variables
 		// to 32, but this is an acceptable limitation.  In reality, the user can only define
-		// up to BS_MAX_USER_EMITTER_MEMBERS members, defined in bsConfig.h.
+		// up to BS_MAX_USER_MEMBERS members, defined in bsConfig.h.
 		uint32 mActiveControllers;
 
 		int mNumUserMembers;
@@ -216,17 +216,43 @@ namespace BS_NMSP
 		 */
 		bstype getAngle() const;
 
+		/**	\brief Get the x-distance that the Emitter has moved since last update.
+		 *	
+		 *	This is used to update anchored objects.
+		 *
+		 *	\return difference.
+		 */
 		bstype _getDeltaX() const;
 
+		/**	\brief Get the y-distance that the Emitter has moved since last update.
+		 *	
+		 *	This is used to update anchored objects.
+		 *
+		 *	\return difference.
+		 */
 		bstype _getDeltaY() const;
 
 #ifdef BS_Z_DIMENSION
+		/**	\brief Get the z-distance that the Emitter has moved since last update.
+		 *	
+		 *	This is used to update anchored objects.
+		 *
+		 *	\return difference.
+		 */
 		bstype _getDeltaZ() const;
 #endif
 
+		/**	\brief Get the angle that the Emitter has rotated by since last update.
+		 *	
+		 *	This is used to update anchored objects.
+		 *
+		 *	\return difference.
+		 */
 		bstype _getDeltaAngle() const;
 
-		void setLastMembers();
+		/**	\brief Update the Emitter's internal state for anchor-querying.  Internal method.
+		 */
+		void _updateLastMembers();
 
 		/**	\brief Set the user-supplied object for this Emitter.
 		 *	

@@ -190,10 +190,6 @@
 				>
 			</File>
 			<File
-				RelativePath="..\src\bsAlloc.cpp"
-				>
-			</File>
-			<File
 				RelativePath="..\src\bsBulletLexer.cpp"
 				>
 			</File>
@@ -273,10 +269,6 @@
 			>
 			<File
 				RelativePath="..\include\bsAffector.h"
-				>
-			</File>
-			<File
-				RelativePath="..\include\bsAlloc.h"
 				>
 			</File>
 			<File

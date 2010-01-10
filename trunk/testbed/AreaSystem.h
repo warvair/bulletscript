@@ -24,13 +24,13 @@ struct Area : public bs::UserTypeBase
 	float alpha;
 
 	// Internal variables, do not modify in affector function!
-	int __index;
-	float __time;
+	int _index;
+	float _time;
 
-	bool __active;
+	bool _active;
 	char padding[7]; // pad to 64 bytes
 
-	Area() : __active(false) {}
+	Area() : _active(false) {}
 };
 
 class AreaBattery

@@ -28,10 +28,10 @@ void Controller::onRelease()
 	mBlocks.clear();
 
 	// Note: it would be nice if we didn't do any dealloc here.
-	delete[] mEmitters;
-	delete[] mEvents;
-	delete[] mEventState.locals;
-	delete mRecord;
+	BS_DELETEA(mEmitters);
+	BS_DELETEA(mEvents);
+	BS_DELETEA(mEventState.locals);
+	BS_DELETE(mRecord);
 }
 // --------------------------------------------------------------------------------
 void Controller::enable(bool enable)
@@ -49,12 +49,12 @@ bool Controller::isEnabled() const
 // --------------------------------------------------------------------------------
 void Controller::setDefinition(ControllerDefinition* def)
 {
-	delete mRecord;
+	BS_DELETE(mRecord);
 	mRecord = def->createScriptRecord(mScriptMachine);
 
 	// Create the emitters that this Controller uses.
 	mNumEmitters = def->getNumEmitterVariables();
-	mEmitters = new EmitterInstance[mNumEmitters];
+	mEmitters = BS_NEWA(EmitterInstance, mNumEmitters);
 
 	for (int i = 0; i < mNumEmitters; ++i)
 	{
@@ -93,7 +93,7 @@ void Controller::setDefinition(ControllerDefinition* def)
 	// Create events
 	mNumEvents = def->getNumEvents();
 	if (mNumEvents > 0)
-		mEvents = new Event[mNumEvents];
+		mEvents = BS_NEWA(Event, mNumEvents);
 
 	for (int i = 0; i < mNumEvents; ++i)
 	{
@@ -109,11 +109,12 @@ void Controller::setDefinition(ControllerDefinition* def)
 
 	int eventLocals = def->getMaxEventLocalVariables();
 	if (eventLocals > 0)
-		mEventState.locals = new bstype[eventLocals];
+		mEventState.locals = BS_NEWA(bstype, eventLocals);
 }
 // --------------------------------------------------------------------------------
 void Controller::setState(int state)
 {
+	// Set state and reset script
 	mRecord->curState = state;
 	mRecord->scriptState.curInstruction = 0;
 	mRecord->scriptState.stackHead = 0;
@@ -256,7 +257,10 @@ bool Controller::_raiseEvent(int index, const bstype* args)
 
 	int oldState = mRecord->curState;
 	mScriptMachine->interpretCode(mEvents[index].code->byteCode, mEvents[index].code->byteCodeSize,
-		mEventState, 0, this, mRecord->members[Member_X], mRecord->members[Member_Y], 
+		mEventState, 0, this, mRecord->members[Member_X], mRecord->members[Member_Y],
+#ifdef BS_Z_DIMENSION
+		mRecord->members[Member_Z],
+#endif
 		mRecord->members[Member_Angle],	mRecord->members, false, 0);
 
 	// We need to know if the event changed the state because if it has then we should suspend the
@@ -271,6 +275,7 @@ void Controller::addBlock(bstype block)
 // --------------------------------------------------------------------------------
 void Controller::signal(bstype block)
 {
+	// See if this Controller has any blocks of this value, and if it does, remove them.
 	std::list<bstype>::iterator it = mBlocks.begin();
 	while (it != mBlocks.end())
 	{

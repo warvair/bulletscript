@@ -31,9 +31,9 @@ namespace BS_NMSP
 
 		~TypeManager();
 
-		void createType(const String& type);
-
 		void addErrorMsg(const String& msg);
+
+		void createType(const String& name);
 
 		EmitType* getType(const String& name) const;
 
@@ -41,18 +41,18 @@ namespace BS_NMSP
 
 		int getTypeId(const String& name) const;
 
+		void releaseType(UserTypeBase* object);
+
 		bool emitFunctionExists(int type, const String& name) const;
 
 		bool affectorFunctionExists(int type, const String& name) const;
 
 		void mapPropertiesToTypes(const std::vector<String>& properties);
 
-		void releaseType(UserTypeBase* ft);
-
 #ifdef BS_Z_DIMENSION
-		void updateType(UserTypeBase* userType, bstype x, bstype y, bstype z, bstype angle, float frameTime);
+		void updateType(UserTypeBase* object, bstype x, bstype y, bstype z, bstype angle, float frameTime);
 #else
-		void updateType(UserTypeBase* userType, bstype x, bstype y, bstype angle, float frameTime);
+		void updateType(UserTypeBase* object, bstype x, bstype y, bstype angle, float frameTime);
 #endif
 
 		int registerEmitFunction(const String& type, const String& name, int numArgs, EmitFunction func);

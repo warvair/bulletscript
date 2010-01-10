@@ -55,6 +55,8 @@ void Affector::recalculateAlways(bool always)
 // --------------------------------------------------------------------------------
 void Affector::execute(UserTypeBase* object, float frameTime)
 {
+	// We need to recalculate arguments, if the argument contains either a global
+	// variable (which has changed) or a function call (which is unpredictable).
 	if (mbRecalculate)
 		recalculateArguments();
 
