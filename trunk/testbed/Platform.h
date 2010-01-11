@@ -9,9 +9,15 @@
 #include <SDL.h>
 #endif
 
+unsigned char* loadFile(const char* fileName, size_t& byteSize);
+
 bool processMessages();
 
 bool keyDown(int key);
+
+bool keyPressed(int key);
+
+bool keyReleased(int key);
 
 bool inFocus();
 

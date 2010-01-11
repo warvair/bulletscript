@@ -14,7 +14,7 @@ such as Java, C++, etc.  It has two class types, three basic variable types, and
 general overview of the language features, and the second explains how and where they should be used.<p>
 
 <a href="#lang">Language features</a><br>
-<a href="#classes">Controllers and emitters</a>
+<a href="#classes">Emitters and controllers</a>
 
 <p>
 <hr />
@@ -87,8 +87,8 @@ Note: the <span class="code">++ --</span> operators are <i>post-increment</i> on
 There are actually two types of functions: emitters have their own special type to control emitted objects, and there are more classical functions which can
 be used in expressions.  Emitter functions will be discussed later.  'Expression' functions are used as follows:
 <pre>
-	<i>function_name</i>(expression_list);
-	<i>value</i> = <i>function_name</i>(expression_list);
+	<i>function_name</i>(<i>expression_list</i>);
+	<i>value</i> = <i>function_name</i>(<i>expression_list</i>);
 </pre>
 
 For instance:
@@ -105,15 +105,15 @@ Conditional statements take the form of an if-else chain.
 <pre>
 	if (<i>expression_statement</i>)
 	{
-		statement_list
+		<i>statement_list</i>
 	}
 	else if(<i>expression_statement</i>)
 	{
-		statement_list
+		<i>statement_list</i>
 	}
 	else
 	{
-		statement_list
+		<i>statement_list</i>
 	}
 </pre>
 Enclosing braces must be used for every block of code, even if it only has one line.
@@ -123,7 +123,7 @@ Iteration is achieved with <span class="code">while</span>:
 <pre>
 	while(<i>expression_statement</i>)
 	{
-		statement_list
+		<i>statement_list</i>
 	}
 </pre>
 The list statements is executed as long as the expression evalulates to non-zero.  Example:
@@ -168,10 +168,10 @@ Emitters are defined in the following form:<p>
 <pre>
 	emitter <i>emitter_name</i>
 	{
-		member_variable_list
-		affector_instance_list
-		function_list
-		state_list
+		<i>member_variable_list</i>
+		<i>affector_instance_list</i>
+		<i>function_list</i>
+		<i>state_list</i>
 	}
 </pre>
 
@@ -198,7 +198,7 @@ the emitter.  A function definition looks like this:
 <pre>
 	<i>func_name</i> = function(argument_list)
 	{
-		statement_list
+		<i>statement_list</i>
 	}
 </pre>
 Here, <span class="code">argument_list</span> is a comma-separated list of argument names, matching values that the function requires to be passed in.  There
@@ -208,24 +208,69 @@ are several special statements which can be used in emitter functions.  First ar
 <h3>Emit statements</h3>
 These take the form:
 <pre>
-	<i>emit_func emit_type</i> (expression_list) [: affector_instance_list <i>emitter_func</i>(expression_list)];
+	<i>emit_func emit_type</i> (<i>expression_list</i>) [: <i>controller_list</i>];
 </pre>
-Here, <span class="code">emit_func</span> is the named emission function specified in code by <span class="code">Machine::registerEmitFunction</span>.
-<span class="code">emit_type</span> is the named type created by <span class="code">Machine::createType</span>.  The <span class="code">expression_list</span>
-is the list of arguments (emit functions are like normal functions in this respect).  Of note are the optional parameters specified after the emit function.
-An emitted object can be controlled by BulletScript, and to do this you specify a list of affector instances and an optional emitter function.  An object
-can have as many affector instances as it needs, but at most only one control function.  An example:
+
+Here, <span class="code">emit_func</span> is the named emission function specified in code by <span class="code">Machine::registerEmitFunction</span>.  <span class="code">emit_type</span> is the named type created by <span class="code">Machine::createType</span>.The <span class="code">controller_list</span> specifies how the emitted object will be controlled after emission.  It is a comma-separated list of any of the following:
+<list>
+<li>At most one emitter function.
+<li>Affector instances.
+<li>Anchors
+</list>
+<p>
+Emitter functions and affector instances are discussed above, but anchors have not.  Anchors are used to connect certain properties of an Emitter to any objects created by it.  For instance, they can be used to attach a laser beam to the Emitter, so that it does not float off into space when the Emitter moves.  Anchors are prefaced with <span class="code">&</span>.  The pre-defined anchors are:
+<pre>	&x &y &z &angle &orbit &kill</pre>
+<span class="code">x</span>, <span class="code">y</span> (and <span class="code">z</span> if enabled) are the Emitter position, <span class="code">angle</span> is the Emitter angle.  <span class="code">orbit</span> makes the object rotate around the Emitter at whatever distance it is from it, based on the Emitter's angle.  <span class="code">kill</span> is a special anchor which tells the Emitter to destroy the object when it itself is
+killed (the default behaviour is for it to de-anchor it).
+<p>
+Example emission statements:
 <pre>
-	fire bullet(180, 100) : gravity, control_func(20, 10);
+	grav = affector Gravity(9.81);
+	force = affector Forcefield();
+
+	control = function(x)
+	{
+	}
+
+	emitAngle bullet(180);
+	emitAngle bullet(180) : grav, control(10);
+	emitAngle bullet(180) : control(10), $x, $y, force, grav;
+	emitAngle bullet(180) : control(10), $x, $y, &kill;
 </pre>
-Like affector instances, emitter functions cannot take member variables as arguments.
 <h3>Die statements</h3>
-<span class="code">die</span> is used in an emitter function to destroy the object.  The syntax is simply:
+<span class="code">die</span> is used in an emitter function to destroy the object that it controls.  The syntax is simply:
 <pre>
 	die;
 </pre>
-Any code which follows this statement in a function may cause undefined effects, most likely crashing the system if it accesses the object which has just
-been destroyed.
+Any code which follows this statement in a function may cause undefined effects, most likely crashing the system if it accesses the object which has just been destroyed.
 
+<h2>Controllers</h2>
+
+Controllers are used to control one or more Emitter.  They can change their position, angle, member variables (technically, position and angle are member variables), enable or disable them, or force them to wait indefinitely ("suspend").  Controllers are defined in the following form:<p>
+<pre>
+	controller <i>controller_name</i>
+	{
+		<i>member_variable_list</i>
+		<i>emitter_list</i>
+		<i>event_list</i>
+		<i>state_list</i>
+	}
+</pre>
+
+Member variables are defined in the same way as Emitter member variables, and are subject to the same restrictions for initialisation.
+<p>
+Emitter variables are instances of named Emitters which are to be controlled.  Their declaration is as follows:
+<pre>
+	<i>emitter_var</i> = emitter <i>emit_type</i>;
+	<i>emitter_var</i> = emitter <i>emit_type</i>(<i>constant_list</i>);
+</pre>
+
+The second declaration allows for setting the Emitter's member variables on creation.  The values here must be constants, not expressions involving functions or variables.  This is a efficiency consideration.  The only variables that are set are the built-in members: <span class="code">x</span>, <span class="code">y</span>, (<span class="code">z</span>), and <span class="code">angle</span>.  Any extra values are ignored.  Examples:
+<pre>
+	emitter1 = emitter Blaster;
+	emitter2 = emitter Blaster(0, 10, 0); // x offset = 0, y offset = 0, angle offset = 0
+	emitter3 = emitter Laser(1, 2, 3, 4); // value '4' is ignored 
+	emitter4 = emitter Laser(5 + rand()); // error, not constant
+</pre>
 </body>
 </html>

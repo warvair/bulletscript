@@ -188,6 +188,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\Boss.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\BulletSystem.cpp"
 				>
 			</File>
@@ -197,6 +201,10 @@
 			</File>
 			<File
 				RelativePath=".\Platform.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\Player.cpp"
 				>
 			</File>
 			<File
@@ -214,6 +222,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\Boss.h"
+				>
+			</File>
+			<File
 				RelativePath=".\BulletSystem.h"
 				>
 			</File>
@@ -223,6 +235,10 @@
 			</File>
 			<File
 				RelativePath=".\Platform.h"
+				>
+			</File>
+			<File
+				RelativePath=".\Player.h"
 				>
 			</File>
 			<File

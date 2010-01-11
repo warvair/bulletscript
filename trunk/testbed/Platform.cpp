@@ -14,12 +14,13 @@ bool processMessages()
 	return true;
 }
 #else
-static int gKeys[SDLK_LAST];
+static int gKeys[SDLK_LAST] = {0};
+static int gOldKeys[SDLK_LAST] = {0};
 
 bool processMessages()
 {
-	// Only check for key presses
-	memset(gKeys, 0, SDLK_LAST * sizeof(int));
+//	memset(gKeys, 0, SDLK_LAST * sizeof(int));
+	memcpy(gOldKeys, gKeys, SDLK_LAST * sizeof(int));
 
 	SDL_Event evt;
 	while (SDL_PollEvent(&evt)) 
@@ -33,8 +34,10 @@ bool processMessages()
 			gKeys[evt.key.keysym.sym] = 1;
 			if (evt.key.keysym.sym == SDLK_ESCAPE)
 				return false;
+			break;
 
 		case SDL_KEYUP:
+			gKeys[evt.key.keysym.sym] = 0;
 			break;
 
 		case SDL_ACTIVEEVENT:
@@ -62,6 +65,16 @@ bool processMessages()
 bool keyDown(int key)
 {
 	return (gKeys[key] == 1);
+}
+
+bool keyPressed(int key)
+{
+	return (gKeys[key] == 1 && gOldKeys[key] == 0);
+}
+
+bool keyReleased(int key)
+{
+	return (gKeys[key] == 0 && gOldKeys[key] == 1);
 }
 
 #endif
@@ -125,8 +138,30 @@ unsigned int getTicks()
 //
 // File utils
 //
+
+unsigned char* loadFile(const char* fileName, size_t& byteSize)
+{
+	FILE *fp = fopen(fileName, "rb");
+
+	if (!fp)
+	{
+		byteSize = 0;
+		return 0;
+	}
+
+	fseek(fp, 0, SEEK_END);
+	byteSize = ftell(fp);
+	
+	rewind(fp);
+	unsigned char* buffer = new unsigned char[byteSize];
+	fread(buffer, byteSize, 1, fp);
+	fclose(fp);
+
+	return buffer;
+}
+
 #if BS_PLATFORM == BS_PLATFORM_WIN32
-std::vector<std::string> getDirectoryListing(const std::string &dir, const std::string &pattern)
+std::vector<std::string> getDirectoryListing(const std::string& dir, const std::string& pattern)
 {
 	std::vector<std::string> fileList;
 	
