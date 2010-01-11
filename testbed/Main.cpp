@@ -7,33 +7,13 @@
 #include "RendererGL.h"
 #include "BulletSystem.h"
 #include "AreaSystem.h"
+#include "Player.h"
+#include "Boss.h"
 
 extern BulletBattery* g_bullets;
 extern AreaBattery* g_areas;
 
 using namespace bs;
-
-// Load a script file
-uint8* loadFile(const String& fileName, size_t& byteSize)
-{
-	FILE *fp = fopen(fileName.c_str(), "rb");
-
-	if (!fp)
-	{
-		byteSize = 0;
-		return 0;
-	}
-
-	fseek(fp, 0, SEEK_END);
-	byteSize = ftell(fp);
-	
-	rewind(fp);
-	uint8* buffer = new uint8[byteSize];
-	fread(buffer, byteSize, 1, fp);
-	fclose(fp);
-
-	return buffer;
-}
 
 int main (int argc, char **argv)
 {
@@ -100,18 +80,18 @@ int main (int argc, char **argv)
 	std::cout << "Compiling..." << std::endl;
 
 	// Load files
-	std::vector<String> scriptFiles = getDirectoryListing(".", "*.script");
+	std::vector<std::string> scriptFiles = getDirectoryListing(".", "*.script");
 
 	for (size_t i = 0; i < scriptFiles.size(); ++i)
 	{
 		size_t fileSize;
-		uint8* fileBuf = loadFile(scriptFiles[i], fileSize);
+		unsigned char* fileBuf = loadFile(scriptFiles[i].c_str(), fileSize);
 		if(machine.compileScript (fileBuf, fileSize) != BS_OK)
 		{
 			std::cout << "Could not compile " << scriptFiles[i] << std::endl;
 			const Log& _log = machine.getLog();
 
-			String msg = _log.getFirstEntry();
+			std::string msg = _log.getFirstEntry();
 			while (msg != Log::END)
 			{
 				std::cout << msg << std::endl;
@@ -129,12 +109,22 @@ int main (int argc, char **argv)
 
 	std::cout << "Initialising..." << std::endl;
 
+	// Create player and bosses
+	BossManager* bosses = new BossManager(&machine);
+	Player* player = new Player(&machine);
+
 #ifndef MINIMAL_APP
 	RendererGL renderer;
 	if (!renderer.initialise(SCREEN_WIDTH, SCREEN_HEIGHT))
 		return 0;
 
 	SDL_ShowCursor(SDL_DISABLE);
+
+	// Player/Bosses
+	player->setImage("player.tga");
+	bosses->loadImages();
+	player->setGuns("PlayerController");
+	
 #endif
 
 	// Main loop
@@ -143,27 +133,72 @@ int main (int argc, char **argv)
 	unsigned int numFrames = 0, updateTime = 0;
 	int numBullets = 0;
 
-	// create some objects
-	for (int i = 0; i < 1; ++i)
-		Emitter* emit = machine.createEmitter("Hell", SCREEN_WIDTH / 2, SCREEN_HEIGHT - 32, 180);
-
 	while (true)
 	{
-#ifndef MINIMAL_APP
-		if (!processMessages())
-			break;
-#endif
-
 		// Get update time
 		unsigned int newTime = getTicks();
 		unsigned int deltaTime = newTime - curTime;
 
 		curTime = newTime;
-		
 		totalTime += deltaTime;
 		fpsCounter += deltaTime;
 
 		float frameTime = deltaTime / 1000.0f;
+
+#ifndef MINIMAL_APP
+		if (!processMessages())
+			break;
+
+		// Move player
+		if (keyDown(SDLK_LEFT))
+		{
+			float x = player->getX();
+			float y = player->getY();
+
+			x -= 192 * frameTime;
+			if (x < 64)
+				x = 64;
+
+			player->setPosition(x, y);
+		}
+		if (keyDown(SDLK_RIGHT))
+		{
+			float x = player->getX();
+			float y = player->getY();
+
+			x += 192 * frameTime;
+			if (x > (SCREEN_WIDTH - 64))
+				x = SCREEN_WIDTH - 64;
+
+			player->setPosition(x, y);
+		}
+		if (keyDown(SDLK_DOWN))
+		{
+			float x = player->getX();
+			float y = player->getY();
+
+			y -= 192 * frameTime;
+			if (y < 0)
+				y = 0;
+
+			player->setPosition(x, y);
+		}
+		if (keyDown(SDLK_UP))
+		{
+			float x = player->getX();
+			float y = player->getY();
+
+			y += 192 * frameTime;
+			if (y > (SCREEN_HEIGHT - 64))
+				y = SCREEN_HEIGHT - 64;
+
+			player->setPosition(x, y);
+		}
+		if (keyPressed(SDLK_z))
+		{
+		}
+
+#endif
 
 		if (fpsCounter > 1000)
 		{
@@ -171,62 +206,44 @@ int main (int argc, char **argv)
 
 			int fps = numFrames;
 			float updateMS = (updateTime / (float) numFrames);
-			fprintf(stderr, "T: %2.1f update time: %4.3fms FPS: %d C: %d\n", totalTime / 1000.0f, updateMS,
-				fps, numBullets);
+			fprintf(stderr, "%4.3fms, %d FPS, %d bullets\n", updateMS, fps, numBullets);
 			numFrames = 0;
 			updateTime = 0;
 		}
 
-/*
-		if (emit)
-		{
-			float xp = emit->getAngle();
-			emit->setAngle(xp + 30 * frameTime);
-
-			if (totalTime > 6000)
-			{
-				machine.destroyEmitter(emit);
-				emit = 0;
-			}
-		}
-*/
-
-		// Set script globals - this will update BulletAffector global arguments
+		// Do all changes to system here, before we update the machine
+		bosses->update(frameTime);
 		machine.setGlobalVariableValue("Level_Time", totalTime / 1000.0f);
 
+		// Update bulletscript
 		unsigned int bsTime1 = getTicks();
-
-		// Update machine
-		// maybe all emitter/controller/etc update must come after here?
 		machine.preUpdate(frameTime);
 
-		// Update types
 		numBullets = g_bullets->update(frameTime);
 		g_areas->update(frameTime);
 
-		// Update machine again
 		machine.postUpdate(frameTime);
 
-		unsigned int bsTime2 = getTicks();
-		updateTime += (bsTime2 - bsTime1);
-
+		updateTime += (getTicks() - bsTime1);
 		numFrames++;
 
 		// Render
 #ifndef MINIMAL_APP
-
 		renderer.startRendering();
 
 		g_bullets->render(&renderer);
 		g_areas->render(&renderer);
+		bosses->render();
+		player->render();
 
 		renderer.finishRendering();
-
 #endif
 	}
 
 	delete g_bullets;
 	delete g_areas;
+	delete bosses;
+	delete player;
 
 #ifndef MINIMAL_APP
 	SDL_Quit();

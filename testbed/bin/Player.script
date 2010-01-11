@@ -1,0 +1,20 @@
+controller PlayerController
+{
+	left = emitter PBlaster(-12, 4, 0);
+	right = emitter PBlaster(12, 4, 0);
+
+	Stage1 = state
+	{
+		wait(3);
+	}
+}
+
+emitter PBlaster
+{
+	Emit = state
+	{
+		fireA bullet(0, 350);
+		wait(0.1);
+	}
+}
+

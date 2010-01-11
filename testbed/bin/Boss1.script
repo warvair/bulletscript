@@ -1,0 +1,22 @@
+controller Boss1
+{
+	// emitters - all these values are offsets from controller values
+	left = emitter Simple(0, 0, 0);
+
+	// states
+	Stage1 = state
+	{
+		wait(10);
+	}
+}
+
+
+emitter Simple
+{
+	Emit = state
+	{
+		fireA bullet(180, 100);
+		wait(1);
+	}
+}
+
