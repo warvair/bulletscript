@@ -17,9 +17,10 @@ struct Bullet : public bs::UserTypeBase
 	// Internal variables, do not modify in affector function!
 	int _index;
 	float _time;
+	float _texture;
 
 	bool _active;
-	char padding[11]; // pad to 64 bytes
+	char padding[7]; // pad to 64 bytes
 
 	Bullet() : _active(false) {}
 };
@@ -81,8 +82,6 @@ public:
 	bs::UserTypeBase* emitTarget(float x, float y, float angle, const float* args, void* user);
 
 	void killBullet(bs::UserTypeBase* object);
-
-	void gravity(bs::UserTypeBase* object, float frameTime, const float* args);
 };
 
 // Function hooks

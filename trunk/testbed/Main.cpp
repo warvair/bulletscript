@@ -19,25 +19,37 @@ using namespace bs;
 
 int main (int argc, char **argv)
 {
-	int runTime = 999999999;
+	bool fullScreen = false;
 	if (argc >= 2)
-		runTime = atoi(argv[1]) * 1000;
+	{
+		if (!strcmp(argv[1], "-f"))
+			fullScreen = true;
+	}
 
-	srand(999);
+	std::cout << "BulletScript demo" << std::endl;
+	std::cout << "-----------------" << std::endl;
+	std::cout << "Arrows:\tmove" << std::endl;
+	std::cout << "Z:\tfire" << std::endl;
+	std::cout << "Esc:\tquit" << std::endl;
+	std::cout << "F1:\ttoggle info" << std::endl;
+	std::cout << "F2:\ttoggle rendering" << std::endl;
+	std::cout << std::endl;
+	std::cout << "Run with -f for fullscreen" << std::endl;
+	std::cout << std::endl;
 
-	// Create machine
+
+
+
+	///////////////////////////////////////////////////////////////////////////
+	// Initialise bulletscript
+	///////////////////////////////////////////////////////////////////////////
 	Machine machine;
-
-	BulletBattery::initialiseTables();
-	g_bossBullets = new BulletBattery(&machine);
-	g_playerBullets = new BulletBattery(&machine);
-	g_areas = new AreaBattery(&machine);
 
 	// Register bullet functions
 	machine.createType("bullet");
 
-	machine.registerEmitFunction("bullet", "fireA", 2, bullet_emitAngle);
-	machine.registerEmitFunction("bullet", "fireT", 4, bullet_emitTarget);
+	machine.registerEmitFunction("bullet", "fireA", 3, bullet_emitAngle);
+	machine.registerEmitFunction("bullet", "fireT", 5, bullet_emitTarget);
 	machine.setDieFunction("bullet", bullet_kill);
 
 	machine.setAnchorX("bullet", bullet_setX, bullet_getX);
@@ -73,19 +85,20 @@ int main (int argc, char **argv)
 	machine.registerProperty("area", "end", area_setEnd, area_getEnd);
 
 	// Register global variables
+	machine.registerGlobalVariable("BALL", true, 0.0f);					// sprite texture 0
+	machine.registerGlobalVariable("COMET", true, 0.5f);				// sprite texture 1
 	machine.registerGlobalVariable("Level_Time", true, 0);
 	machine.registerGlobalVariable("ScreenSize_X", true, SCREEN_WIDTH);
 	machine.registerGlobalVariable("ScreenSize_Y", true, SCREEN_HEIGHT);
-	machine.registerGlobalVariable("Test_Global", false, 0);
+	machine.registerGlobalVariable("Player_X", true, 0);
+	machine.registerGlobalVariable("Player_Y", true, 0);
 
 	// User member variables must be declared before compiling scripts
-	machine.declareControllerMemberVariable("Boss1", "health", 1); // 100%
+//	machine.declareControllerMemberVariable("Boss1", "health", 1); // 100%
 
+	// Compile all script files in directory
 	std::cout << "Compiling..." << std::endl;
-
-	// Load files
 	std::vector<std::string> scriptFiles = getDirectoryListing(".", "*.script");
-
 	for (size_t i = 0; i < scriptFiles.size(); ++i)
 	{
 		size_t fileSize;
@@ -103,41 +116,49 @@ int main (int argc, char **argv)
 			}
 
 			delete[] fileBuf;
-			delete g_bossBullets;
-			delete g_playerBullets;
-			delete g_areas;
 			return 0;
 		}
 
 		delete[] fileBuf;
 	}
 
+
+
+
+	///////////////////////////////////////////////////////////////////////////
+	// Initialise object batteries, renderer and player/bosses
+	///////////////////////////////////////////////////////////////////////////
 	std::cout << "Initialising..." << std::endl;
 
-	// Create player and g_bosses
+	BulletBattery::initialiseTables();
+	g_bossBullets = new BulletBattery(&machine);
+	g_playerBullets = new BulletBattery(&machine);
+	g_areas = new AreaBattery(&machine);
+
 	g_bosses = new BossManager(&machine);
 	Player* player = new Player(&machine);
 
-#ifndef MINIMAL_APP
 	RendererGL renderer;
-	if (!renderer.initialise(SCREEN_WIDTH, SCREEN_HEIGHT))
+	if (!renderer.initialise(SCREEN_WIDTH, SCREEN_HEIGHT, fullScreen))
 		return 0;
 
-	SDL_ShowCursor(SDL_DISABLE);
-
-	// Player/Bosses
+	// Load images now that renderer is created
 	player->setImage("player.tga");
 	g_bosses->loadImages();
-	player->setGuns("PlayerController");
-	
-#endif
 
+
+
+
+	///////////////////////////////////////////////////////////////////////////
 	// Main loop
-	unsigned int curTime = getTicks();
+	///////////////////////////////////////////////////////////////////////////
 	unsigned int totalTime = 0, fpsCounter = 0;
 	unsigned int numFrames = 0, updateTime = 0;
 	int numBullets = 0;
 
+	bool showInfo = true, doRender = true;
+
+	unsigned int curTime = getTicks();
 	while (true)
 	{
 		// Get update time
@@ -150,29 +171,45 @@ int main (int argc, char **argv)
 
 		float frameTime = deltaTime / 1000.0f;
 
-#ifndef MINIMAL_APP
-		if (!processMessages())
-			break;
-
-		// Move player
-		player->doInput(frameTime);
-
-#endif
-
+		// Debugging/info
+		char fpsString[80];
 		if (fpsCounter > 1000)
 		{
 			fpsCounter -= 1000;
 
 			int fps = numFrames;
 			float updateMS = (updateTime / (float) numFrames);
-			fprintf(stderr, "%4.3fms, %d FPS, %d bullets\n", updateMS, fps, numBullets);
+
+			sprintf(fpsString, "%4.3fms, %d FPS, %d bullets\n", updateMS, fps, numBullets);
 			numFrames = 0;
 			updateTime = 0;
 		}
 
-		// Do all changes to system here, before we update the machine
+
+
+
+		/// Input
+		if (!processMessages())
+			break;
+
+		if (keyPressed(SDLK_F1))
+			showInfo = !showInfo;
+
+		if (keyPressed(SDLK_F2))
+			doRender = !doRender;
+
+
+
+
+		// Player and boss logic
+		player->doInput(frameTime);
 		g_bosses->update(frameTime);
 		machine.setGlobalVariableValue("Level_Time", totalTime / 1000.0f);
+		machine.setGlobalVariableValue("Player_X", player->getX());
+		machine.setGlobalVariableValue("Player_Y", player->getY());
+
+
+
 
 		// Update bulletscript
 		unsigned int bsTime1 = getTicks();
@@ -187,29 +224,37 @@ int main (int argc, char **argv)
 		updateTime += (getTicks() - bsTime1);
 		numFrames++;
 
+
+
+
 		// Render
-#ifndef MINIMAL_APP
 		renderer.startRendering();
 
-		g_bossBullets->render(&renderer);
-		g_playerBullets->render(&renderer);
-		g_areas->render(&renderer);
-		g_bosses->render();
-		player->render();
+		if (doRender)
+		{
+			g_bossBullets->render(&renderer);
+			g_playerBullets->render(&renderer);
+			g_areas->render(&renderer);
+			g_bosses->render();
+			player->render();
+		}
+
+		if (showInfo)
+			renderer.print (5, SCREEN_HEIGHT - 20, fpsString);
 
 		renderer.finishRendering();
-#endif
 	}
 
+	///////////////////////////////////////////////////////////////////////////
+	// Main loop
+	///////////////////////////////////////////////////////////////////////////
 	delete g_bossBullets;
 	delete g_playerBullets;
 	delete g_areas;
 	delete g_bosses;
 	delete player;
 
-#ifndef MINIMAL_APP
 	SDL_Quit();
-#endif
 	
 	return 0;
 }

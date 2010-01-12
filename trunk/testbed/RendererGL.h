@@ -4,11 +4,6 @@
 #include <vector>
 #include "Main.h"
 
-#ifdef MINIMAL_APP
-class RendererGL
-{
-};
-#else
 #include "bsPrerequisites.h"
 #include "BulletSystem.h"
 
@@ -43,7 +38,16 @@ struct Area;
 
 class RendererGL
 {
+	// Font
+	GLuint mFontTexture;
+	
 	// Bullets
+	struct BulletInfo
+	{
+		float vHeight;
+		int width, height;
+	} mBulletInfo[2];
+
 	static const int MAX_BULLETS = 2048;
 	static const int BULLET_RADIUS = 4;
 	float mBulletPos[MAX_BULLETS * 8];
@@ -84,18 +88,17 @@ class RendererGL
 	unsigned short mArcIndices[MAX_ARC_POINTS];
 	GLuint mArcTexture;
 
-	// Units
-	GLuint mUnit1Texture;
-
 public:
 
 	RendererGL ();
 
-	bool initialise(int width, int height);
+	bool initialise(int width, int height, bool fullScreen);
 
 	void startRendering();
 
 	void finishRendering();
+
+	void print(int x, int y, const char* str);
 
 	void addBullet(const Bullet& b);
 
@@ -104,11 +107,6 @@ public:
 	void addEllipseArea(Area* a);
 
 	void addArcArea(Area* a);
-
-	void renderUnit(float x, float y);
-
 };
-
-#endif // MINIMAL_APP
 
 #endif

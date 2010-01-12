@@ -138,7 +138,8 @@ float bullet_getAlpha(bs::UserTypeBase* object)
 
 void bullet_gravity(bs::UserTypeBase* object, float frameTime, const float* args)
 {
-	g_bossBullets->gravity(object, frameTime, args);
+	Bullet* b = static_cast<Bullet*>(object);
+//	b->vy -= args[-1] * frameTime;
 }
 
 // --------------------------------------------------------------------------------
@@ -218,6 +219,7 @@ bs::UserTypeBase* BulletBattery::emitAngle(float x, float y, float angle, const 
 	Bullet b;
 	b._active = true;
 	b._time = 0;
+	b._texture = args[-3];
 
 	b.x = x;
 	b.y = y;
@@ -246,6 +248,7 @@ bs::UserTypeBase* BulletBattery::emitTarget(float x, float y, float angle, const
 	Bullet b;
 	b._active = true;
 	b._time = 0;
+	b._texture = args[-5];
 
 	b.x = x;
 	b.y = y;
@@ -283,13 +286,6 @@ void BulletBattery::killBullet(Bullet* b)
 void BulletBattery::killBullet(bs::UserTypeBase* object)
 {
 	killBullet(static_cast<Bullet*>(object));
-}
-// --------------------------------------------------------------------------------
-void BulletBattery::gravity(bs::UserTypeBase* object, float frameTime, const float* args)
-{
-	Bullet* b = static_cast<Bullet*>(object);
-
-	b->vy -= args[-1] * frameTime;
 }
 // --------------------------------------------------------------------------------
 int BulletBattery::update(float frameTime)
@@ -367,7 +363,6 @@ int BulletBattery::checkCollisions(float x0, float y0, float x1, float y1)
 // --------------------------------------------------------------------------------
 void BulletBattery::render(RendererGL *renderer)
 {
-#ifndef MINIMAL_APP
 	std::vector<Bullet>::iterator it = mBullets.begin();
 	while (it != mBullets.end ())
 	{
@@ -377,6 +372,5 @@ void BulletBattery::render(RendererGL *renderer)
 
 		++ it;
 	}
-#endif
 }
 // --------------------------------------------------------------------------------

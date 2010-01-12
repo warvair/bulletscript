@@ -22,17 +22,21 @@ class Boss
 
 	bool mVisible;
 
+protected:
+
+	std::string mImageFile;
+	
 public:
 
 	explicit Boss(bs::Machine* machine);
 
-	~Boss();
+	virtual ~Boss();
 
 	void reset();
 
 	void setVisible(bool vis);
 
-	void setImage(const char* file);
+	void loadImage();
 
 	void setBounds(int x0, int y0, int x1, int y1);
 
@@ -59,6 +63,8 @@ public:
 	void stopGuns();
 
 	bool checkCollisions(BulletBattery* bs);
+
+	virtual void update(float frameTime) = 0;
 
 	void render();
 };

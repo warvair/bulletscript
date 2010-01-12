@@ -8,12 +8,6 @@ static bool gPaused = false;
 //
 // Input/message handling
 //
-#ifdef MINIMAL_APP
-bool processMessages()
-{
-	return true;
-}
-#else
 static int gKeys[SDLK_LAST] = {0};
 static int gOldKeys[SDLK_LAST] = {0};
 
@@ -77,10 +71,6 @@ bool keyReleased(int key)
 	return (gKeys[key] == 0 && gOldKeys[key] == 1);
 }
 
-#endif
-
-
-
 bool inFocus()
 {
 	return gInFocus;
@@ -128,11 +118,7 @@ unsigned int timeGetTime()
 
 unsigned int getTicks()
 {
-#ifdef MINIMAL_APP
-	return timeGetTime();
-#else
 	return SDL_GetTicks();
-#endif
 }
 
 //

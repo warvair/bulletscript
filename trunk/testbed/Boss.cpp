@@ -1,4 +1,5 @@
 #include "Boss.h"
+#include "Bosses.h"
 #include "RendererGL.h"
 
 extern BulletBattery* g_bossBullets, *g_playerBullets;
@@ -17,7 +18,7 @@ Boss::Boss(bs::Machine* machine) :
 	mHealth(100),
 	mGunController(0),
 	mMachine(machine),
-	mVisible(true)
+	mVisible(false)
 {
 }
 
@@ -36,9 +37,9 @@ void Boss::setVisible(bool vis)
 	mVisible = vis;
 }
 
-void Boss::setImage(const char* file)
+void Boss::loadImage()
 {
-	TGALoader img(file);
+	TGALoader img(mImageFile);
 	mTexture = img.loadToVRAM (mWidth, mHeight);
 }
 
@@ -156,13 +157,13 @@ void Boss::render()
 	glBegin(GL_QUADS);
 	{
 			glTexCoord2i(0, 0);
-			glVertex2f(-w2, -h2);
+			glVertex2i(-w2, -h2);
 			glTexCoord2i(1, 0);
-			glVertex2f(w2, -h2);
+			glVertex2i(w2, -h2);
 			glTexCoord2i(1, 1);
-			glVertex2f(w2, h2);
+			glVertex2i(w2, h2);
 			glTexCoord2i(0, 1);
-			glVertex2f(-w2, h2);
+			glVertex2i(-w2, h2);
 	}
 	glEnd();
 
@@ -177,29 +178,21 @@ BossManager::BossManager(bs::Machine* machine) :
 	mCurState(State_Setup),
 	mIdle(-1.0f)
 {
-	for (int i = 0; i < NUM_BOSSES; ++i)
-	{
-		mBosses[i] = new Boss(machine);
-		mBosses[i]->setVisible(false);
-	}
 
-	// Hardcoded specific bounding boxes
-	mBosses[0]->setBounds(112, 20, 112, 40);
-	mBosses[1]->setBounds(148, 26, 148, 26);
+	mBosses[0] = new Boss1(machine);
+	mBosses[1] = new Boss2(machine);
 }
 
 BossManager::~BossManager()
 {
 	for (int i = 0; i < NUM_BOSSES; ++i)
-	{
 		delete mBosses[i];
-	}
 }
 
 void BossManager::loadImages()
 {
-	mBosses[0]->setImage("boss1.tga");
-	mBosses[1]->setImage("boss2.tga");
+	for (int i = 0; i < NUM_BOSSES; ++i)
+		mBosses[i]->loadImage();
 }
 
 void BossManager::update(float frameTime)
@@ -237,6 +230,7 @@ void BossManager::update(float frameTime)
 		break;
 
 	case State_Update:
+		mBosses[mCurBoss]->update(frameTime);
 		checkCollisions(g_playerBullets);
 		break;
 

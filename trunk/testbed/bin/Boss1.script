@@ -1,7 +1,14 @@
 controller Boss1
 {
 	// emitters - all these values are offsets from controller values
-	left = emitter Boss1Gun1(0, 0, 0);
+	innerl = emitter Boss1Gun1(-26, -43, 177);
+	innerr = emitter Boss1Gun1( 26, -43, 183);
+
+	outerl = emitter Boss1Gun1(-75, -40, 177);
+	outerr = emitter Boss1Gun1( 75, -40, 183);
+
+	sidel = emitter Boss1Gun2l(-109, -29, 210);
+	sider = emitter Boss1Gun2r( 109, -29, 150);
 
 	// states
 	Stage1 = state
@@ -14,8 +21,64 @@ emitter Boss1Gun1
 {
 	Emit = state
 	{
-		fireA bullet(180, 100);
-		wait(1);
+		fireA bullet(BALL, This_Angle, 200);
+		wait(0.25);
+	}
+}
+
+emitter Boss1Gun2l
+{
+	loopAngle = 290;
+
+	Loop = function(angle)
+	{
+		wait(0.8);
+		$blue = {0, 2};
+		$angle += {angle, 2};
+	}
+
+	Curl = function()
+	{
+		wait(0.3);
+		$red = {0, 2};
+		$green = {0, 2};
+		$angle -= {30, 2};
+	}
+
+	Emit = state
+	{
+		fireA bullet(BALL, This_Angle, 200) : Curl();
+		wait(0.125);
+		fireA bullet(BALL, This_Angle, 200) : Loop(loopAngle);
+		wait(0.125);
+	}
+}
+
+emitter Boss1Gun2r
+{
+	loopAngle = 290;
+
+	Loop = function(angle)
+	{
+		wait(0.8);
+		$blue = {0, 2};
+		$angle -= {angle, 2};
+	}
+
+	Curl = function()
+	{
+		wait(0.3);
+		$red = {0, 2};
+		$green = {0, 2};
+		$angle += {30, 2};
+	}
+
+	Emit = state
+	{
+		fireA bullet(BALL, This_Angle, 200) : Curl();
+		wait(0.125);
+		fireA bullet(BALL, This_Angle, 200) : Loop(loopAngle);
+		wait(0.125);
 	}
 }
 
