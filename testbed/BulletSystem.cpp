@@ -2,109 +2,143 @@
 #include <iostream>
 #include <algorithm>
 #include "Main.h"
+#include "Boss.h"
 #include "BulletSystem.h"
 #include "RendererGL.h"
 
-BulletBattery* g_bullets = 0;
+extern BossManager* g_bosses;
+
+float BulletBattery::mSinTable[];
+float BulletBattery::mCosTable[];
+
+BulletBattery* g_bossBullets = 0, *g_playerBullets = 0;
 
 bs::UserTypeBase* bullet_emitAngle(float x, float y, float angle, const float* args, void* userObj)
 {
-	return g_bullets->emitAngle(x, y, angle, args, userObj);
+	return static_cast<BulletBattery*>(userObj)->emitAngle(x, y, angle, args, userObj);
 }
 
 bs::UserTypeBase* bullet_emitTarget(float x, float y, float angle, const float* args, void* userObj)
 {
-	return g_bullets->emitTarget(x, y, angle, args, userObj);
+	return static_cast<BulletBattery*>(userObj)->emitTarget(x, y, angle, args, userObj);
 }
 
 void bullet_kill(bs::UserTypeBase* object, void* userObj)
 {
-	g_bullets->killBullet(object);
+	static_cast<BulletBattery*>(userObj)->killBullet(object);
 }
 
 void bullet_setX(bs::UserTypeBase* object, float value)
 {
-	g_bullets->setX(object, value);
+	Bullet* b = static_cast<Bullet*>(object);
+	b->x = value;
 }
 
 float bullet_getX(bs::UserTypeBase* object)
 {
-	return g_bullets->getX(object);
+	Bullet* b = static_cast<Bullet*>(object);
+	return b->x;
 }
 
 void bullet_setY(bs::UserTypeBase* object, float value)
 {
-	g_bullets->setY(object, value);
+	Bullet* b = static_cast<Bullet*>(object);
+	b->y = value;
 }
 
 float bullet_getY(bs::UserTypeBase* object)
 {
-	return g_bullets->getY(object);
+	Bullet* b = static_cast<Bullet*>(object);
+	return b->y;
 }
 
 void bullet_setAngle(bs::UserTypeBase* object, float value)
 {
-	g_bullets->setAngle(object, value);
+	Bullet* b = static_cast<Bullet*>(object);
+
+	b->angle = value;
+
+	if (value < 0.0f)
+		value += 360.0f;
+
+	int index = (int) (value * 10) % 3600;
+	b->vx = BulletBattery::getSine(index) * b->speed;
+	b->vy = BulletBattery::getCosine(index) * b->speed;
 }
 
 float bullet_getAngle(bs::UserTypeBase* object)
 {
-	return g_bullets->getAngle(object);
+	Bullet* b = static_cast<Bullet*>(object);
+	return b->angle;
 }
 
 void bullet_setSpeed(bs::UserTypeBase* object, float value)
 {
-	g_bullets->setSpeed(object, value);
+	Bullet* b = static_cast<Bullet*>(object);
+
+	b->speed = value;
+	int index = (int) (b->angle * 10) % 3600;
+	b->vx = BulletBattery::getSine(index) * value;
+	b->vy = BulletBattery::getCosine(index) * value;
 }
 
 float bullet_getSpeed(bs::UserTypeBase* object)
 {
-	return g_bullets->getSpeed(object);
+	Bullet* b = static_cast<Bullet*>(object);
+	return b->speed;
 }
 
 void bullet_setRed(bs::UserTypeBase* object, float value)
 {
-	g_bullets->setRed(object, value);
+	Bullet* b = static_cast<Bullet*>(object);
+	b->red = value;
 }
 
 float bullet_getRed(bs::UserTypeBase* object)
 {
-	return g_bullets->getRed(object);
+	Bullet* b = static_cast<Bullet*>(object);
+	return b->red;
 }
 
 void bullet_setGreen(bs::UserTypeBase* object, float value)
 {
-	g_bullets->setGreen(object, value);
+	Bullet* b = static_cast<Bullet*>(object);
+	b->green = value;
 }
 
 float bullet_getGreen(bs::UserTypeBase* object)
 {
-	return g_bullets->getGreen(object);
+	Bullet* b = static_cast<Bullet*>(object);
+	return b->green;
 }
 
 void bullet_setBlue(bs::UserTypeBase* object, float value)
 {
-	g_bullets->setBlue(object, value);
+	Bullet* b = static_cast<Bullet*>(object);
+	b->blue = value;
 }
 
 float bullet_getBlue(bs::UserTypeBase* object)
 {
-	return g_bullets->getBlue(object);
+	Bullet* b = static_cast<Bullet*>(object);
+	return b->blue;
 }
 
 void bullet_setAlpha(bs::UserTypeBase* object, float value)
 {
-	g_bullets->setAlpha(object, value);
+	Bullet* b = static_cast<Bullet*>(object);
+	b->alpha = value;
 }
 
 float bullet_getAlpha(bs::UserTypeBase* object)
 {
-	return g_bullets->getAlpha(object);
+	Bullet* b = static_cast<Bullet*>(object);
+	return b->alpha;
 }
 
 void bullet_gravity(bs::UserTypeBase* object, float frameTime, const float* args)
 {
-	g_bullets->gravity(object, frameTime, args);
+	g_bossBullets->gravity(object, frameTime, args);
 }
 
 // --------------------------------------------------------------------------------
@@ -119,13 +153,26 @@ BulletBattery::BulletBattery(bs::Machine* machine) :
 
 	for (int i = 0; i < BATTERY_SIZE; ++ i)
 		mFreeList[mUseIndex].push_back(BATTERY_SIZE - i - 1);
-
+}
+// --------------------------------------------------------------------------------
+void BulletBattery::initialiseTables()
+{
 	// trig tables
 	for (int i = 0; i < 3600; ++i)
 	{
 		mSinTable[i] = (float) sin((i / 10.0f) * bs::DEG_TO_RAD);
 		mCosTable[i] = (float) cos((i / 10.0f) * bs::DEG_TO_RAD);
 	}
+}
+// --------------------------------------------------------------------------------
+float BulletBattery::getSine(int index)
+{
+	return mSinTable[index];
+}
+// --------------------------------------------------------------------------------
+float BulletBattery::getCosine(int index)
+{
+	return mCosTable[index];
 }
 // --------------------------------------------------------------------------------
 unsigned int BulletBattery::getFreeBulletSlot()
@@ -238,114 +285,6 @@ void BulletBattery::killBullet(bs::UserTypeBase* object)
 	killBullet(static_cast<Bullet*>(object));
 }
 // --------------------------------------------------------------------------------
-void BulletBattery::setX(bs::UserTypeBase* object, float value)
-{
-	Bullet* b = static_cast<Bullet*>(object);
-	b->x = value;
-}
-// --------------------------------------------------------------------------------
-float BulletBattery::getX(bs::UserTypeBase* object)
-{
-	Bullet* b = static_cast<Bullet*>(object);
-	return b->x;
-}
-// --------------------------------------------------------------------------------
-void BulletBattery::setY(bs::UserTypeBase* object, float value)
-{
-	Bullet* b = static_cast<Bullet*>(object);
-	b->y = value;
-}
-// --------------------------------------------------------------------------------
-float BulletBattery::getY(bs::UserTypeBase* object)
-{
-	Bullet* b = static_cast<Bullet*>(object);
-	return b->y;
-}
-// --------------------------------------------------------------------------------
-void BulletBattery::setAngle(bs::UserTypeBase* object, float value)
-{
-	Bullet* b = static_cast<Bullet*>(object);
-
-	b->angle = value;
-
-	if (value < 0.0f)
-		value += 360.0f;
-
-	int index = (int) (value * 10) % 3600;
-	b->vx = mSinTable[index] * b->speed;
-	b->vy = mCosTable[index] * b->speed;
-}
-// --------------------------------------------------------------------------------
-float BulletBattery::getAngle(bs::UserTypeBase* object)
-{
-	Bullet* b = static_cast<Bullet*>(object);
-	return b->angle;
-}
-// --------------------------------------------------------------------------------
-void BulletBattery::setSpeed(bs::UserTypeBase* object, float value)
-{
-	Bullet* b = static_cast<Bullet*>(object);
-
-	b->speed = value;
-	int index = (int) (b->angle * 10) % 3600;
-	b->vx = mSinTable[index] * value;
-	b->vy = mCosTable[index] * value;
-}
-// --------------------------------------------------------------------------------
-float BulletBattery::getSpeed(bs::UserTypeBase* object)
-{
-	Bullet* b = static_cast<Bullet*>(object);
-	return b->speed;
-}
-// --------------------------------------------------------------------------------
-void BulletBattery::setAlpha(bs::UserTypeBase* object, float value)
-{
-	Bullet* b = static_cast<Bullet*>(object);
-	b->alpha = value;
-}
-// --------------------------------------------------------------------------------
-float BulletBattery::getAlpha(bs::UserTypeBase* object)
-{
-	Bullet* b = static_cast<Bullet*>(object);
-	return b->alpha;
-}
-// --------------------------------------------------------------------------------
-void BulletBattery::setRed(bs::UserTypeBase* object, float value)
-{
-	Bullet* b = static_cast<Bullet*>(object);
-	b->red = value;
-}
-// --------------------------------------------------------------------------------
-float BulletBattery::getRed(bs::UserTypeBase* object)
-{
-	Bullet* b = static_cast<Bullet*>(object);
-	return b->red;
-}
-// --------------------------------------------------------------------------------
-void BulletBattery::setGreen(bs::UserTypeBase* object, float value)
-{
-	Bullet* b = static_cast<Bullet*>(object);
-	b->green = value;
-}
-// --------------------------------------------------------------------------------
-float BulletBattery::getGreen(bs::UserTypeBase* object)
-{
-	Bullet* b = static_cast<Bullet*>(object);
-	return b->green;
-}
-// --------------------------------------------------------------------------------
-void BulletBattery::setBlue(bs::UserTypeBase* object, float value)
-{
-	Bullet* b = static_cast<Bullet*>(object);
-	b->blue = value;
-}
-// --------------------------------------------------------------------------------
-float BulletBattery::getBlue(bs::UserTypeBase* object)
-{
-	Bullet* b = static_cast<Bullet*>(object);
-	return b->blue;
-}
-// --------------------------------------------------------------------------------
 void BulletBattery::gravity(bs::UserTypeBase* object, float frameTime, const float* args)
 {
 	Bullet* b = static_cast<Bullet*>(object);
@@ -374,7 +313,7 @@ int BulletBattery::update(float frameTime)
 		if (b._active)
 		{
 			b._time += frameTime;
-			
+
 			// Apply normal movement update
 			b.x += b.vx * frameTime;
 			b.y += b.vy * frameTime;
@@ -382,12 +321,15 @@ int BulletBattery::update(float frameTime)
 			// bulletscript: apply affectors and control functions
 			mMachine->updateType(&b, b.x, b.y, b.angle, frameTime);
 
-
 			// Check for death
 			if (b.y < 0 || b.y > SCREEN_HEIGHT || b.x < 0 || b.x > SCREEN_WIDTH)
+			{
 				killBullet(&b);
+			}
 			else
+			{
 				count++;
+			}
 		}
 
 		++it;
@@ -395,6 +337,32 @@ int BulletBattery::update(float frameTime)
 	}
 
 	return count;
+}
+// --------------------------------------------------------------------------------
+int BulletBattery::checkCollisions(float x0, float y0, float x1, float y1)
+{
+	int hits = 0;
+
+	int index = 0;
+	std::vector<Bullet>::iterator it = mBullets.begin();
+	while (it != mBullets.end())
+	{
+		Bullet &b = *it;
+		b._index = index;
+		if (b._active)
+		{
+			if (b.x >= x0 && b.y >= y0 && b.x <= x1 && b.y <= y1)
+			{
+				killBullet(&b);
+				hits++;
+			}
+		}
+
+		++it;
+		++index;
+	}
+
+	return hits;
 }
 // --------------------------------------------------------------------------------
 void BulletBattery::render(RendererGL *renderer)

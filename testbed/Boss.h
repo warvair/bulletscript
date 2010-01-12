@@ -2,12 +2,15 @@
 #define __BOSS_H__
 
 #include "bsBulletScript.h"
+#include "BulletSystem.h"
 
 class Boss
 {
 	unsigned int mTexture;
 	
 	int mWidth, mHeight;
+
+	int mBoundsX0, mBoundsY0, mBoundsX1, mBoundsY1;
 	
 	float mX, mY, mAngle;
 	
@@ -17,13 +20,21 @@ class Boss
 
 	bs::Machine* mMachine;
 
+	bool mVisible;
+
 public:
 
 	explicit Boss(bs::Machine* machine);
 
 	~Boss();
 
+	void reset();
+
+	void setVisible(bool vis);
+
 	void setImage(const char* file);
+
+	void setBounds(int x0, int y0, int x1, int y1);
 
 	void setGuns(const char* guns);
 
@@ -39,16 +50,22 @@ public:
 
 	bool damage(int damage);
 
+	void setHealth(int health);
+
 	int getHealth() const;
 
 	void startGuns();
+
+	void stopGuns();
+
+	bool checkCollisions(BulletBattery* bs);
 
 	void render();
 };
 
 class BossManager
 {
-	static const int NUM_BOSSES = 1;
+	static const int NUM_BOSSES = 2;
 	
 	Boss* mBosses[NUM_BOSSES];
 	
@@ -56,6 +73,7 @@ class BossManager
 
 	enum State
 	{
+		State_Setup,
 		State_MoveOnScreen,
 		State_StartGuns,
 		State_Update,
@@ -63,6 +81,8 @@ class BossManager
 	};
 
 	int mCurState;
+
+	float mIdle;
 
 public:
 
@@ -73,6 +93,8 @@ public:
 	void loadImages();
 
 	void update(float frameTime);
+
+	void checkCollisions(BulletBattery* bs);
 
 	void render();
 };

@@ -29,6 +29,8 @@ struct Bullet : public bs::UserTypeBase
 
 class BulletBattery
 {
+	static float mSinTable[3600], mCosTable[3600];
+
 	struct BulletSorter
 	{
 		bool operator ()(int a, int b)
@@ -37,7 +39,7 @@ class BulletBattery
 		}
 	};
 
-	static const int BATTERY_SIZE = 2048;
+	static const int BATTERY_SIZE = 512;
 
 	bs::Machine* mMachine;
 
@@ -46,8 +48,6 @@ class BulletBattery
 	std::vector<unsigned int> mFreeList[2];
 
 	int mStoreIndex, mUseIndex;
-
-	float mSinTable[3600], mCosTable[3600];
 
 	std::vector<Bullet> mSpawnedBullets; // should be queue
 
@@ -61,7 +61,15 @@ public:
 
 	BulletBattery(bs::Machine* machine);
 
+	static void initialiseTables();
+
+	static float getSine(int index);
+
+	static float getCosine(int index);
+
 	int update(float frameTime);
+
+	int checkCollisions(float x0, float y0, float x1, float y1);
 
 	void render(RendererGL* renderer);
 
@@ -73,38 +81,6 @@ public:
 	bs::UserTypeBase* emitTarget(float x, float y, float angle, const float* args, void* user);
 
 	void killBullet(bs::UserTypeBase* object);
-
-	void setX(bs::UserTypeBase* object, float value);
-
-	float getX(bs::UserTypeBase* object);
-
-	void setY(bs::UserTypeBase* object, float value);
-
-	float getY(bs::UserTypeBase* object);
-
-	void setAngle(bs::UserTypeBase* object, float value);
-
-	float getAngle(bs::UserTypeBase* object);
-
-	void setSpeed(bs::UserTypeBase* object, float value);
-
-	float getSpeed(bs::UserTypeBase* object);
-
-	void setAlpha(bs::UserTypeBase* object, float value);
-
-	float getAlpha(bs::UserTypeBase* object);
-
-	void setRed(bs::UserTypeBase* object, float value);
-
-	float getRed(bs::UserTypeBase* object);
-
-	void setGreen(bs::UserTypeBase* object, float value);
-
-	float getGreen(bs::UserTypeBase* object);
-
-	void setBlue(bs::UserTypeBase* object, float value);
-
-	float getBlue(bs::UserTypeBase* object);
 
 	void gravity(bs::UserTypeBase* object, float frameTime, const float* args);
 };
