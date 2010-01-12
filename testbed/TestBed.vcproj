@@ -226,6 +226,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\Bosses.h"
+				>
+			</File>
+			<File
 				RelativePath=".\BulletSystem.h"
 				>
 			</File>

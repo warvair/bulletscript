@@ -13,6 +13,7 @@ Player::Player(bs::Machine* machine) :
 	mGunController(0),
 	mMachine(machine)
 {
+	setGuns("PlayerController");
 }
 
 Player::~Player()
@@ -135,13 +136,13 @@ void Player::render()
 	glBegin(GL_QUADS);
 	{
 			glTexCoord2i(0, 0);
-			glVertex2f(-w2, -h2);
+			glVertex2i(-w2, -h2);
 			glTexCoord2i(1, 0);
-			glVertex2f(w2, -h2);
+			glVertex2i(w2, -h2);
 			glTexCoord2i(1, 1);
-			glVertex2f(w2, h2);
+			glVertex2i(w2, h2);
 			glTexCoord2i(0, 1);
-			glVertex2f(-w2, h2);
+			glVertex2i(-w2, h2);
 	}
 	glEnd();
 

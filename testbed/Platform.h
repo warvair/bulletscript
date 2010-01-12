@@ -5,7 +5,6 @@
 #include <string>
 #include "Main.h"
 
-#ifndef MINIMAL_APP
 #include <SDL.h>
 #endif
 
@@ -28,5 +27,3 @@ bool paused();
 unsigned int getTicks();
 
 std::vector<std::string> getDirectoryListing(const std::string &dir, const std::string &pattern);
-
-#endif

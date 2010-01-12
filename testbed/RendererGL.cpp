@@ -3,7 +3,121 @@
 #include "RendererGL.h"
 #include "AreaSystem.h"
 
-#ifndef MINIMAL_APP
+#define GLYPH_START		32
+#define NUM_GLYPHS		95
+
+/**
+	Multiple sprites:
+		make sprite first param of emit functions, from 0 up.
+		put all bullet sprites into one texture, and use param as x offset
+			use lookup array for sprite height
+
+*/
+
+struct DebugGlyph
+{
+	int x, y, w, h;
+	float u0, v0, u1, v1;
+};
+
+// Goes from codes 32 to 125
+static DebugGlyph glyphs[NUM_GLYPHS] = {
+	{1,		1,		6,		16}, // Space
+	{8,		1,		6,		16}, // !
+	{15,	1,		8,		16}, // "
+	{24,	1,		10,		16}, // #
+	{35,	1,		10,		16}, // $
+	{46,	1,		13,		16}, // %
+	{60,	1,		11,		16}, // &
+	{72,	1,		6,		16}, // '
+	{79,	1,		6,		16}, // (
+	{86,	1,		6,		16}, // )
+	{93,	1,		8,		16}, // *
+	{102,	1,		10,		16}, // +
+	{113,	1,		6,		16}, // ,
+	{120,	1,		6,		16}, // -
+	{127,	1,		6,		16}, // .
+	{134,	1,		6,		16}, // /
+	{141,	1,		10,		16}, // 0
+	{152,	1,		10,		16}, // 1
+	{163,	1,		10,		16}, // 2
+	{174,	1,		10,		16}, // 3
+	{185,	1,		10,		16}, // 4
+	{196,	1,		10,		16}, // 5
+	{207,	1,		10,		16}, // 6
+	{218,	1,		10,		16}, // 7
+	{229,	1,		10,		16}, // 8
+	{240,	1,		10,		16}, // 9
+	{1,		18,		6,		16}, // :
+	{8,		18,		6,		16}, // ;
+	{15,	18,		10,		16}, // <
+	{26,	18,		10,		16}, // =
+	{37,	18,		10,		16}, // >
+	{48,	18,		10,		16}, // ?
+	{59,	18,		16,		16}, // @
+	{76,	18,		10,		16}, // A
+	{87,	18,		12,		16}, // B
+	{100,	18,		11,		16}, // C
+	{112,	18,		12,		16}, // D
+	{125,	18,		11,		16}, // E
+	{137,	18,		10,		16}, // F
+	{148,	18,		12,		16}, // G
+	{161,	18,		12,		16}, // H
+	{174,	18,		6,		16}, // I
+	{181,	18,		10,		16}, // J
+	{191,	18,		11,		16}, // K
+	{203,	18,		10,		16}, // L
+	{214,	18,		14,		16}, // M
+	{229,	18,		12,		16}, // N
+	{242,	18,		12,		16}, // O
+	{1,		35,		11,		16}, // P
+	{13,	35,		12,		16}, // Q
+	{26,	35,		12,		16}, // R
+	{39,	35,		11,		16}, // S
+	{51,	35,		10,		16}, // T
+	{62,	35,		12,		16}, // U
+	{75,	35,		10,		16}, // V
+	{86,	35,		16,		16}, // W
+	{103,	35,		11,		16}, // X
+	{115,	35,		12,		16}, // Y
+	{128,	35,		11,		16}, // Z
+	{140,	35,		6,		16}, // [
+	{147,	35,		6,		16}, // '\'
+	{154,	35,		6,		16}, // ]
+	{161,	35,		7,		16}, // ^
+	{169,	35,		10,		16}, // _
+	{180,	35,		7,		16}, // `
+	{188,	35,		10,		16}, // a
+	{199,	35,		10,		16}, // b
+	{210,	35,		9,		16}, // c
+	{220,	35,		10,		16}, // d
+	{231,	35,		10,		16}, // e
+	{242,	35,		6,		16}, // f
+	{1,		52,		10,		16}, // g
+	{12,	52,		10,		16}, // h
+	{23,	52,		6,		16}, // i
+	{30,	52,		6,		16}, // j
+	{37,	52,		9,		16}, // k
+	{47,	52,		6,		16}, // l
+	{54,	52,		14,		16}, // m
+	{69,	52,		10,		16}, // n
+	{80,	52,		10,		16}, // o
+	{91,	52,		10,		16}, // p
+	{102,	52,		10,		16}, // q
+	{113,	52,		7,		16}, // r
+	{121,	52,		10,		16}, // s
+	{132,	52,		6,		16}, // t
+	{139,	52,		10,		16}, // u
+	{150,	52,		10,		16}, // v
+	{161,	52,		12,		16}, // w
+	{174,	52,		10,		16}, // x
+	{185,	52,		10,		16}, // y
+	{196,	52,		10,		16}, // z
+	{207,	52,		7,		16}, // {
+	{215,	52,		6,		16}, // |
+	{222,	52,		7,		16}, // }
+	{230,	52,		7,		16}, // ~
+};
 
 // --------------------------------------------------------------------------------
 GLuint TGALoader::loadToVRAM(int& width, int& height)
@@ -81,28 +195,23 @@ GLuint TGALoader::loadToVRAM(int& width, int& height)
 // --------------------------------------------------------------------------------
 // --------------------------------------------------------------------------------
 RendererGL::RendererGL () :
+	mFontTexture(0),
 	mNumBullets (0),
 	mNumQuads(0),
-	mBulletTexture (0),
+	mBulletTexture(0),
 	mBeamTexture(0),
 	mBeamTipTexture(0),
-	mArcTexture(0),
-	mUnit1Texture(0)
+	mArcTexture(0)
 {
 	int i;
 
 	// Set up bullets
-	for (i = 0; i < MAX_BULLETS * 8; i += 8)
-	{
-		mBulletTex[i + 0] = 0;
-		mBulletTex[i + 1] = 0;
-		mBulletTex[i + 2] = 1;
-		mBulletTex[i + 3] = 0;
-		mBulletTex[i + 4] = 1;
-		mBulletTex[i + 5] = 1;
-		mBulletTex[i + 6] = 0;
-		mBulletTex[i + 7] = 1;
-	}
+	mBulletInfo[0].width = 4;
+	mBulletInfo[0].height = 4;
+	mBulletInfo[0].vHeight = 0.5f;
+	mBulletInfo[1].width = 6;
+	mBulletInfo[1].height = 12;
+	mBulletInfo[1].vHeight = 1.0f;
 
 	for (i = 0; i < MAX_BULLETS * 16; ++i)
 		mBulletCol[i] = 1;
@@ -153,14 +262,19 @@ RendererGL::RendererGL () :
 	}
 }
 // --------------------------------------------------------------------------------
-bool RendererGL::initialise (int width, int height)
+bool RendererGL::initialise (int width, int height, bool fullScreen)
 {
 	if (SDL_Init(SDL_INIT_VIDEO) < 0)
 		return false;
 
 	SDL_WM_SetCaption ("BulletScript", "");
 	SDL_GL_SetAttribute (SDL_GL_SWAP_CONTROL, 0);  // No vsync
-	SDL_SetVideoMode (width, height, 32, SDL_OPENGL | SDL_HWSURFACE | SDL_DOUBLEBUF/* | SDL_FULLSCREEN*/);
+
+	if (fullScreen)
+		SDL_SetVideoMode (width, height, 32, SDL_OPENGL | SDL_HWSURFACE | SDL_DOUBLEBUF | SDL_FULLSCREEN);
+	else
+		SDL_SetVideoMode (width, height, 32, SDL_OPENGL | SDL_HWSURFACE | SDL_DOUBLEBUF/* | SDL_FULLSCREEN*/);
+
 	glViewport (0, 0, width, height);
 	glMatrixMode (GL_PROJECTION);
 	glLoadIdentity ();
@@ -170,44 +284,55 @@ bool RendererGL::initialise (int width, int height)
 	glBlendFunc (GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 	glEnable (GL_BLEND);
 
-	// Create bullet sprite
-	TGALoader bulletLoader ("bullet1.tga");
+	// Create font
+	TGALoader fontLoader("font.tga");
+	int fWidth, fHeight;
+	mFontTexture = fontLoader.loadToVRAM(fWidth, fHeight);
+	if (mFontTexture == 0)
+		return false;
+
+	for (int i = 0; i < NUM_GLYPHS; ++ i)
+	{
+		glyphs[i].u0 = glyphs[i].x / 256.0f;
+		glyphs[i].v0 = glyphs[i].y / 128.0f;
+		glyphs[i].u1 = (glyphs[i].x + glyphs[i].w) / 256.0f;
+		glyphs[i].v1 = (glyphs[i].y + glyphs[i].h) / 128.0f;
+	}
+
+	// Create bullet sprites
+	TGALoader bulletLoader("bullets.tga");
 	int bwidth, bheight;
 	mBulletTexture = bulletLoader.loadToVRAM (bwidth, bheight);
 	if (mBulletTexture == 0)
 		return false;
 
 	// Create beam sprite
-	TGALoader beamLoader ("beam1.tga");
+	TGALoader beamLoader("beam1.tga");
 	mBeamTexture = beamLoader.loadToVRAM (bwidth, bheight);
 	if (mBeamTexture == 0)
 		return false;
 
-	TGALoader beamTipLoader ("beam2.tga");
+	TGALoader beamTipLoader("beam2.tga");
 	mBeamTipTexture = beamTipLoader.loadToVRAM (bwidth, bheight);
 	if (mBeamTipTexture == 0)
 		return false;
 
 	// Create beam sprite
-	TGALoader ballLoader ("ball1.tga");
+	TGALoader ballLoader("ball1.tga");
 	mEllipseTexture = ballLoader.loadToVRAM (bwidth, bheight);
 	if (mEllipseTexture == 0)
 		return false;
 
 	// Create arc sprite
-	TGALoader arcLoader ("arc.tga");
+	TGALoader arcLoader("arc.tga");
 	mArcTexture = arcLoader.loadToVRAM (bwidth, bheight);
 	if (mArcTexture == 0)
 		return false;
 
-	// Create unit sprites
-	TGALoader unitLoader ("ship1.tga");
-	mUnit1Texture = unitLoader.loadToVRAM (bwidth, bheight);
-	if (mUnit1Texture == 0)
-		return false;
-
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	SDL_GL_SwapBuffers();
+
+	SDL_ShowCursor(SDL_DISABLE);
 
 	return true;
 }
@@ -227,7 +352,33 @@ void RendererGL::finishRendering ()
 	SDL_GL_SwapBuffers ();
 }
 // --------------------------------------------------------------------------------
-void RendererGL::addBullet (const Bullet& b)
+void RendererGL::print(int x, int y, const char* str)
+{
+	const char *textPtr = str;
+	glBindTexture(GL_TEXTURE_2D, mFontTexture);
+	glColor4f(1, 1, 1, 1);
+	glBegin(GL_QUADS);
+	while (*textPtr)
+	{
+		DebugGlyph& glyph = glyphs[*textPtr - GLYPH_START];
+
+		glTexCoord2f(glyph.u0, 1.0f - glyph.v0);
+		glVertex2i(x, y + glyph.h);
+		glTexCoord2f(glyph.u1, 1.0f - glyph.v0);
+		glVertex2i(x + glyph.w, y + glyph.h);
+		glTexCoord2f(glyph.u1, 1.0f - glyph.v1);
+		glVertex2i(x + glyph.w, y);
+		glTexCoord2f(glyph.u0, 1.0f - glyph.v1);
+		glVertex2i(x, y);
+
+		x += glyph.w;
+		x --;
+		textPtr ++;
+	}
+	glEnd();
+}
+// --------------------------------------------------------------------------------
+void RendererGL::addBullet(const Bullet& b)
 {
 	if (mNumBullets >= MAX_BULLETS)
 	{
@@ -245,14 +396,26 @@ void RendererGL::addBullet (const Bullet& b)
 	int bOffset = mNumBullets * 8;
 	int cOffset = mNumBullets * 16;
 
-	mBulletPos[bOffset + 0] = x - BULLET_RADIUS;
-	mBulletPos[bOffset + 1] = y - BULLET_RADIUS;
-	mBulletPos[bOffset + 2] = x + BULLET_RADIUS;
-	mBulletPos[bOffset + 3] = y - BULLET_RADIUS;
-	mBulletPos[bOffset + 4] = x + BULLET_RADIUS;
-	mBulletPos[bOffset + 5] = y + BULLET_RADIUS;
-	mBulletPos[bOffset + 6] = x - BULLET_RADIUS;
-	mBulletPos[bOffset + 7] = y + BULLET_RADIUS;
+	int texId = (int) (b._texture * 2);
+	const BulletInfo& bi = mBulletInfo[texId];
+
+	mBulletPos[bOffset + 0] = x - bi.width;
+	mBulletPos[bOffset + 1] = y - bi.height;
+	mBulletPos[bOffset + 2] = x + bi.width;
+	mBulletPos[bOffset + 3] = y - bi.height;
+	mBulletPos[bOffset + 4] = x + bi.width;
+	mBulletPos[bOffset + 5] = y + bi.height;
+	mBulletPos[bOffset + 6] = x - bi.width;
+	mBulletPos[bOffset + 7] = y + bi.height;
+
+	mBulletTex[bOffset + 0] = b._texture;
+	mBulletTex[bOffset + 1] = 1;
+	mBulletTex[bOffset + 2] = b._texture + 0.5f;
+	mBulletTex[bOffset + 3] = 1;
+	mBulletTex[bOffset + 4] = b._texture + 0.5f;
+	mBulletTex[bOffset + 5] = 1 - bi.vHeight;
+	mBulletTex[bOffset + 6] = b._texture;
+	mBulletTex[bOffset + 7] = 1 - bi.vHeight;
 
 	mBulletCol[cOffset + 0] = rd;
 	mBulletCol[cOffset + 1] = gr;
@@ -282,8 +445,8 @@ void RendererGL::addQuadArea(Area* a)
 		mNumQuads = 0;
 	}
 
-	float sinAngle = sin((a->angle - 180) * bs::DEG_TO_RAD);
-	float cosAngle = cos((a->angle - 180) * bs::DEG_TO_RAD);
+	float sinAngle = (float) sin((a->angle - 180) * bs::DEG_TO_RAD);
+	float cosAngle = (float) cos((a->angle - 180) * bs::DEG_TO_RAD);
 
 	float w2 = a->w / 2;
 	float h2 = a->h / 2;
@@ -324,7 +487,7 @@ void RendererGL::addQuadArea(Area* a)
 void RendererGL::addEllipseArea(Area* a)
 {
 	// Work out how many points to use based on its size
-	int size = a->w + a->h;
+	int size = (int) (a->w + a->h);
 	int numPoints = size / 8;
 
 	// +1 for the central vertex
@@ -349,15 +512,15 @@ void RendererGL::addEllipseArea(Area* a)
 	float angle = a->angle + a->start;
 	for (int i = 0, j = 0; i < numPoints * 2; i += 2)
 	{
-		float sinAngle = sin(angle * bs::DEG_TO_RAD);
-		float cosAngle = cos(angle * bs::DEG_TO_RAD);
+		float sinAngle = (float) sin(angle * bs::DEG_TO_RAD);
+		float cosAngle = (float) cos(angle * bs::DEG_TO_RAD);
 
 		// Pos
 		mEllipsePos[2 + i + 0] = a->x + sinAngle * w2;
 		mEllipsePos[2 + i + 1] = a->y + cosAngle * h2;
 		// UVs
-		mEllipseTex[2 + i + 0] = sinAngle / 2.0f + 0.5;
-		mEllipseTex[2 + i + 1] = cosAngle / 2.0f + 0.5;
+		mEllipseTex[2 + i + 0] = sinAngle / 2.0f + 0.5f;
+		mEllipseTex[2 + i + 1] = cosAngle / 2.0f + 0.5f;
 		// Colour
 		mEllipseCol[7 + j * 4] = a->alpha;
 
@@ -386,7 +549,7 @@ void RendererGL::addEllipseArea(Area* a)
 void RendererGL::addArcArea(Area* a)
 {
 	// Work out how many points to use based on its size
-	int size = a->w + a->h;
+	int size = (int) (a->w + a->h);
 	int numPoints = size / 8;
 
 	// *2 for inner vertices
@@ -405,8 +568,8 @@ void RendererGL::addArcArea(Area* a)
 	float angle = a->angle + a->start;
 	for (int i = 0; i <= numPoints; ++i)
 	{
-		float sinAngle = sin(angle * bs::DEG_TO_RAD);
-		float cosAngle = cos(angle * bs::DEG_TO_RAD);
+		float sinAngle = (float) sin(angle * bs::DEG_TO_RAD);
+		float cosAngle = (float) cos(angle * bs::DEG_TO_RAD);
 
 		// Outer Pos
 		mArcPos[i * 4 + 0] = a->x + sinAngle * w2o;
@@ -484,23 +647,3 @@ void RendererGL::renderQuadBatch()
 	glDisableClientState (GL_VERTEX_ARRAY);
 }
 // --------------------------------------------------------------------------------
-void RendererGL::renderUnit(float x, float y)
-{
-	glBindTexture(GL_TEXTURE_2D, mUnit1Texture);
-	glColor4f(1, 1, 1, 1);
-	glBegin(GL_QUADS);
-	{
-			glTexCoord2i(0, 0);
-			glVertex2f(x - 32, y - 32);
-			glTexCoord2i(1, 0);
-			glVertex2f(x + 32, y - 32);
-			glTexCoord2i(1, 1);
-			glVertex2f(x + 32, y + 32);
-			glTexCoord2i(0, 1);
-			glVertex2f(x - 32, y + 32);
-	}
-	glEnd();
-}
-// --------------------------------------------------------------------------------
-
-#endif

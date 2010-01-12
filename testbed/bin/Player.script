@@ -3,9 +3,10 @@ controller PlayerController
 	left = emitter PBlaster(-12, 4, 0);
 	right = emitter PBlaster(12, 4, 0);
 
+	// Redundant state
 	Stage1 = state
 	{
-		wait(3);
+		wait(10);
 	}
 }
 
@@ -13,7 +14,7 @@ emitter PBlaster
 {
 	Emit = state
 	{
-		fireA bullet(0, 350);
+		fireA bullet(COMET, 0, 350);
 		wait(0.1);
 	}
 }

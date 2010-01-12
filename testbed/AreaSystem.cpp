@@ -468,7 +468,6 @@ int AreaBattery::update(float frameTime)
 // --------------------------------------------------------------------------------
 void AreaBattery::render(RendererGL *renderer)
 {
-#ifndef MINIMAL_APP
 	std::vector<Area>::iterator it = mAreas.begin();
 	while (it != mAreas.end ())
 	{
@@ -485,6 +484,5 @@ void AreaBattery::render(RendererGL *renderer)
 
 		++ it;
 	}
-#endif
 }
 // --------------------------------------------------------------------------------
