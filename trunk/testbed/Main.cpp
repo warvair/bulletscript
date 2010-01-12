@@ -10,8 +10,10 @@
 #include "Player.h"
 #include "Boss.h"
 
-extern BulletBattery* g_bullets;
+extern BulletBattery* g_bossBullets, *g_playerBullets;
 extern AreaBattery* g_areas;
+
+BossManager* g_bosses = 0;
 
 using namespace bs;
 
@@ -26,7 +28,9 @@ int main (int argc, char **argv)
 	// Create machine
 	Machine machine;
 
-	g_bullets = new BulletBattery(&machine);
+	BulletBattery::initialiseTables();
+	g_bossBullets = new BulletBattery(&machine);
+	g_playerBullets = new BulletBattery(&machine);
 	g_areas = new AreaBattery(&machine);
 
 	// Register bullet functions
@@ -99,7 +103,8 @@ int main (int argc, char **argv)
 			}
 
 			delete[] fileBuf;
-			delete g_bullets;
+			delete g_bossBullets;
+			delete g_playerBullets;
 			delete g_areas;
 			return 0;
 		}
@@ -109,8 +114,8 @@ int main (int argc, char **argv)
 
 	std::cout << "Initialising..." << std::endl;
 
-	// Create player and bosses
-	BossManager* bosses = new BossManager(&machine);
+	// Create player and g_bosses
+	g_bosses = new BossManager(&machine);
 	Player* player = new Player(&machine);
 
 #ifndef MINIMAL_APP
@@ -122,7 +127,7 @@ int main (int argc, char **argv)
 
 	// Player/Bosses
 	player->setImage("player.tga");
-	bosses->loadImages();
+	g_bosses->loadImages();
 	player->setGuns("PlayerController");
 	
 #endif
@@ -150,53 +155,7 @@ int main (int argc, char **argv)
 			break;
 
 		// Move player
-		if (keyDown(SDLK_LEFT))
-		{
-			float x = player->getX();
-			float y = player->getY();
-
-			x -= 192 * frameTime;
-			if (x < 64)
-				x = 64;
-
-			player->setPosition(x, y);
-		}
-		if (keyDown(SDLK_RIGHT))
-		{
-			float x = player->getX();
-			float y = player->getY();
-
-			x += 192 * frameTime;
-			if (x > (SCREEN_WIDTH - 64))
-				x = SCREEN_WIDTH - 64;
-
-			player->setPosition(x, y);
-		}
-		if (keyDown(SDLK_DOWN))
-		{
-			float x = player->getX();
-			float y = player->getY();
-
-			y -= 192 * frameTime;
-			if (y < 0)
-				y = 0;
-
-			player->setPosition(x, y);
-		}
-		if (keyDown(SDLK_UP))
-		{
-			float x = player->getX();
-			float y = player->getY();
-
-			y += 192 * frameTime;
-			if (y > (SCREEN_HEIGHT - 64))
-				y = SCREEN_HEIGHT - 64;
-
-			player->setPosition(x, y);
-		}
-		if (keyPressed(SDLK_z))
-		{
-		}
+		player->doInput(frameTime);
 
 #endif
 
@@ -212,14 +171,15 @@ int main (int argc, char **argv)
 		}
 
 		// Do all changes to system here, before we update the machine
-		bosses->update(frameTime);
+		g_bosses->update(frameTime);
 		machine.setGlobalVariableValue("Level_Time", totalTime / 1000.0f);
 
 		// Update bulletscript
 		unsigned int bsTime1 = getTicks();
 		machine.preUpdate(frameTime);
 
-		numBullets = g_bullets->update(frameTime);
+		numBullets = g_bossBullets->update(frameTime);
+		numBullets += g_playerBullets->update(frameTime);
 		g_areas->update(frameTime);
 
 		machine.postUpdate(frameTime);
@@ -231,18 +191,20 @@ int main (int argc, char **argv)
 #ifndef MINIMAL_APP
 		renderer.startRendering();
 
-		g_bullets->render(&renderer);
+		g_bossBullets->render(&renderer);
+		g_playerBullets->render(&renderer);
 		g_areas->render(&renderer);
-		bosses->render();
+		g_bosses->render();
 		player->render();
 
 		renderer.finishRendering();
 #endif
 	}
 
-	delete g_bullets;
+	delete g_bossBullets;
+	delete g_playerBullets;
 	delete g_areas;
-	delete bosses;
+	delete g_bosses;
 	delete player;
 
 #ifndef MINIMAL_APP

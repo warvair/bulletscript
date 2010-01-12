@@ -25,11 +25,15 @@ public:
 
 	void setGuns(const char* guns);
 
+	void enableGuns(bool enable);
+
 	void setPosition(float x, float y);
 
 	float getX() const;
 
 	float getY() const;
+
+	void doInput(float frameTime);
 
 	void render();
 };

@@ -1,5 +1,8 @@
 #include "Player.h"
 #include "RendererGL.h"
+#include "Platform.h"
+
+extern BulletBattery* g_playerBullets;
 
 Player::Player(bs::Machine* machine) :
 	mTexture(0),
@@ -26,10 +29,17 @@ void Player::setImage(const char* file)
 
 void Player::setGuns(const char* guns)
 {
-	mGunController = mMachine->createController(guns);
+	mGunController = mMachine->createController(guns, g_playerBullets);
 	mGunController->setX(mX);
 	mGunController->setY(mY);
 	mGunController->setAngle(0.0f);
+	
+	enableGuns(false);
+}
+
+void Player::enableGuns(bool enable)
+{
+	mGunController->enable(enable);
 }
 
 void Player::setPosition(float x, float y)
@@ -52,6 +62,62 @@ float Player::getX() const
 float Player::getY() const
 {
 	return mY;
+}
+
+void Player::doInput(float frameTime)
+{
+	if (keyDown(SDLK_LEFT))
+	{
+		float x = getX();
+		float y = getY();
+
+		x -= 192 * frameTime;
+		if (x < 64)
+			x = 64;
+
+		setPosition(x, y);
+	}
+	if (keyDown(SDLK_RIGHT))
+	{
+		float x = getX();
+		float y = getY();
+
+		x += 192 * frameTime;
+		if (x > (SCREEN_WIDTH - 64))
+			x = SCREEN_WIDTH - 64;
+
+		setPosition(x, y);
+	}
+	if (keyDown(SDLK_DOWN))
+	{
+		float x = getX();
+		float y = getY();
+
+		y -= 192 * frameTime;
+		if (y < 64)
+			y = 64;
+
+		setPosition(x, y);
+	}
+	if (keyDown(SDLK_UP))
+	{
+		float x = getX();
+		float y = getY();
+
+		y += 192 * frameTime;
+		if (y > (SCREEN_HEIGHT - 64))
+			y = SCREEN_HEIGHT - 64;
+
+		setPosition(x, y);
+	}
+	if (keyPressed(SDLK_z))
+	{
+		enableGuns(true);
+	}
+	else if (keyReleased(SDLK_z))
+	{
+		enableGuns(false);
+	}
 }
 
 void Player::render()

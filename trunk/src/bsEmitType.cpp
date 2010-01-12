@@ -463,7 +463,7 @@ int EmitType::_processCode(const uint32* code, ScriptState& state, bstype x, bst
 		numAffectors = code[state.curInstruction + 5];
 		anchored = code[state.curInstruction + 6 + numAffectors];
 
-		if (controlFunc == 0 && numAffectors == 0 && anchored == 0)
+		if (controlFunc == 0 && numAffectors == 0 && anchored == 0 && !userObj)
 		{
 			type->_et_ = 0;
 		}

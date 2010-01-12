@@ -1,23 +1,39 @@
 #include "Boss.h"
 #include "RendererGL.h"
 
+extern BulletBattery* g_bossBullets, *g_playerBullets;
+
 Boss::Boss(bs::Machine* machine) :
 	mTexture(0),
 	mWidth(0),
 	mHeight(0),
+	mBoundsX0(0),
+	mBoundsY0(0),
+	mBoundsX1(0),
+	mBoundsY1(0),
 	mX(0),
 	mY(0),
 	mAngle(0),
 	mHealth(100),
 	mGunController(0),
-	mMachine(machine)
+	mMachine(machine),
+	mVisible(true)
 {
 }
 
 Boss::~Boss()
 {
-	if (mGunController)
-		mMachine->destroyController(mGunController);
+	stopGuns();
+}
+
+void Boss::reset()
+{
+	mHealth = 100;
+}
+
+void Boss::setVisible(bool vis)
+{
+	mVisible = vis;
 }
 
 void Boss::setImage(const char* file)
@@ -26,9 +42,17 @@ void Boss::setImage(const char* file)
 	mTexture = img.loadToVRAM (mWidth, mHeight);
 }
 
+void Boss::setBounds(int x0, int y0, int x1, int y1)
+{
+	mBoundsX0 = x0;
+	mBoundsY0 = y0;
+	mBoundsX1 = x1;
+	mBoundsY1 = y1;
+}
+
 void Boss::setGuns(const char* guns)
 {
-	mGunController = mMachine->createController(guns);
+	mGunController = mMachine->createController(guns, g_bossBullets);
 	mGunController->setX(mX);
 	mGunController->setY(mY);
 	mGunController->setAngle(mAngle);
@@ -77,6 +101,11 @@ bool Boss::damage(int damage)
 	return (mHealth > 0);
 }
 
+void Boss::setHealth(int health)
+{
+	mHealth = health;
+}
+
 int Boss::getHealth() const
 {
 	return mHealth;
@@ -87,8 +116,32 @@ void Boss::startGuns()
 	setGuns("Boss1");
 }
 
+void Boss::stopGuns()
+{
+	if (mGunController)
+	{
+		mMachine->destroyController(mGunController);
+		mGunController = 0;
+	}
+}
+
+bool Boss::checkCollisions(BulletBattery* bs)
+{
+	int hits = bs->checkCollisions(mX - mBoundsX0, mY - mBoundsY0, mX + mBoundsX1, mY + mBoundsY1);
+	if (!damage(hits))
+	{
+		// Kill, alert BossManager
+		return true;
+	}
+
+	return false;
+}
+
 void Boss::render()
 {
+	if (!mVisible)
+		return;
+
 	int w2 = mWidth / 2;
 	int h2 = mHeight / 2;
 
@@ -121,14 +174,18 @@ void Boss::render()
 
 BossManager::BossManager(bs::Machine* machine) :
 	mCurBoss(0),
-	mCurState(State_MoveOnScreen)
+	mCurState(State_Setup),
+	mIdle(-1.0f)
 {
 	for (int i = 0; i < NUM_BOSSES; ++i)
 	{
 		mBosses[i] = new Boss(machine);
-		mBosses[i]->setPosition(SCREEN_WIDTH / 2, SCREEN_HEIGHT + 100);
-		mBosses[i]->setAngle(0);
+		mBosses[i]->setVisible(false);
 	}
+
+	// Hardcoded specific bounding boxes
+	mBosses[0]->setBounds(112, 20, 112, 40);
+	mBosses[1]->setBounds(148, 26, 148, 26);
 }
 
 BossManager::~BossManager()
@@ -142,12 +199,21 @@ BossManager::~BossManager()
 void BossManager::loadImages()
 {
 	mBosses[0]->setImage("boss1.tga");
+	mBosses[1]->setImage("boss2.tga");
 }
 
 void BossManager::update(float frameTime)
 {
 	switch(mCurState)
 	{
+	case State_Setup:
+		mBosses[mCurBoss]->reset();
+		mBosses[mCurBoss]->setVisible(true);
+		mBosses[mCurBoss]->setPosition(SCREEN_WIDTH / 2, SCREEN_HEIGHT + 100);
+		mBosses[mCurBoss]->setAngle(0);
+		mCurState = State_MoveOnScreen;
+		break;
+
 	case State_MoveOnScreen:
 		{
 			int yTarget = SCREEN_HEIGHT - mBosses[mCurBoss]->getHeight() / 2;
@@ -156,7 +222,7 @@ void BossManager::update(float frameTime)
 			float y = mBosses[mCurBoss]->getY();
 			if (y > yTarget)
 			{
-				mBosses[mCurBoss]->setPosition(x, y - 64 * frameTime);
+				mBosses[mCurBoss]->setPosition(x, y - 96 * frameTime);
 			}
 			else
 			{
@@ -171,14 +237,70 @@ void BossManager::update(float frameTime)
 		break;
 
 	case State_Update:
+		checkCollisions(g_playerBullets);
 		break;
 
 	case State_Intermission:
+		mIdle -= frameTime;
+		if (mIdle < 0.0f)
+			mCurState = State_Setup;
 		break;
+	}
+}
+
+void BossManager::checkCollisions(BulletBattery* bs)
+{
+	bool dead = mBosses[mCurBoss]->checkCollisions(bs);
+	if (dead)
+	{
+		mBosses[mCurBoss]->setVisible(false);
+		mBosses[mCurBoss]->stopGuns();
+
+		mCurBoss++;
+		if (mCurBoss == NUM_BOSSES)
+			mCurBoss = 0;
+
+		mBosses[mCurBoss]->setHealth(0);
+		mIdle = 3.0f;
+		mCurState = State_Intermission;
 	}
 }
 
 void BossManager::render()
 {
+	float cx = SCREEN_WIDTH / 2 - 128;
+	float cy = SCREEN_HEIGHT - 12;
 	mBosses[mCurBoss]->render();
+
+	float scale;
+	if (mCurState == State_Intermission)
+	{
+		scale = (3.0f - mIdle) / 3.0f;
+	}
+	else
+	{
+		int health = mBosses[mCurBoss]->getHealth();
+		scale = health / 100.0f;
+	}
+
+	// Render health bar
+	glBindTexture(GL_TEXTURE_2D, 0);
+	glColor4f(1, 1, 1, 1);
+	glBegin(GL_QUADS);
+	{
+			glVertex2f(cx, cy - 8);
+			glVertex2f(cx + 256 * scale, cy - 8);
+			glVertex2f(cx + 256 * scale, cy + 8);
+			glVertex2f(cx, cy + 8);
+	}
+	glEnd();
+
+	glBegin(GL_LINES);
+	{
+			glVertex2f(cx, cy - 8 - 2);
+			glVertex2f(cx + 256, cy - 8 - 2);
+			glVertex2f(cx, cy + 8 + 2);
+			glVertex2f(cx + 256, cy + 8 + 2);
+	}
+	glEnd();
 }

@@ -1,7 +1,7 @@
 controller Boss1
 {
 	// emitters - all these values are offsets from controller values
-	left = emitter Simple(0, 0, 0);
+	left = emitter Boss1Gun1(0, 0, 0);
 
 	// states
 	Stage1 = state
@@ -10,8 +10,7 @@ controller Boss1
 	}
 }
 
-
-emitter Simple
+emitter Boss1Gun1
 {
 	Emit = state
 	{
