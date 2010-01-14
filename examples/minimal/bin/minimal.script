@@ -1,0 +1,14 @@
+emitter Minimal
+{
+	killMe = function(time)
+	{
+		wait(time);
+		die;
+	}
+
+	Emit = state
+	{
+		emit bullet(100) : killMe(5);
+		wait(1);
+	}
+}
