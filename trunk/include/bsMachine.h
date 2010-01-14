@@ -231,6 +231,14 @@ namespace BS_NMSP
 		 */
 		int registerAffector(const String& type, const String& name, AffectorFunction func);
 
+		/**	\brief Registers native function.
+		 *
+		 *	\param name name of the function in script.
+		 *	\param func NativeFunction function pointer.
+		 *	\return BS_OK currently, or BS_NativeFunctionExists if the name is already in use.
+		 */
+		int registerNativeFunction(const String& name, NativeFunction func);
+
 		/**	\brief Declares a member variable for a Controller, which can then be used in script.
 		 *
 		 *	\param ctrl name of the Controller.

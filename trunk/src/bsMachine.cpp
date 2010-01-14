@@ -112,6 +112,11 @@ int Machine::registerAffector(const String& type, const String& name, AffectorFu
 	return mTypeManager->registerAffector(type, name, func);
 }
 // --------------------------------------------------------------------------------
+int Machine::registerNativeFunction(const String& name, NativeFunction func)
+{
+	return mScriptMachine->registerNativeFunction(name, func);
+}
+// --------------------------------------------------------------------------------
 #ifndef BS_Z_DIMENSION
 Emitter* Machine::createEmitter(const String& definition, bstype x, bstype y, bstype angle, void* userObject)
 {
