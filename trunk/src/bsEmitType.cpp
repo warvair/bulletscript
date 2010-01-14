@@ -14,7 +14,8 @@ EmitType::EmitType(const String& name, int type, ScriptMachine* machine) :
 	mType(type),
 	mScriptMachine(machine),
 	mPropertyIndices(0),
-	mDieFunction(0)
+	mDieFunction(0),
+	numProperties_(0)
 {
 	// These need to be registered here with empty functions, so that the user can
 	// set them without disturbing the order of properties.
