@@ -57,8 +57,8 @@ The next step is to create a system to manage the objects.  There is a specific,
 				if (mBullets[i]._active)
 				{
 					// Assume angle is in radians
-					mBullets[i].x += sin(mBullets[i].angle) * mBullets[i].speed);
-					mBullets[i].y += cos(mBullets[i].angle) * mBullets[i].speed);
+					mBullets[i].x += sin(mBullets[i].angle) * mBullets[i].speed;
+					mBullets[i].y += cos(mBullets[i].angle) * mBullets[i].speed;
 				}
 			}
 		}
@@ -68,18 +68,18 @@ This does a simple update on the active bullets.  In practice, you will want to 
 <p>
 The next stage is to get objects emitted.  To do this, we create a function with the following signature:
 <pre>
-	UserTypeBase* (*<i>emit_function</i>) (bstype x, bstype y, bstype angle, const bstype* args, void* user);
+	bs::UserTypeBase* (*<i>emit_function</i>) (bstype x, bstype y, bstype angle, const bstype* args, void* user);
 </pre>
 <span class="code">x</span>, <span class="code">y</span> and <span class="code">angle</span> are the corresponding values of the emitter that called the emit function.  <span class="code">args</span> is the list of arguments passed to it, and <span class="code">user</span> is an object that the user can pass in to an emitter when the emitter is created.  This can be used, for instance, to specify which system should manage any emitted objects, if you have more than one.  The function should return a pointer to the newly created object, or NULL if it is not be managed by bulletscript.
 <pre>
-	UserTypeBase* emitBullet(float x, float y, float angle, const float* args, void* user)
+	bs::UserTypeBase* emitBullet(float x, float y, float angle, const float* args, void* user)
 	{
 		// Assume that there is a global bullet system.  We cannot
 		// directly use member functions as function pointers.
-		gBullets->addBullet(x, y, angle, args);
+		return gBullets->addBullet(x, y, angle, args);
 	}
 
-	UserTypeBase* BulletManager::addBullet(float x, float y, float angle, const float* args)
+	bs::UserTypeBase* BulletManager::addBullet(float x, float y, float angle, const float* args)
 	{
 		// Find first free slot
 		for (int i = 0; i < NUM_BULLETS; ++i)
@@ -108,11 +108,11 @@ The next stage is to get objects emitted.  To do this, we create a function with
 </pre>
 The next stage is to create a function to handle object destruction:
 <pre>
-	void (*<i>die_function</i>) (UserTypeBase* userType, void* user);
+	void (*<i>die_function</i>) (bs::UserTypeBase* userType, void* user);
 </pre>
 <span class="code">userType</span> is the object to destroy, and <span class="code">user</span> is a user-supplied object (if there is one).
 <pre>
-	void killBullet(UserTypeBase *userType, void* user)
+	void killBullet(bs::UserTypeBase *userType, void* user)
 	{
 		Bullet* b = static_cast&lt;Bullet*&gt;(userType);
 		gBullets->killBullet(b);
@@ -125,18 +125,18 @@ The next stage is to create a function to handle object destruction:
 </pre>
 The next step is to create functions for handling properties.  There are three properties for which you must provide functions: <span class="code">x</span>, <span class="code">y</span> and <span class="code">angle</span>.  These are built into bulletscript, but bulletscript does not provide the functions because it cannot make any assumptions about how the user is structuring things.  Property functions look like this:
 <pre>
-	void (*<i>set_function</i>) (UserTypeBase* userType, bstype value);
-	bstype (*<i>get_function</i>) (UserTypeBase* userType);
+	void (*<i>set_function</i>) (bs::UserTypeBase* userType, bstype value);
+	bstype (*<i>get_function</i>) (bs::UserTypeBase* userType);
 </pre>
 Thus, property functions for <span class="code">x</span> would look like:
 <pre>
-	void setX(UserTypeBase* userType, float value)
+	void setX(bs::UserTypeBase* userType, float value)
 	{
 		Bullet* b = static_cast&lt;Bullet*&gt;(userType);
 		b->x = value;
 	}
 
-	float getX(UserTypeBase* userType)
+	float getX(bs::UserTypeBase* userType)
 	{
 		Bullet* b = static_cast&lt;Bullet*&gt;(userType);
 		return b->x;
@@ -144,11 +144,11 @@ Thus, property functions for <span class="code">x</span> would look like:
 </pre>
 Affector functions have the following signature:
 <pre>
-	void (*<i>affector_function</i>) (UserTypeBase* userType, bstype frameTime, const bstype* args);	
+	void (*<i>affector_function</i>) (bs::UserTypeBase* userType, bstype frameTime, const bstype* args);	
 </pre>
 An 'accelerate' affector could be written as:
 <pre>
-	void accelerate(UserTypeBase* userType, float frameTime, const float* args)
+	void accelerate(bs::UserTypeBase* userType, float frameTime, const float* args)
 	{
 		Bullet* b = static_cast&lt;Bullet*&gt;(userType);
 
@@ -249,13 +249,76 @@ A simple example:
 	}
 </pre>
 This function returns the number of errors in the script.
-creating machine, and binding types<br>
-compiling scripts<br>
-using emitters/controllers<br>
-updating system<br>
-shutdown<br>
-error codes, logging<br>
+<p>
+Once scripts have been compiled, the next step is to create emitters and controllers.  This is done with:
+<pre>
+	bs:Emitter* emit = machine.createEmitter(<i>emitter_name</i>, x, y, angle, <i>userObject</i>);
+	bs::Controller* ctrl = machine.createController(<i>controller_name</i>, <i>userObject</i>);
+</pre>
+<span class="code">userObject</span> can be ignored (it defaults to NULL), if wanted.  These objects can then be manipulated (eg changing position/angle, enabling/disabling, raising events) outside of the main update loop.  They are destroyed with:
+<pre>
+	machine.destroyEmitter(emit);
+	machine.destroyController(ctrl);
+</pre>
+The main update loop is as follows:
+<pre>
+	machine.preUpdate(<i>frameTime</i>);
+	
+	// Update user system
+	gBullets.update(<i>frameTime</i>);
 
+	machine.postUpdate(<i>frameTime</i>);
+</pre>
+Any changes to bulletscript objects, for example emitters and controllers, must be done outside of this loop.  This is worth bearing in mind if you have a system which emits objects which use emitters (eg enemy ships).  If this is the case, you will have to emit the object to a temporary structure, and add them outside of the loop.
+<p>
+Let's revisit our management class:
+<pre>
+	void BulletManager::update(float frameTime)
+	{
+		for (int i = 0; i < NUM_BULLETS; ++i)
+		{
+			if (mBullets[i]._active)
+			{
+				// Assume angle is in radians
+				mBullets[i].x += sin(mBullets[i].angle) * mBullets[i].speed;
+				mBullets[i].y += cos(mBullets[i].angle) * mBullets[i].speed;
+
+				// Now, we tell bulletscript to update our objects.
+				// Assume that the bulletscript machine is globally accessible.
+				machine.updateType(&mBullets[i], mBullets[i].x, mBullets[i].y, mBullets[i].angle, frameTime);
+			}
+		}
+	}
+</pre>
+<h4>Shutdown</h4>
+bulletscript shuts down automatically, and the user need do nothing.
+
+<h4>Errors and logging</h4>
+Many functions return an integer, which corresponds to a bulletscript error code.  This code can be queried with <span class="code">getErrorMessage()</span>.  For instance:
+<pre>
+	int errVal = machine.registerGlobalVariable("Player_X", true, 0);
+	if (errVal != BS_OK)
+	{
+		std::string errMsg = getErrorMessage(errVal);
+		std::cerr << errVal << std::endl;
+	}
+</pre>
+In the case of script errors, these are written to the bulletscript log file, which can be queried like so:
+<pre>
+	if(machine.compileScript(buffer, bufferSize) != BS_OK)
+	{
+		const bs::Log& _log = machine.getLog();
+
+		std::string msg = _log.getFirstEntry();
+		while (msg != bs::Log::END)
+		{
+			std::cerr << msg << std::endl;
+			msg = _log.getNextEntry();
+		}
+	}
+</pre>
+
+The code in this document can be found in the minimal example in the <span class="code">/examples/minimal</span> directory.
 </body>
 </html>
 
