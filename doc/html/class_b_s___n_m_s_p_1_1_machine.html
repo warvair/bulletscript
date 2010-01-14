@@ -93,6 +93,9 @@
 <tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_b_s___n_m_s_p_1_1_machine.html#01b62978f7635f8a70a7021b8ac73342">registerAffector</a> (const String &amp;type, const String &amp;name, AffectorFunction func)</td></tr>
 
 <tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Registers a user AffectorFunction with this type.  <a href="#01b62978f7635f8a70a7021b8ac73342"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_b_s___n_m_s_p_1_1_machine.html#b07d349193f7525338074a9440187b3f">registerNativeFunction</a> (const String &amp;name, NativeFunction func)</td></tr>
+
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Registers native function.  <a href="#b07d349193f7525338074a9440187b3f"></a><br></td></tr>
 <tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_b_s___n_m_s_p_1_1_machine.html#e73198d9d359a2d02ab85a1932094d3e">declareControllerMemberVariable</a> (const String &amp;ctrl, const String &amp;var, bstype value)</td></tr>
 
 <tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Declares a member variable for a <a class="el" href="class_b_s___n_m_s_p_1_1_controller.html" title="Class for manipulating Emitter objects at a high level.">Controller</a>, which can then be used in script.  <a href="#e73198d9d359a2d02ab85a1932094d3e"></a><br></td></tr>
@@ -685,6 +688,44 @@ Register a global variable, for use in script.
 
 </div>
 </div><p>
+<a class="anchor" name="b07d349193f7525338074a9440187b3f"></a><!-- doxytag: member="BS_NMSP::Machine::registerNativeFunction" ref="b07d349193f7525338074a9440187b3f" args="(const String &amp;name, NativeFunction func)" -->
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">int BS_NMSP::Machine::registerNativeFunction           </td>
+          <td>(</td>
+          <td class="paramtype">const String &amp;&nbsp;</td>
+          <td class="paramname"> <em>name</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">NativeFunction&nbsp;</td>
+          <td class="paramname"> <em>func</em></td><td>&nbsp;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td><td></td>
+        </tr>
+      </table>
+</div>
+<div class="memdoc">
+
+<p>
+Registers native function. 
+<p>
+<dl compact><dt><b>Parameters:</b></dt><dd>
+  <table border="0" cellspacing="2" cellpadding="0">
+    <tr><td valign="top"></td><td valign="top"><em>name</em>&nbsp;</td><td>name of the function in script. </td></tr>
+    <tr><td valign="top"></td><td valign="top"><em>func</em>&nbsp;</td><td>NativeFunction function pointer. </td></tr>
+  </table>
+</dl>
+<dl class="return" compact><dt><b>Returns:</b></dt><dd>BS_OK currently, or BS_NativeFunctionExists if the name is already in use. </dd></dl>
+
+</div>
+</div><p>
 <a class="anchor" name="37ddd8fd32e83612dcbd03ec5be246fc"></a><!-- doxytag: member="BS_NMSP::Machine::registerProperty" ref="37ddd8fd32e83612dcbd03ec5be246fc" args="(const String &amp;type, const String &amp;name, SetFunction set, GetFunction get)" -->
 <div class="memitem">
 <div class="memproto">
@@ -1042,7 +1083,7 @@ The user should call this on each object that they want bulletscript to update. 
 <hr>The documentation for this class was generated from the following file:<ul>
 <li>C:/Code/bulletscript/include/<a class="el" href="bs_machine_8h_source.html">bsMachine.h</a></ul>
 </div>
-<hr size="1"><address style="text-align: right;"><small>Generated on Sun Jan 10 21:45:51 2010 for bulletscript by&nbsp;
+<hr size="1"><address style="text-align: right;"><small>Generated on Thu Jan 14 12:49:57 2010 for bulletscript by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img src="doxygen.png" alt="doxygen" align="middle" border="0"></a> 1.5.9 </small></address>
 </body>
