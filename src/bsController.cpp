@@ -232,9 +232,10 @@ int Controller::raiseEvent(const String& evt, const bstype* args)
 	{
 		if (mEvents[i].name == evt)
 		{
-			if (_raiseEvent((int) i, args))
+			if (_raiseEvent(i, args))
 			{
-				// Suspend the Controller's script if the event has changed the state?
+				// Todo: suspend the Controller's script if the event has changed the state?
+				// Probably not, because this should only be called outside of an update loop.
 				// ...
 			}
 

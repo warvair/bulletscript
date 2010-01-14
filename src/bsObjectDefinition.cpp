@@ -131,6 +131,8 @@ void ObjectDefinition::appendConstructionCode(const BytecodeBlock& code)
 // --------------------------------------------------------------------------------
 void ObjectDefinition::finaliseConstructor()
 {
+	// Is there a reason why we copy to an array?
+	// Todo: look into this
 	mConstructSize = mConstructor.size();
 	if (mConstructSize > 0)
 	{

@@ -1,7 +1,8 @@
+#ifdef _WIN32
+#	include <windows.h>
+#endif
 #include <iostream>
 #include <cmath>
-#include <windows.h>
-#include <mmsystem.h>
 #include "bsBulletScript.h"
 
 #define DEG_TO_RAD (3.14159 / 180.0)
@@ -82,8 +83,8 @@ public:
 			if (mBullets[i]._active)
 			{
 				// Assume angle is in radians
-				mBullets[i].x += (float) sin(mBullets[i].angle * DEG_TO_RAD) * mBullets[i].speed;
-				mBullets[i].y += (float) cos(mBullets[i].angle * DEG_TO_RAD) * mBullets[i].speed;
+				mBullets[i].x += (float) sin(mBullets[i].angle * DEG_TO_RAD) * mBullets[i].speed * frameTime;
+				mBullets[i].y += (float) cos(mBullets[i].angle * DEG_TO_RAD) * mBullets[i].speed * frameTime;
 
 				// Now, we tell bulletscript to update our objects.
 				gMachine->updateType(&mBullets[i], mBullets[i].x, mBullets[i].y, mBullets[i].angle, frameTime);
@@ -192,8 +193,8 @@ int main()
 
 	gMachine->registerAffector("bullet", "accelerate", accelerate);
 
-	// Compile script
-	FILE* fp = fopen("minimal.script", "rt");
+	// Compile script - open in binary mode because sometimes ftell messes up in text mode
+	FILE* fp = fopen("minimal.script", "rb");
 	fseek(fp, 0, SEEK_END);
 	size_t fileLength = ftell(fp);
 	unsigned char* buffer = new unsigned char[fileLength];
@@ -205,7 +206,15 @@ int main()
 	if (gMachine->compileScript(buffer, fileLength) != 0)
 	{
 		// get errors
-		// ...
+		const bs::Log& _log = gMachine->getLog();
+
+		std::string msg = _log.getFirstEntry();
+		while (msg != bs::Log::END)
+		{
+			std::cerr << msg << std::endl;
+			msg = _log.getNextEntry();
+		}
+
 		delete[] buffer;
 		delete gBullets;
 		delete gMachine;
@@ -213,7 +222,7 @@ int main()
 	}
 	delete[] buffer;
 
-	// Create some objects
+	// Create an emitter
 	bs::Emitter* emit = gMachine->createEmitter("Minimal", 0, 0, 0);
 
 	// Start processing

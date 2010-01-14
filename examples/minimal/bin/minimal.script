@@ -1,6 +1,6 @@
 emitter Minimal
 {
-	killMe = function(time)
+	KillMe = function(time)
 	{
 		wait(time);
 		die;
@@ -8,7 +8,7 @@ emitter Minimal
 
 	Emit = state
 	{
-		emit bullet(100) : killMe(5);
+		emit bullet(100) : KillMe(5);
 		wait(1);
 	}
 }

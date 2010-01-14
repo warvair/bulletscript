@@ -57,8 +57,8 @@ The next step is to create a system to manage the objects.  There is a specific,
 				if (mBullets[i]._active)
 				{
 					// Assume angle is in radians
-					mBullets[i].x += sin(mBullets[i].angle) * mBullets[i].speed;
-					mBullets[i].y += cos(mBullets[i].angle) * mBullets[i].speed;
+					mBullets[i].x += sin(mBullets[i].angle) * mBullets[i].speed * frameTime;
+					mBullets[i].y += cos(mBullets[i].angle) * mBullets[i].speed * frameTime;
 				}
 			}
 		}
@@ -271,7 +271,7 @@ The main update loop is as follows:
 </pre>
 Any changes to bulletscript objects, for example emitters and controllers, must be done outside of this loop.  This is worth bearing in mind if you have a system which emits objects which use emitters (eg enemy ships).  If this is the case, you will have to emit the object to a temporary structure, and add them outside of the loop.
 <p>
-Let's revisit our management class:
+Let's revisit our management class, and add a line to make bulletscript update our objects:
 <pre>
 	void BulletManager::update(float frameTime)
 	{
@@ -280,8 +280,8 @@ Let's revisit our management class:
 			if (mBullets[i]._active)
 			{
 				// Assume angle is in radians
-				mBullets[i].x += sin(mBullets[i].angle) * mBullets[i].speed;
-				mBullets[i].y += cos(mBullets[i].angle) * mBullets[i].speed;
+				mBullets[i].x += sin(mBullets[i].angle) * mBullets[i].speed * frameTime;
+				mBullets[i].y += cos(mBullets[i].angle) * mBullets[i].speed * frameTime;
 
 				// Now, we tell bulletscript to update our objects.
 				// Assume that the bulletscript machine is globally accessible.
@@ -290,6 +290,7 @@ Let's revisit our management class:
 		}
 	}
 </pre>
+We don't have to have bulletscript update the objects.  If we want, we can just use bulletscript for emitting objects, and do all the update ourselves.  This may be necessary if you need a very large number of objects.
 <h4>Shutdown</h4>
 bulletscript shuts down automatically, and the user need do nothing.
 
