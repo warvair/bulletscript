@@ -1,3 +1,9 @@
+/*
+	BulletScript: a script for firing bullets.
+
+	see /doc/license.txt for license details.
+*/
+
 #ifndef __BS_AFFECTOR_H__
 #define __BS_AFFECTOR_H__
 
