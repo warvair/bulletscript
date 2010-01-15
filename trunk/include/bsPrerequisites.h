@@ -3,7 +3,10 @@
 
 #include "bsConfig.h"
 
-// Platform - based off OGRE3D (www.ogre3d.org)
+#define BS_PROGRAM	"bulletscript"
+#define BS_VERSION	1.0
+
+// Platform settings - based off OGRE3D (www.ogre3d.org)
 #define BS_PLATFORM_WIN32 1
 #define BS_PLATFORM_LINUX 2
 #define BS_PLATFORM_APPLE 3
@@ -22,19 +25,16 @@
 #if defined( _MSC_VER )
 #   define BS_COMPILER BS_COMPILER_MSVC
 #   define BS_COMP_VER _MSC_VER
-
 #elif defined( __GNUC__ )
 #   define BS_COMPILER BS_COMPILER_GNUC
 #   define BS_COMP_VER (((__GNUC__)*100) + \
         (__GNUC_MINOR__*10) + \
         __GNUC_PATCHLEVEL__)
-
 #elif defined( __BORLANDC__ )
 #   define BS_COMPILER BS_COMPILER_BORL
 #   define BS_COMP_VER __BCPLUSPLUS__
-
 #else
-#   pragma error "No known compiler. Abort! Abort!"
+#   pragma error "Unknown compiler."
 
 #endif
 
@@ -84,16 +84,15 @@ namespace BS_NMSP
 
 	typedef std::string String;
 
-	typedef unsigned int uint32;
-	typedef unsigned short uint16;
 	typedef unsigned char uint8;
+	typedef unsigned short uint16;
+	typedef unsigned int uint32;
 
 	#if BS_COMPILER == BS_COMPILER_MSVC
 		typedef unsigned __int64 uint64;
 	#else
 		typedef unsigned long long uint64;
 	#endif
-
 }
 
 #endif

@@ -1,0 +1,5 @@
+bulletscript changelog
+----------------------
+
+15/01/10
+o version 1.0 released
