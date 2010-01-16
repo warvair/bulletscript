@@ -55,7 +55,7 @@ class RendererGL
 	float mBulletCol[MAX_BULLETS * 16];
 	unsigned short mBulletIndices[MAX_BULLETS * 4];
 	int mNumBullets;
-	GLuint mBulletTexture;
+	GLuint mBulletTexture, mArrowTexture;
 
 	void renderBulletBatch();
 

@@ -18,7 +18,7 @@
 		<Configuration
 			Name="Debug|Win32"
 			OutputDirectory="$(SolutionDir)/../Bin"
-			IntermediateDirectory="$(SolutionDir)/../Obj/$(ConfigurationName)"
+			IntermediateDirectory="$(SolutionDir)/Obj/$(ConfigurationName)"
 			ConfigurationType="2"
 			CharacterSet="2"
 			>
@@ -97,7 +97,7 @@
 		<Configuration
 			Name="Release|Win32"
 			OutputDirectory="$(SolutionDir)/../Bin"
-			IntermediateDirectory="$(SolutionDir)/../Obj/$(ConfigurationName)"
+			IntermediateDirectory="$(SolutionDir)/Obj/$(ConfigurationName)"
 			ConfigurationType="2"
 			CharacterSet="2"
 			WholeProgramOptimization="1"
@@ -140,7 +140,6 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="winmm.lib"
 				OutputFile="$(OutDir)\BulletScript.dll"
 				LinkIncremental="1"
 				GenerateDebugInformation="true"
