@@ -8,8 +8,8 @@ class RendererGL;
 struct Bullet : public bs::UserTypeBase
 {
 	float x, y;
-	float angle;
 	float vx, vy;
+	float angle;
 	float speed;
 	float alpha;
 	float red, green, blue;

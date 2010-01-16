@@ -27,22 +27,22 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "minimal", "..\examples\mini
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
-		Debug|Win32 = Debug|Win32
-		Release|Win32 = Release|Win32
+		Debug DLL|Win32 = Debug DLL|Win32
+		Release DLL|Win32 = Release DLL|Win32
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{ACD37C06-E4E3-41B1-B0FA-C9F09217036A}.Debug|Win32.ActiveCfg = Debug|Win32
-		{ACD37C06-E4E3-41B1-B0FA-C9F09217036A}.Debug|Win32.Build.0 = Debug|Win32
-		{ACD37C06-E4E3-41B1-B0FA-C9F09217036A}.Release|Win32.ActiveCfg = Release|Win32
-		{ACD37C06-E4E3-41B1-B0FA-C9F09217036A}.Release|Win32.Build.0 = Release|Win32
-		{2FBF55CB-7C5B-4EE2-9637-AC858F7F733A}.Debug|Win32.ActiveCfg = Debug|Win32
-		{2FBF55CB-7C5B-4EE2-9637-AC858F7F733A}.Debug|Win32.Build.0 = Debug|Win32
-		{2FBF55CB-7C5B-4EE2-9637-AC858F7F733A}.Release|Win32.ActiveCfg = Release|Win32
-		{2FBF55CB-7C5B-4EE2-9637-AC858F7F733A}.Release|Win32.Build.0 = Release|Win32
-		{585112FC-333C-466A-8E30-47C643B071EE}.Debug|Win32.ActiveCfg = Debug|Win32
-		{585112FC-333C-466A-8E30-47C643B071EE}.Debug|Win32.Build.0 = Debug|Win32
-		{585112FC-333C-466A-8E30-47C643B071EE}.Release|Win32.ActiveCfg = Release|Win32
-		{585112FC-333C-466A-8E30-47C643B071EE}.Release|Win32.Build.0 = Release|Win32
+		{ACD37C06-E4E3-41B1-B0FA-C9F09217036A}.Debug DLL|Win32.ActiveCfg = Debug|Win32
+		{ACD37C06-E4E3-41B1-B0FA-C9F09217036A}.Debug DLL|Win32.Build.0 = Debug|Win32
+		{ACD37C06-E4E3-41B1-B0FA-C9F09217036A}.Release DLL|Win32.ActiveCfg = Release|Win32
+		{ACD37C06-E4E3-41B1-B0FA-C9F09217036A}.Release DLL|Win32.Build.0 = Release|Win32
+		{2FBF55CB-7C5B-4EE2-9637-AC858F7F733A}.Debug DLL|Win32.ActiveCfg = Debug|Win32
+		{2FBF55CB-7C5B-4EE2-9637-AC858F7F733A}.Debug DLL|Win32.Build.0 = Debug|Win32
+		{2FBF55CB-7C5B-4EE2-9637-AC858F7F733A}.Release DLL|Win32.ActiveCfg = Release|Win32
+		{2FBF55CB-7C5B-4EE2-9637-AC858F7F733A}.Release DLL|Win32.Build.0 = Release|Win32
+		{585112FC-333C-466A-8E30-47C643B071EE}.Debug DLL|Win32.ActiveCfg = Debug|Win32
+		{585112FC-333C-466A-8E30-47C643B071EE}.Debug DLL|Win32.Build.0 = Debug|Win32
+		{585112FC-333C-466A-8E30-47C643B071EE}.Release DLL|Win32.ActiveCfg = Release|Win32
+		{585112FC-333C-466A-8E30-47C643B071EE}.Release DLL|Win32.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
