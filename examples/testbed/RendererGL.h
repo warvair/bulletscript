@@ -55,7 +55,7 @@ class RendererGL
 	float mBulletCol[MAX_BULLETS * 16];
 	unsigned short mBulletIndices[MAX_BULLETS * 4];
 	int mNumBullets;
-	GLuint mBulletTexture, mArrowTexture;
+	GLuint mBulletTexture;
 
 	void renderBulletBatch();
 
@@ -87,6 +87,9 @@ class RendererGL
 	float mArcCol[MAX_ARC_POINTS * 4];
 	unsigned short mArcIndices[MAX_ARC_POINTS];
 	GLuint mArcTexture;
+
+	// Shaders
+	GLuint mFragmentShader, mFragmentProgram, mVertexShader, mVertexProgram;
 
 public:
 

@@ -111,41 +111,6 @@ static DebugGlyph glyphs[NUM_GLYPHS] = {
 	{230,	52,		7,		16}, // ~
 };
 
-// Shaders for rendering point sprites
-// This code is based off code from Hornet600S, posted on the SHMUP-DEV forums
-// at http://www.shmup-dev.com/forum
-
-static const char* gVertexShader = 
-	"varying mat4 v_tex_rot;"
-	"void main(void)"
-	"{"
-	"	vec4 l_position=gl_Vertex;"
-	"	vec2 l_direction=normalize(vec2(l_position.z,l_position.w));"
-	"	v_tex_rot=mat4(l_direction.x,l_direction.y,0.0,0.0,"
-	"				   -l_direction.y,l_direction.x,0.0,0.0,"
-	"				   0.0,0.0,1.0,0.0,"
-	"				   0.0,0.0,0.0,1.0);"
-	"	l_position.z=0.0;"
-	"	l_position.w=1.0;"
-	"	gl_FrontColor=gl_Color;"
-	"	gl_Position=gl_ModelViewProjectionMatrix*l_position;"
-	"}";
-
-static const char* gFragmentShader = 
-	"varying mat4 v_tex_rot;"
-	"uniform sampler2D tex;"
-	"void main(void)"
-	"{"
-	"	vec2 l_uv=gl_PointCoord;"
-	"	const vec2 l_offset=vec2(0.5,0.5);"
-	"	l_uv-=l_offset;"
-	"	l_uv=vec2(v_tex_rot*vec4(l_uv,0.0,1.0));"
-	"	l_uv+=l_offset;"
-	"	gl_FragColor=vec4(texture2D(tex,l_uv))*gl_Color;"
-	"}";
-
-
-
 // --------------------------------------------------------------------------------
 GLuint TGALoader::loadToVRAM(int& width, int& height)
 {
@@ -180,11 +145,11 @@ GLuint TGALoader::loadToVRAM(int& width, int& height)
 	fclose (fp);
 
 	GLuint texId;
-	glGenTextures (1, &texId);
-	glBindTexture (GL_TEXTURE_2D, texId);
+	glGenTextures(1, &texId);
+	glBindTexture(GL_TEXTURE_2D, texId);
 
-	glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-	glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
 	if (mBPP == 24)
 	{
@@ -226,10 +191,13 @@ RendererGL::RendererGL () :
 	mNumBullets (0),
 	mNumQuads(0),
 	mBulletTexture(0),
-	mArrowTexture(0),
 	mBeamTexture(0),
 	mBeamTipTexture(0),
-	mArcTexture(0)
+	mArcTexture(0),
+	mFragmentShader(0),
+	mFragmentProgram(0),
+	mVertexShader(0),
+	mVertexProgram(0)
 {
 	int i;
 
@@ -334,11 +302,6 @@ bool RendererGL::initialise (int width, int height, bool fullScreen)
 	if (mBulletTexture == 0)
 		return false;
 
-	TGALoader arrowLoader("arrow.tga");
-	mArrowTexture = arrowLoader.loadToVRAM (bwidth, bheight);
-	if (mArrowTexture == 0)
-		return false;
-
 	// Create beam sprite
 	TGALoader beamLoader("beam1.tga");
 	mBeamTexture = beamLoader.loadToVRAM (bwidth, bheight);
@@ -362,10 +325,7 @@ bool RendererGL::initialise (int width, int height, bool fullScreen)
 	if (mArcTexture == 0)
 		return false;
 
-	// Create shaders
-//	GLenum my_vertex_shader;
-//	my_vertex_shader = glCreateShaderObjectARB(GL_VERTEX_SHADER_ARB);
-
+	// Init other stuff
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	SDL_GL_SwapBuffers();
 
