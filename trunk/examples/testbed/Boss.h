@@ -16,16 +16,18 @@ class Boss
 	
 	int mHealth;
 
-	bs::Controller* mGunController;
-
 	bs::Machine* mMachine;
 
 	bool mVisible;
 
 protected:
 
+	bs::Controller* mGunController;
+
 	std::string mImageFile;
-	
+
+	std::string mControllerName;
+
 public:
 
 	explicit Boss(bs::Machine* machine);
@@ -41,6 +43,8 @@ public:
 	void setBounds(int x0, int y0, int x1, int y1);
 
 	void setGuns(const char* guns);
+
+	virtual int getTargetY() const;
 
 	void setPosition(float x, float y);
 
@@ -71,7 +75,7 @@ public:
 
 class BossManager
 {
-	static const int NUM_BOSSES = 2;
+	static const int NUM_BOSSES = 4;
 	
 	Boss* mBosses[NUM_BOSSES];
 	

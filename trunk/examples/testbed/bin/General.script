@@ -1,0 +1,364 @@
+/* ----------------------------------------------------------------------------
+	Abstract pattern - this is mainly to demonstrate how useful calling
+	functions recursively can be in creating nice patterns: see how Func1
+	emits a bullet which uses Func2, and vice-versa.
+---------------------------------------------------------------------------- */
+
+emitter Abstract
+{
+	m_speed = 60;
+
+	Func1 = function(time, speed, angle)
+	{
+		$red = 0;
+		$blue = 0;
+
+		wait(time);
+		$angle += {angle, 2};
+		wait(2);
+		fireA bullet(BALL, -angle, speed) : Func2(2, speed, angle + 50);
+		$alpha = {0, 2};
+		wait(2);
+		die;
+
+	}
+
+	Func2 = function(time, speed, angle)
+	{
+		$red = 0;
+		$blue = 0;
+
+		wait(time);
+		$angle = {$angle - angle, 2};
+		wait(2);
+		fireA bullet(BALL, angle, speed) : Func1(2, speed, angle - 50);
+		$alpha = {0, 2};
+		wait(2);
+		die;
+	}
+
+	Main = state
+	{
+		fireA bullet(BALL, 170, m_speed) : Func1(1.2, m_speed, 120);
+		fireA bullet(BALL, 190, m_speed) : Func2(1.2, m_speed, 120);
+		wait(0.1);
+	}
+}
+
+/* ----------------------------------------------------------------------------
+	This emitter spawns an object, with a 'spawn effect' around it.  Useful
+	for item drops, or enemies teleporting in, etc.
+---------------------------------------------------------------------------- */
+
+emitter Spawner
+{
+	time = 0.5;
+
+	debris = function()
+	{
+		wait(0.3);
+		$alpha = {0, 0.6};
+		wait(0.6);
+		die;
+	}
+
+	grow = function(dir, time)
+	{
+		$start = {180 + 180 * dir, 0.3};
+		$end = {180, 0.3};
+		wait(time);
+
+		a = 0;
+		while(a < 20)
+		{
+			fireA bullet(BALL, a * 18, 80) : debris();
+			a++;
+		}
+
+		$alpha = {0, 0.3};
+		$width = {300, 0.1};
+		$height = {300, 0.1};
+		$iwidth = {$iwidth + 100, 0.1};
+		$iheight = {$iheight + 100, 0.1};
+		wait(0.3);
+		die;
+	}
+
+	// States
+	Emit = state
+	{
+		arc area(64, 64, 90, 90, 32) : grow(-1, time);
+		arc area(64, 64, 270, 270, 32) : grow(1, time);
+
+		wait(time);
+		fireA bullet(BALL, 180, 100);
+
+		wait(2);
+	}
+}
+
+/* ----------------------------------------------------------------------------
+	A basic lightning effect which demonstrates one of the more tricky uses
+	of bulletscript.  This effect requires a specific emit function which
+	emits an object with a relative position to its emitter.  It shows how
+	useful recursion can be.
+---------------------------------------------------------------------------- */
+
+emitter Lightning
+{
+	Lightning = function(length, offset)
+	{
+		$height = 0;
+		$height += {length, 0.5};
+		wait(0.5);
+		quadProj area(length, 20, length, offset) : Lightning(length * 0.9, offset * 0.75);
+		quadProj area(length, 20, length, -offset) : Lightning(length * 0.9, offset * 0.75);
+	}	
+
+	Emit = state
+	{
+		// 'root' lightning beam. 
+		quadProj area(0, 20, 100, 0) : Lightning(100, 30);
+		wait(50);
+	}
+}
+
+/* ----------------------------------------------------------------------------
+	This smartbomb floats to the centre of the screen, explodes, and creates
+	a shockwave which expands out.
+---------------------------------------------------------------------------- */
+
+controller BombController
+{
+	wait_time = 4.8;
+
+	bomb = emitter SmartBomb2(150, 150, 0);
+
+	Setup = state
+	{
+		$bomb.wait_time = wait_time;
+		goto Fire;
+	}
+
+	Fire = state
+	{
+		wait(wait_time / 2);
+		$bomb.This_X = rand(ScreenSize_X);
+		$bomb.This_Y = rand(ScreenSize_Y);
+		wait(wait_time / 2);
+	}
+}
+
+emitter SmartBomb2
+{
+	// members
+	speed = 120;
+	wait_time = 1;
+
+	// functions
+	expand = function()
+	{
+		$width = {ScreenSize_X + 100, 0.4};
+		$height = {ScreenSize_X + 100, 0.4};
+		$iwidth += {50, 0.4};
+		$iheight += {50, 0.4};
+		wait(0.3);
+		$alpha = {0, 0.1};
+		wait(0.1);
+		die;
+	}
+
+	delayExplode = function(time)
+	{
+		wait(time);
+		arc area(30, 30, 0, 360, 20) : expand();
+		die;
+	}
+
+	// states
+	Fire = state
+	{
+		tx = ScreenSize_X / 2;
+		ty = ScreenSize_Y / 2;
+
+		dist = (This_X - tx) * (This_X - tx) + (This_Y - ty) * (This_Y - ty);
+		dist = sqrt(dist);
+
+		time = dist / speed;
+		fireT bullet(BALL, tx, ty, 0, speed) : delayExplode(time);
+		wait(wait_time);
+	}
+
+}
+
+/* ----------------------------------------------------------------------------
+	A basic particle-like effect.
+---------------------------------------------------------------------------- */
+
+emitter Flower
+{
+	// member variables
+	fl_angle = 0;
+	fl_speed = 2;
+	fl_dir = 1;
+
+	// functions
+	death = function(time)
+	{
+		$blue = 0.2;
+		$alpha = {0, time};
+		wait(time);
+		die;
+	}
+
+	petal_o = function(dir)
+	{
+		$blue = 0.2;
+		wait(0.4);
+		$angle += {50 * dir, 1.7};
+
+		wait(1.7);
+		die;
+	}
+
+	petal_i = function(dir)
+	{
+		$blue = 0.6;
+		$green = 0.2;
+		wait(0.2);
+		$angle += {35 * dir, 1.2};
+
+		wait(1.2);
+		die;
+	}
+
+	// states
+	Grow = state
+	{
+		// spawn
+		i = 0;
+		while (i < 6)
+		{
+			angle1 = fl_angle + 40 + i * 60;
+			angle2 = angle1 + 40;
+			fireA bullet(BALL, angle1, 70) : petal_o(1);
+			fireA bullet(BALL, angle2, 70) : petal_o(-1);
+
+			fireA bullet(BALL, angle1 + 5, 70) : petal_i(1);
+			fireA bullet(BALL, angle2 - 5, 70) : petal_i(-1);
+
+			i++;
+		}
+
+		// update speed/rotation
+		fl_speed += 0.1 * fl_dir;
+		if (fl_speed < 1 || fl_speed > 10)
+		{
+			fl_dir *= -1;
+		}
+
+		fl_angle += fl_speed;
+		if (fl_angle >= 360)
+		{
+			fl_angle -= 360;
+		}
+
+		fl_angle++;
+
+		// wait
+		wait(0.05);
+	}
+
+}
+
+/* ----------------------------------------------------------------------------
+	An animated mandelbrot emitter.  There's not much use for this, it's
+	just a demonstration of what bulletscript can do if you really want
+	to push it.
+---------------------------------------------------------------------------- */
+
+emitter Mandelbrot
+{
+	viewReal = -1; // -1.8
+	viewImg = -0.1; // -1.1
+	mag = 0.03;
+	time = 1;
+
+	count_x = ScreenSize_X / 8;
+	count_y = ScreenSize_Y / 8;
+
+	stop = function(time, fade)
+	{
+		c = fade / 255;
+		c += 0.1;
+		if (c > 1)
+		{
+			c = 1;
+		}
+
+		$alpha = c;
+		wait(time);
+		$speed = 0;
+		wait(1);
+		die;
+	}
+
+	Emit = state
+	{
+		y = 0;
+		while (y < count_y)
+		{
+			img = viewImg + y * mag;
+			
+			x = 0;
+			while (x < count_y)
+			{
+				real = viewReal + x * mag;
+				zreal = real;
+				zimg = img;
+
+				n = 0;
+				inside = 0;
+				while (n < 255)
+				{
+					realSq = zreal * zreal;
+					imgSq = zimg * zimg;
+					
+					if (realSq + imgSq > 4)
+					{
+						inside = 1;
+						break;
+					}
+
+					zimg = 2 * zreal * zimg + img;
+					zreal = realSq - imgSq + real;
+
+
+					n++;
+				}
+
+				if (inside)
+				{
+					// calculate target position and speed
+					target_x = x * 8 + 4;
+					target_y = y * 8 + 4;
+					
+					dist_x = target_x - This_X;
+					dist_y = target_y - This_Y;
+
+					dist = sqrt(dist_x * dist_x + dist_y * dist_y);
+					speed = dist / time;
+
+					fireT bullet(BALL, target_x, target_y, 0, speed) : stop (time, n);
+				}
+
+				x++;
+			}
+
+			y++;
+		}
+
+		mag -= 0.001;
+		wait(1);
+	}
+}

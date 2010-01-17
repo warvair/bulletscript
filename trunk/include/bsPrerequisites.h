@@ -1,3 +1,8 @@
+/*
+	BulletScript: a script for firing bullets.
+	See /doc/license.txt for license details.
+*/
+
 #ifndef __BS_PREREQUISITES_H__
 #define __BS_PREREQUISITES_H__
 
@@ -14,12 +19,6 @@
 #define BS_COMPILER_MSVC 1
 #define BS_COMPILER_GNUC 2
 #define BS_COMPILER_BORL 3
-
-#define BS_ENDIAN_LITTLE 1
-#define BS_ENDIAN_BIG 2
-
-#define BS_ARCHITECTURE_32 1
-#define BS_ARCHITECTURE_64 2
 
 // Find compiler information
 #if defined( _MSC_VER )
@@ -45,13 +44,6 @@
 #   define BS_PLATFORM BS_PLATFORM_APPLE
 #else
 #   define BS_PLATFORM BS_PLATFORM_LINUX
-#endif
-
-// Set architecture
-#if defined(__x86_64__) || defined(_M_X64) || defined(__powerpc64__) || defined(__alpha__) || defined(__ia64__) || defined(__s390__) || defined(__s390x__)
-#   define BS_ARCH_TYPE BS_ARCHITECTURE_64
-#else
-#   define BS_ARCH_TYPE BS_ARCHITECTURE_32
 #endif
 
 // DLL Export

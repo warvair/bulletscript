@@ -1,3 +1,8 @@
+/*
+	BulletScript: a script for firing bullets.
+	See /doc/license.txt for license details.
+*/
+
 #ifndef __BS_PARSETREE_H__
 #define __BS_PARSETREE_H__
 

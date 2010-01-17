@@ -3,7 +3,8 @@ controller PlayerController
 	left = emitter PBlaster(-12, 4, 0);
 	right = emitter PBlaster(12, 4, 0);
 
-	// Redundant state
+	// Redundant state, but necessary for now.  Later versions of
+	// bulletscript may create these automatically.
 	Stage1 = state
 	{
 		wait(10);

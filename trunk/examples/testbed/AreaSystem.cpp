@@ -231,18 +231,16 @@ bs::UserTypeBase* AreaBattery::emitQuadProjected(float x, float y, float angle, 
 	Area a;
 	a._active = true;
 	a._time = 0;
-	a.type = AT_QuadBased;
+	a.type = AT_QuadProjected;
 
-	float dist = args[-4];
+	a.start = args[-4];
 
 	// Project x and y, 'dist' along the angle
-	a.x = x - sin(angle * bs::DEG_TO_RAD) * dist;
-	a.y = y + cos(angle * bs::DEG_TO_RAD) * dist;
+	a.x = x; - sin(angle * bs::DEG_TO_RAD) * a.start;
+	a.y = y;
 	a.w = args[-3];
 	a.h = args[-2];
 	a.angle = angle + args[-1];
-	a.start = 0.0f;
-	a.end = 0.0f;
 	a.alpha = 1;
 
 	size_t count = mSpawnedAreas.size();

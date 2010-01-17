@@ -77,7 +77,12 @@ void bullet_setSpeed(bs::UserTypeBase* object, float value)
 	Bullet* b = static_cast<Bullet*>(object);
 
 	b->speed = value;
-	int index = (int) (b->angle * 10) % 3600;
+
+	float angle = b->angle;
+	if (angle < 0.0f)
+		angle += 360.0f;
+
+	int index = (int) (angle * 10) % 3600;
 	b->vx = BulletBattery::getSine(index) * value;
 	b->vy = BulletBattery::getCosine(index) * value;
 }

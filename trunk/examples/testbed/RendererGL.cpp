@@ -344,7 +344,7 @@ void RendererGL::startRendering ()
 void RendererGL::finishRendering ()
 {
 	renderBulletBatch();
-	renderQuadBatch();
+	_renderQuadBatch();
 
 	SDL_GL_SwapBuffers ();
 }
@@ -378,10 +378,7 @@ void RendererGL::print(int x, int y, const char* str)
 void RendererGL::addBullet(const Bullet& b)
 {
 	if (mNumBullets >= MAX_BULLETS)
-	{
 		renderBulletBatch();
-		mNumBullets = 0;
-	}
 
 	float x = b.x;
 	float y = b.y;
@@ -437,10 +434,7 @@ void RendererGL::addBullet(const Bullet& b)
 void RendererGL::addQuadArea(Area* a)
 {
 	if (mNumQuads >= (MAX_QUADS - 1))
-	{
-		renderQuadBatch();
-		mNumQuads = 0;
-	}
+		_renderQuadBatch();
 
 	float sinAngle = (float) sin((a->angle - 180) * bs::DEG_TO_RAD);
 	float cosAngle = (float) cos((a->angle - 180) * bs::DEG_TO_RAD);
@@ -471,6 +465,17 @@ void RendererGL::addQuadArea(Area* a)
 		mQuadPos[bOffset + 5] = a->y - a->h * cosAngle + w2 * sinAngle;
 		mQuadPos[bOffset + 6] = a->x - w2 * cosAngle + a->h * sinAngle;
 		mQuadPos[bOffset + 7] = a->y - a->h * cosAngle - w2 * sinAngle;
+	}
+	else if (a->type == AT_QuadProjected)
+	{
+		mQuadPos[bOffset + 0] = a->x - w2 * cosAngle + a->start * sinAngle;
+		mQuadPos[bOffset + 1] = a->y - w2 * sinAngle - a->start * cosAngle;
+		mQuadPos[bOffset + 2] = a->x + w2 * cosAngle + a->start * sinAngle;
+		mQuadPos[bOffset + 3] = a->y + w2 * sinAngle - a->start * cosAngle;
+		mQuadPos[bOffset + 4] = a->x + w2 * cosAngle + (a->h + a->start) * sinAngle;
+		mQuadPos[bOffset + 5] = a->y - (a->h + a->start) * cosAngle + w2 * sinAngle;
+		mQuadPos[bOffset + 6] = a->x - w2 * cosAngle + (a->h + a->start) * sinAngle;
+		mQuadPos[bOffset + 7] = a->y - (a->h + a->start) * cosAngle - w2 * sinAngle;
 	}
 
 	mQuadCol[cOffset + 3] = a->alpha;
@@ -608,6 +613,9 @@ void RendererGL::addArcArea(Area* a)
 // --------------------------------------------------------------------------------
 void RendererGL::renderBulletBatch()
 {
+	if (mNumBullets == 0)
+		return;
+
 	glBindTexture (GL_TEXTURE_2D, mBulletTexture);
 
 	glEnableClientState (GL_VERTEX_ARRAY);
@@ -623,10 +631,15 @@ void RendererGL::renderBulletBatch()
 	glDisableClientState (GL_COLOR_ARRAY);
 	glDisableClientState (GL_TEXTURE_COORD_ARRAY);
 	glDisableClientState (GL_VERTEX_ARRAY);
+
+	mNumBullets = 0;
 }
 // --------------------------------------------------------------------------------
-void RendererGL::renderQuadBatch()
+void RendererGL::_renderQuadBatch()
 {
+	if (mNumQuads == 0)
+		return;
+
 	glBindTexture (GL_TEXTURE_2D, mBeamTexture);
 
 	glEnableClientState (GL_VERTEX_ARRAY);
@@ -642,5 +655,7 @@ void RendererGL::renderQuadBatch()
 	glDisableClientState (GL_COLOR_ARRAY);
 	glDisableClientState (GL_TEXTURE_COORD_ARRAY);
 	glDisableClientState (GL_VERTEX_ARRAY);
+
+	mNumQuads = 0;
 }
 // --------------------------------------------------------------------------------
