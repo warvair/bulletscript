@@ -68,8 +68,6 @@ class RendererGL
 	int mNumQuads;
 	GLuint mBeamTexture, mBeamTipTexture;	
 
-	void renderQuadBatch();
-
 	// Ellipses
 	// An ellipse is a triangle fan, and how many triangles it uses depends on its size.
 	// Therefore, we must generate the indices dynamically.  
@@ -96,6 +94,8 @@ public:
 	RendererGL ();
 
 	bool initialise(int width, int height, bool fullScreen);
+
+	void _renderQuadBatch();
 
 	void startRendering();
 

@@ -48,7 +48,11 @@ int main (int argc, char **argv)
 	// Register bullet functions
 	machine.createType("bullet");
 
+	/*	Emit at an angle (sprite, angle, speed)
+	*/
 	machine.registerEmitFunction("bullet", "fireA", 3, bullet_emitAngle);
+	/*	Emit at a target (sprite, target-x, target-y, angle offset, speed)
+	*/
 	machine.registerEmitFunction("bullet", "fireT", 5, bullet_emitTarget);
 	machine.setDieFunction("bullet", bullet_kill);
 
@@ -65,10 +69,20 @@ int main (int argc, char **argv)
 	// Register area functions
 	machine.createType("area");
 
+	/*	Emit a quad, with origin at its centre (width, height, angle)
+	*/
 	machine.registerEmitFunction("area", "quadC", 3, area_emitQuadC);
+	/*	Emit a quad, with origin at its base (width, height, angle)
+	*/
 	machine.registerEmitFunction("area", "quadB", 3, area_emitQuadB);
+	/*	Emit a quad, with origin at its base, projected a distance away (distance, width, height, angle)
+	*/
 	machine.registerEmitFunction("area", "quadProj", 4, area_emitQuadProjected);
+	/*	Emit an ellipse (radius-x, radius-y)
+	*/
 	machine.registerEmitFunction("area", "ellipse", 2, area_emitEllipse);
+	/*	Emit an arc (radius-x, radius-y, angle-start, angle-end, inner width)
+	*/
 	machine.registerEmitFunction("area", "arc", 5, area_emitArc);
 	machine.setDieFunction("area", area_kill);
 
@@ -235,6 +249,10 @@ int main (int argc, char **argv)
 			g_bossBullets->render(&renderer);
 			g_playerBullets->render(&renderer);
 			g_areas->render(&renderer);
+			
+			// Upload quads so they are rendered behind units
+			renderer._renderQuadBatch();
+			
 			g_bosses->render();
 			player->render();
 		}

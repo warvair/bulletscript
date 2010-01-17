@@ -9,6 +9,7 @@ enum AreaType
 {
 	AT_QuadCentred,
 	AT_QuadBased,
+	AT_QuadProjected,
 	AT_Ellipse,
 	AT_Arc
 };

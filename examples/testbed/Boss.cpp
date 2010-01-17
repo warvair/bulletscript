@@ -59,6 +59,11 @@ void Boss::setGuns(const char* guns)
 	mGunController->setAngle(mAngle);
 }
 
+int Boss::getTargetY() const
+{
+	return SCREEN_HEIGHT / 2;
+}
+
 void Boss::setPosition(float x, float y)
 {
 	mX = x;
@@ -114,7 +119,7 @@ int Boss::getHealth() const
 
 void Boss::startGuns()
 {
-	setGuns("Boss1");
+	setGuns(mControllerName.c_str());
 }
 
 void Boss::stopGuns()
@@ -181,6 +186,8 @@ BossManager::BossManager(bs::Machine* machine) :
 
 	mBosses[0] = new Boss1(machine);
 	mBosses[1] = new Boss2(machine);
+	mBosses[2] = new Boss3(machine);
+	mBosses[3] = new Boss4(machine);
 }
 
 BossManager::~BossManager()
@@ -209,7 +216,7 @@ void BossManager::update(float frameTime)
 
 	case State_MoveOnScreen:
 		{
-			int yTarget = SCREEN_HEIGHT - mBosses[mCurBoss]->getHeight() / 2;
+			int yTarget = mBosses[mCurBoss]->getTargetY();
 
 			float x = mBosses[mCurBoss]->getX();
 			float y = mBosses[mCurBoss]->getY();
