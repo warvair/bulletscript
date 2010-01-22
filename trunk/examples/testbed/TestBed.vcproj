@@ -140,7 +140,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="BulletScript.lib opengl32.lib glu32.lib SDL.lib SDLmain.lib winmm.lib"
+				AdditionalDependencies="BulletScript.lib opengl32.lib glu32.lib SDL.lib SDLmain.lib "
 				LinkIncremental="1"
 				AdditionalLibraryDirectories="../../lib;&quot;C:\Code\__Other\SDL-1.2.13\lib&quot;"
 				GenerateDebugInformation="true"
