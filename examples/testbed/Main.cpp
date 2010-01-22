@@ -115,6 +115,8 @@ int main (int argc, char **argv)
 	std::vector<std::string> scriptFiles = getDirectoryListing(".", "*.script");
 	for (size_t i = 0; i < scriptFiles.size(); ++i)
 	{
+		std::cerr << scriptFiles[i] << " 1" << std::endl;
+		
 		size_t fileSize;
 		unsigned char* fileBuf = loadFile(scriptFiles[i].c_str(), fileSize);
 		if(machine.compileScript (fileBuf, fileSize) != BS_OK)
@@ -135,6 +137,8 @@ int main (int argc, char **argv)
 
 		delete[] fileBuf;
 	}
+
+	std::cerr << "1" << std::endl;
 
 
 
