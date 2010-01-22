@@ -484,52 +484,6 @@ int ScriptMachine::compileScript(const uint8* buffer, size_t bufferSize)
 
 	ast->foldConstants();
 
-	// Now build constant list
-/*
-	ParseTree::ConstantDefinitionList defList;
-	ast->preprocess(defList);
-
-	// For each constant, replace every instance except the first.
-	ParseTree::ConstantDefinitionList::iterator it = defList.begin();
-	while (it != defList.end())
-	{
-		size_t iLength = it->first.length();
-		size_t iPos = strBuf.find(it->first);
-
-		iPos = strBuf.find(it->first, iPos + iLength);
-		while (iPos != strBuf.npos)
-		{
-			std::stringstream valueStr;
-			valueStr << it->second;
-
-			strBuf.replace(iPos, iLength, valueStr.str());
-			iPos = strBuf.find(it->first, iPos + iLength);
-		}
-
-		++it;
-	}
-
-	// And parse again
-	ast->reset();
-
-	parseBuffer = yy_scan_string(strBuf.c_str());
-	if (parseBuffer)
-	{
-		yylineno = 1;
-		numParseErrors = yyparse();
-		yy_delete_buffer(parseBuffer);
-	}
-	else
-	{
-		addErrorMsg("ScriptMachine: internal error (couldn't allocate parse buffer).");
-		return -1;
-	}
-
-	if (numParseErrors > 0)
-		return numParseErrors;
-
-	ast->foldConstants();
-*/
 //	ast->print(ast->getRootNode(), 0);
 
 	// The first time we compile a script, we must map property definitions from
