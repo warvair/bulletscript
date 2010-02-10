@@ -201,6 +201,8 @@ namespace BS_NMSP
 
 		int mNumErrors;
 
+		bool mLocked;
+
 		static ParseTree* msInstance;
 
 	private:
@@ -309,6 +311,8 @@ namespace BS_NMSP
 		void addError(int line, const String& msg);
 
 		ParseTreeNode* getRootNode();
+
+		bool isLocked() const;
 
 		ParseTreeNode* createNode(int type, int line);
 

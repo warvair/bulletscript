@@ -13,6 +13,7 @@ namespace BS_NMSP
 
 	enum ErrorCode
 	{
+		BS_TreeLocked = -2,
 		BS_NotFound = -1,
 		BS_OK = 0,
 		BS_BadEvent,

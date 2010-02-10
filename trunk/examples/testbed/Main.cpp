@@ -2,9 +2,11 @@
 #include <iostream>
 #include <ctime>
 #include "bsBulletScript.h"
+
 #include "Main.h"
 #include "Platform.h"
 #include "RendererGL.h"
+
 #include "BulletSystem.h"
 #include "AreaSystem.h"
 #include "Player.h"
@@ -39,7 +41,6 @@ int main (int argc, char **argv)
 
 
 
-
 	///////////////////////////////////////////////////////////////////////////
 	// Initialise bulletscript
 	///////////////////////////////////////////////////////////////////////////
@@ -48,11 +49,9 @@ int main (int argc, char **argv)
 	// Register bullet functions
 	machine.createType("bullet");
 
-	/*	Emit at an angle (sprite, angle, speed)
-	*/
+	//	Emit at an angle (sprite, angle, speed)
 	machine.registerEmitFunction("bullet", "fireA", 3, bullet_emitAngle);
-	/*	Emit at a target (sprite, target-x, target-y, angle offset, speed)
-	*/
+	//	Emit at a target (sprite, target-x, target-y, angle offset, speed)
 	machine.registerEmitFunction("bullet", "fireT", 5, bullet_emitTarget);
 	machine.setDieFunction("bullet", bullet_kill);
 
@@ -69,20 +68,15 @@ int main (int argc, char **argv)
 	// Register area functions
 	machine.createType("area");
 
-	/*	Emit a quad, with origin at its centre (width, height, angle)
-	*/
+	//	Emit a quad, with origin at its centre (width, height, angle)
 	machine.registerEmitFunction("area", "quadC", 3, area_emitQuadC);
-	/*	Emit a quad, with origin at its base (width, height, angle)
-	*/
+	//	Emit a quad, with origin at its base (width, height, angle)
 	machine.registerEmitFunction("area", "quadB", 3, area_emitQuadB);
-	/*	Emit a quad, with origin at its base, projected a distance away (distance, width, height, angle)
-	*/
+	//	Emit a quad, with origin at its base, projected a distance away (distance, width, height, angle)
 	machine.registerEmitFunction("area", "quadProj", 4, area_emitQuadProjected);
-	/*	Emit an ellipse (radius-x, radius-y)
-	*/
+	//	Emit an ellipse (radius-x, radius-y)
 	machine.registerEmitFunction("area", "ellipse", 2, area_emitEllipse);
-	/*	Emit an arc (radius-x, radius-y, angle-start, angle-end, inner width)
-	*/
+	//	Emit an arc (radius-x, radius-y, angle-start, angle-end, inner width)
 	machine.registerEmitFunction("area", "arc", 5, area_emitArc);
 	machine.setDieFunction("area", area_kill);
 
@@ -108,16 +102,19 @@ int main (int argc, char **argv)
 	machine.registerGlobalVariable("Player_Y", true, 0);
 
 	// User member variables must be declared before compiling scripts
-//	machine.declareControllerMemberVariable("Boss1", "health", 1); // 100%
+//	machine.declareControllerMemberVariable("Boss1", "health", 1.0f); // 1.0f = 100% health
 
 	// Compile all script files in directory
 	std::cout << "Compiling..." << std::endl;
 	std::vector<std::string> scriptFiles = getDirectoryListing(".", "*.script");
 	for (size_t i = 0; i < scriptFiles.size(); ++i)
 	{
+		std::cerr << scriptFiles[i] << std::endl;
+		
 		size_t fileSize;
 		unsigned char* fileBuf = loadFile(scriptFiles[i].c_str(), fileSize);
-		if(machine.compileScript (fileBuf, fileSize) != BS_OK)
+
+		if (machine.compileScript(fileBuf, fileSize) != BS_OK)
 		{
 			std::cout << "Could not compile " << scriptFiles[i] << std::endl;
 			const Log& _log = machine.getLog();
@@ -273,6 +270,6 @@ int main (int argc, char **argv)
 	delete player;
 
 	SDL_Quit();
-	
+
 	return 0;
 }

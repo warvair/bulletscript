@@ -221,7 +221,35 @@ int main()
 		return 0;
 	}
 	delete[] buffer;
+/*
+	fp = fopen("minimal2.script", "rb");
+	fseek(fp, 0, SEEK_END);
+	fileLength = ftell(fp);
+	buffer = new unsigned char[fileLength];
+	
+	fseek(fp, 0, SEEK_SET);
+	fread(buffer, fileLength, 1, fp);
+	fclose(fp);
 
+	if (gMachine->compileScript(buffer, fileLength) != 0)
+	{
+		// get errors
+		const bs::Log& _log = gMachine->getLog();
+
+		std::string msg = _log.getFirstEntry();
+		while (msg != bs::Log::END)
+		{
+			std::cerr << msg << std::endl;
+			msg = _log.getNextEntry();
+		}
+
+		delete[] buffer;
+		delete gBullets;
+		delete gMachine;
+		return 0;
+	}
+	delete[] buffer;
+*/
 	// Create an emitter
 	bs::Emitter* emit = gMachine->createEmitter("Minimal", 0, 0, 0);
 

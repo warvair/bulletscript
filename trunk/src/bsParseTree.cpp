@@ -264,7 +264,8 @@ const String& ParseTreeNode::getStringData() const
 }
 // --------------------------------------------------------------------------------
 // --------------------------------------------------------------------------------
-ParseTree::ParseTree()
+ParseTree::ParseTree() :
+	mLocked(false)
 {
 	create();
 }
@@ -316,6 +317,11 @@ void ParseTree::setMachines(ScriptMachine *scriptMachine)
 ParseTreeNode* ParseTree::getRootNode()
 {
 	return mRoot;
+}
+// --------------------------------------------------------------------------------
+bool ParseTree::isLocked() const
+{
+	return mLocked;
 }
 // --------------------------------------------------------------------------------
 ParseTreeNode* ParseTree::createNode(int type, int line)
@@ -2358,8 +2364,8 @@ void ParseTree::generateBytecode(ObjectDefinition* def, ParseTreeNode* node,
 			String varName = node->getStringData();
 
 			// Check for local, then member, then global
-			CodeRecord* rec;
-			int index;
+			CodeRecord* rec = 0;
+			int index = -1;
 
 			if (codeType == CBT_EmitterState || codeType == CBT_ControllerState)
 				rec = getCodeRecord(def->getType(), def->getName(), "State", s_curState->name);
@@ -2368,7 +2374,8 @@ void ParseTree::generateBytecode(ObjectDefinition* def, ParseTreeNode* node,
 			else if (codeType == CBT_Event)
 				rec = getCodeRecord(def->getType(), def->getName(), "Event", s_curEvent->name);
 
-			index = rec->getVariableIndex(varName);
+			if (rec)
+				index = rec->getVariableIndex(varName);
 
 			if (index >= 0)
 			{
@@ -2773,22 +2780,16 @@ void ParseTree::createControllerDefinitions(ParseTreeNode* node,
 void ParseTree::createDefinitions(ParseTreeNode* node,
 								  const MemberVariableDeclarationMap& memberDecls)
 {
+	// Lock tree for basic thread-safety.
+	mLocked = true;
+	
 	// Create emitter definitions first, then controller definitions, because 
 	// controllers rely on emitters
 	createEmitterDefinitions(node);
 	createControllerDefinitions(node, memberDecls);
 
-/*
-	for (int i = 0; i < mScriptMachine->getNumCodeRecords(); ++i)
-	{
-		CodeRecord* rec = mScriptMachine->getCodeRecord(i);
-		std::cout << rec->getName() << std::endl;
-		std::cout << "---------------------------" << std::endl;
-		for (size_t j = 0; j < rec->byteCodeSize; ++j)
-			std::cout << rec->byteCode[j] << std::endl;
-		std::cout << std::endl;
-	}
-*/
+	// Unlock
+	mLocked = false;
 }
 // --------------------------------------------------------------------------------
 String ParseTree::getCodeRecordName(const String& type, const String& typeName,

@@ -130,7 +130,11 @@ void generate_assignment_expr(int nodeType, int idType, YYSTYPE parentNode, YYST
 	if (idType == PT_EmitterMember)
 	{
 		id_node->setString(idNode->getStringData().c_str());
-		id_node->setChild(0, idNode->getChild(0));
+		
+		YYSTYPE id_name_node = AST->createNode(PT_Identifier, yylineno);
+		id_name_node->setString(idNode->getChild(0)->getStringData().c_str());
+
+		id_node->setChild(0, id_name_node);
 	}
 	else
 	{
