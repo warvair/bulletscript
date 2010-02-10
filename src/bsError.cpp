@@ -8,6 +8,8 @@ String getErrorMessage(int code)
 {
 	switch (code)
 	{
+	case BS_TreeLocked:
+		return "parse tree is locked";
 	case BS_NotFound:
 		return "object not found";
 	case BS_OK:
