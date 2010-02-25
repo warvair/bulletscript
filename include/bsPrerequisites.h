@@ -50,6 +50,8 @@
 #if BS_PLATFORM == BS_PLATFORM_WIN32
 #	if defined(BS_DLL_EXPORT)
 #		define _BSAPI __declspec( dllexport )
+#	elif defined(BS_STATIC_LIB)
+#		define _BSAPI
 #	else
 #		if defined(__MINGW32__)
 #			define _BSAPI
@@ -58,7 +60,11 @@
 #		endif
 #	endif
 #elif BS_PLATFORM == BS_PLATFORM_LINUX
-#	define _BSAPI __attribute__((visibility("default")))
+#	if defined(BS_DLL_EXPORT)
+#		define _BSAPI __attribute__((visibility("default")))
+#	else
+#		define _BSAPI
+#	endif
 #endif
 
 // Ok, because only occurs on non-public STL members
