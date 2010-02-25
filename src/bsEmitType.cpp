@@ -486,6 +486,10 @@ int EmitType::_processCode(const uint32* code, ScriptState& state, bstype x, bst
 				state.stackHead -= numArgs;
 				memcpy(type->_et_->state.locals, state.stack + state.stackHead, numArgs * sizeof(bstype));
 			}
+			else
+			{
+				type->_et_->code = 0;
+			}
 
 			// Set up affectors
 			type->_et_->numAffectors = numAffectors;

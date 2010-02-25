@@ -96,8 +96,8 @@
 		</Configuration>
 		<Configuration
 			Name="Release|Win32"
-			OutputDirectory="$(ProjectDir)/Bin"
-			IntermediateDirectory="$(ProjectDir)/Obj"
+			OutputDirectory="$(ProjectDir)/bin"
+			IntermediateDirectory="$(ProjectDir)/obj"
 			ConfigurationType="1"
 			CharacterSet="2"
 			WholeProgramOptimization="1"

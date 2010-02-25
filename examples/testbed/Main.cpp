@@ -255,7 +255,7 @@ int main (int argc, char **argv)
 		}
 
 		if (showInfo)
-			renderer.print (5, SCREEN_HEIGHT - 20, fpsString);
+			renderer.print(5, SCREEN_HEIGHT - 20, fpsString);
 
 		renderer.finishRendering();
 	}
