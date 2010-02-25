@@ -236,7 +236,7 @@ bs::UserTypeBase* AreaBattery::emitQuadProjected(float x, float y, float angle, 
 	a.start = args[-4];
 
 	// Project x and y, 'dist' along the angle
-	a.x = x; - sin(angle * bs::DEG_TO_RAD) * a.start;
+	a.x = x - sin(angle * bs::DEG_TO_RAD) * a.start;
 	a.y = y;
 	a.w = args[-3];
 	a.h = args[-2];
