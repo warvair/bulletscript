@@ -1,0 +1,8 @@
+bulletscript changelog
+----------------------
+
+10/02/10
+o fixed bug in grammar file which was crashing the debug build.
+
+15/01/10
+o version 1.0 released.
