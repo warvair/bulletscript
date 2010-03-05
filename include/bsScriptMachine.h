@@ -129,7 +129,13 @@ namespace BS_NMSP
 
 		int getNumControllerDefinitions() const;
 
-		Controller* createController(const String& definition, void* userObject);
+#ifndef BS_Z_DIMENSION
+		Controller* createController(const String& definition, bstype x, bstype y, bstype angle, 
+			void* userObject);
+#else
+		Controller* createController(const String& definition, bstype x, bstype y, bstype z, 
+			bstype angle, void* userObject);
+#endif
 
 		void destroyController(Controller* emit);
 

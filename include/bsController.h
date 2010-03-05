@@ -36,6 +36,7 @@ namespace BS_NMSP
 		{
 			Emitter* emitter;
 			bstype special[NUM_SPECIAL_MEMBERS];
+			bstype baseX, baseY;
 
 			MemberController controllers[NUM_SPECIAL_MEMBERS];
 			uint32 activeControllers;
@@ -94,6 +95,7 @@ namespace BS_NMSP
 		 */
 		void onRelease();
 
+#ifndef BS_Z_DIMENSION
 		/**	\brief Set a Controller instance to use the specified ControllerDefinition.
 		 *	
 		 *	Sets the Controller to use the given ControllerDefinition.  You do not
@@ -101,9 +103,27 @@ namespace BS_NMSP
 		 *	undefined state.  Use Machine::createController instead.
 		 *
 		 *	\param def pointer to the ControllerDefinition to use to set the Controller up.
+		 *	\param x initial x position
+		 *	\param y initial y position
+		 *	\param angle initial angle
 		 */
-		void setDefinition(ControllerDefinition* def);
-		
+		void setDefinition(ControllerDefinition* def, bstype x, bstype y, bstype angle);
+#else
+		/**	\brief Set a Controller instance to use the specified ControllerDefinition.
+		 *	
+		 *	Sets the Controller to use the given ControllerDefinition.  You do not
+		 *	want to call this function directly: doing so will leave the Controller in an
+		 *	undefined state.  Use Machine::createController instead.
+		 *
+		 *	\param def pointer to the ControllerDefinition to use to set the Controller up.
+		 *	\param x initial x position
+		 *	\param y initial y position
+		 *	\param z initial y position
+		 *	\param angle initial angle
+		 */
+		void setDefinition(ControllerDefinition* def, bstype x, bstype y, bstype z, bstype angle);
+#endif
+
 		/**	\brief Enables or disables the Controller, and its Emitters.
 		 *	
 		 *	\param enable enables if true, disables if false.
@@ -136,11 +156,29 @@ namespace BS_NMSP
 		void setZ(bstype z);
 #endif
 
+#ifndef BS_Z_DIMENSION
+		/**	\brief Set the position of this Controller.
+		 *	
+		 *	\param x new x position.
+		 *	\param y new y position.
+		 */
+		void setPosition(bstype x, bstype y);
+#else
+		/**	\brief Set the position of this Controller.
+		 *	
+		 *	\param x new x position.
+		 *	\param y new y position.
+		 *	\param z new z position.
+		 */
+		void setPosition(bstype x, bstype y, bstype z);
+#endif
+
 		/**	\brief Set the angle of this Controller, in degrees.
 		 *	
-		 *	\param angle new angle.
+		 *	\param facing the angle in which to orient the Controller and its Emitters.
+		 *	\param orbit the angle by which to rotate the position of the Controller's Emitters.
 		 */
-		void setAngle(bstype angle);
+		void setAngle(bstype facing, bstype orbit);
 
 		/**	\brief Set the specified member of the Controller.
 		 *	

@@ -350,10 +350,8 @@ void EmitType::generateBytecode(EmitterDefinition* def, ParseTreeNode* node,
 	EmitterDefinition id
 */
 
-	// opcode
+	// opcode & obejct type
 	code->push_back(BC_EMIT);
-
-	// type
 	code->push_back((uint32) mType);
 
 	// function id

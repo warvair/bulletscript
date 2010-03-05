@@ -141,10 +141,19 @@ bool Machine::emitterDefinitionExists(const String& name) const
 	return mScriptMachine->getEmitterDefinition(name) != 0;
 }
 // --------------------------------------------------------------------------------
-Controller* Machine::createController(const String& definition, void* userObject)
+#ifndef BS_Z_DIMENSION
+Controller* Machine::createController(const String& definition, bstype x, bstype y, bstype angle, void* userObject)
 {
-	return mScriptMachine->createController(definition, userObject);
+	return mScriptMachine->createController(definition, x, y, angle, userObject);
 }
+// --------------------------------------------------------------------------------
+#else
+Controller* Machine::createController(const String& definition, bstype x, bstype y, bstype z, 
+									  bstype angle, void* userObject)
+{
+	return mScriptMachine->createController(definition, x, y, z, angle, userObject);
+}
+#endif
 // --------------------------------------------------------------------------------
 void Machine::destroyController(Controller* ctrl)
 {

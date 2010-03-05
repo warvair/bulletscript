@@ -108,9 +108,9 @@
 <tr><td class="memItemLeft" nowrap align="right" valign="top">bool&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_b_s___n_m_s_p_1_1_machine.html#1bc76b7d48a2989cbbd237ff62c52b02">emitterDefinitionExists</a> (const String &amp;name) const </td></tr>
 
 <tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">See whether the named <a class="el" href="class_b_s___n_m_s_p_1_1_emitter_definition.html" title="Class to store a definition for instantiating Emitter objects.">EmitterDefinition</a> exists.  <a href="#1bc76b7d48a2989cbbd237ff62c52b02"></a><br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="el" href="class_b_s___n_m_s_p_1_1_controller.html">Controller</a> *&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_b_s___n_m_s_p_1_1_machine.html#e58db6ce44d559e6faee2d5032e4f239">createController</a> (const String &amp;definition, void *userObject=0)</td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="el" href="class_b_s___n_m_s_p_1_1_controller.html">Controller</a> *&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_b_s___n_m_s_p_1_1_machine.html#705c858e2d93c43ba382f8072b82599e">createController</a> (const String &amp;definition, bstype x, bstype y, bstype angle, void *userObject=0)</td></tr>
 
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Create a <a class="el" href="class_b_s___n_m_s_p_1_1_controller.html" title="Class for manipulating Emitter objects at a high level.">Controller</a>.  <a href="#e58db6ce44d559e6faee2d5032e4f239"></a><br></td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Create a <a class="el" href="class_b_s___n_m_s_p_1_1_controller.html" title="Class for manipulating Emitter objects at a high level.">Controller</a>.  <a href="#705c858e2d93c43ba382f8072b82599e"></a><br></td></tr>
 <tr><td class="memItemLeft" nowrap align="right" valign="top">void&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_b_s___n_m_s_p_1_1_machine.html#ee89fdab94e3083c346ed3e612f56b0f">destroyController</a> (<a class="el" href="class_b_s___n_m_s_p_1_1_controller.html">Controller</a> *ctrl)</td></tr>
 
 <tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Destroy the specified <a class="el" href="class_b_s___n_m_s_p_1_1_controller.html" title="Class for manipulating Emitter objects at a high level.">Controller</a>.  <a href="#ee89fdab94e3083c346ed3e612f56b0f"></a><br></td></tr>
@@ -188,7 +188,7 @@ See whether the named <a class="el" href="class_b_s___n_m_s_p_1_1_controller_def
 
 </div>
 </div><p>
-<a class="anchor" name="e58db6ce44d559e6faee2d5032e4f239"></a><!-- doxytag: member="BS_NMSP::Machine::createController" ref="e58db6ce44d559e6faee2d5032e4f239" args="(const String &amp;definition, void *userObject=0)" -->
+<a class="anchor" name="705c858e2d93c43ba382f8072b82599e"></a><!-- doxytag: member="BS_NMSP::Machine::createController" ref="705c858e2d93c43ba382f8072b82599e" args="(const String &amp;definition, bstype x, bstype y, bstype angle, void *userObject=0)" -->
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
@@ -197,6 +197,24 @@ See whether the named <a class="el" href="class_b_s___n_m_s_p_1_1_controller_def
           <td>(</td>
           <td class="paramtype">const String &amp;&nbsp;</td>
           <td class="paramname"> <em>definition</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">bstype&nbsp;</td>
+          <td class="paramname"> <em>x</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">bstype&nbsp;</td>
+          <td class="paramname"> <em>y</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">bstype&nbsp;</td>
+          <td class="paramname"> <em>angle</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
@@ -219,6 +237,9 @@ Create a <a class="el" href="class_b_s___n_m_s_p_1_1_controller.html" title="Cla
 <dl compact><dt><b>Parameters:</b></dt><dd>
   <table border="0" cellspacing="2" cellpadding="0">
     <tr><td valign="top"></td><td valign="top"><em>definition</em>&nbsp;</td><td>name of the <a class="el" href="class_b_s___n_m_s_p_1_1_controller_definition.html" title="Class to store a definition for instantiating Controller objects.">ControllerDefinition</a> to use (as defined in script). </td></tr>
+    <tr><td valign="top"></td><td valign="top"><em>x</em>&nbsp;</td><td>initial x position. </td></tr>
+    <tr><td valign="top"></td><td valign="top"><em>y</em>&nbsp;</td><td>initial y position. </td></tr>
+    <tr><td valign="top"></td><td valign="top"><em>angle</em>&nbsp;</td><td>initial angle. </td></tr>
     <tr><td valign="top"></td><td valign="top"><em>userObject</em>&nbsp;</td><td>an object which the user can pass in.</td></tr>
   </table>
 </dl>
@@ -1083,7 +1104,7 @@ The user should call this on each object that they want bulletscript to update. 
 <hr>The documentation for this class was generated from the following file:<ul>
 <li>C:/Code/bulletscript/include/<a class="el" href="bs_machine_8h_source.html">bsMachine.h</a></ul>
 </div>
-<hr size="1"><address style="text-align: right;"><small>Generated on Thu Jan 14 14:24:52 2010 for bulletscript by&nbsp;
+<hr size="1"><address style="text-align: right;"><small>Generated on Fri Mar 5 21:42:58 2010 for bulletscript by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img src="doxygen.png" alt="doxygen" align="middle" border="0"></a> 1.5.9 </small></address>
 </body>

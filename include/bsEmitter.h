@@ -150,6 +150,23 @@ namespace BS_NMSP
 		void setZ(bstype z);
 #endif
 
+#ifndef BS_Z_DIMENSION
+		/**	\brief Set the position of this Emitter.
+		 *	
+		 *	\param x new x position.
+		 *	\param y new y position.
+		 */
+		void setPosition(bstype x, bstype y);
+#else
+		/**	\brief Set the position of this Controller.
+		 *	
+		 *	\param x new x position.
+		 *	\param y new y position.
+		 *	\param z new z position.
+		 */
+		void setPosition(bstype x, bstype y, bstype z);
+#endif
+
 		/**	\brief Set the angle of this Emitter, in degrees.
 		 *	
 		 *	\param angle new angle.

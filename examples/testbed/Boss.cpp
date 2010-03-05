@@ -53,10 +53,7 @@ void Boss::setBounds(int x0, int y0, int x1, int y1)
 
 void Boss::setGuns(const char* guns)
 {
-	mGunController = mMachine->createController(guns, g_bossBullets);
-	mGunController->setX(mX);
-	mGunController->setY(mY);
-	mGunController->setAngle(mAngle);
+	mGunController = mMachine->createController(guns, mX, mY, mAngle, g_bossBullets);
 }
 
 int Boss::getTargetY() const
@@ -70,10 +67,7 @@ void Boss::setPosition(float x, float y)
 	mY = y;
 
 	if (mGunController)
-	{
-		mGunController->setX(mX);
-		mGunController->setY(mY);
-	}
+		mGunController->setPosition(mX, mY);
 }
 
 void Boss::setAngle(float angle)
@@ -81,9 +75,7 @@ void Boss::setAngle(float angle)
 	mAngle = angle;
 
 	if (mGunController)
-	{
-		mGunController->setAngle(mAngle);
-	}
+		mGunController->setAngle(mAngle, mAngle);
 }
 
 float Boss::getX() const
