@@ -30,11 +30,7 @@ void Player::setImage(const char* file)
 
 void Player::setGuns(const char* guns)
 {
-	mGunController = mMachine->createController(guns, g_playerBullets);
-	mGunController->setX(mX);
-	mGunController->setY(mY);
-	mGunController->setAngle(0.0f);
-	
+	mGunController = mMachine->createController(guns, mX, mY, 0.0f, g_playerBullets);
 	enableGuns(false);
 }
 
@@ -49,10 +45,7 @@ void Player::setPosition(float x, float y)
 	mY = y;
 
 	if (mGunController)
-	{
-		mGunController->setX(mX);
-		mGunController->setY(mY);
-	}
+		mGunController->setPosition(mX, mY);
 }
 
 float Player::getX() const

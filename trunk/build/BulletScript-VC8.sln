@@ -7,56 +7,22 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "BulletScript-VC8", "BulletS
 		Release.AspNetCompiler.Debug = "False"
 	EndProjectSection
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "TestBed", "..\examples\testbed\TestBed.vcproj", "{2FBF55CB-7C5B-4EE2-9637-AC858F7F733A}"
-	ProjectSection(WebsiteProperties) = preProject
-		Debug.AspNetCompiler.Debug = "True"
-		Release.AspNetCompiler.Debug = "False"
-	EndProjectSection
-	ProjectSection(ProjectDependencies) = postProject
-		{ACD37C06-E4E3-41B1-B0FA-C9F09217036A} = {ACD37C06-E4E3-41B1-B0FA-C9F09217036A}
-	EndProjectSection
-EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "minimal", "..\examples\minimal\minimal.vcproj", "{585112FC-333C-466A-8E30-47C643B071EE}"
-	ProjectSection(WebsiteProperties) = preProject
-		Debug.AspNetCompiler.Debug = "True"
-		Release.AspNetCompiler.Debug = "False"
-	EndProjectSection
-	ProjectSection(ProjectDependencies) = postProject
-		{ACD37C06-E4E3-41B1-B0FA-C9F09217036A} = {ACD37C06-E4E3-41B1-B0FA-C9F09217036A}
-	EndProjectSection
-EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug DLL|Win32 = Debug DLL|Win32
-		Debug|Win32 = Debug|Win32
+		Debug Static|Win32 = Debug Static|Win32
 		Release DLL|Win32 = Release DLL|Win32
-		Release|Win32 = Release|Win32
+		Release Static|Win32 = Release Static|Win32
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{ACD37C06-E4E3-41B1-B0FA-C9F09217036A}.Debug DLL|Win32.ActiveCfg = Debug|Win32
-		{ACD37C06-E4E3-41B1-B0FA-C9F09217036A}.Debug DLL|Win32.Build.0 = Debug|Win32
-		{ACD37C06-E4E3-41B1-B0FA-C9F09217036A}.Debug|Win32.ActiveCfg = Debug|Win32
-		{ACD37C06-E4E3-41B1-B0FA-C9F09217036A}.Debug|Win32.Build.0 = Debug|Win32
-		{ACD37C06-E4E3-41B1-B0FA-C9F09217036A}.Release DLL|Win32.ActiveCfg = Release|Win32
-		{ACD37C06-E4E3-41B1-B0FA-C9F09217036A}.Release DLL|Win32.Build.0 = Release|Win32
-		{ACD37C06-E4E3-41B1-B0FA-C9F09217036A}.Release|Win32.ActiveCfg = Release|Win32
-		{ACD37C06-E4E3-41B1-B0FA-C9F09217036A}.Release|Win32.Build.0 = Release|Win32
-		{2FBF55CB-7C5B-4EE2-9637-AC858F7F733A}.Debug DLL|Win32.ActiveCfg = Debug|Win32
-		{2FBF55CB-7C5B-4EE2-9637-AC858F7F733A}.Debug DLL|Win32.Build.0 = Debug|Win32
-		{2FBF55CB-7C5B-4EE2-9637-AC858F7F733A}.Debug|Win32.ActiveCfg = Debug|Win32
-		{2FBF55CB-7C5B-4EE2-9637-AC858F7F733A}.Debug|Win32.Build.0 = Debug|Win32
-		{2FBF55CB-7C5B-4EE2-9637-AC858F7F733A}.Release DLL|Win32.ActiveCfg = Release|Win32
-		{2FBF55CB-7C5B-4EE2-9637-AC858F7F733A}.Release DLL|Win32.Build.0 = Release|Win32
-		{2FBF55CB-7C5B-4EE2-9637-AC858F7F733A}.Release|Win32.ActiveCfg = Release|Win32
-		{2FBF55CB-7C5B-4EE2-9637-AC858F7F733A}.Release|Win32.Build.0 = Release|Win32
-		{585112FC-333C-466A-8E30-47C643B071EE}.Debug DLL|Win32.ActiveCfg = Debug|Win32
-		{585112FC-333C-466A-8E30-47C643B071EE}.Debug DLL|Win32.Build.0 = Debug|Win32
-		{585112FC-333C-466A-8E30-47C643B071EE}.Debug|Win32.ActiveCfg = Debug|Win32
-		{585112FC-333C-466A-8E30-47C643B071EE}.Debug|Win32.Build.0 = Debug|Win32
-		{585112FC-333C-466A-8E30-47C643B071EE}.Release DLL|Win32.ActiveCfg = Release|Win32
-		{585112FC-333C-466A-8E30-47C643B071EE}.Release DLL|Win32.Build.0 = Release|Win32
-		{585112FC-333C-466A-8E30-47C643B071EE}.Release|Win32.ActiveCfg = Release|Win32
-		{585112FC-333C-466A-8E30-47C643B071EE}.Release|Win32.Build.0 = Release|Win32
+		{ACD37C06-E4E3-41B1-B0FA-C9F09217036A}.Debug DLL|Win32.ActiveCfg = Debug DLL|Win32
+		{ACD37C06-E4E3-41B1-B0FA-C9F09217036A}.Debug DLL|Win32.Build.0 = Debug DLL|Win32
+		{ACD37C06-E4E3-41B1-B0FA-C9F09217036A}.Debug Static|Win32.ActiveCfg = Debug|Win32
+		{ACD37C06-E4E3-41B1-B0FA-C9F09217036A}.Debug Static|Win32.Build.0 = Debug|Win32
+		{ACD37C06-E4E3-41B1-B0FA-C9F09217036A}.Release DLL|Win32.ActiveCfg = Release DLL|Win32
+		{ACD37C06-E4E3-41B1-B0FA-C9F09217036A}.Release DLL|Win32.Build.0 = Release DLL|Win32
+		{ACD37C06-E4E3-41B1-B0FA-C9F09217036A}.Release Static|Win32.ActiveCfg = Release|Win32
+		{ACD37C06-E4E3-41B1-B0FA-C9F09217036A}.Release Static|Win32.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

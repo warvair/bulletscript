@@ -299,14 +299,34 @@ namespace BS_NMSP
 		 */
 		bool emitterDefinitionExists(const String& name) const;
 
+#ifndef BS_Z_DIMENSION
 		/**	\brief Create a Controller.
 		 *
 		 *	\param definition name of the ControllerDefinition to use (as defined in script).
+		 *	\param x initial x position.
+		 *	\param y initial y position.
+		 *	\param angle initial angle.
 		 *	\param userObject an object which the user can pass in.
 		 *
 		 *	\return pointer to the newly-created Controller, or 0 if the definition was not found.
 		 */
-		Controller* createController(const String& definition, void* userObject = 0);
+		Controller* createController(const String& definition, bstype x, bstype y, bstype angle, 
+			void* userObject = 0);
+#else
+		/**	\brief Create a Controller.
+		 *
+		 *	\param definition name of the ControllerDefinition to use (as defined in script).
+		 *	\param x initial x position.
+		 *	\param y initial y position.
+		 *	\param z initial z position.
+		 *	\param angle initial angle.
+		 *	\param userObject an object which the user can pass in.
+		 *
+		 *	\return pointer to the newly-created Controller, or 0 if the definition was not found.
+		 */
+		Controller* createController(const String& definition, bstype x, bstype y, bstype z, bstype angle, 
+			void* userObject = 0);
+#endif
 
 		/**	\brief Destroy the specified Controller.
 		 *

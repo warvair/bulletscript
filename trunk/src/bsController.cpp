@@ -1,5 +1,6 @@
 #include <iostream>
 #include <assert.h>
+#include <cmath>
 #include "bsController.h"
 #include "bsScriptMachine.h"
 
@@ -47,10 +48,17 @@ bool Controller::isEnabled() const
 	return mEnabled;
 }
 // --------------------------------------------------------------------------------
-void Controller::setDefinition(ControllerDefinition* def)
+#ifndef BS_Z_DIMENSION
+void Controller::setDefinition(ControllerDefinition* def, bstype x, bstype y, bstype angle)
+#else
+void Controller::setDefinition(ControllerDefinition* def, bstype x, bstype y, bstype z, bstype angle)
+#endif
 {
 	BS_DELETE(mRecord);
 	mRecord = def->createScriptRecord(mScriptMachine);
+
+	// Initialise to 0 temporarily while we set up Emitter members
+	mRecord->members[Member_X] = mRecord->members[Member_Y] = mRecord->members[Member_Angle] = 0.0f;
 
 	// Create the emitters that this Controller uses.
 	mNumEmitters = def->getNumEmitterVariables();
@@ -68,27 +76,38 @@ void Controller::setDefinition(ControllerDefinition* def)
 #ifdef BS_Z_DIMENSION
 		inst.special[Member_Z] = var.z;
 #endif
-
 		inst.special[Member_Angle] = var.angle;
+
+		bstype sinAngle = sin(var.angle * DEG_TO_RAD);
+		bstype cosAngle = cos(var.angle * DEG_TO_RAD);
+		inst.baseX = var.x * cosAngle - var.y * sinAngle;
+		inst.baseY = var.x * sinAngle + var.y * cosAngle;
 
 #ifndef BS_Z_DIMENSION
 		inst.emitter = mScriptMachine->createEmitter(var.emitter, 
-			mRecord->members[Member_X] + inst.special[Member_X],
-			mRecord->members[Member_Y] + inst.special[Member_Y],
+			mRecord->members[Member_X] + inst.baseX,
+			mRecord->members[Member_Y] + inst.baseY,
 			mRecord->members[Member_Angle] + inst.special[Member_Angle],
 			mUserObject);
 #else
 		inst.emitter = mScriptMachine->createEmitter(var.emitter, 
-			mRecord->members[Member_X] + inst.special[Member_X],
-			mRecord->members[Member_Y] + inst.special[Member_Y],
+			mRecord->members[Member_X] + inst.special[Member_X] + xOff,
+			mRecord->members[Member_Y] + inst.special[Member_Y] + yOff,
 			mRecord->members[Member_Z] + inst.special[Member_Z],
 			mRecord->members[Member_Angle] + inst.special[Member_Angle],
 			mUserObject);
-
 #endif
 
 		inst.activeControllers = 0;
 	}
+
+	// After emitter members have been created, set position
+#ifndef BS_Z_DIMENSION
+	setPosition(x, y);
+#else
+	setPosition(x, y, z);
+#endif
+	setAngle(angle, angle);
 
 	// Create events
 	mNumEvents = def->getNumEvents();
@@ -139,8 +158,12 @@ void Controller::setX(bstype x)
 	// the Controller's position.  Hence when we change the Controller position we
 	// must update the Emitters'.
 	mRecord->members[Member_X] = x;
+
 	for (int i = 0; i < mNumEmitters; ++i)
-		mEmitters[i].emitter->setX(mEmitters[i].special[Member_X] + x);
+	{
+		mEmitters[i].emitter->setX(mRecord->members[Member_X] + mEmitters[i].baseX);
+		mEmitters[i].emitter->setY(mRecord->members[Member_Y] + mEmitters[i].baseY);
+	}
 }
 // --------------------------------------------------------------------------------
 void Controller::setY(bstype y)
@@ -149,8 +172,12 @@ void Controller::setY(bstype y)
 	// the Controller's position.  Hence when we change the Controller position we
 	// must update the Emitters'.
 	mRecord->members[Member_Y] = y;
+
 	for (int i = 0; i < mNumEmitters; ++i)
-		mEmitters[i].emitter->setY(mEmitters[i].special[Member_Y] + y);
+	{
+		mEmitters[i].emitter->setX(mRecord->members[Member_X] + mEmitters[i].baseX);
+		mEmitters[i].emitter->setY(mRecord->members[Member_Y] + mEmitters[i].baseY);
+	}
 }
 // --------------------------------------------------------------------------------
 #ifdef BS_Z_DIMENSION
@@ -165,14 +192,52 @@ void Controller::setZ(bstype z)
 }
 #endif
 // --------------------------------------------------------------------------------
-void Controller::setAngle(bstype angle)
+#ifndef BS_Z_DIMENSION
+void Controller::setPosition(bstype x, bstype y)
+#else
+void Controller::setPosition(bstype x, bstype y, bstype z)
+#endif
 {
-	// When controlled by a Controller, Emitter angle is stored as an offset to
-	// the Controller's.  Hence when we change the Controller angle we must update
-	// the Emitters'.
-	mRecord->members[Member_Angle] = angle;
+	mRecord->members[Member_X] = x;
+	mRecord->members[Member_Y] = y;
+#ifdef BS_Z_DIMENSION
+	mRecord->members[Member_Z] = z;
+#endif
+
 	for (int i = 0; i < mNumEmitters; ++i)
-		mEmitters[i].emitter->setAngle(mEmitters[i].special[Member_Angle] + angle);
+	{
+		mEmitters[i].emitter->setX(mRecord->members[Member_X] + mEmitters[i].baseX);
+		mEmitters[i].emitter->setY(mRecord->members[Member_Y] + mEmitters[i].baseY);
+#ifdef BS_Z_DIMENSION
+		mEmitters[i].emitter->setZ(mRecord->members[Member_Z]);
+#endif
+	}
+}
+// --------------------------------------------------------------------------------
+void Controller::setAngle(bstype facing, bstype orbit)
+{
+	// There are two possible things to update: the angle in which the Emitters
+	// now face, and their position relative to the Controller: when the Controller rotates,
+	// we may want its Emitters to rotate around its origin.
+	mRecord->members[Member_Angle] = facing;
+
+	// Recaculate orientation vector
+	bstype cosAngle = cos(-orbit * DEG_TO_RAD);
+	bstype sinAngle = sin(-orbit * DEG_TO_RAD);
+
+	for (int i = 0; i < mNumEmitters; ++i)
+	{
+		mEmitters[i].emitter->setAngle(mEmitters[i].special[Member_Angle] + facing);
+
+		mEmitters[i].baseX = mEmitters[i].special[Member_X] * cosAngle - 
+							 mEmitters[i].special[Member_Y] * sinAngle;
+
+		mEmitters[i].baseY = mEmitters[i].special[Member_X] * sinAngle +
+							 mEmitters[i].special[Member_Y] * cosAngle;
+
+		mEmitters[i].emitter->setX(mRecord->members[Member_X] + mEmitters[i].baseX);
+		mEmitters[i].emitter->setY(mRecord->members[Member_Y] + mEmitters[i].baseY);
+	}
 }
 // --------------------------------------------------------------------------------
 void Controller::setMember(int member, bstype value)
@@ -185,8 +250,17 @@ void Controller::setEmitterMember(int emitter, int member, bstype value)
 {
 	if (member < NUM_SPECIAL_MEMBERS)
 	{
+		// If X or Y, want to calculate based on orientation
 		mEmitters[emitter].special[member] = value;
-		mEmitters[emitter].emitter->setSpecialMember(member, value + mRecord->members[member]);
+		if (member <= Member_Y)
+		{
+			mEmitters[emitter].emitter->setX(mRecord->members[Member_X] + mEmitters[emitter].baseX);
+			mEmitters[emitter].emitter->setY(mRecord->members[Member_Y] + mEmitters[emitter].baseY);
+		}
+		else
+		{
+			mEmitters[emitter].emitter->setSpecialMember(member, value + mRecord->members[member]);
+		}
 	}
 	else
 	{
@@ -232,13 +306,7 @@ int Controller::raiseEvent(const String& evt, const bstype* args)
 	{
 		if (mEvents[i].name == evt)
 		{
-			if (_raiseEvent(i, args))
-			{
-				// Todo: suspend the Controller's script if the event has changed the state?
-				// Probably not, because this should only be called outside of an update loop.
-				// ...
-			}
-
+			_raiseEvent(i, args);
 			return BS_OK;
 		}
 	}
@@ -335,7 +403,16 @@ void Controller::update(float frameTime)
 				if (mEmitters[i].activeControllers & mask)
 				{
 					mEmitters[i].special[j] += mEmitters[i].controllers[j].speed * frameTime;
-					mEmitters[i].emitter->setSpecialMember(j, mEmitters[i].special[j] + mRecord->members[j]);
+					// If X or Y, want to update based on orientation
+					if (j <= Member_Y)
+					{
+						mEmitters[i].emitter->setX(mRecord->members[Member_X] + mEmitters[i].baseX);
+						mEmitters[i].emitter->setY(mRecord->members[Member_Y] + mEmitters[i].baseY);
+					}
+					else
+					{
+						mEmitters[i].emitter->setSpecialMember(j, mEmitters[i].special[j] + mRecord->members[j]);
+					}
 
 					mEmitters[i].controllers[j].time -= frameTime;
 					if (mEmitters[i].controllers[j].time <= 0)

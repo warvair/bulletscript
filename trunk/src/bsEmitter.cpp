@@ -92,6 +92,19 @@ void Emitter::setZ(bstype z)
 }
 #endif
 // --------------------------------------------------------------------------------
+#ifndef BS_Z_DIMENSION
+void Emitter::setPosition(bstype x, bstype y)
+#else
+void Emitter::setPosition(bstype x, bstype y, bstype z)
+#endif
+{
+	mRecord->members[Member_X] = x;
+	mRecord->members[Member_Y] = y;
+#ifdef BS_Z_DIMENSION
+	mRecord->members[Member_Z] = z;
+#endif
+}
+// --------------------------------------------------------------------------------
 void Emitter::setAngle(bstype angle)
 {
 	mRecord->members[Member_Angle] = angle;

@@ -181,7 +181,13 @@ void ScriptMachine::postUpdateEmitters()
 	}
 }
 // --------------------------------------------------------------------------------
-Controller* ScriptMachine::createController(const String& definition, void* userObject)
+#ifndef BS_Z_DIMENSION
+Controller* ScriptMachine::createController(const String& definition, bstype x, bstype y, 
+									  bstype angle, void* userObject)
+#else
+Controller* ScriptMachine::createController(const String& definition, bstype x, bstype y, 
+									  bstype z, bstype angle, void* userObject)
+#endif
 {
 	ControllerDefinition* def = getControllerDefinition(definition);
 
@@ -189,7 +195,11 @@ Controller* ScriptMachine::createController(const String& definition, void* user
 	if (def)
 	{
 		ctrl = mControllers->acquire();
-		ctrl->setDefinition(def);
+#ifndef BS_Z_DIMENSION
+		ctrl->setDefinition(def, x, y, angle);
+#else
+		ctrl->setDefinition(def, x, y, z, angle);
+#endif
 		ctrl->setUserObject(userObject);
 	}
 	else

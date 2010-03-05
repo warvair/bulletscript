@@ -1,6 +1,14 @@
 bulletscript changelog
 ----------------------
 
+05/03/10
+o version 1.1 released.
+o Machine::createController now takes position/angle, similar to Machine::createEmitter.
+o Emitter::setPosition and Controller::setPosition functions.
+o Controller emitter members now rotate around Contrller origin properly.
+o Fixed builds and moved examples to separate solution file.
+o Removed linux makefile.
+
 10/02/10
 o fixed bug in grammar file which was crashing the debug build.
 

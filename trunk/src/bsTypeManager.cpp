@@ -91,7 +91,7 @@ void TypeManager::updateType(UserTypeBase* object, bstype x, bstype y, bstype an
 	if (!object->_et_)
 		return;
 
-	EmitTypeControl* rec = object->_et_;
+	register EmitTypeControl* rec = object->_et_;
 	EmitType* emitType = rec->_type_;
 
 	// Update pointer to the user object because it may have been moved by the user
