@@ -272,6 +272,8 @@ namespace BS_NMSP
 			EmitType* ft, CodeBlockType type, const String& typeName);
 
 		// Code generation
+		void generateConstantArgumentList(ParseTreeNode* node, BytecodeBlock* code);
+
 		void createMemberVariableBytecode(ObjectDefinition* def, ParseTreeNode* node, bool first);
 
 		void generateEmitTail(EmitterDefinition* def, ParseTreeNode* node, BytecodeBlock* bytecode, 
@@ -279,8 +281,6 @@ namespace BS_NMSP
 
 		void generateBytecode(ObjectDefinition* def, ParseTreeNode* node, BytecodeBlock* bytecode,
 			CodeBlockType codeType, bool reset = false);
-
-		void generateConstantArgumentList(ParseTreeNode* node, BytecodeBlock* code);
 
 		// Utility functions
 		bool checkConstantExpression(ObjectDefinition* def, CodeBlockType type, const String& name,

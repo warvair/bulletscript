@@ -28,7 +28,6 @@ namespace BS_NMSP
 		BC_SETPROPERTY1,
 		BC_SETPROPERTY2,
 		BC_GETPROPERTY,
-		BC_OP_POS,
 		BC_OP_NEG,
 		BC_OP_ADD,
 		BC_OP_SUBTRACT,
@@ -56,6 +55,14 @@ namespace BS_NMSP
 		BC_RAISE,
 		BC_ENABLE,
 		BC_DIE
+	};
+
+	enum
+	{
+		BCR_ADD,
+		BCR_SUB,
+		BCR_MUL,
+		BCR_DIV
 	};
 
 }

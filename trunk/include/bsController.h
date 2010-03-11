@@ -36,7 +36,6 @@ namespace BS_NMSP
 		{
 			Emitter* emitter;
 			bstype special[NUM_SPECIAL_MEMBERS];
-			bstype baseX, baseY;
 
 			MemberController controllers[NUM_SPECIAL_MEMBERS];
 			uint32 activeControllers;
@@ -54,6 +53,9 @@ namespace BS_NMSP
 		bool mEnabled;
 
 		ScriptMachine* mScriptMachine;
+
+		// Angle represented as a vector
+		float mDirX, mDirY;
 
 		// Array of Emitter instances.
 		EmitterInstance* mEmitters;
