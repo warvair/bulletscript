@@ -139,7 +139,7 @@ namespace BS_NMSP
 	{
 		//! Member variables of the object that owns this ScriptRecord.
 		bstype* members;
-		// Todo: in a poor example of RAII, this is allocated by <Object>Definition::createScriptRecord,
+		// Todo: in a poor example of RAII, this is allocated by ObjectDefinition::createScriptRecord,
 		// and deallocated in ~ScriptRecord, which is called by <Object>::onRelease
 
 		//! number of member variables
@@ -194,7 +194,7 @@ namespace BS_NMSP
 	/**
 	 *	User function prototype for a native script function.
 	 */
-	typedef void (*NativeFunction)(ScriptState&);
+	typedef int (*NativeFunction)(ScriptState&);
 
 	/** 
      * Predefined member variables.

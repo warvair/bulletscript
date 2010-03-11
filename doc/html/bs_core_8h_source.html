@@ -96,7 +96,7 @@
 <a name="l00138"></a><a class="code" href="struct_b_s___n_m_s_p_1_1_script_record.html">00138</a>         <span class="keyword">struct </span>_BSAPI <a class="code" href="struct_b_s___n_m_s_p_1_1_script_record.html" title="Record of a scriptable object&amp;#39;s internal state.">ScriptRecord</a>
 <a name="l00139"></a>00139         {
 <a name="l00141"></a><a class="code" href="struct_b_s___n_m_s_p_1_1_script_record.html#232690c970ff37d1bad760f0bd3a9c37">00141</a>                 bstype* members;
-<a name="l00142"></a>00142                 <span class="comment">// Todo: in a poor example of RAII, this is allocated by &lt;Object&gt;Definition::createScriptRecord,</span>
+<a name="l00142"></a>00142                 <span class="comment">// Todo: in a poor example of RAII, this is allocated by ObjectDefinition::createScriptRecord,</span>
 <a name="l00143"></a>00143                 <span class="comment">// and deallocated in ~ScriptRecord, which is called by &lt;Object&gt;::onRelease</span>
 <a name="l00144"></a>00144 
 <a name="l00146"></a><a class="code" href="struct_b_s___n_m_s_p_1_1_script_record.html#e3cdc9ec539a3f1ec548ea36c8b52c8f">00146</a>                 <span class="keywordtype">int</span> numMembers;
@@ -126,7 +126,7 @@
 <a name="l00188"></a>00188 
 <a name="l00192"></a>00192         <span class="keyword">typedef</span> void (*AffectorFunction) (<a class="code" href="struct_b_s___n_m_s_p_1_1_user_type_base.html" title="Base class for users to derive their object types from.">UserTypeBase</a>*, float, <span class="keyword">const</span> bstype*);
 <a name="l00193"></a>00193 
-<a name="l00197"></a>00197         <span class="keyword">typedef</span> void (*NativeFunction)(<a class="code" href="struct_b_s___n_m_s_p_1_1_script_state.html" title="Script state.">ScriptState</a>&amp;);
+<a name="l00197"></a>00197         <span class="keyword">typedef</span> int (*NativeFunction)(<a class="code" href="struct_b_s___n_m_s_p_1_1_script_state.html" title="Script state.">ScriptState</a>&amp;);
 <a name="l00198"></a>00198 
 <a name="l00203"></a>00203         <span class="keyword">enum</span>
 <a name="l00204"></a>00204         {
@@ -154,7 +154,7 @@
 <a name="l00230"></a>00230 
 <a name="l00231"></a>00231 <span class="preprocessor">#endif</span>
 </pre></div></div>
-<hr size="1"><address style="text-align: right;"><small>Generated on Fri Mar 5 21:42:58 2010 for bulletscript by&nbsp;
+<hr size="1"><address style="text-align: right;"><small>Generated on Thu Mar 11 12:48:16 2010 for bulletscript by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img src="doxygen.png" alt="doxygen" align="middle" border="0"></a> 1.5.9 </small></address>
 </body>

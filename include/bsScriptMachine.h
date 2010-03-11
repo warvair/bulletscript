@@ -27,7 +27,7 @@ namespace BS_NMSP
 	enum ScriptStatus
 	{
 		ScriptSuspended,
-		ScriptFinished
+		ScriptOK
 	};
 
 	class ScriptMachine

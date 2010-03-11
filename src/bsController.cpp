@@ -11,6 +11,8 @@ namespace BS_NMSP
 Controller::Controller(ScriptMachine* machine) :
 	mEnabled(true),
 	mScriptMachine(machine),
+	mDirX(0),
+	mDirY(0),
 	mEmitters(0),
 	mNumEmitters(0),
 	mEvents(0),
@@ -64,6 +66,9 @@ void Controller::setDefinition(ControllerDefinition* def, bstype x, bstype y, bs
 	mNumEmitters = def->getNumEmitterVariables();
 	mEmitters = BS_NEWA(EmitterInstance, mNumEmitters);
 
+	mDirX = sin(angle * DEG_TO_RAD);
+	mDirY = cos(angle * DEG_TO_RAD);
+
 	for (int i = 0; i < mNumEmitters; ++i)
 	{
 		ControllerDefinition::EmitterVariable& var = def->getEmitterVariable(i);
@@ -78,21 +83,16 @@ void Controller::setDefinition(ControllerDefinition* def, bstype x, bstype y, bs
 #endif
 		inst.special[Member_Angle] = var.angle;
 
-		bstype sinAngle = sin(var.angle * DEG_TO_RAD);
-		bstype cosAngle = cos(var.angle * DEG_TO_RAD);
-		inst.baseX = var.x * cosAngle - var.y * sinAngle;
-		inst.baseY = var.x * sinAngle + var.y * cosAngle;
-
 #ifndef BS_Z_DIMENSION
 		inst.emitter = mScriptMachine->createEmitter(var.emitter, 
-			mRecord->members[Member_X] + inst.baseX,
-			mRecord->members[Member_Y] + inst.baseY,
+			mRecord->members[Member_X] + var.x * mDirY - var.y * mDirX,
+			mRecord->members[Member_Y] + var.x * mDirX + var.y * mDirY,
 			mRecord->members[Member_Angle] + inst.special[Member_Angle],
 			mUserObject);
 #else
 		inst.emitter = mScriptMachine->createEmitter(var.emitter, 
-			mRecord->members[Member_X] + inst.special[Member_X] + xOff,
-			mRecord->members[Member_Y] + inst.special[Member_Y] + yOff,
+			mRecord->members[Member_X] + var.x * mDirY - var.y * mDirX,
+			mRecord->members[Member_Y] + var.x * mDirX + var.y * mDirY,
 			mRecord->members[Member_Z] + inst.special[Member_Z],
 			mRecord->members[Member_Angle] + inst.special[Member_Angle],
 			mUserObject);
@@ -161,8 +161,11 @@ void Controller::setX(bstype x)
 
 	for (int i = 0; i < mNumEmitters; ++i)
 	{
-		mEmitters[i].emitter->setX(mRecord->members[Member_X] + mEmitters[i].baseX);
-		mEmitters[i].emitter->setY(mRecord->members[Member_Y] + mEmitters[i].baseY);
+		mEmitters[i].emitter->setX(mRecord->members[Member_X] + 
+			mEmitters[i].special[Member_X] * mDirY - mEmitters[i].special[Member_Y] * mDirX);
+
+		mEmitters[i].emitter->setY(mRecord->members[Member_Y] + 
+			mEmitters[i].special[Member_X] * mDirX + mEmitters[i].special[Member_Y] * mDirY);
 	}
 }
 // --------------------------------------------------------------------------------
@@ -175,8 +178,11 @@ void Controller::setY(bstype y)
 
 	for (int i = 0; i < mNumEmitters; ++i)
 	{
-		mEmitters[i].emitter->setX(mRecord->members[Member_X] + mEmitters[i].baseX);
-		mEmitters[i].emitter->setY(mRecord->members[Member_Y] + mEmitters[i].baseY);
+		mEmitters[i].emitter->setX(mRecord->members[Member_X] + 
+			mEmitters[i].special[Member_X] * mDirY - mEmitters[i].special[Member_Y] * mDirX);
+
+		mEmitters[i].emitter->setY(mRecord->members[Member_Y] + 
+			mEmitters[i].special[Member_X] * mDirX + mEmitters[i].special[Member_Y] * mDirY);
 	}
 }
 // --------------------------------------------------------------------------------
@@ -206,8 +212,12 @@ void Controller::setPosition(bstype x, bstype y, bstype z)
 
 	for (int i = 0; i < mNumEmitters; ++i)
 	{
-		mEmitters[i].emitter->setX(mRecord->members[Member_X] + mEmitters[i].baseX);
-		mEmitters[i].emitter->setY(mRecord->members[Member_Y] + mEmitters[i].baseY);
+		mEmitters[i].emitter->setX(mRecord->members[Member_X] + 
+			mEmitters[i].special[Member_X] * mDirY - mEmitters[i].special[Member_Y] * mDirX);
+
+		mEmitters[i].emitter->setY(mRecord->members[Member_Y] + 
+			mEmitters[i].special[Member_X] * mDirX + mEmitters[i].special[Member_Y] * mDirY);
+
 #ifdef BS_Z_DIMENSION
 		mEmitters[i].emitter->setZ(mRecord->members[Member_Z]);
 #endif
@@ -222,21 +232,18 @@ void Controller::setAngle(bstype facing, bstype orbit)
 	mRecord->members[Member_Angle] = facing;
 
 	// Recaculate orientation vector
-	bstype cosAngle = cos(-orbit * DEG_TO_RAD);
-	bstype sinAngle = sin(-orbit * DEG_TO_RAD);
+	mDirX = sin(-orbit * DEG_TO_RAD);
+	mDirY = cos(-orbit * DEG_TO_RAD);
 
 	for (int i = 0; i < mNumEmitters; ++i)
 	{
 		mEmitters[i].emitter->setAngle(mEmitters[i].special[Member_Angle] + facing);
 
-		mEmitters[i].baseX = mEmitters[i].special[Member_X] * cosAngle - 
-							 mEmitters[i].special[Member_Y] * sinAngle;
+		mEmitters[i].emitter->setX(mRecord->members[Member_X] + 
+			mEmitters[i].special[Member_X] * mDirY - mEmitters[i].special[Member_Y] * mDirX);
 
-		mEmitters[i].baseY = mEmitters[i].special[Member_X] * sinAngle +
-							 mEmitters[i].special[Member_Y] * cosAngle;
-
-		mEmitters[i].emitter->setX(mRecord->members[Member_X] + mEmitters[i].baseX);
-		mEmitters[i].emitter->setY(mRecord->members[Member_Y] + mEmitters[i].baseY);
+		mEmitters[i].emitter->setY(mRecord->members[Member_Y] + 
+			mEmitters[i].special[Member_X] * mDirX + mEmitters[i].special[Member_Y] * mDirY);
 	}
 }
 // --------------------------------------------------------------------------------
@@ -254,8 +261,11 @@ void Controller::setEmitterMember(int emitter, int member, bstype value)
 		mEmitters[emitter].special[member] = value;
 		if (member <= Member_Y)
 		{
-			mEmitters[emitter].emitter->setX(mRecord->members[Member_X] + mEmitters[emitter].baseX);
-			mEmitters[emitter].emitter->setY(mRecord->members[Member_Y] + mEmitters[emitter].baseY);
+			mEmitters[emitter].emitter->setX(mRecord->members[Member_X] + 
+				mEmitters[emitter].special[Member_X] * mDirY - mEmitters[emitter].special[Member_Y] * mDirX);
+
+			mEmitters[emitter].emitter->setY(mRecord->members[Member_Y] + 
+				mEmitters[emitter].special[Member_X] * mDirX + mEmitters[emitter].special[Member_Y] * mDirY);
 		}
 		else
 		{
@@ -406,8 +416,11 @@ void Controller::update(float frameTime)
 					// If X or Y, want to update based on orientation
 					if (j <= Member_Y)
 					{
-						mEmitters[i].emitter->setX(mRecord->members[Member_X] + mEmitters[i].baseX);
-						mEmitters[i].emitter->setY(mRecord->members[Member_Y] + mEmitters[i].baseY);
+						mEmitters[i].emitter->setX(mRecord->members[Member_X] + 
+							mEmitters[i].special[Member_X] * mDirY - mEmitters[i].special[Member_Y] * mDirX);
+
+						mEmitters[i].emitter->setY(mRecord->members[Member_Y] + 
+							mEmitters[i].special[Member_X] * mDirX + mEmitters[i].special[Member_Y] * mDirY);
 					}
 					else
 					{

@@ -25,7 +25,7 @@ void yy_delete_buffer(yy_buffer_state*);
 namespace BS_NMSP
 {
 
-void bm_rand(ScriptState& state)
+int bm_rand(ScriptState& state)
 {
 	int rv = rand();
 	bstype scale = state.stack[state.stackHead - 1];
@@ -34,12 +34,14 @@ void bm_rand(ScriptState& state)
 	// Push random onto stack - don't need to pop stack
 	// because the return value takes the argument's place.
 	state.stack[state.stackHead - 1] = r;
+	return ScriptOK;
 }
 
-void bm_sqrt(ScriptState& state)
+int bm_sqrt(ScriptState& state)
 {
 	bstype value = state.stack[state.stackHead - 1];
 	state.stack[state.stackHead - 1] = (bstype) sqrtf(value);
+	return ScriptOK;
 }
 
 // --------------------------------------------------------------------------------
@@ -576,11 +578,12 @@ int ScriptMachine::interpretCode(const uint32* code, size_t length, ScriptState&
 								  bstype angle, bstype* members, bool loop, void* userObject)
 {
 	if (st.curInstruction >= length)
-		return ScriptFinished;
+		return ScriptOK;
 
 	while (true)
 	{
-		switch (code[st.curInstruction])
+		uint32 instr32 = code[st.curInstruction];
+		switch (instr32)
 		{
 		case BC_PUSH:
 			{
@@ -752,13 +755,6 @@ int ScriptMachine::interpretCode(const uint32* code, size_t length, ScriptState&
 			}
 			break;
 
-		case BC_OP_POS:
-			{
-				// Don't actually need to do anything
-				st.curInstruction++;
-			}
-			break;
-
 		case BC_OP_NEG:
 			{
 				st.stack[st.stackHead - 1] = -st.stack[st.stackHead - 1];
@@ -767,144 +763,39 @@ int ScriptMachine::interpretCode(const uint32* code, size_t length, ScriptState&
 			break;
 
 		case BC_OP_ADD:
-			{
-				bstype val1 = st.stack[st.stackHead - 2];
-				bstype val2 = st.stack[st.stackHead - 1];
-
-				st.stack[st.stackHead - 2] = val1 + val2;
-				st.stackHead--;
-				st.curInstruction++;
-			}
-			break;
-
 		case BC_OP_SUBTRACT:
-			{
-				bstype val1 = st.stack[st.stackHead - 2];
-				bstype val2 = st.stack[st.stackHead - 1];
-
-				st.stack[st.stackHead - 2] = val1 - val2;
-				st.stackHead--;
-				st.curInstruction++;
-			}
-			break;
-
 		case BC_OP_MULTIPLY:
-			{
-
-				bstype val1 = st.stack[st.stackHead - 2];
-				bstype val2 = st.stack[st.stackHead - 1];
-
-				st.stack[st.stackHead - 2] = val1 * val2;
-				st.stackHead--;
-				st.curInstruction++;
-			}
-			break;
-
 		case BC_OP_DIVIDE:
-			{
-				bstype val1 = st.stack[st.stackHead - 2];
-				bstype val2 = st.stack[st.stackHead - 1];
-
-				st.stack[st.stackHead - 2] = val1 / val2;
-				st.stackHead--;
-				st.curInstruction++;
-			}
-			break;
-		
 		case BC_OP_REMAINDER:
-			{
-				bstype val1 = st.stack[st.stackHead - 2];
-				bstype val2 = st.stack[st.stackHead - 1];
-
-				st.stack[st.stackHead - 2] = (bstype) ((int) val1 % (int) val2);
-				st.stackHead--;
-				st.curInstruction++;
-			}
-			break;
-
 		case BC_OP_EQ:
-			{
-				bstype val1 = st.stack[st.stackHead - 2];
-				bstype val2 = st.stack[st.stackHead - 1];
-
-				st.stack[st.stackHead - 2] = (val1 == val2) ? bsvalue1 : bsvalue0;
-				st.stackHead--;
-				st.curInstruction++;
-			}
-			break;
-
 		case BC_OP_NEQ:
-			{
-				bstype val1 = st.stack[st.stackHead - 2];
-				bstype val2 = st.stack[st.stackHead - 1];
-
-				st.stack[st.stackHead - 2] = (val1 != val2) ? bsvalue1 : bsvalue0;
-				st.stackHead--;
-				st.curInstruction++;
-			}
-			break;
-
 		case BC_OP_LT:
-			{
-				bstype val1 = st.stack[st.stackHead - 2];
-				bstype val2 = st.stack[st.stackHead - 1];
-
-				st.stack[st.stackHead - 2] = (val1 < val2) ? bsvalue1 : bsvalue0;
-				st.stackHead--;
-				st.curInstruction++;
-			}
-			break;
-
 		case BC_OP_LTE:
-			{
-				bstype val1 = st.stack[st.stackHead - 2];
-				bstype val2 = st.stack[st.stackHead - 1];
-
-				st.stack[st.stackHead - 2] = (val1 <= val2) ? bsvalue1 : bsvalue0;
-				st.stackHead--;
-				st.curInstruction++;
-			}
-			break;
-
 		case BC_OP_GT:
-			{
-				bstype val1 = st.stack[st.stackHead - 2];
-				bstype val2 = st.stack[st.stackHead - 1];
-
-				st.stack[st.stackHead - 2] = (val1 > val2) ? bsvalue1 : bsvalue0;
-				st.stackHead--;
-				st.curInstruction++;
-			}
-			break;
-
 		case BC_OP_GTE:
-			{
-				bstype val1 = st.stack[st.stackHead - 2];
-				bstype val2 = st.stack[st.stackHead - 1];
-
-				st.stack[st.stackHead - 2] = (val1 >= val2) ? bsvalue1 : bsvalue0;
-				st.stackHead--;
-				st.curInstruction++;
-			}
-			break;
-
 		case BC_LOG_AND:
-			{
-				bstype val1 = st.stack[st.stackHead - 2];
-				bstype val2 = st.stack[st.stackHead - 1];
-
-				st.stack[st.stackHead - 2] = (val1 && val2) ? bsvalue1 : bsvalue0;
-				st.stackHead--;
-				st.curInstruction++;
-			}
-			break;
-
 		case BC_LOG_OR:
 			{
 				bstype val1 = st.stack[st.stackHead - 2];
 				bstype val2 = st.stack[st.stackHead - 1];
 
-				st.stack[st.stackHead - 2] = (val1 || val2) ? bsvalue1 : bsvalue0;
+				switch(instr32)
+				{
+					case BC_OP_ADD:			st.stack[st.stackHead - 2] = val1 + val2; break;
+					case BC_OP_SUBTRACT:	st.stack[st.stackHead - 2] = val1 - val2; break;
+					case BC_OP_MULTIPLY:	st.stack[st.stackHead - 2] = val1 * val2; break;
+					case BC_OP_DIVIDE:		st.stack[st.stackHead - 2] = val1 / val2; break;
+					case BC_OP_REMAINDER:	st.stack[st.stackHead - 2] = (bstype) ((int) val1 % (int) val2);
+					case BC_OP_EQ:			st.stack[st.stackHead - 2] = (val1 == val2) ? bsvalue1 : bsvalue0; break;
+					case BC_OP_NEQ:			st.stack[st.stackHead - 2] = (val1 != val2) ? bsvalue1 : bsvalue0; break;
+					case BC_OP_LT:			st.stack[st.stackHead - 2] = (val1 < val2) ? bsvalue1 : bsvalue0; break;
+					case BC_OP_LTE:			st.stack[st.stackHead - 2] = (val1 <= val2) ? bsvalue1 : bsvalue0; break;
+					case BC_OP_GT:			st.stack[st.stackHead - 2] = (val1 > val2) ? bsvalue1 : bsvalue0; break;
+					case BC_OP_GTE:			st.stack[st.stackHead - 2] = (val1 >= val2) ? bsvalue1 : bsvalue0; break;
+					case BC_LOG_AND:		st.stack[st.stackHead - 2] = (val1 && val2) ? bsvalue1 : bsvalue0; break;
+					case BC_LOG_OR:			st.stack[st.stackHead - 2] = (val1 || val2) ? bsvalue1 : bsvalue0; break;
+				};
+				
 				st.stackHead--;
 				st.curInstruction++;
 			}
@@ -993,7 +884,7 @@ int ScriptMachine::interpretCode(const uint32* code, size_t length, ScriptState&
 				
 				// If the event changes the state then we want to bail now
 				if (ctrl->_raiseEvent(evtIndex, &st.stack[st.stackHead - numArgs]))
-					return ScriptFinished;
+					return ScriptOK;
 
 				st.curInstruction += 3;
 			}
@@ -1013,9 +904,17 @@ int ScriptMachine::interpretCode(const uint32* code, size_t length, ScriptState&
 			{
 				int function = code[st.curInstruction + 1];
 				NativeFunction func = getNativeFunction(function);
-				func(st);
+				int scriptStatus = func(st);
 
 				st.curInstruction += 2;
+
+				// If the user has suspended the script, return now.
+				if (scriptStatus == ScriptSuspended)
+				{
+					if (st.curInstruction >= (int) length && loop)
+						st.curInstruction = 0;
+					return ScriptSuspended;
+				}
 			}
 			break;
 
@@ -1078,7 +977,7 @@ int ScriptMachine::interpretCode(const uint32* code, size_t length, ScriptState&
 		}
 
 		if (!checkInstructionPosition(st, length, loop))
-			return ScriptFinished;
+			return ScriptOK;
 	}
 }
 // --------------------------------------------------------------------------------
@@ -1086,7 +985,8 @@ int ScriptMachine::interpretCode(const uint32* code, size_t length, ScriptState&
 {
 	while (st.curInstruction < length)
 	{
-		switch (code[st.curInstruction])
+		uint32 instr32 = code[st.curInstruction];
+		switch (instr32)
 		{
 		case BC_PUSH:
 			{
@@ -1135,13 +1035,6 @@ int ScriptMachine::interpretCode(const uint32* code, size_t length, ScriptState&
 			}
 			break;
 
-		case BC_OP_POS:
-			{
-				// Don't actually need to do anything
-				st.curInstruction++;
-			}
-			break;
-
 		case BC_OP_NEG:
 			{
 				st.stack[st.stackHead - 1] = -st.stack[st.stackHead - 1];
@@ -1150,144 +1043,39 @@ int ScriptMachine::interpretCode(const uint32* code, size_t length, ScriptState&
 			break;
 
 		case BC_OP_ADD:
-			{
-				bstype val1 = st.stack[st.stackHead - 2];
-				bstype val2 = st.stack[st.stackHead - 1];
-
-				st.stack[st.stackHead - 2] = val1 + val2;
-				st.stackHead--;
-				st.curInstruction++;
-			}
-			break;
-
 		case BC_OP_SUBTRACT:
-			{
-				bstype val1 = st.stack[st.stackHead - 2];
-				bstype val2 = st.stack[st.stackHead - 1];
-
-				st.stack[st.stackHead - 2] = val1 - val2;
-				st.stackHead--;
-				st.curInstruction++;
-			}
-			break;
-
 		case BC_OP_MULTIPLY:
-			{
-
-				bstype val1 = st.stack[st.stackHead - 2];
-				bstype val2 = st.stack[st.stackHead - 1];
-
-				st.stack[st.stackHead - 2] = val1 * val2;
-				st.stackHead--;
-				st.curInstruction++;
-			}
-			break;
-
 		case BC_OP_DIVIDE:
-			{
-				bstype val1 = st.stack[st.stackHead - 2];
-				bstype val2 = st.stack[st.stackHead - 1];
-
-				st.stack[st.stackHead - 2] = val1 / val2;
-				st.stackHead--;
-				st.curInstruction++;
-			}
-			break;
-		
 		case BC_OP_REMAINDER:
-			{
-				bstype val1 = st.stack[st.stackHead - 2];
-				bstype val2 = st.stack[st.stackHead - 1];
-
-				st.stack[st.stackHead - 2] = (bstype) ((int) val1 % (int) val2);
-				st.stackHead--;
-				st.curInstruction++;
-			}
-			break;
-
 		case BC_OP_EQ:
-			{
-				bstype val1 = st.stack[st.stackHead - 2];
-				bstype val2 = st.stack[st.stackHead - 1];
-
-				st.stack[st.stackHead - 2] = (val1 == val2) ? bsvalue1 : bsvalue0;
-				st.stackHead--;
-				st.curInstruction++;
-			}
-			break;
-
 		case BC_OP_NEQ:
-			{
-				bstype val1 = st.stack[st.stackHead - 2];
-				bstype val2 = st.stack[st.stackHead - 1];
-
-				st.stack[st.stackHead - 2] = (val1 != val2) ? bsvalue1 : bsvalue0;
-				st.stackHead--;
-				st.curInstruction++;
-			}
-			break;
-
 		case BC_OP_LT:
-			{
-				bstype val1 = st.stack[st.stackHead - 2];
-				bstype val2 = st.stack[st.stackHead - 1];
-
-				st.stack[st.stackHead - 2] = (val1 < val2) ? bsvalue1 : bsvalue0;
-				st.stackHead--;
-				st.curInstruction++;
-			}
-			break;
-
 		case BC_OP_LTE:
-			{
-				bstype val1 = st.stack[st.stackHead - 2];
-				bstype val2 = st.stack[st.stackHead - 1];
-
-				st.stack[st.stackHead - 2] = (val1 <= val2) ? bsvalue1 : bsvalue0;
-				st.stackHead--;
-				st.curInstruction++;
-			}
-			break;
-
 		case BC_OP_GT:
-			{
-				bstype val1 = st.stack[st.stackHead - 2];
-				bstype val2 = st.stack[st.stackHead - 1];
-
-				st.stack[st.stackHead - 2] = (val1 > val2) ? bsvalue1 : bsvalue0;
-				st.stackHead--;
-				st.curInstruction++;
-			}
-			break;
-
 		case BC_OP_GTE:
-			{
-				bstype val1 = st.stack[st.stackHead - 2];
-				bstype val2 = st.stack[st.stackHead - 1];
-
-				st.stack[st.stackHead - 2] = (val1 >= val2) ? bsvalue1 : bsvalue0;
-				st.stackHead--;
-				st.curInstruction++;
-			}
-			break;
-
 		case BC_LOG_AND:
-			{
-				bstype val1 = st.stack[st.stackHead - 2];
-				bstype val2 = st.stack[st.stackHead - 1];
-
-				st.stack[st.stackHead - 2] = (val1 && val2) ? bsvalue1 : bsvalue0;
-				st.stackHead--;
-				st.curInstruction++;
-			}
-			break;
-
 		case BC_LOG_OR:
 			{
 				bstype val1 = st.stack[st.stackHead - 2];
 				bstype val2 = st.stack[st.stackHead - 1];
 
-				st.stack[st.stackHead - 2] = (val1 || val2) ? bsvalue1 : bsvalue0;
+				switch(instr32)
+				{
+					case BC_OP_ADD:			st.stack[st.stackHead - 2] = val1 + val2; break;
+					case BC_OP_SUBTRACT:	st.stack[st.stackHead - 2] = val1 - val2; break;
+					case BC_OP_MULTIPLY:	st.stack[st.stackHead - 2] = val1 * val2; break;
+					case BC_OP_DIVIDE:		st.stack[st.stackHead - 2] = val1 / val2; break;
+					case BC_OP_REMAINDER:	st.stack[st.stackHead - 2] = (bstype) ((int) val1 % (int) val2);
+					case BC_OP_EQ:			st.stack[st.stackHead - 2] = (val1 == val2) ? bsvalue1 : bsvalue0; break;
+					case BC_OP_NEQ:			st.stack[st.stackHead - 2] = (val1 != val2) ? bsvalue1 : bsvalue0; break;
+					case BC_OP_LT:			st.stack[st.stackHead - 2] = (val1 < val2) ? bsvalue1 : bsvalue0; break;
+					case BC_OP_LTE:			st.stack[st.stackHead - 2] = (val1 <= val2) ? bsvalue1 : bsvalue0; break;
+					case BC_OP_GT:			st.stack[st.stackHead - 2] = (val1 > val2) ? bsvalue1 : bsvalue0; break;
+					case BC_OP_GTE:			st.stack[st.stackHead - 2] = (val1 >= val2) ? bsvalue1 : bsvalue0; break;
+					case BC_LOG_AND:		st.stack[st.stackHead - 2] = (val1 && val2) ? bsvalue1 : bsvalue0; break;
+					case BC_LOG_OR:			st.stack[st.stackHead - 2] = (val1 || val2) ? bsvalue1 : bsvalue0; break;
+				};
+				
 				st.stackHead--;
 				st.curInstruction++;
 			}
@@ -1310,7 +1098,7 @@ int ScriptMachine::interpretCode(const uint32* code, size_t length, ScriptState&
 		}
 	}
 
-	return ScriptFinished;
+	return ScriptOK;
 }
 // --------------------------------------------------------------------------------
 void ScriptMachine::processScriptRecord(ScriptRecord* gsr, void* object, void* userObject)

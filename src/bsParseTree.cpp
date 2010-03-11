@@ -2411,7 +2411,7 @@ void ParseTree::generateBytecode(ObjectDefinition* def, ParseTreeNode* node,
 	switch (node->getType())
 	{
 	case PT_UnaryPosStatement:
-		bytecode->push_back(BC_OP_POS);
+		// Don't do anything for now
 		break;
 
 	case PT_UnaryNegStatement:
@@ -2780,7 +2780,7 @@ void ParseTree::createControllerDefinitions(ParseTreeNode* node,
 void ParseTree::createDefinitions(ParseTreeNode* node,
 								  const MemberVariableDeclarationMap& memberDecls)
 {
-	// Lock tree for basic thread-safety.
+	// Lock tree for basic concurrency-safety.
 	mLocked = true;
 	
 	// Create emitter definitions first, then controller definitions, because 

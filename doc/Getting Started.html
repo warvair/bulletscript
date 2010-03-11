@@ -160,19 +160,29 @@ An 'accelerate' affector could be written as:
 </pre>
 Native functions are C++ functions which are usable in script.  Some common examples would be random number generation, and square root.  A native function is declared as follows:
 <pre>
-	void (*<i>native_function</i>)(bs::ScriptState& state);
+	int (*<i>native_function</i>)(bs::ScriptState& state);
 </pre>
-Here, <span class="code">state</span> is a reference to bulletscript's internal script management structure, of which there is one for each emitter (and controller).  This contains information such as the instruction pointer, the stack and local variables.  Thus, native functions have a fair amount of control over the emitter, and can pause/unpause it by setting its suspend time, or push values onto the stack as a way of returning values.  For instance, the script function <span class="code">rand</span> is implemented as follows:
+Here, <span class="code">state</span> is a reference to bulletscript's internal script management structure, of which there is one for each emitter (and controller).  This contains information such as the instruction pointer, the stack and local variables.  Thus, native functions have a fair amount of control over the emitter, and can pause/unpause it by setting its suspend time, or push values onto the stack as a way of returning values.  
+<p>
+The stack pointer (<span class="code">ScriptState::stack</span>) points to the stack base.  <span class="code">ScriptState::stackHead</span> is the 'top' pointer, used to access the top of the stack.  It is actually the offset of the next available space on the stack, and thus accessing the stack means using it with a negative offset.
+<p>
+For instance, the script function <span class="code">rand</span> is implemented as follows:
 <pre>
-	void bm_rand(ScriptState& state)
+	int bm_rand(ScriptState& state)
 	{
 		int rv = rand();
-		bstype scale = state.stack[state.stackHead - 1];
-		bstype r = scale * (rv / (float) RAND_MAX);
 
-		// Push random onto stack - don't need to pop stack
-		// because the return value takes the argument's place.
-		state.stack[state.stackHead - 1] = r;
+		// Get the first argument off the stack.
+		bstype scale = state.stack[state.stackHead - 1];
+
+		// Scale our random number to the desired range.
+		bstype result = scale * (rv / (float) RAND_MAX);
+
+		// Push result onto stack.  Normally, when a function ends the arguments must be popped off the stack.  This would be
+		// done by subtracting the number of arguments from state.stackHead.  However, in this case, we are returning a value,
+		// so this must be pushed onto the stack, taking the argument's place, so we don't need to modify state.stackHead.
+		state.stack[state.stackHead - 1] = result;
+		return ScriptOK;
 	}
 </pre>
 
@@ -180,6 +190,17 @@ This function is used in script as:
 <pre>
 	x = rand(10); // generate random float between 0 and 10
 </pre>
+
+The return value is used to tell BulletScript the state of the script.  Because the function takes a reference, you are able to modify it, but unless you tell BulletScript how you have done this, errors will occur.  If you have just modified the stack, then return <span class="code">ScriptOK</span>.  However, you can also set the <span class="code">ScriptState::suspendTime</span> value, which will cause the script to halt execution.  This can be used to implement a custom 'wait' function, eg:
+<pre>
+	int my_wait(ScriptState& state)
+	{
+		float count = state.stack[--state.stackHead];
+		state.suspendTime = count;
+		return bs::ScriptSuspended;
+	}
+</pre>
+
 
 <h3>Initialising bulletscript</h3>
 Once the user system is created, we need to expose it to bulletscript.  First off all, we create an instance of <span class="code">bs::Machine</span>.  This is a facade class which handles all communication between the user and bulletscript.
@@ -252,8 +273,8 @@ This function returns the number of errors in the script.
 <p>
 Once scripts have been compiled, the next step is to create emitters and controllers.  This is done with:
 <pre>
-	bs:Emitter* emit = machine.createEmitter(<i>emitter_name</i>, x, y, angle, <i>userObject</i>);
-	bs::Controller* ctrl = machine.createController(<i>controller_name</i>, <i>userObject</i>);
+	bs:Emitter* emit = machine.createEmitter(<i>emitter_name</i>, x, y, angle, userObject);
+	bs::Controller* ctrl = machine.createController(<i>controller_name</i>, x, y, angle, userObject);
 </pre>
 <span class="code">userObject</span> can be ignored (it defaults to NULL), if wanted.  These objects can then be manipulated (eg changing position/angle, enabling/disabling, raising events) outside of the main update loop.  They are destroyed with:
 <pre>
