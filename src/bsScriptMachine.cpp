@@ -583,6 +583,7 @@ int ScriptMachine::interpretCode(const uint32* code, size_t length, ScriptState&
 	while (true)
 	{
 		uint32 instr32 = code[st.curInstruction];
+
 		switch (instr32)
 		{
 		case BC_PUSH:
