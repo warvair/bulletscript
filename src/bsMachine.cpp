@@ -181,5 +181,12 @@ void Machine::postUpdate(float frameTime)
 	mScriptMachine->postUpdateEmitters();
 }
 // --------------------------------------------------------------------------------
+#ifdef BS_ENABLEJIT
+bool Machine::enableJIT(const char* object)
+{
+	return mScriptMachine->enableJIT(object);
+}
+#endif
+// --------------------------------------------------------------------------------
 
 }

@@ -331,7 +331,7 @@ BulletScript uses the following operators.  Operators cannot be overloaded by us
 <pre>	+ - * / % > < >= <= == != && ||</pre>
 Notes: 
 <list>
-<li>Despite using floating point, the modulus (<span class="code">%</span>) operator can be used.  However it will convert the values to integers before calculation.  BulletScript does not currently support fractional modulus calculation.</li>
+<li>The modulus operator implements fractional modulus, ie <span class="code">fmod()</span>.</li>
 <li>The equivalence operators (<span class="code">> < >= <= == !=</span>) and the logical operators (<span class="code">&& ||</span>) return 1 if the condition is true, and 0 if false.
 </list>
 <p>

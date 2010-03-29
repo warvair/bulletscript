@@ -215,13 +215,13 @@ namespace BS_NMSP
 		void buildConstantDefineList(ParseTreeNode* node, ConstantDefinitionList& defList);
 
 		// Core definition creation
-		void createEmitterDefinitions(ParseTreeNode* node);
+		void createEmitterDefinitions(ParseTreeNode* node, JitterHookFunction jitHook);
 
-		EmitterDefinition* createEmitterDefinition(ParseTreeNode* node);
+		EmitterDefinition* createEmitterDefinition(ParseTreeNode* node, JitterHookFunction jitHook);
 
-		void createControllerDefinitions(ParseTreeNode* node, const MemberVariableDeclarationMap& memberDecls);
+		void createControllerDefinitions(ParseTreeNode* node, const MemberVariableDeclarationMap& memberDecls, JitterHookFunction jitHook);
 
-		ControllerDefinition* createControllerDefinition(ParseTreeNode* node, const MemberVariableDeclarationMap& memberDecls);
+		ControllerDefinition* createControllerDefinition(ParseTreeNode* node, const MemberVariableDeclarationMap& memberDecls, JitterHookFunction jitHook);
 
 		// Member variables
 		void createMemberVariables(ObjectDefinition* def, ParseTreeNode* node);
@@ -322,7 +322,8 @@ namespace BS_NMSP
 
 		int getNumErrors() const;
 
-		void createDefinitions(ParseTreeNode* node,	const MemberVariableDeclarationMap& memberDecls);
+		void createDefinitions(ParseTreeNode* node,	const MemberVariableDeclarationMap& memberDecls,
+			JitterHookFunction jitHook);
 
 		int createCodeRecord(const String& type, const String& typeName,
 			const String& blockType, const String& blockName);

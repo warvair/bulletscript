@@ -342,6 +342,20 @@ namespace BS_NMSP
 		 */
 		bool controllerDefinitionExists(const String& name) const;
 
+#ifdef BS_ENABLEJIT
+		/**	\brief Load JIT compiler
+		 *
+		 *	Calling this function loads the JIT compiler, if it is available, and enables
+		 *	JIT compilation.  The virtual machine is then not used for interpreting code,
+		 *	as it is all done in native machine code.
+		 *
+		 *	\param object dll/so library to load.
+		 *
+		 *	\return true if load was successful, false otherwise.
+		 */
+		bool enableJIT(const char* object);
+#endif
+
 	};
 
 }

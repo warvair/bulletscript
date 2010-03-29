@@ -219,7 +219,7 @@
 			/>
 			<Tool
 				Name="VCPostBuildEventTool"
-				CommandLine="copy $(SolutionDir)\..\bin\BulletScript.dll $(SolutionDir)\..\examples\testbed\bin&#x0D;&#x0A;copy $(SolutionDir)\..\bin\BulletScript.dll $(SolutionDir)\..\examples\minimal\bin&#x0D;&#x0A;&#x0D;&#x0A;"
+				CommandLine="copy $(SolutionDir)\..\bin\BulletScript.dll $(SolutionDir)\..\examples\testbed\bin&#x0D;&#x0A;copy $(SolutionDir)\..\bin\BulletScript.dll $(SolutionDir)\..\examples\minimal\bin&#x0D;&#x0A;copy $(SolutionDir)\..\bin\BulletScript.dll $(SolutionDir)\..\examples\testjit\bin&#x0D;&#x0A;&#x0D;&#x0A;"
 			/>
 		</Configuration>
 		<Configuration
@@ -294,7 +294,7 @@
 			/>
 			<Tool
 				Name="VCPostBuildEventTool"
-				CommandLine="copy $(SolutionDir)\..\bin\BulletScriptd.dll $(SolutionDir)\..\examples\testbed\bin&#x0D;&#x0A;copy $(SolutionDir)\..\bin\BulletScriptd.dll $(SolutionDir)\..\examples\minimal\bin&#x0D;&#x0A;&#x0D;&#x0A;"
+				CommandLine="copy $(SolutionDir)\..\bin\BulletScriptd.dll $(SolutionDir)\..\examples\testbed\bin&#x0D;&#x0A;copy $(SolutionDir)\..\bin\BulletScriptd.dll $(SolutionDir)\..\examples\minimal\bin&#x0D;&#x0A;copy $(SolutionDir)\..\bin\BulletScriptd.dll $(SolutionDir)\..\examples\testjit\bin&#x0D;&#x0A;"
 			/>
 		</Configuration>
 	</Configurations>
@@ -328,6 +328,10 @@
 			</File>
 			<File
 				RelativePath="..\src\bsCore.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\src\bsDLL.cpp"
 				>
 			</File>
 			<File
@@ -425,6 +429,10 @@
 				>
 			</File>
 			<File
+				RelativePath="..\include\bsDLL.h"
+				>
+			</File>
+			<File
 				RelativePath="..\include\bsEmitter.h"
 				>
 			</File>
@@ -480,6 +488,10 @@
 			>
 			<File
 				RelativePath="..\doc\Features.txt"
+				>
+			</File>
+			<File
+				RelativePath="..\doc\JIT.txt"
 				>
 			</File>
 			<File
