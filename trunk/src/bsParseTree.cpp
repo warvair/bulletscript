@@ -2472,7 +2472,7 @@ void ParseTree::generateBytecode(ObjectDefinition* def, ParseTreeNode* node,
 	}
 }
 // --------------------------------------------------------------------------------
-EmitterDefinition* ParseTree::createEmitterDefinition(ParseTreeNode* node)
+EmitterDefinition* ParseTree::createEmitterDefinition(ParseTreeNode* node, JitterHookFunction jitHook)
 {
 	String name = node->getStringData();
 	EmitterDefinition* def = new EmitterDefinition(name);
@@ -2599,19 +2599,24 @@ EmitterDefinition* ParseTree::createEmitterDefinition(ParseTreeNode* node)
 	// Create state bytecode
 	generateBytecode(def, node->getChild(PT_EmitterStateNode), 0, CBT_EmitterState, true);
 
-	if (mNumErrors > 0)
+#ifdef BS_ENABLEJIT
+	if (jitHook)
 	{
-		delete def;
-		return 0;
+		// JIT states
+		for (int i = 0; i < def->getNumStates(); ++i)
+		{
+			CodeRecord* codeRec = getCodeRecord("Emitter", def->getName(), "State", def->getState(i).name);
+			codeRec->jitFunction = jitHook(codeRec->byteCode, codeRec->byteCodeSize, "State");
+		}
 	}
-	else
-	{
-		return def;
-	}
+#endif
+
+	return def;
 }
 // --------------------------------------------------------------------------------
 ControllerDefinition* ParseTree::createControllerDefinition(ParseTreeNode* node,
-															const MemberVariableDeclarationMap& memberDecls)
+															const MemberVariableDeclarationMap& memberDecls,
+															JitterHookFunction jitHook)
 {
 	String name = node->getStringData();
 
@@ -2729,22 +2734,14 @@ ControllerDefinition* ParseTree::createControllerDefinition(ParseTreeNode* node,
 	// Create state bytecode
 	generateBytecode(def, node->getChild(PT_ControllerStateNode), 0, CBT_ControllerState, true);
 
-	if (mNumErrors > 0)
-	{
-		delete def;
-		return 0;
-	}
-	else
-	{
-		return def;
-	}
+	return def;
 }
 // --------------------------------------------------------------------------------
-void ParseTree::createEmitterDefinitions(ParseTreeNode* node)
+void ParseTree::createEmitterDefinitions(ParseTreeNode* node, JitterHookFunction jitHook)
 {
 	if (node->getType() == PT_EmitterDefinition)
 	{
-		EmitterDefinition* def = createEmitterDefinition(node);
+		EmitterDefinition* def = createEmitterDefinition(node, jitHook);
 		if (def)
 			mScriptMachine->addEmitterDefinition(def->getName(), def);
 	}
@@ -2753,17 +2750,18 @@ void ParseTree::createEmitterDefinitions(ParseTreeNode* node)
 		for (int i = 0; i < ParseTreeNode::MAX_CHILDREN; ++i)
 		{
 			if (node->getChild(i))
-				createEmitterDefinitions(node->getChild(i));
+				createEmitterDefinitions(node->getChild(i), jitHook);
 		}
 	}
 }
 // --------------------------------------------------------------------------------
 void ParseTree::createControllerDefinitions(ParseTreeNode* node,
-											const MemberVariableDeclarationMap& memberDecls)
+											const MemberVariableDeclarationMap& memberDecls,
+											JitterHookFunction jitHook)
 {
 	if (node->getType() == PT_ControllerDefinition)
 	{
-		ControllerDefinition* def = createControllerDefinition(node, memberDecls);
+		ControllerDefinition* def = createControllerDefinition(node, memberDecls, jitHook);
 		if (def)
 			mScriptMachine->addControllerDefinition(def->getName(), def);
 	}
@@ -2772,21 +2770,22 @@ void ParseTree::createControllerDefinitions(ParseTreeNode* node,
 		for (int i = 0; i < ParseTreeNode::MAX_CHILDREN; ++i)
 		{
 			if (node->getChild(i))
-				createControllerDefinitions(node->getChild(i), memberDecls);
+				createControllerDefinitions(node->getChild(i), memberDecls, jitHook);
 		}
 	}
 }
 // --------------------------------------------------------------------------------
 void ParseTree::createDefinitions(ParseTreeNode* node,
-								  const MemberVariableDeclarationMap& memberDecls)
+								  const MemberVariableDeclarationMap& memberDecls,
+								  JitterHookFunction jitHook)
 {
 	// Lock tree for basic concurrency-safety.
 	mLocked = true;
 	
 	// Create emitter definitions first, then controller definitions, because 
 	// controllers rely on emitters
-	createEmitterDefinitions(node);
-	createControllerDefinitions(node, memberDecls);
+	createEmitterDefinitions(node, jitHook);
+	createControllerDefinitions(node, memberDecls, jitHook);
 
 	// Unlock
 	mLocked = false;

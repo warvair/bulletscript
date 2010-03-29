@@ -11,11 +11,15 @@
 // value type
 namespace BS_NMSP
 {
+	// Currently, only float works reliably, so do not change this!
 	typedef float bstype;
 	const bstype bsepsilon = 0.001f;
 	const bstype bsvalue1 = 1.0f;
 	const bstype bsvalue0 = 0.0f;
 }
+
+// Comment this out to disable JIT functionality
+#define BS_ENABLEJIT
 
 #define BS_TYPE_TO_UINT32(x)			(*((BS_NMSP::uint32*) ((void*) (&x))))
 #define BS_UINT32_TO_TYPE(x)			(*((bstype*) ((void*) (&x))))
@@ -39,7 +43,7 @@ namespace BS_NMSP
 // is likely a more efficient way of achieving the effect you want.
 
 // By default bulletscript uses 2 dimensions.  Uncommenting this enables the special member variable 'z',
-// which behaves similarly to x and y.  This has not been tested properly yet!
+// which behaves similarly to x and y.  This has not been tested properly yet, and is likely to break things!
 //#define BS_Z_DIMENSION
 
 // Max number of arguments that an affector can take.

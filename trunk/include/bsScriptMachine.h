@@ -19,6 +19,7 @@
 #include "bsControllerDefinition.h"
 #include "bsDeepMemoryPool.h"
 #include "bsLog.h"
+#include "bsDLL.h"
 
 namespace BS_NMSP
 {
@@ -84,6 +85,13 @@ namespace BS_NMSP
 		// CodeRecords
 		typedef std::vector<CodeRecord*> CodeList;
 		CodeList mCodeRecords;
+
+		// JIT compilation
+		bool mJitEnabled;
+
+		DynLib mJitDLL;
+
+		JitterHookFunction mJitHook;
 
 	private:
 
@@ -202,6 +210,10 @@ namespace BS_NMSP
 		int compileScript(const uint8* buffer, size_t bufferSize);
 
 		int declareControllerMemberVariable(const String& ctrl, const String& var, bstype value);
+
+#ifdef BS_ENABLEJIT
+		bool enableJIT(const char* object);
+#endif
 
 		// Errors
 		void addErrorMsg (const String& msg);

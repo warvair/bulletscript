@@ -50,7 +50,9 @@ ScriptMachine::ScriptMachine(Log* _log) :
 	mLog(_log),
 	mPropertiesMapped(false),
 	mEmitters(0),
-	mControllers(0)
+	mControllers(0),
+	mJitEnabled(false),
+	mJitHook(0)
 {
 	// Register functions
 	registerNativeFunction("rand", bm_rand);
@@ -506,7 +508,7 @@ int ScriptMachine::compileScript(const uint8* buffer, size_t bufferSize)
 		mPropertiesMapped = true;
 	}
 
-	ast->createDefinitions(ast->getRootNode(), mMemberVariableDeclarations);
+	ast->createDefinitions(ast->getRootNode(), mMemberVariableDeclarations, mJitHook);
 
 	numParseErrors = ast->getNumErrors();
 	if (numParseErrors > 0)
@@ -549,6 +551,20 @@ int ScriptMachine::declareControllerMemberVariable(const String& ctrl, const Str
 
 	return BS_OK;
 }
+// --------------------------------------------------------------------------------
+#ifdef BS_ENABLEJIT
+bool ScriptMachine::enableJIT(const char* object)
+{
+	if (!mJitDLL.load(object, mJitHook))
+	{
+		addErrorMsg(mJitDLL.getErrorMessage());
+		return false;
+	}
+
+	mJitEnabled = true;
+	return mJitEnabled;
+}
+#endif
 // --------------------------------------------------------------------------------
 void ScriptMachine::addErrorMsg(const String& msg)
 {
@@ -786,7 +802,7 @@ int ScriptMachine::interpretCode(const uint32* code, size_t length, ScriptState&
 					case BC_OP_SUBTRACT:	st.stack[st.stackHead - 2] = val1 - val2; break;
 					case BC_OP_MULTIPLY:	st.stack[st.stackHead - 2] = val1 * val2; break;
 					case BC_OP_DIVIDE:		st.stack[st.stackHead - 2] = val1 / val2; break;
-					case BC_OP_REMAINDER:	st.stack[st.stackHead - 2] = (bstype) ((int) val1 % (int) val2);
+					case BC_OP_REMAINDER:	st.stack[st.stackHead - 2] = fmod(val1, val2); break;
 					case BC_OP_EQ:			st.stack[st.stackHead - 2] = (val1 == val2) ? bsvalue1 : bsvalue0; break;
 					case BC_OP_NEQ:			st.stack[st.stackHead - 2] = (val1 != val2) ? bsvalue1 : bsvalue0; break;
 					case BC_OP_LT:			st.stack[st.stackHead - 2] = (val1 < val2) ? bsvalue1 : bsvalue0; break;
@@ -1066,7 +1082,7 @@ int ScriptMachine::interpretCode(const uint32* code, size_t length, ScriptState&
 					case BC_OP_SUBTRACT:	st.stack[st.stackHead - 2] = val1 - val2; break;
 					case BC_OP_MULTIPLY:	st.stack[st.stackHead - 2] = val1 * val2; break;
 					case BC_OP_DIVIDE:		st.stack[st.stackHead - 2] = val1 / val2; break;
-					case BC_OP_REMAINDER:	st.stack[st.stackHead - 2] = (bstype) ((int) val1 % (int) val2);
+					case BC_OP_REMAINDER:	st.stack[st.stackHead - 2] = fmod(val1, val2); break;
 					case BC_OP_EQ:			st.stack[st.stackHead - 2] = (val1 == val2) ? bsvalue1 : bsvalue0; break;
 					case BC_OP_NEQ:			st.stack[st.stackHead - 2] = (val1 != val2) ? bsvalue1 : bsvalue0; break;
 					case BC_OP_LT:			st.stack[st.stackHead - 2] = (val1 < val2) ? bsvalue1 : bsvalue0; break;
@@ -1109,6 +1125,14 @@ void ScriptMachine::processScriptRecord(ScriptRecord* gsr, void* object, void* u
 	CodeRecord* rec = getCodeRecord(gsr->curState);
 	uint32 *bytecode = rec->byteCode;
 	size_t bytecodeLen = rec->byteCodeSize;
+
+#ifdef BS_ENABLEJIT
+	if (rec->jitFunction)
+	{
+		float ret = rec->jitFunction();
+		std::cerr << "jit return: " << ret << std::endl;
+	}
+#endif
 
 #ifdef BS_Z_DIMENSION
 	interpretCode(bytecode, bytecodeLen, gsr->scriptState, &gsr->curState, object,

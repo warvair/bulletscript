@@ -40,69 +40,6 @@ namespace BS_NMSP
 
 	typedef std::multimap<String, MemberVariableDeclaration> MemberVariableDeclarationMap;
 
-	/**	\brief Class to hold bytecode for states, functions and events.
-	 *
-	 *	Bytecode blocks are stored in the ScriptMachine and shared by instances that need it.
-	 */
-	class _BSAPI CodeRecord
-	{
-		// Todo: should locals really be here?  Would be better to put them elsewhere.
-		std::vector<String> mVariables;
-
-		String mName;
-
-	public:
-
-		/** 
-         *	Bytecode array.  Public for convenience, however it is for internal use only.
-		 */
-		uint32* byteCode;
-
-		/** 
-         *	Size of bytecode array.  Public for convenience, however it is for internal use only.
-		 */
-		size_t byteCodeSize;
-
-		/**	\brief Constructor.
-		 *	\param name name of record.
-		 */
-		explicit CodeRecord(const String& name);
-
-		/**	\brief Destructor.
-		 */
-		~CodeRecord();
-
-		/**	\brief Returns Affector instance name.
-		 *
-		 *	\return the Affector instance name.
-		 */
-		const String& getName() const;
-
-		/**	\brief Add a named local variable to this CodeRecord.
-		 *
-		 *	\param name name of record.
-		 */
-		void addVariable(const String& name);
-
-		/**	\brief Get the name of a local variable.
-		 *	
-		 *	\param index index of the  variable.
-		 *	\return the local variable name.
-		 */
-		const String& getVariable(int index) const;
-
-		/**	\brief Get a local variable index.
-		 *	
-		 *	\param name name of the local variable.
-		 */		
-		int getVariableIndex(const String& name) const;
-
-		/**	\brief Get the number of local variables.
-		 *	
-		 *	\return number of local variables.
-		 */		
-		int getNumVariables() const;
-	};
 
 	/**	\brief Script state.
 	 *
@@ -162,6 +99,7 @@ namespace BS_NMSP
 		~ScriptRecord();
 	};
 
+
 	/**
 	 *	User function prototype for emitting an object.
 	 */
@@ -195,6 +133,86 @@ namespace BS_NMSP
 	 *	User function prototype for a native script function.
 	 */
 	typedef int (*NativeFunction)(ScriptState&);
+
+	/**
+	 *	Just-in-time compiled function
+	 */
+	typedef float (*JittedFunction)();
+
+	/**
+	 *	Just-in-time compiler hook
+	 */
+	typedef JittedFunction (*JitterHookFunction)(const unsigned int*, size_t, const char*);
+
+	/**	\brief Class to hold bytecode for states, functions and events.
+	 *
+	 *	Bytecode blocks are stored in the ScriptMachine and shared by instances that need it.
+	 */
+	class _BSAPI CodeRecord
+	{
+		// Todo: should locals really be here?  Would be better to put them elsewhere.
+		std::vector<String> mVariables;
+
+		String mName;
+
+	public:
+
+		/** 
+         *	Bytecode array.  Public for convenience, however it is for internal use only.
+		 */
+		uint32* byteCode;
+
+		/** 
+         *	Size of bytecode array.  Public for convenience, however it is for internal use only.
+		 */
+		size_t byteCodeSize;
+
+		/** 
+         *	Jitted function, if available.
+		 */
+		JittedFunction jitFunction;
+
+		/**	\brief Constructor.
+		 *	\param name name of record.
+		 */
+		explicit CodeRecord(const String& name);
+
+		/**	\brief Destructor.
+		 */
+		~CodeRecord();
+
+		/**	\brief Returns Affector instance name.
+		 *
+		 *	\return the Affector instance name.
+		 */
+		const String& getName() const;
+
+		/**	\brief Add a named local variable to this CodeRecord.
+		 *
+		 *	\param name name of record.
+		 */
+		void addVariable(const String& name);
+
+		/**	\brief Get the name of a local variable.
+		 *	
+		 *	\param index index of the  variable.
+		 *	\return the local variable name.
+		 */
+		const String& getVariable(int index) const;
+
+		/**	\brief Get a local variable index.
+		 *	
+		 *	\param name name of the local variable.
+		 */		
+		int getVariableIndex(const String& name) const;
+
+		/**	\brief Get the number of local variables.
+		 *	
+		 *	\return number of local variables.
+		 */		
+		int getNumVariables() const;
+	};
+
 
 	/** 
      * Predefined member variables.
