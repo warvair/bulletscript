@@ -1,4 +1,4 @@
-#include "bsScriptVariables.h"
+#include "bsGlobalVariable.h"
 
 namespace BS_NMSP
 {
@@ -25,7 +25,7 @@ void GlobalVariable::setValue(bstype value)
 {
 	mValue = value;
 
-	std::list<VariableListener*>::iterator it = mListeners.begin();
+	ListenerList::iterator it = mListeners.begin();
 	while (it != mListeners.end())
 	{
 		(*it)->onChanged();
@@ -38,7 +38,7 @@ bstype GlobalVariable::getValue() const
 	return mValue;
 }
 // --------------------------------------------------------------------------------
-void GlobalVariable::registerListener(VariableListener* listener)
+void GlobalVariable::registerListener(GlobalVariableListener* listener)
 {
 	mListeners.push_back(listener);
 }

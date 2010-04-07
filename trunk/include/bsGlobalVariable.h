@@ -3,8 +3,8 @@
 	See /doc/license.txt for license details.
 */
 
-#ifndef __BS_SCRIPTVARIABLES_H__
-#define __BS_SCRIPTVARIABLES_H__
+#ifndef __BS_GLOBALVARIABLE_H__
+#define __BS_GLOBALVARIABLE_H__
 
 #include <list>
 #include "bsPrerequisites.h"
@@ -12,7 +12,7 @@
 namespace BS_NMSP
 {
 
-	class _BSAPI VariableListener
+	class _BSAPI GlobalVariableListener
 	{
 	public:
 
@@ -27,7 +27,8 @@ namespace BS_NMSP
 
 		bstype mValue;
 
-		std::list<VariableListener*> mListeners;
+		typedef std::list<GlobalVariableListener*> ListenerList;
+		ListenerList mListeners;
 
 	public:
 
@@ -41,7 +42,7 @@ namespace BS_NMSP
 
 		bstype getValue() const;
 
-		void registerListener(VariableListener* listener);
+		void registerListener(GlobalVariableListener* listener);
 	};
 
 }

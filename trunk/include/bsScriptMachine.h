@@ -11,7 +11,7 @@
 #include <list>
 #include "bsPrerequisites.h"
 #include "bsCore.h"
-#include "bsScriptVariables.h"
+#include "bsGlobalVariable.h"
 #include "bsEmitType.h"
 #include "bsEmitter.h"
 #include "bsEmitterDefinition.h"
