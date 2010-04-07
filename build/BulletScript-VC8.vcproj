@@ -219,7 +219,7 @@
 			/>
 			<Tool
 				Name="VCPostBuildEventTool"
-				CommandLine="copy $(SolutionDir)\..\bin\BulletScript.dll $(SolutionDir)\..\examples\testbed\bin&#x0D;&#x0A;copy $(SolutionDir)\..\bin\BulletScript.dll $(SolutionDir)\..\examples\minimal\bin&#x0D;&#x0A;copy $(SolutionDir)\..\bin\BulletScript.dll $(SolutionDir)\..\examples\testbed2\bin&#x0D;&#x0A;copy $(SolutionDir)\..\bin\BulletScript.dll $(SolutionDir)\..\examples\testjit\bin&#x0D;&#x0A;&#x0D;&#x0A;"
+				CommandLine="copy $(SolutionDir)\..\bin\BulletScript.dll $(SolutionDir)\..\examples\testbed\bin&#x0D;&#x0A;copy $(SolutionDir)\..\bin\BulletScript.dll $(SolutionDir)\..\examples\minimal\bin&#x0D;&#x0A;copy $(SolutionDir)\..\bin\BulletScript.dll $(SolutionDir)\..\examples\testjit\bin&#x0D;&#x0A;&#x0D;&#x0A;"
 			/>
 		</Configuration>
 		<Configuration
@@ -294,7 +294,7 @@
 			/>
 			<Tool
 				Name="VCPostBuildEventTool"
-				CommandLine="copy $(SolutionDir)\..\bin\BulletScriptd.dll $(SolutionDir)\..\examples\testbed\bin&#x0D;&#x0A;copy $(SolutionDir)\..\bin\BulletScriptd.dll $(SolutionDir)\..\examples\testbed2\bin&#x0D;&#x0A;copy $(SolutionDir)\..\bin\BulletScriptd.dll $(SolutionDir)\..\examples\minimal\bin&#x0D;&#x0A;copy $(SolutionDir)\..\bin\BulletScriptd.dll $(SolutionDir)\..\examples\testjit\bin&#x0D;&#x0A;"
+				CommandLine="copy $(SolutionDir)\..\bin\BulletScriptd.dll $(SolutionDir)\..\examples\testbed\bin&#x0D;&#x0A;copy $(SolutionDir)\..\bin\BulletScriptd.dll $(SolutionDir)\..\examples\minimal\bin&#x0D;&#x0A;copy $(SolutionDir)\..\bin\BulletScriptd.dll $(SolutionDir)\..\examples\testjit\bin&#x0D;&#x0A;"
 			/>
 		</Configuration>
 	</Configurations>
@@ -355,6 +355,10 @@
 				>
 			</File>
 			<File
+				RelativePath="..\src\bsGlobalVariable.cpp"
+				>
+			</File>
+			<File
 				RelativePath="..\src\bsLog.cpp"
 				>
 			</File>
@@ -380,10 +384,6 @@
 			</File>
 			<File
 				RelativePath="..\src\bsScriptMachine.cpp"
-				>
-			</File>
-			<File
-				RelativePath="..\src\bsScriptVariables.cpp"
 				>
 			</File>
 			<File
@@ -465,6 +465,10 @@
 				>
 			</File>
 			<File
+				RelativePath="..\include\bsGlobalVariable.h"
+				>
+			</File>
+			<File
 				RelativePath="..\include\bsLog.h"
 				>
 			</File>
@@ -494,10 +498,6 @@
 			</File>
 			<File
 				RelativePath="..\include\bsScriptMachine.h"
-				>
-			</File>
-			<File
-				RelativePath="..\include\bsScriptVariables.h"
 				>
 			</File>
 			<File

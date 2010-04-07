@@ -9,7 +9,7 @@
 #include "bsPrerequisites.h"
 #include "bsCore.h"
 #include "bsBytecode.h"
-#include "bsScriptVariables.h"
+#include "bsGlobalVariable.h"
 
 namespace BS_NMSP
 {
@@ -31,7 +31,7 @@ namespace BS_NMSP
 	 *	Due to speed reasons, Affectors have a hard limit on the number of arguments that they can
 	 *	take.  This is defined by BS_MAX_AFFECTOR_ARGS in bsConfig.h.
 	 */
-	class Affector : public VariableListener
+	class Affector : public GlobalVariableListener
 	{
 		String mName;
 
