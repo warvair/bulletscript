@@ -236,13 +236,30 @@ namespace BS_NMSP
 		 */
 		int registerAffector(const String& type, const String& name, AffectorFunction func);
 
+#ifdef BS_ENABLEJIT
 		/**	\brief Registers native function.
 		 *
 		 *	\param name name of the function in script.
+		 *	\param returnsValue whether the function returns a value or nothing.
+		 *	\param numArguments the number of arguments the function takes.
+		 *	\param func NativeFunction function pointer.
+		 *	\param jitFunc pointer to the JIT version of the function
+		 *	\return BS_OK currently, or BS_NativeFunctionExists if the name is already in use.
+		 */
+		int registerNativeFunction(const String& name, bool returnsValue, int numArguments, 
+			NativeFunction func, void* jitFunc);
+#else
+		/**	\brief Registers native function.
+		 *
+		 *	\param name name of the function in script.
+		 *	\param returnsValue whether the function returns a value or nothing.
+		 *	\param numArguments the number of arguments the function takes.
 		 *	\param func NativeFunction function pointer.
 		 *	\return BS_OK currently, or BS_NativeFunctionExists if the name is already in use.
 		 */
-		int registerNativeFunction(const String& name, NativeFunction func);
+		int registerNativeFunction(const String& name, bool returnsValue, int numArguments, 
+			NativeFunction func);
+#endif
 
 		/**	\brief Declares a member variable for a Controller, which can then be used in script.
 		 *

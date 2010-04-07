@@ -100,51 +100,59 @@
 <a name="l00226"></a>00226 
 <a name="l00237"></a>00237                 <span class="keywordtype">int</span> registerAffector(<span class="keyword">const</span> String&amp; type, <span class="keyword">const</span> String&amp; name, AffectorFunction func);
 <a name="l00238"></a>00238 
-<a name="l00245"></a>00245                 <span class="keywordtype">int</span> registerNativeFunction(<span class="keyword">const</span> String&amp; name, NativeFunction func);
-<a name="l00246"></a>00246 
-<a name="l00254"></a>00254                 <span class="keywordtype">int</span> declareControllerMemberVariable(<span class="keyword">const</span> String&amp; ctrl, <span class="keyword">const</span> String&amp; var, bstype value);
-<a name="l00255"></a>00255 
-<a name="l00256"></a>00256                 <span class="comment">// Emitter management</span>
-<a name="l00257"></a>00257 <span class="preprocessor">#ifndef BS_Z_DIMENSION</span>
-<a name="l00258"></a>00258 <span class="preprocessor"></span>
-<a name="l00269"></a>00269                 <a class="code" href="class_b_s___n_m_s_p_1_1_emitter.html" title="Class for controlling object emission.">Emitter</a>* createEmitter(<span class="keyword">const</span> String&amp; definition, bstype x, bstype y, bstype angle, 
-<a name="l00270"></a>00270                         <span class="keywordtype">void</span>* userObject = 0);
-<a name="l00271"></a>00271 <span class="preprocessor">#else</span>
-<a name="l00272"></a>00272 <span class="preprocessor"></span>
-<a name="l00284"></a>00284                 <a class="code" href="class_b_s___n_m_s_p_1_1_emitter.html" title="Class for controlling object emission.">Emitter</a>* createEmitter(<span class="keyword">const</span> String&amp; definition, bstype x, bstype y, bstype z, 
-<a name="l00285"></a>00285                         bstype angle, <span class="keywordtype">void</span>* userObject = 0);
-<a name="l00286"></a>00286 <span class="preprocessor">#endif</span>
-<a name="l00287"></a>00287 <span class="preprocessor"></span>
-<a name="l00292"></a>00292                 <span class="keywordtype">void</span> destroyEmitter(<a class="code" href="class_b_s___n_m_s_p_1_1_emitter.html" title="Class for controlling object emission.">Emitter</a>* emit);
-<a name="l00293"></a>00293 
-<a name="l00300"></a>00300                 <span class="keywordtype">bool</span> emitterDefinitionExists(<span class="keyword">const</span> String&amp; name) <span class="keyword">const</span>;
-<a name="l00301"></a>00301 
-<a name="l00302"></a>00302 <span class="preprocessor">#ifndef BS_Z_DIMENSION</span>
-<a name="l00303"></a>00303 <span class="preprocessor"></span>
-<a name="l00313"></a>00313                 <a class="code" href="class_b_s___n_m_s_p_1_1_controller.html" title="Class for manipulating Emitter objects at a high level.">Controller</a>* createController(<span class="keyword">const</span> String&amp; definition, bstype x, bstype y, bstype angle, 
-<a name="l00314"></a>00314                         <span class="keywordtype">void</span>* userObject = 0);
-<a name="l00315"></a>00315 <span class="preprocessor">#else</span>
-<a name="l00316"></a>00316 <span class="preprocessor"></span>
-<a name="l00327"></a>00327                 <a class="code" href="class_b_s___n_m_s_p_1_1_controller.html" title="Class for manipulating Emitter objects at a high level.">Controller</a>* createController(<span class="keyword">const</span> String&amp; definition, bstype x, bstype y, bstype z, bstype angle, 
-<a name="l00328"></a>00328                         <span class="keywordtype">void</span>* userObject = 0);
-<a name="l00329"></a>00329 <span class="preprocessor">#endif</span>
-<a name="l00330"></a>00330 <span class="preprocessor"></span>
-<a name="l00335"></a>00335                 <span class="keywordtype">void</span> destroyController(<a class="code" href="class_b_s___n_m_s_p_1_1_controller.html" title="Class for manipulating Emitter objects at a high level.">Controller</a>* ctrl);
-<a name="l00336"></a>00336 
-<a name="l00343"></a>00343                 <span class="keywordtype">bool</span> controllerDefinitionExists(<span class="keyword">const</span> String&amp; name) <span class="keyword">const</span>;
-<a name="l00344"></a>00344 
-<a name="l00345"></a>00345 <span class="preprocessor">#ifdef BS_ENABLEJIT</span>
-<a name="l00346"></a>00346 <span class="preprocessor"></span>
-<a name="l00356"></a>00356                 <span class="keywordtype">bool</span> enableJIT(<span class="keyword">const</span> <span class="keywordtype">char</span>* <span class="keywordtype">object</span>);
-<a name="l00357"></a>00357 <span class="preprocessor">#endif</span>
-<a name="l00358"></a>00358 <span class="preprocessor"></span>
-<a name="l00359"></a>00359         };
-<a name="l00360"></a>00360 
-<a name="l00361"></a>00361 }
-<a name="l00362"></a>00362 
-<a name="l00363"></a>00363 <span class="preprocessor">#endif</span>
+<a name="l00239"></a>00239 <span class="preprocessor">#ifdef BS_ENABLEJIT</span>
+<a name="l00240"></a>00240 <span class="preprocessor"></span>
+<a name="l00249"></a>00249                 <span class="keywordtype">int</span> registerNativeFunction(<span class="keyword">const</span> String&amp; name, <span class="keywordtype">bool</span> returnsValue, <span class="keywordtype">int</span> numArguments, 
+<a name="l00250"></a>00250                         NativeFunction func, <span class="keywordtype">void</span>* jitFunc);
+<a name="l00251"></a>00251 <span class="preprocessor">#else</span>
+<a name="l00252"></a>00252 <span class="preprocessor"></span>
+<a name="l00260"></a>00260                 <span class="keywordtype">int</span> registerNativeFunction(<span class="keyword">const</span> String&amp; name, <span class="keywordtype">bool</span> returnsValue, <span class="keywordtype">int</span> numArguments, 
+<a name="l00261"></a>00261                         NativeFunction func);
+<a name="l00262"></a>00262 <span class="preprocessor">#endif</span>
+<a name="l00263"></a>00263 <span class="preprocessor"></span>
+<a name="l00271"></a>00271                 <span class="keywordtype">int</span> declareControllerMemberVariable(<span class="keyword">const</span> String&amp; ctrl, <span class="keyword">const</span> String&amp; var, bstype value);
+<a name="l00272"></a>00272 
+<a name="l00273"></a>00273                 <span class="comment">// Emitter management</span>
+<a name="l00274"></a>00274 <span class="preprocessor">#ifndef BS_Z_DIMENSION</span>
+<a name="l00275"></a>00275 <span class="preprocessor"></span>
+<a name="l00286"></a>00286                 <a class="code" href="class_b_s___n_m_s_p_1_1_emitter.html" title="Class for controlling object emission.">Emitter</a>* createEmitter(<span class="keyword">const</span> String&amp; definition, bstype x, bstype y, bstype angle, 
+<a name="l00287"></a>00287                         <span class="keywordtype">void</span>* userObject = 0);
+<a name="l00288"></a>00288 <span class="preprocessor">#else</span>
+<a name="l00289"></a>00289 <span class="preprocessor"></span>
+<a name="l00301"></a>00301                 <a class="code" href="class_b_s___n_m_s_p_1_1_emitter.html" title="Class for controlling object emission.">Emitter</a>* createEmitter(<span class="keyword">const</span> String&amp; definition, bstype x, bstype y, bstype z, 
+<a name="l00302"></a>00302                         bstype angle, <span class="keywordtype">void</span>* userObject = 0);
+<a name="l00303"></a>00303 <span class="preprocessor">#endif</span>
+<a name="l00304"></a>00304 <span class="preprocessor"></span>
+<a name="l00309"></a>00309                 <span class="keywordtype">void</span> destroyEmitter(<a class="code" href="class_b_s___n_m_s_p_1_1_emitter.html" title="Class for controlling object emission.">Emitter</a>* emit);
+<a name="l00310"></a>00310 
+<a name="l00317"></a>00317                 <span class="keywordtype">bool</span> emitterDefinitionExists(<span class="keyword">const</span> String&amp; name) <span class="keyword">const</span>;
+<a name="l00318"></a>00318 
+<a name="l00319"></a>00319 <span class="preprocessor">#ifndef BS_Z_DIMENSION</span>
+<a name="l00320"></a>00320 <span class="preprocessor"></span>
+<a name="l00330"></a>00330                 <a class="code" href="class_b_s___n_m_s_p_1_1_controller.html" title="Class for manipulating Emitter objects at a high level.">Controller</a>* createController(<span class="keyword">const</span> String&amp; definition, bstype x, bstype y, bstype angle, 
+<a name="l00331"></a>00331                         <span class="keywordtype">void</span>* userObject = 0);
+<a name="l00332"></a>00332 <span class="preprocessor">#else</span>
+<a name="l00333"></a>00333 <span class="preprocessor"></span>
+<a name="l00344"></a>00344                 <a class="code" href="class_b_s___n_m_s_p_1_1_controller.html" title="Class for manipulating Emitter objects at a high level.">Controller</a>* createController(<span class="keyword">const</span> String&amp; definition, bstype x, bstype y, bstype z, bstype angle, 
+<a name="l00345"></a>00345                         <span class="keywordtype">void</span>* userObject = 0);
+<a name="l00346"></a>00346 <span class="preprocessor">#endif</span>
+<a name="l00347"></a>00347 <span class="preprocessor"></span>
+<a name="l00352"></a>00352                 <span class="keywordtype">void</span> destroyController(<a class="code" href="class_b_s___n_m_s_p_1_1_controller.html" title="Class for manipulating Emitter objects at a high level.">Controller</a>* ctrl);
+<a name="l00353"></a>00353 
+<a name="l00360"></a>00360                 <span class="keywordtype">bool</span> controllerDefinitionExists(<span class="keyword">const</span> String&amp; name) <span class="keyword">const</span>;
+<a name="l00361"></a>00361 
+<a name="l00362"></a>00362 <span class="preprocessor">#ifdef BS_ENABLEJIT</span>
+<a name="l00363"></a>00363 <span class="preprocessor"></span>
+<a name="l00373"></a>00373                 <span class="keywordtype">bool</span> enableJIT(<span class="keyword">const</span> <span class="keywordtype">char</span>* <span class="keywordtype">object</span>);
+<a name="l00374"></a>00374 <span class="preprocessor">#endif</span>
+<a name="l00375"></a>00375 <span class="preprocessor"></span>
+<a name="l00376"></a>00376         };
+<a name="l00377"></a>00377 
+<a name="l00378"></a>00378 }
+<a name="l00379"></a>00379 
+<a name="l00380"></a>00380 <span class="preprocessor">#endif</span>
 </pre></div></div>
-<hr size="1"><address style="text-align: right;"><small>Generated on Mon Mar 29 16:23:31 2010 for bulletscript by&nbsp;
+<hr size="1"><address style="text-align: right;"><small>Generated on Wed Mar 31 12:49:05 2010 for bulletscript by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img src="doxygen.png" alt="doxygen" align="middle" border="0"></a> 1.5.9 </small></address>
 </body>

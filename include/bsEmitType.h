@@ -397,7 +397,16 @@ namespace BS_NMSP
 		 *	\return BS_OK, or BS_EmitFunctionExists is the name is already being used.
 		 */
 		int registerEmitFunction(const String& name, int numArgs, EmitFunction func);
-		
+
+		/**	\brief Get the indexed EmitFunction.
+		 *
+		 *	This is used by the jitter.
+		 *
+		 *	\param index the index of the EmitFunction.
+		 *	\return the EmitFunction.
+		 */
+		EmitFunction getEmitFunction(int index) const;
+
 		/**	\brief Test whether an EmitFunction has been registered with this EmitType.
 		 *
 		 *	\param name the name of the EmitFunction.
@@ -421,6 +430,15 @@ namespace BS_NMSP
 		 */
 		int getNumEmitFunctionArguments(const String& name) const;
 
+		/**	\brief Get the number of arguments an EmitFunction requires.
+		 *
+		 *	This is used in semantic checking during compilation.
+		 *
+		 *	\param index the index of the EmitFunction.
+		 *	\return the number of arguments it uses, or -1 if the function is not registered.
+		 */
+		int getNumEmitFunctionArguments(int index) const;
+
 		/**	\brief Generate bytecode for a given emission call.
 		 *
 		 *	This is used during compilation.  It for is internal use.
@@ -432,6 +450,19 @@ namespace BS_NMSP
 		 */
 		void generateBytecode(EmitterDefinition* def, ParseTreeNode* node,
 			BytecodeBlock* code, const String& funcName);
+
+#ifdef BS_ENABLEJIT
+#	ifdef BS_Z_DIMENSION
+		// ...
+#	else
+		/**	\brief Process a jitted EMIT statement.
+		 *
+		 *	This is used by the jitter.
+		 *
+		 */
+		void _processCodeJit();
+#	endif
+#endif
 
 #ifdef BS_Z_DIMENSION
 		/**	\brief Process a BC_EMIT opcode.
@@ -470,7 +501,7 @@ namespace BS_NMSP
 		int _processCode(const uint32* code, ScriptState& state, bstype x, 
 			bstype y, bstype angle, bstype* members, void* userObj, Emitter* emitter);
 #endif
-
+		
 		/**	\brief Registers a user AffectorFunction with this type.
 		 *
 		 *	Affector functions are stored per-EmitType.  If the name is already in use, it

@@ -191,9 +191,9 @@ bs::UserTypeBase* AreaBattery::emitQuadC(float x, float y, float angle, const fl
 
 	a.x = x;
 	a.y = y;
-	a.w = args[-3];
+	a.w = args[-1];
 	a.h = args[-2];
-	a.angle = args[-1];
+	a.angle = args[-3];
 	a.start = 0.0f;
 	a.end = 0.0f;
 	a.alpha = 1;
@@ -213,9 +213,9 @@ bs::UserTypeBase* AreaBattery::emitQuadB(float x, float y, float angle, const fl
 
 	a.x = x;
 	a.y = y;
-	a.w = args[-3];
+	a.w = args[-1];
 	a.h = args[-2];
-	a.angle = args[-1];
+	a.angle = args[-3];
 	a.start = 0.0f;
 	a.end = 0.0f;
 	a.alpha = 1;
@@ -233,14 +233,14 @@ bs::UserTypeBase* AreaBattery::emitQuadProjected(float x, float y, float angle, 
 	a._time = 0;
 	a.type = AT_QuadProjected;
 
-	a.start = args[-4];
+	a.start = args[-1];
 
 	// Project x and y, 'dist' along the angle
 	a.x = x - sin(angle * bs::DEG_TO_RAD) * a.start;
 	a.y = y;
-	a.w = args[-3];
-	a.h = args[-2];
-	a.angle = angle + args[-1];
+	a.w = args[-2];
+	a.h = args[-3];
+	a.angle = angle + args[-4];
 	a.alpha = 1;
 
 	size_t count = mSpawnedAreas.size();
@@ -258,8 +258,8 @@ bs::UserTypeBase* AreaBattery::emitEllipse(float x, float y, float angle, const 
 
 	a.x = x;
 	a.y = y;
-	a.w = args[-2];
-	a.h = args[-1];
+	a.w = args[-1];
+	a.h = args[-2];
 	a.angle = 0.0f;
 	a.start = 0.0f;
 	a.end = 360.0f;
@@ -280,12 +280,12 @@ bs::UserTypeBase* AreaBattery::emitArc(float x, float y, float angle, const floa
 
 	a.x = x;
 	a.y = y;
-	a.w = args[-5];
-	a.h = args[-4];
+	a.w = args[-1];
+	a.h = args[-2];
 	a.angle = 0.0f;
 	a.start = args[-3];
-	a.end = args[-2];
-	a.innerh = a.innerw = args[-1];
+	a.end = args[-4];
+	a.innerh = a.innerw = args[-5];
 	a.alpha = 1;
 
 	size_t count = mSpawnedAreas.size();

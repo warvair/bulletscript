@@ -137,9 +137,9 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="AsmJit.lib"
+				AdditionalDependencies="BulletScript.lib AsmJit.lib"
 				LinkIncremental="1"
-				AdditionalLibraryDirectories="C:\Code\__Other\AsmJit-0.8.5\AsmJit\AsmJit\release"
+				AdditionalLibraryDirectories="..\..\lib;&quot;C:\Code\__Other\AsmJit-0.8.5\AsmJit\AsmJit\release&quot;"
 				ModuleDefinitionFile="bsjitc.def"
 				GenerateDebugInformation="true"
 				SubSystem="2"

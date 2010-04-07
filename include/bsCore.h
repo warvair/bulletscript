@@ -40,6 +40,17 @@ namespace BS_NMSP
 
 	typedef std::multimap<String, MemberVariableDeclaration> MemberVariableDeclarationMap;
 
+	/** 
+     * Status values for runnings scripts.
+	 *
+     * These are for the user to let the virtual machine know what state a script is in
+	 * after they have run a native function on it.
+     */
+	enum ScriptStatus
+	{
+		ScriptSuspended,	/**< Script has been suspended and will wait before resumption. */
+		ScriptOK			/**< Script is running normally. */
+	};
 
 	/**	\brief Script state.
 	 *
@@ -104,45 +115,46 @@ namespace BS_NMSP
 	 *	User function prototype for emitting an object.
 	 */
 #ifdef BS_Z_DIMENSION
-	typedef UserTypeBase* (*EmitFunction) (bstype, bstype, bstype, bstype, const bstype*, void*);
+	typedef UserTypeBase* (BS_CALLCONV *EmitFunction) (bstype, bstype, bstype, bstype, const bstype*, void*);
 #else
-	typedef UserTypeBase* (*EmitFunction) (bstype, bstype, bstype, const bstype*, void*);
+	typedef UserTypeBase* (BS_CALLCONV *EmitFunction) (bstype, bstype, bstype, const bstype*, void*);
 #endif
 
 	/**
 	 *	User function prototype for destroying an object.
 	 */
-	typedef void (*DieFunction) (UserTypeBase*, void*);
+	typedef void (BS_CALLCONV *DieFunction) (UserTypeBase*, void*);
 
 	/**
 	 *	User function prototype for setting an object's properties.
 	 */
-	typedef void (*SetFunction) (UserTypeBase*, bstype);
+	typedef void (BS_CALLCONV *SetFunction) (UserTypeBase*, bstype);
 
 	/**
 	 *	User function prototype for getting an object's properties.
 	 */
-	typedef bstype (*GetFunction) (UserTypeBase*);
+	typedef bstype (BS_CALLCONV *GetFunction) (UserTypeBase*);
 
 	/**
 	 *	User function prototype for an Affector.
 	 */
-	typedef void (*AffectorFunction) (UserTypeBase*, float, const bstype*);
+	typedef void (BS_CALLCONV *AffectorFunction) (UserTypeBase*, float, const bstype*);
 
 	/**
 	 *	User function prototype for a native script function.
 	 */
-	typedef int (*NativeFunction)(ScriptState&);
+	typedef int (BS_CALLCONV *NativeFunction)(ScriptState&);
 
 	/**
 	 *	Just-in-time compiled function
 	 */
-	typedef float (*JittedFunction)();
+	typedef void (BS_CALLCONV *JittedFunction)(bstype, bstype, bstype, void*);
 
+	class ScriptMachine;
 	/**
 	 *	Just-in-time compiler hook
 	 */
-	typedef JittedFunction (*JitterHookFunction)(const unsigned int*, size_t, const char*);
+	typedef JittedFunction (BS_CALLCONV *JitterHookFunction)(const unsigned int*, size_t, const char*, ScriptMachine* bsMachine);
 
 	/**	\brief Class to hold bytecode for states, functions and events.
 	 *
@@ -171,6 +183,8 @@ namespace BS_NMSP
          *	Jitted function, if available.
 		 */
 		JittedFunction jitFunction;
+
+	public:
 
 		/**	\brief Constructor.
 		 *	\param name name of record.
@@ -231,6 +245,7 @@ namespace BS_NMSP
 
 	/** 
      * Predefined properties.
+	 *
      * These are the built-in properties available to an emitted object.
      */
 	enum

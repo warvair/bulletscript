@@ -16,6 +16,7 @@ namespace BS_NMSP
 	enum
 	{
 		BC_PUSH,
+		BC_POP,
 		BC_SETL,
 		BC_GETL,
 		BC_SETM,
@@ -55,14 +56,6 @@ namespace BS_NMSP
 		BC_RAISE,
 		BC_ENABLE,
 		BC_DIE
-	};
-
-	enum
-	{
-		BCR_ADD,
-		BCR_SUB,
-		BCR_MUL,
-		BCR_DIV
 	};
 
 }

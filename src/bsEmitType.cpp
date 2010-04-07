@@ -1,3 +1,4 @@
+#include <assert.h>
 #include <iostream>
 #include "bsEmitType.h"
 #include "bsEmitter.h"
@@ -68,6 +69,14 @@ int EmitType::registerEmitFunction(const String& name, int numArgs, EmitFunction
 	return BS_OK;
 }
 // --------------------------------------------------------------------------------
+EmitFunction EmitType::getEmitFunction(int index) const
+{
+	assert(index >= 0 && index < (int) mFunctions.size() && 
+		"EmitType::getEmitFunction: out of bounds.");
+
+	return mFunctions[index].func;
+}
+// --------------------------------------------------------------------------------
 int EmitType::getNumEmitFunctionArguments(const String& name) const
 {
 	for (size_t i = 0; i < mFunctions.size(); ++i)
@@ -75,6 +84,14 @@ int EmitType::getNumEmitFunctionArguments(const String& name) const
 			return mFunctions[i].numArguments;
 
 	return BS_NotFound;
+}
+// --------------------------------------------------------------------------------
+int EmitType::getNumEmitFunctionArguments(int index) const
+{
+	assert(index >= 0 && index < (int) mFunctions.size() && 
+		"EmitType::getNumEmitFunctionArguments: out of bounds.");
+
+	return mFunctions[index].numArguments;
 }
 // --------------------------------------------------------------------------------
 void EmitType::setDieFunction(DieFunction func)
@@ -312,6 +329,7 @@ void EmitType::getControllers(EmitterDefinition* def, ParseTreeNode* node, Strin
 
 		ParseTree* tree = node->getTree();
 		funcIndex = tree->getCodeRecordIndex("Emitter", def->getName(),	"Function", callName);
+		return; // return here, else we may end up with a native function instead
 	}
 	else if (nodeType == PT_AffectorCall)
 	{
@@ -429,14 +447,27 @@ void EmitType::generateBytecode(EmitterDefinition* def, ParseTreeNode* node,
 	}
 
 	code->push_back(anchorFlags);
-
-	// This is very hacky, but works.  This is because, at the point that this function is
-	// called, the EmitterDefinition that is calling it will be the next to be added, and will
-	// therefore have this index.  Terrible, I know.
-	int index = mScriptMachine->getNumEmitterDefinitions(); 
-	code->push_back((uint32) index);
+	code->push_back((uint32) def->_getIndex());
 }
 // --------------------------------------------------------------------------------
+/*
+	processJit
+	emit functions need their own JIT versions.
+
+	1) get function
+		void* emitFunc = et->getFunction(byteCode[instr + 2]).func;
+
+	2) call it, pushing arguments onto stack first, and popping the emit arguments on exit, but
+		not the control arguments yet.
+
+		emitFunc(x, y, angle, args, userObject);
+
+	3) get the returned object
+
+	4) if returned object is null, return.
+
+*/
+
 int EmitType::_processCode(const uint32* code, ScriptState& state, bstype x, bstype y, 
 #ifdef BS_Z_DIMENSION
 						  bstype z, 
@@ -470,6 +501,7 @@ int EmitType::_processCode(const uint32* code, ScriptState& state, bstype x, bst
 		{
 			// Request a EmitTypeControl from pool
 			int emitDef = code[state.curInstruction + 7 + numAffectors];
+
 			type->_et_ = mScriptMachine->getEmitTypeRecord(emitDef);
 			type->_et_->_type_ = this;
 			type->_et_->_userObject_ = userObj;
@@ -517,6 +549,10 @@ int EmitType::_processCode(const uint32* code, ScriptState& state, bstype x, bst
 
 	// this must match the number of bytecodes emitted in generateBytecode
 	return 8 + numAffectors;
+}
+// --------------------------------------------------------------------------------
+void EmitType::_processCodeJit()
+{
 }
 // --------------------------------------------------------------------------------
 

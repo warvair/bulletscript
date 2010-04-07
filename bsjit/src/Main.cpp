@@ -4,6 +4,8 @@
 #include <AsmJit/Assembler.h>
 #include <bsBytecode.h>
 #include <bsCore.h>
+#include <bsScriptMachine.h>
+#include <bsEmitType.h>
 
 #include "JitInfo.h"
 
@@ -11,7 +13,8 @@ using namespace AsmJit;
 using namespace bs;
 
 // ----------------------------------------------------------------------------
-JittedFunction jitter(const uint32* byteCode, size_t byteCodeSize, const char* codeType)
+JittedFunction jitter(const uint32* byteCode, size_t byteCodeSize, const char* codeType,
+					  bs::ScriptMachine* bsMachine)
 {
 	// Build info
 	JitCodeInfo info;
@@ -20,8 +23,12 @@ JittedFunction jitter(const uint32* byteCode, size_t byteCodeSize, const char* c
 	// Start assembler
 	Assembler a;
 
-	Label L_Start, L_Exit, L_Push0, L_Push1, L_CompDone;
-	
+	// Create labels for jumps
+	Label* jumpLabels = 0;
+	int numJumpTargets = info.getNumJumpTargets();
+	if (numJumpTargets > 0)
+		jumpLabels = new Label[numJumpTargets];
+
 	// prolog
 	a.push(ebp);
 	a.mov(ebp, esp);
@@ -48,14 +55,31 @@ JittedFunction jitter(const uint32* byteCode, size_t byteCodeSize, const char* c
 	if (info.getNumLocals() > 0)
 		a.sub(esp, info.getNumLocals() * 4);
 
-	a.bind(&L_Start);
+	Label l_start, l_exit;
+	a.bind(&l_start);
 
 	// body
 	size_t instr = 0;
 	while (instr < byteCodeSize)
 	{
+		// check jump targets first
+		for (int i = 0; i < info.getNumJumpTargets(); ++i)
+		{
+			int jumpIndex = info.getJumpTargetIndexByDest(instr);
+			if (jumpIndex >= 0)
+				a.bind(&jumpLabels[jumpIndex]);
+		}
+
+		// process bytecode
 		switch(byteCode[instr])
 		{
+		case BC_POP:
+			{
+				a.fstp(dword_ptr(eax));
+				instr += 1;
+			}
+			break;
+
 		case BC_PUSH:
 			{
 				// Push either a constant in locals area, or 0 or 1
@@ -172,102 +196,134 @@ JittedFunction jitter(const uint32* byteCode, size_t byteCodeSize, const char* c
 		case BC_OP_LTE:
 		case BC_OP_GT:
 		case BC_OP_GTE:
-			a.fcompp();
-			a.fnstsw(ax);
-			
-			switch(byteCode[instr])
 			{
-			case BC_OP_EQ:
-				a.test(ah, imm(0x44));
-				a.jp(&L_Push0);
-				break;
+				Label l_push0, l_done;
 
-			case BC_OP_NEQ:
-				a.test(ah, imm(0x44));
-				a.jnp(&L_Push0);
-				break;
+				a.fcompp();
+				a.fnstsw(ax);
+				
+				switch(byteCode[instr])
+				{
+				case BC_OP_EQ:
+					a.test(ah, imm(0x44));
+					a.jp(&l_push0);
+					break;
 
-			case BC_OP_LT:
-				a.test(ah, imm(0x41));
-				a.jne(&L_Push0);
-				break;
+				case BC_OP_NEQ:
+					a.test(ah, imm(0x44));
+					a.jnp(&l_push0);
+					break;
 
-			case BC_OP_LTE:
-				a.test(ah, imm(1));
-				a.jne(&L_Push0);
-				break;
+				case BC_OP_LT:
+					a.test(ah, imm(0x41));
+					a.jne(&l_push0);
+					break;
 
-			case BC_OP_GT:
-				a.test(ah, imm(5));
-				a.jp(&L_Push0);
-				break;
+				case BC_OP_LTE:
+					a.test(ah, imm(1));
+					a.jne(&l_push0);
+					break;
 
-			case BC_OP_GTE:
-				a.test(ah, imm(0x41));
-				a.jp(&L_Push0);
-				break;
+				case BC_OP_GT:
+					a.test(ah, imm(5));
+					a.jp(&l_push0);
+					break;
+
+				case BC_OP_GTE:
+					a.test(ah, imm(0x41));
+					a.jp(&l_push0);
+					break;
+				}
+
+				a.fld1();
+				a.jmp_short(&l_done);
+				a.bind(&l_push0);
+				a.fldz();
+				a.bind(&l_done);
+
+				instr += 1;
 			}
-
-			a.fld1();
-			a.jmp_short(&L_CompDone);
-			a.bind(&L_Push0);
-			a.fldz();
-			a.bind(&L_CompDone);
-
-			instr += 1;
 			break;
 
 		case BC_LOG_AND:
-			// operand 2
-			a.fldz();				// push zero
-			a.fcompp();				// compare operand2 and zero, and pop them
-			a.fnstsw(ax);
-			a.test(ah, imm(0x44));
-			a.jnp(&L_Push0);		// if equal, then we can short-circuit
-			// operand 1
-			a.fldz();				// push zero
-			a.fcomp();				// compare operand1 and zero, and pop them
-			a.fnstsw(ax);
-			a.test(ah, imm(0x44));
-			a.jnp(&L_Push0);		// if not equal, then expression is true
-			// push result
-			a.fld1();
-			a.jmp_short(&L_CompDone);
-			a.bind(&L_Push0);
-			a.fstp(dword_ptr(eax));	// pop operand1
-			a.fldz();
-			a.bind(&L_CompDone);
+			{
+				Label l_push0, l_done;
 
-			instr += 1;
+				// operand 2
+				a.fldz();				// push zero
+				a.fcompp();				// compare operand2 and zero, and pop them
+				a.fnstsw(ax);
+				a.test(ah, imm(0x44));
+				a.jnp(&l_push0);		// if equal, then we can short-circuit
+				// operand 1
+				a.fldz();				// push zero
+				a.fcomp();				// compare operand1 and zero, and pop them
+				a.fnstsw(ax);
+				a.test(ah, imm(0x44));
+				a.jnp(&l_push0);		// if not equal, then expression is true
+				// push result
+				a.fld1();
+				a.jmp_short(&l_done);
+				a.bind(&l_push0);
+				a.fstp(dword_ptr(eax));	// pop operand1
+				a.fldz();
+				a.bind(&l_done);
+
+				instr += 1;
+			}
 			break;
 
 		case BC_LOG_OR:
-			// operand 2
-			a.fldz();				// push zero
-			a.fcompp();				// compare operand2 and zero, and pop them
-			a.fnstsw(ax);
-			a.test(ah, imm(0x44));
-			a.jp(&L_Push1);			// if not equal, then we can short-circuit
-			// operand 1
-			a.fldz();				// push zero
-			a.fcomp();				// compare operand1 and zero, and pop them
-			a.fnstsw(ax);
-			a.test(ah, imm(0x44));
-			a.jp(&L_Push1);			// if not equal, then expression is true
-			a.fstp(dword_ptr(eax));	// pop operand1
-			a.fldz();
-			a.jmp_short(&L_CompDone);
-			// push result
-			a.bind(&L_Push1);
-			a.fstp(dword_ptr(eax));	// pop operand1
-			a.fld1();
-			a.bind(&L_CompDone);
+			{
+				Label l_push1, l_done;
 
-			instr += 1;
+				// operand 2
+				a.fldz();				// push zero
+				a.fcompp();				// compare operand2 and zero, and pop them
+				a.fnstsw(ax);
+				a.test(ah, imm(0x44));
+				a.jp(&l_push1);			// if not equal, then we can short-circuit
+				// operand 1
+				a.fldz();				// push zero
+				a.fcomp();				// compare operand1 and zero, and pop them
+				a.fnstsw(ax);
+				a.test(ah, imm(0x44));
+				a.jp(&l_push1);			// if not equal, then expression is true
+				a.fstp(dword_ptr(eax));	// pop operand1
+				a.fldz();
+				a.jmp_short(&l_done);
+				// push result
+				a.bind(&l_push1);
+				a.fstp(dword_ptr(eax));	// pop operand1
+				a.fld1();
+				a.bind(&l_done);
+
+				instr += 1;
+			}
 			break;
 
 		case BC_CALL:
-			instr += 2;
+			{
+				int funcIndex = byteCode[instr + 1];
+				int numArgs = bsMachine->getNativeFunctionArgumentCount(funcIndex);
+
+				// Pop arguments off fpu stack
+				if (numArgs > 0)
+				{
+					a.sub(esp, imm(numArgs * 4));
+					for (int i = 0; i < numArgs; ++i)
+						a.fstp(dword_ptr(esp, i * 4));
+				}
+
+				void* funcAddress = bsMachine->getNativeJitFunction(funcIndex);
+				a.call(funcAddress);
+				
+				// Pop arguments
+				if (numArgs > 0)
+					a.add(esp, imm(numArgs * 4));
+
+				instr += 2;
+			}
 			break;
 
 		case BC_GOTO:
@@ -285,16 +341,39 @@ JittedFunction jitter(const uint32* byteCode, size_t byteCodeSize, const char* c
 			break;
 
 		case BC_JUMP:
-
-			instr += 2;
+			{
+				int index = info.getJumpTargetIndexBySource(instr);
+				a.jmp(&jumpLabels[index]);
+				instr += 2;
+			}
 			break;
 
 		case BC_JZ:
-
-			instr += 2;
+			{
+				a.fldz();
+				a.fcompp();
+				a.fnstsw(ax);
+				a.test(ah, imm(0x44));
+				int index = info.getJumpTargetIndexBySource(instr);
+				a.jnp(&jumpLabels[index]);
+				instr += 2;
+			}
 			break;
 
 		case BC_WAIT:
+			// Set coroutine context here
+/*
+			may have to copy whole stack frame (including arguments), registers etc to memory.
+			esp excluded of course.  also fpu stack?
+
+			shouldn't need fpu stack because it will always have been properly popped when wait
+			is called.  likewise, x86 stack should not have any temporary data on it.
+
+			-													 +
+			|locals|constants|registers|ebp|eip|x|y|angle|userObj|
+*/
+
+//			a.jmp(&l_exit);
 			instr += 1;
 			break;
 
@@ -313,8 +392,64 @@ JittedFunction jitter(const uint32* byteCode, size_t byteCodeSize, const char* c
 			break;
 
 		case BC_EMIT:
+			{
+				int emitType = byteCode[instr + 1];
+				int funcIndex = byteCode[instr + 2];
+				int numAffectors = byteCode[instr + 5];
 
-			instr += 0; // ToDo!
+				EmitType* et = bsMachine->getEmitType(emitType);
+				int numUserArgs = et->getNumEmitFunctionArguments(funcIndex);
+
+				// Push function args: x, y, (z), angle, args, user
+				// args must be a pointer to a contiguous array.
+#ifdef BS_Z_DIMENSION
+				int numCallArgs = 6;
+#else
+				int numCallArgs = 5;
+#endif
+
+				int totalArgs = numCallArgs + numUserArgs;
+
+				// Pop arguments off fpu stack
+				if (numUserArgs > 0)
+				{
+					a.sub(esp, imm(numUserArgs * 4));
+					for (int i = 0; i < numUserArgs; ++i)
+						a.fstp(dword_ptr(esp, i * 4));
+				}
+
+				// Store address of user args for later
+//				a.lea(eax, dword_ptr(esp, 0));
+
+				// Function arguments - push backwards
+#ifdef BS_Z_DIMENSION
+				a.push(dword_ptr(ebp, 24));		// user object
+				a.push(eax);					// pointer to args
+				a.push(dword_ptr(ebp, 20));		// angle
+				a.push(dword_ptr(ebp, 16));		// z
+				a.push(dword_ptr(ebp, 12));		// y
+				a.push(dword_ptr(ebp, 8));		// x
+#else
+				a.push(dword_ptr(ebp, 20));		// user object
+//				a.push(eax);					// pointer to args
+				a.push(imm(0));
+				a.push(dword_ptr(ebp, 16));		// angle
+				a.push(dword_ptr(ebp, 12));		// y
+				a.push(dword_ptr(ebp, 8));		// x
+#endif
+
+				// Call
+				EmitFunction emitFunction = et->getEmitFunction(funcIndex);
+				a.call((void*) emitFunction);
+
+				// Get return from eax
+				// ...
+				
+				// Pop args
+				a.add(esp, imm(totalArgs * 4));
+
+				instr += (8 + numAffectors);
+			}
 			break;
 
 		case BC_RAISE:
@@ -341,12 +476,8 @@ JittedFunction jitter(const uint32* byteCode, size_t byteCodeSize, const char* c
 		// ...
 	}
 
-	// debug code: return local 1
-	int localToReturn = 1;
-	a.fld(dword_ptr(ebp, (1 + info.getNumRegistersUsed() + info.getNumConstants() + localToReturn) * -4));
-
 	// Exit point
-	a.bind(&L_Exit);
+	a.bind(&l_exit);
 
 	// pop constants and locals
 	if (info.getNumConstants() > 0 || info.getNumLocals() > 0)
@@ -366,8 +497,12 @@ JittedFunction jitter(const uint32* byteCode, size_t byteCodeSize, const char* c
 	a.pop(ebp);
 	a.ret();
 
-	// create function and return it.
-	return function_cast<JittedFunction>(a.make());
+	// create function
+	JittedFunction fn = function_cast<JittedFunction>(a.make());
+
+	delete[] jumpLabels;
+
+	return fn;
 }
 // ----------------------------------------------------------------------------
 extern "C" void dllStartPlugin(JitterHookFunction& func)

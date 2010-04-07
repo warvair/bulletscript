@@ -112,10 +112,19 @@ int Machine::registerAffector(const String& type, const String& name, AffectorFu
 	return mTypeManager->registerAffector(type, name, func);
 }
 // --------------------------------------------------------------------------------
-int Machine::registerNativeFunction(const String& name, NativeFunction func)
+#ifdef BS_ENABLEJIT
+int Machine::registerNativeFunction(const String& name, bool returnsValue,
+									int numArguments, NativeFunction func, void* jitFunc)
 {
-	return mScriptMachine->registerNativeFunction(name, func);
+	return mScriptMachine->registerNativeFunction(name, returnsValue, numArguments, func, jitFunc);
 }
+#else
+int Machine::registerNativeFunction(const String& name, bool returnsValue,
+									int numArguments, NativeFunction func)
+{
+	return mScriptMachine->registerNativeFunction(name, returnsValue, numArguments, func);
+}
+#endif
 // --------------------------------------------------------------------------------
 #ifndef BS_Z_DIMENSION
 Emitter* Machine::createEmitter(const String& definition, bstype x, bstype y, bstype angle, void* userObject)

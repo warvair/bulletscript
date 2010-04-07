@@ -224,18 +224,18 @@ bs::UserTypeBase* BulletBattery::emitAngle(float x, float y, float angle, const 
 	Bullet b;
 	b._active = true;
 	b._time = 0;
-	b._texture = args[-3];
+	b._texture = args[-1];
 
 	b.x = x;
 	b.y = y;
-	b.speed = args[-1];
+	b.speed = args[-3];
 	b.angle = args[-2];
 	if (b.angle < 0.0f)
 		b.angle += 360.0f;
 
 	int index = (int) (b.angle * 10) % 3600;
-	b.vx = mSinTable[index] * args[-1];
-	b.vy = mCosTable[index] * args[-1];
+	b.vx = mSinTable[index] * args[-3];
+	b.vy = mCosTable[index] * args[-3];
 
 	b.alpha = 1;
 	b.red = 1;
@@ -253,22 +253,22 @@ bs::UserTypeBase* BulletBattery::emitTarget(float x, float y, float angle, const
 	Bullet b;
 	b._active = true;
 	b._time = 0;
-	b._texture = args[-5];
+	b._texture = args[-1];
 
 	b.x = x;
 	b.y = y;
 	b.speed = args[-1];
 
-	float dx = args[-4] - x;
+	float dx = args[-2] - x;
 	float dy = args[-3] - y;
-	float tgtAngle = (float) atan2(dy, -dx) * bs::RAD_TO_DEG - 90.0f + args[-2];
+	float tgtAngle = (float) atan2(dy, -dx) * bs::RAD_TO_DEG - 90.0f + args[-4];
 	if (tgtAngle < 0.0f)
 		tgtAngle += 360.0f;
 	b.angle = tgtAngle;
 
 	int index = (int) (tgtAngle * 10) % 3600;
-	b.vx = mSinTable[index] * args[-1];
-	b.vy = mCosTable[index] * args[-1];
+	b.vx = mSinTable[index] * args[-5];
+	b.vy = mCosTable[index] * args[-5];
 
 	b.alpha = 1;
 	b.red = 1;

@@ -56,7 +56,6 @@ public:
 
 				// Important: the argument array is in fact the top of a stack.  
 				// Thus, arguments have negative indices.  
-				// The first argument is at args[-num_args], and the last at args[-1].		
 
 				// Assume that the bullet speed is passed in the first argument.
 				mBullets[i].speed = args[-1];

@@ -25,12 +25,6 @@ namespace BS_NMSP
 {
 	class TypeManager;
 
-	enum ScriptStatus
-	{
-		ScriptSuspended,
-		ScriptOK
-	};
-
 	class ScriptMachine
 	{
 		friend class Machine;
@@ -50,6 +44,11 @@ namespace BS_NMSP
 		{
 			String name;
 			NativeFunction function;
+			bool returnsValue;
+			int numArguments;
+#ifdef BS_ENABLEJIT
+			void* jitFunction;
+#endif
 		};
 
 		std::vector<NativeFunctionRecord> mNativeFunctions;
@@ -162,14 +161,68 @@ namespace BS_NMSP
 		void releaseEmitTypeRecord(int index, EmitTypeControl* rec);
 
 		// Native functions
-		int registerNativeFunction(const String& name, NativeFunction func);
+#ifdef BS_ENABLEJIT
+		int registerNativeFunction(const String& name, bool returnsValue,
+			int numArguments, NativeFunction func, void* jitFunc);
+#else
+		int registerNativeFunction(const String& name, bool returnsValue,
+			int numArguments, NativeFunction func);
+#endif
 
 		int getNativeFunctionIndex(const String &name) const;
 
+		const String& getNativeFunctionName(int index) const;
+
+		/**	\brief Check whether a registered NativeFunction returns a value or not.
+		 *
+		 *	This is used by the JIT compiler.
+		 *
+		 *	\param index index of NativeFunction.
+		 *	\return true if it does return a value, false if not.
+		 */
+		_BSAPI bool nativeFunctionReturnsValue(int index) const;
+
+		/**	\brief Get the number of arguments a registered NativeFunction uses.
+		 *
+		 *	This is used by the JIT compiler.
+		 *
+		 *	\param index index of NativeFunction.
+		 *	\return number of arguments
+		 */
+		_BSAPI int getNativeFunctionArgumentCount(int index) const;
+
 		NativeFunction getNativeFunction(int index) const;
 
+#ifdef BS_ENABLEJIT
+		/**	\brief Get the JIT version of a NativeFunction.
+		 *
+		 *	This is used by the JIT compiler.
+		 *
+		 *	\param index index of NativeFunction.
+		 *	\return void pointer to the function.
+		 */
+		_BSAPI void* getNativeJitFunction(int index) const;
+#endif
+
 		// Emit types
-		EmitType* getEmitType(const String& name) const;
+
+		/**	\brief Get the named EmitType.
+		 *
+		 *	This is used by the JIT compiler.
+		 *
+		 *	\param name name of the EmitType to retrieve.
+		 *	\return the EmitType.
+		 */
+		_BSAPI EmitType* getEmitType(const String& name) const;
+
+		/**	\brief Get the indexed EmitType.
+		 *
+		 *	This is used by the JIT compiler.
+		 *
+		 *	\param index index of the EmitType to retrieve.
+		 *	\return the EmitType.
+		 */
+		_BSAPI EmitType* getEmitType(int index) const;
 
 		// Properties
 		int addProperty(const String& prop);

@@ -10,257 +10,51 @@ namespace BS_NMSP
 {
 
 // --------------------------------------------------------------------------------
-ParseTreeNode::ParseTreeNode(int type, int line, ScriptMachine* scriptMachine,
-							 ParseTree* tree) :
-	mTree(tree),
-	mParent(0),
-	mScriptMachine(scriptMachine),
-	mType(type),
-	mLine(line)
+int ParseUtilities::countConstantArgumentList(ParseTreeNode* node)
 {
-	for (int i = 0; i < MAX_CHILDREN; ++i)
-		mChildren[i] = 0;
-}
-// --------------------------------------------------------------------------------
-ParseTreeNode::~ParseTreeNode()
-{
-	for (int i = 0; i < MAX_CHILDREN; ++i)
-		delete mChildren[i];
-}
-// --------------------------------------------------------------------------------
-void ParseTreeNode::_setType(int type)
-{
-	mType = type;
-}
-// --------------------------------------------------------------------------------
-void ParseTreeNode::setChild(int index, ParseTreeNode *node)
-{
-	mChildren[index] = node;
-	if (mChildren[index])
-		mChildren[index]->mParent = this;
-}
-// --------------------------------------------------------------------------------
-ParseTreeNode* ParseTreeNode::getChild(int index) const
-{
-	return mChildren[index];
-}
-// --------------------------------------------------------------------------------
-ParseTreeNode* ParseTreeNode::getParent() const
-{
-	return mParent;
-}
-// --------------------------------------------------------------------------------
-ParseTree* ParseTreeNode::getTree() const
-{
-	return mTree;
-}
-// --------------------------------------------------------------------------------
-int ParseTreeNode::getType() const
-{
-	return mType;
-}
-// --------------------------------------------------------------------------------
-int ParseTreeNode::getLine() const
-{
-	return mLine;
-}
-// --------------------------------------------------------------------------------
-void ParseTreeNode::foldBinaryNode()
-{
-	if (mChildren[0]->getType() != PT_Constant || mChildren[1]->getType() != PT_Constant)
-		return;
+	int numArgs = (node->getType() == PT_Constant) ? 1 : 0;
 
-	bstype val1 = mChildren[0]->getValueData();
-	bstype val2 = mChildren[1]->getValueData();
-
-	switch (mType)
+	for (int i = 0; i < ParseTreeNode::MAX_CHILDREN; ++ i)
 	{
-	case PT_AddStatement:
-		setValue(val1 + val2);
-		break;
-
-	case PT_SubtractStatement:
-		setValue(val1 - val2);
-		break;
-
-	case PT_MultiplyStatement:
-		setValue(val1 * val2);
-		break;
-
-	case PT_DivideStatement:
-		setValue(val1 / val2);
-		break;
-
-	case PT_RemainderStatement:
-		setValue((bstype) ((int) val1 % (int) val2));
-		break;
-
-	case PT_EqualsStatement:
-		setValue(val1 == val2 ? bsvalue1 : bsvalue0);
-		break;
-
-	case PT_NotEqualsStatement:
-		setValue(val1 != val2 ? bsvalue1 : bsvalue0);
-		break;
-
-	case PT_LessThanStatement:
-		setValue(val1 < val2 ? bsvalue1 : bsvalue0);
-		break;
-
-	case PT_GreaterThanStatement:
-		setValue(val1 > val2 ? bsvalue1 : bsvalue0);
-		break;
-
-	case PT_LessThanEqStatement:
-		setValue(val1 <= val2 ? bsvalue1 : bsvalue0);
-		break;
-
-	case PT_GreaterThanEqStatement:
-		setValue(val1 >= val2 ? bsvalue1 : bsvalue0);
-		break;
+		if (node->getChild(i))
+			numArgs += countConstantArgumentList(node->getChild(i));
 	}
 
-	mType = PT_Constant;
-	for (int i = 0; i < MAX_CHILDREN; ++i)
-	{
-		if (mChildren[i])
-		{
-			delete mChildren[i];
-			mChildren[i] = 0;
-		}
-	}
+	return numArgs;
 }
 // --------------------------------------------------------------------------------
-void ParseTreeNode::foldUnaryNode()
+int ParseUtilities::countFunctionCallArguments(ParseTreeNode* node)
 {
-	if (mChildren[0]->getType() != PT_Constant)
-		return;
+	int nodeType = node->getType();
 
-	bstype val = mChildren[0]->getValueData();
+	// If another function has been called as an argument, bail out.
+	if (nodeType == PT_FunctionCall)
+		return 0;
 
-	switch (mType)
+	int numArgs = (nodeType == PT_FunctionCallArg) ? 1 : 0;
+
+	for (int i = 0; i < ParseTreeNode::MAX_CHILDREN; ++ i)
 	{
-	case PT_UnaryPosStatement:
-		setValue(val);
-		break;
-
-	case PT_UnaryNegStatement:
-		setValue(-val);
-		break;
-
-	case PT_ConstantExpression:
-		setValue(val);
-		break;
+		if (node->getChild(i))
+			numArgs += countFunctionCallArguments(node->getChild(i));
 	}
 
-	mType = PT_Constant;
-	for (int i = 0; i < MAX_CHILDREN; ++i)
-	{
-		if (mChildren[i])
-		{
-			delete mChildren[i];
-			mChildren[i] = 0;
-		}
-	}
+	return numArgs;
 }
 // --------------------------------------------------------------------------------
-void ParseTreeNode::foldLogicalNode()
+bool ParseUtilities::expressionHasFunctionCall(ParseTreeNode* node)
 {
-	if (mChildren[0]->getType () != PT_Constant || mChildren[1]->getType () != PT_Constant)
-		return;
+	if (node->getType() == PT_FunctionCall)
+		return true;
 
-	bstype val1 = mChildren[0]->getValueData();
-	bstype val2 = mChildren[1]->getValueData();
-
-	switch (mType)
+	for (int i = 0; i < ParseTreeNode::MAX_CHILDREN; ++ i)
 	{
-	case PT_LogicalOr:
-		setValue(val1 || val2 ? bsvalue1 : bsvalue0);
-		break;
-
-	case PT_LogicalAnd:
-		setValue(val1 && val2 ? bsvalue1 : bsvalue0);
-		break;
+		if (node->getChild(i))
+			if (expressionHasFunctionCall(node->getChild(i)))
+				return true;
 	}
 
-	mType = PT_Constant;
-	for (int i = 0; i < MAX_CHILDREN; ++i)
-	{
-		if (mChildren[i])
-		{
-			delete mChildren[i];
-			mChildren[i] = 0;
-		}
-	}
-}
-// --------------------------------------------------------------------------------
-void ParseTreeNode::foldConstants()
-{
-	for (int i = 0; i < MAX_CHILDREN; ++i)
-	{
-		if (mChildren[i])
-		{
-			mChildren[i]->foldConstants();
-		}
-	}
-
-	switch (mType)
-	{
-	case PT_AddStatement:
-	case PT_SubtractStatement:
-	case PT_MultiplyStatement:
-	case PT_DivideStatement:
-	case PT_RemainderStatement:
-	case PT_EqualsStatement:
-	case PT_NotEqualsStatement:
-	case PT_LessThanStatement:
-	case PT_GreaterThanStatement:
-	case PT_LessThanEqStatement:
-	case PT_GreaterThanEqStatement:
-		foldBinaryNode();
-		break;
-
-	case PT_UnaryPosStatement:
-	case PT_UnaryNegStatement:
-	case PT_ConstantExpression:
-		foldUnaryNode();
-		break;
-
-	case PT_LogicalOr:
-	case PT_LogicalAnd:
-		foldLogicalNode();
-		break;
-
-	default:
-		break;
-	}
-}
-// --------------------------------------------------------------------------------
-void ParseTreeNode::setValue(bstype data)
-{
-	mDataType = DT_Value;
-	mValueData = data;
-}
-// --------------------------------------------------------------------------------
-void ParseTreeNode::setString(const char* data)
-{
-	mDataType = DT_String;
-	mStringData = data;
-}
-// --------------------------------------------------------------------------------
-int ParseTreeNode::getDataType() const
-{
-	return mDataType;
-}
-// --------------------------------------------------------------------------------
-bstype ParseTreeNode::getValueData() const
-{
-	return mValueData;
-}
-// --------------------------------------------------------------------------------
-const String& ParseTreeNode::getStringData() const
-{
-	return mStringData;
+	return false;
 }
 // --------------------------------------------------------------------------------
 // --------------------------------------------------------------------------------
@@ -287,8 +81,6 @@ void ParseTree::destroy()
 	mStateIndices.clear();
 	mFunctionIndices.clear();
 	mEventIndices.clear();
-	mBreakLocations.clear();
-	mContinueLocations.clear();
 	mNumErrors = 0;
 
 	delete mRoot;
@@ -319,6 +111,16 @@ ParseTreeNode* ParseTree::getRootNode()
 	return mRoot;
 }
 // --------------------------------------------------------------------------------
+void ParseTree::lock()
+{
+	mLocked = true;
+}
+// --------------------------------------------------------------------------------
+void ParseTree::unlock()
+{
+	mLocked = false;
+}
+// --------------------------------------------------------------------------------
 bool ParseTree::isLocked() const
 {
 	return mLocked;
@@ -332,25 +134,6 @@ ParseTreeNode* ParseTree::createNode(int type, int line)
 void ParseTree::foldConstants()
 {
 	mRoot->foldConstants();
-}
-// --------------------------------------------------------------------------------
-void ParseTree::buildConstantDefineList(ParseTreeNode* node, ConstantDefinitionList& defList)
-{
-	// ...
-
-	for (int i = 0; i < ParseTreeNode::MAX_CHILDREN; ++ i)
-	{
-		ParseTreeNode* child = node->getChild(i);
-		if (child)
-			buildConstantDefineList(child, defList);
-	}
-}
-// --------------------------------------------------------------------------------
-void ParseTree::preprocess(ConstantDefinitionList& defList)
-{
-	// Do constant-definition replacing
-	if (mRoot->getChild(1))
-		buildConstantDefineList(mRoot->getChild(1), defList);
 }
 // --------------------------------------------------------------------------------
 void ParseTree::addError(int line, const String& msg)
@@ -383,6 +166,38 @@ bool ParseTree::checkConstantExpression(ObjectDefinition* def, CodeBlockType typ
 				addError(node->getLine(), errMsg + ": function '" + funcName + "'.");
 				return false;
 			}
+
+			// Make sure this returns something, unless it is at the root of the constant
+			// expression.
+			int grandParentType = node->getParent()->getParent()->getType();
+			if (grandParentType != PT_StatementList && grandParentType != PT_State &&
+				grandParentType != PT_Function && grandParentType != PT_Event &&
+				!mScriptMachine->nativeFunctionReturnsValue(index))
+			{
+				// If we're not in a root node, then the function must return.
+				addError(node->getLine(), "Expression does not return a value.");
+				return false;
+			}
+
+			// Count arguments
+			int numArguments = 0, requiredArguments;
+
+			ParseTreeNode* argsNode = node->getChild(1);
+			if (argsNode)
+				numArguments = ParseUtilities::countFunctionCallArguments(argsNode);
+
+			requiredArguments = mScriptMachine->getNativeFunctionArgumentCount(index);
+			if (numArguments != requiredArguments)
+			{
+				std::stringstream ss;
+				ss << "Function '" << funcName << "' expects " << requiredArguments << " argument(s).";
+				addError(node->getLine(), ss.str());
+				return false;
+			}
+
+			if (argsNode)
+				return checkConstantExpression(def, type, name, argsNode);
+
 		}
 		return true;
 
@@ -495,18 +310,34 @@ bool ParseTree::checkConstantExpression(ObjectDefinition* def, CodeBlockType typ
 		return true;
 	}
 
-	bool ok = true;
+	bool status = true;
 	for (int i = 0; i < ParseTreeNode::MAX_CHILDREN; ++ i)
 	{
 		ParseTreeNode* child = node->getChild(i);
 		if (child)
 		{
 			if (!checkConstantExpression(def, type, name, child))
-				ok = false;
+				status = false;
 		}
 	}
 
-	return ok;
+	return status;
+}
+// --------------------------------------------------------------------------------
+bool ParseTree::constantExpressionHasType(ParseTreeNode* node)
+{
+	// The only time that an expression won't have a type is when the root is a
+	// function, and it does not return anything.
+	ParseTreeNode* childNode = node->getChild(0);
+	if (childNode->getType() == PT_FunctionCall)
+	{
+		String functionName = childNode->getChild(0)->getStringData();
+		int funcIndex = mScriptMachine->getNativeFunctionIndex(functionName);
+		if (!mScriptMachine->nativeFunctionReturnsValue(funcIndex))
+			return false;
+	}
+
+	return true;
 }
 // --------------------------------------------------------------------------------
 void ParseTree::createMemberVariables(ObjectDefinition* def, ParseTreeNode* node)
@@ -635,7 +466,7 @@ void ParseTree::createAffectors(EmitterDefinition* def, ParseTreeNode* node)
 			AffectorInfo info;
 			info.name = affName;
 			info.function = node->getChild(1)->getChild(0)->getStringData();
-			countFunctionCallArguments(node->getChild(1), info.numArgs);
+			info.numArgs = ParseUtilities::countFunctionCallArguments(node->getChild(1));
 			info.node = node;
 
 			mAffectors.push_back(info);
@@ -681,7 +512,7 @@ void ParseTree::createEmitterVariables(ControllerDefinition* def, ParseTreeNode*
 
 			if (numArguments > NUM_SPECIAL_MEMBERS)
 			{
-				// Warning, extra arguments ignored
+				// Warning? ...extra arguments ignored
 				// ...
 			}
 		}
@@ -696,26 +527,8 @@ void ParseTree::createEmitterVariables(ControllerDefinition* def, ParseTreeNode*
 	}
 }
 // --------------------------------------------------------------------------------
-void ParseTree::countFunctionCallArguments(ParseTreeNode* node, int& numArguments)
-{
-	int nodeType = node->getType();
-
-	// If another function has been called as an argument, bail out.
-	if (nodeType == PT_FunctionCall)
-		return;
-
-	if (nodeType == PT_FunctionCallArg)
-		numArguments++;
-
-	for (int i = 0; i < ParseTreeNode::MAX_CHILDREN; ++ i)
-	{
-		if (node->getChild(i))
-			countFunctionCallArguments(node->getChild(i), numArguments);
-	}
-}
-// --------------------------------------------------------------------------------
 void ParseTree::getEmitterVariableArguments(ParseTreeNode* node, 
-											bstype emitArgs[NUM_SPECIAL_MEMBERS],
+											bstype (&emitArgs)[NUM_SPECIAL_MEMBERS],
 											int& numArguments)
 {
 	if (node->getType() == PT_Constant)
@@ -729,18 +542,6 @@ void ParseTree::getEmitterVariableArguments(ParseTreeNode* node,
 	{
 		if (node->getChild(i))
 			getEmitterVariableArguments(node->getChild(i), emitArgs, numArguments);
-	}
-}
-// --------------------------------------------------------------------------------
-void ParseTree::countConstantArgumentList(ParseTreeNode* node, int& numArguments)
-{
-	if (node->getType() == PT_Constant)
-		numArguments++;
-
-	for (int i = 0; i < ParseTreeNode::MAX_CHILDREN; ++ i)
-	{
-		if (node->getChild(i))
-			countConstantArgumentList(node->getChild(i), numArguments);
 	}
 }
 // --------------------------------------------------------------------------------
@@ -777,7 +578,7 @@ void ParseTree::checkEmitControllers(EmitterDefinition* def, ParseTreeNode* node
 			if (!checkConstantExpression(def, type, typeName, node->getChild(1)))
 				return;
 
-			countFunctionCallArguments(node->getChild(1), numArguments);
+			numArguments = ParseUtilities::countFunctionCallArguments(node->getChild(1));
 		}
 
 		EmitterDefinition::Function& func = def->getFunction(fIndex);
@@ -906,16 +707,15 @@ void ParseTree::addFunctions(EmitterDefinition* def, ParseTreeNode* node)
 	}
 }
 // --------------------------------------------------------------------------------
-void ParseTree::buildFunctions(EmitterDefinition* def, ParseTreeNode* node)
+void ParseTree::buildFunctions(EmitterDefinition* def, ParseTreeNode* node,
+							   EmitterDefinition::Function* funcInfo)
 {
-	static EmitterDefinition::Function* s_curFunc = 0;
-
 	switch (node->getType())
 	{
 	case PT_Function:
 		{
 			String funcName = node->getChild(0)->getStringData();
-			s_curFunc = &(def->getFunction(def->getFunctionIndex(funcName))); // dodgy but will be ok here
+			funcInfo = &(def->getFunction(def->getFunctionIndex(funcName))); // dodgy but will be ok here
 		}
 		break;
 
@@ -923,7 +723,7 @@ void ParseTree::buildFunctions(EmitterDefinition* def, ParseTreeNode* node)
 		{
 			String varName = node->getChild(0)->getStringData();
 
-			CodeRecord* rec = getCodeRecord("Emitter", def->getName(), "Function", s_curFunc->name);
+			CodeRecord* rec = getCodeRecord("Emitter", def->getName(), "Function", funcInfo->name);
 			bool varFound = false;
 			if (rec->getVariableIndex(varName) >= 0)
 			{
@@ -947,7 +747,7 @@ void ParseTree::buildFunctions(EmitterDefinition* def, ParseTreeNode* node)
 			}
 
 			// Check RHS
-			if (!checkConstantExpression(def, CBT_Function, s_curFunc->name, node->getChild(1)))
+			if (!checkConstantExpression(def, CBT_Function, funcInfo->name, node->getChild(1)))
 				return;
 
 			// Create local if not found
@@ -978,10 +778,10 @@ void ParseTree::buildFunctions(EmitterDefinition* def, ParseTreeNode* node)
 			int numArguments = 0;
 			if (node->getChild(1))
 			{
-				if (!checkConstantExpression(def, CBT_Function, s_curFunc->name, node->getChild(1)))
+				if (!checkConstantExpression(def, CBT_Function, funcInfo->name, node->getChild(1)))
 					return;
 
-				countFunctionCallArguments(node->getChild(1), numArguments);
+				numArguments = ParseUtilities::countFunctionCallArguments(node->getChild(1));
 			}
 
 			int expectedArgs = ft->getNumEmitFunctionArguments(funcName);
@@ -996,14 +796,14 @@ void ParseTree::buildFunctions(EmitterDefinition* def, ParseTreeNode* node)
 			if (node->getChild(3))
 			{
 				int numCtrls = 0;
-				checkEmitControllers(def, node->getChild(3), numCtrls, ft, CBT_Function, s_curFunc->name);
+				checkEmitControllers(def, node->getChild(3), numCtrls, ft, CBT_Function, funcInfo->name);
 			}
 		}
 		return;
 
 	case PT_SetStatement:
 		{
-			checkConstantExpression(def, CBT_Function, s_curFunc->name, node->getChild(1));
+			checkConstantExpression(def, CBT_Function, funcInfo->name, node->getChild(1));
 		}
 		return;
 
@@ -1016,7 +816,7 @@ void ParseTree::buildFunctions(EmitterDefinition* def, ParseTreeNode* node)
 			}
 			else
 			{
-				checkConstantExpression(def, CBT_Function, s_curFunc->name, node->getChild(0));
+				checkConstantExpression(def, CBT_Function, funcInfo->name, node->getChild(0));
 			}
 		}
 		return;
@@ -1048,7 +848,11 @@ void ParseTree::buildFunctions(EmitterDefinition* def, ParseTreeNode* node)
 				addError(node->getLine(), "break/continue must be used inside a while statement.");
 			}
 		}
-		break;
+		return;
+
+	case PT_ConstantExpression:
+		checkConstantExpression(def, CBT_Function, funcInfo->name, node);
+		return;
 
 	default:
 		break;
@@ -1057,7 +861,7 @@ void ParseTree::buildFunctions(EmitterDefinition* def, ParseTreeNode* node)
 	for (int i = 0; i < ParseTreeNode::MAX_CHILDREN; ++ i)
 	{
 		if (node->getChild(i))
-			buildFunctions(def, node->getChild(i));
+			buildFunctions(def, node->getChild(i), funcInfo);
 	}
 }
 // --------------------------------------------------------------------------------
@@ -1117,16 +921,15 @@ void ParseTree::addEvents(ControllerDefinition* def, ParseTreeNode* node)
 	}
 }
 // --------------------------------------------------------------------------------
-void ParseTree::buildEvents(ControllerDefinition* def, ParseTreeNode* node)
+void ParseTree::buildEvents(ControllerDefinition* def, ParseTreeNode* node,
+							ControllerDefinition::Event* eventInfo)
 {
-	static ControllerDefinition::Event* s_curEvent = 0;
-
 	switch (node->getType())
 	{
 	case PT_Event:
 		{
 			String evtName = node->getChild(0)->getStringData();
-			s_curEvent = &(def->getEvent(def->getEventIndex(evtName))); // dodgy but will be ok here
+			eventInfo = &(def->getEvent(def->getEventIndex(evtName))); // dodgy but will be ok here
 		}
 		break;
 
@@ -1134,7 +937,7 @@ void ParseTree::buildEvents(ControllerDefinition* def, ParseTreeNode* node)
 		{
 			String varName = node->getChild(0)->getStringData();
 
-			CodeRecord* rec = getCodeRecord(def->getType(), def->getName(), "Event", s_curEvent->name);
+			CodeRecord* rec = getCodeRecord(def->getType(), def->getName(), "Event", eventInfo->name);
 
 			bool varFound = false;
 			if (rec->getVariableIndex(varName) >= 0)
@@ -1174,7 +977,7 @@ void ParseTree::buildEvents(ControllerDefinition* def, ParseTreeNode* node)
 			}
 
 			// Check RHS
-			if (!checkConstantExpression(def, CBT_Event, s_curEvent->name, node->getChild(1)))
+			if (!checkConstantExpression(def, CBT_Event, eventInfo->name, node->getChild(1)))
 				return;
 
 			// Create local if not found
@@ -1206,7 +1009,7 @@ void ParseTree::buildEvents(ControllerDefinition* def, ParseTreeNode* node)
 				return;
 			}
 
-			checkConstantExpression(def, CBT_Event, s_curEvent->name, node->getChild(1));
+			checkConstantExpression(def, CBT_Event, eventInfo->name, node->getChild(1));
 		}
 		return;
 
@@ -1248,7 +1051,7 @@ void ParseTree::buildEvents(ControllerDefinition* def, ParseTreeNode* node)
 			int numBlocks = 0;
 			ParseTreeNode* blockNode = node->getChild(0);
 			if (blockNode)
-				countConstantArgumentList(blockNode, numBlocks);
+				numBlocks = ParseUtilities::countConstantArgumentList(blockNode);
 
 			int curNumBlocks = def->getMaxBlocks();
 
@@ -1276,7 +1079,7 @@ void ParseTree::buildEvents(ControllerDefinition* def, ParseTreeNode* node)
 			{
 				int givenArgs = 0;
 				if (funcNode->getChild(1))
-					countFunctionCallArguments(funcNode->getChild(1), givenArgs);
+					givenArgs = ParseUtilities::countFunctionCallArguments(funcNode->getChild(1));
 
 				ControllerDefinition::Event& evt = def->getEvent(eventIndex);
 				if (givenArgs != evt.numArguments)
@@ -1326,12 +1129,15 @@ void ParseTree::buildEvents(ControllerDefinition* def, ParseTreeNode* node)
 		}
 		return;
 
+	case PT_ConstantExpression:
+		checkConstantExpression(def, CBT_Event, eventInfo->name, node);
+		return;
 	}
 
 	for (int i = 0; i < ParseTreeNode::MAX_CHILDREN; ++ i)
 	{
 		if (node->getChild(i))
-			buildEvents(def, node->getChild(i));
+			buildEvents(def, node->getChild(i), eventInfo);
 	}
 }
 // --------------------------------------------------------------------------------
@@ -1361,16 +1167,16 @@ void ParseTree::addStates(ObjectDefinition* def, ParseTreeNode* node)
 	}
 }
 // --------------------------------------------------------------------------------
-void ParseTree::buildStates(ObjectDefinition* def, ParseTreeNode* node)
+void ParseTree::buildStates(ObjectDefinition* def, ParseTreeNode* node,
+							ObjectDefinition::State* stateInfo)
 {
-	static ObjectDefinition::State* s_curState = 0;
 
 	switch (node->getType())
 	{
 	case PT_State:
 		{
 			String stateName = node->getChild(0)->getStringData();
-			s_curState = &(def->getState(def->getStateIndex(stateName)));
+			stateInfo = &(def->getState(def->getStateIndex(stateName)));
 		}
 		break;
 
@@ -1378,7 +1184,7 @@ void ParseTree::buildStates(ObjectDefinition* def, ParseTreeNode* node)
 		{
 			String varName = node->getChild(0)->getStringData();
 
-			CodeRecord* rec = getCodeRecord(def->getType(), def->getName(), "State", s_curState->name);
+			CodeRecord* rec = getCodeRecord(def->getType(), def->getName(), "State", stateInfo->name);
 
 			bool varFound = false;
 			if (rec->getVariableIndex(varName) >= 0)
@@ -1424,7 +1230,7 @@ void ParseTree::buildStates(ObjectDefinition* def, ParseTreeNode* node)
 			else
 				cbtype = CBT_EmitterState;
 
-			if (!checkConstantExpression(def, cbtype, s_curState->name, node->getChild(1)))
+			if (!checkConstantExpression(def, cbtype, stateInfo->name, node->getChild(1)))
 				return;
 
 			// Create local if not found
@@ -1458,7 +1264,7 @@ void ParseTree::buildStates(ObjectDefinition* def, ParseTreeNode* node)
 				return;
 			}
 
-			checkConstantExpression(def, CBT_ControllerState, s_curState->name, node->getChild(1));
+			checkConstantExpression(def, CBT_ControllerState, stateInfo->name, node->getChild(1));
 		}
 		return;
 
@@ -1485,10 +1291,10 @@ void ParseTree::buildStates(ObjectDefinition* def, ParseTreeNode* node)
 			int numArguments = 0;
 			if (node->getChild(1))
 			{
-				if (!checkConstantExpression(def, CBT_EmitterState, s_curState->name, node->getChild(1)))
+				if (!checkConstantExpression(def, CBT_EmitterState, stateInfo->name, node->getChild(1)))
 					return;
 
-				countFunctionCallArguments(node->getChild(1), numArguments);
+				numArguments = ParseUtilities::countFunctionCallArguments(node->getChild(1));
 			}
 
 			int expectedArgs = ft->getNumEmitFunctionArguments(funcName);
@@ -1505,7 +1311,7 @@ void ParseTree::buildStates(ObjectDefinition* def, ParseTreeNode* node)
 			{
 				int numCtrls = 0;
 				checkEmitControllers(static_cast<EmitterDefinition*>(def), node->getChild(3), numCtrls, ft,
-					CBT_EmitterState, s_curState->name);
+					CBT_EmitterState, stateInfo->name);
 			}
 		}
 		return;
@@ -1560,7 +1366,7 @@ void ParseTree::buildStates(ObjectDefinition* def, ParseTreeNode* node)
 			int numBlocks = 0;
 			ParseTreeNode* blockNode = node->getChild(0);
 			if (blockNode)
-				countConstantArgumentList(blockNode, numBlocks);
+				numBlocks = ParseUtilities::countConstantArgumentList(blockNode);
 
 			ControllerDefinition* cDef = static_cast<ControllerDefinition*>(def);
 			int curNumBlocks = cDef->getMaxBlocks();
@@ -1592,7 +1398,7 @@ void ParseTree::buildStates(ObjectDefinition* def, ParseTreeNode* node)
 			{
 				int givenArgs = 0;
 				if (funcNode->getChild(1))
-					countFunctionCallArguments(funcNode->getChild(1), givenArgs);
+					givenArgs = ParseUtilities::countFunctionCallArguments(funcNode->getChild(1));
 
 				ControllerDefinition::Event& evt = cDef->getEvent(eventIndex);
 				if (givenArgs != evt.numArguments)
@@ -1643,12 +1449,18 @@ void ParseTree::buildStates(ObjectDefinition* def, ParseTreeNode* node)
 		}
 		return;
 
+	case PT_ConstantExpression:
+		if (def->getType() == "Controller")
+			checkConstantExpression(def, CBT_ControllerState, stateInfo->name, node);
+		else
+			checkConstantExpression(def, CBT_EmitterState, stateInfo->name, node);
+		return;
 	}
 
 	for (int i = 0; i < ParseTreeNode::MAX_CHILDREN; ++ i)
 	{
 		if (node->getChild(i))
-			buildStates(def, node->getChild(i));
+			buildStates(def, node->getChild(i), stateInfo);
 	}
 }
 // --------------------------------------------------------------------------------
@@ -1664,6 +1476,7 @@ void ParseTree::_checkEmitStatements(EmitterDefinition* def, ParseTreeNode* node
 		EmitterDefinition::Function func = def->getFunction(def->getFunctionIndex(funcName));
 		checkFunctionProperties(func.node, ft);
 		checkFunctionDieStatements(func.node, ft);
+		return;
 	}
 
 	for (int i = 0; i < ParseTreeNode::MAX_CHILDREN; ++ i)
@@ -1724,779 +1537,32 @@ void ParseTree::checkFunctionDieStatements(ParseTreeNode* node, EmitType* type)
 	}
 }
 // --------------------------------------------------------------------------------
-void ParseTree::setAffectorRecalculationType(EmitterDefinition* def, Affector* affector, 
-											 ParseTreeNode* node)
+EmitterDefinition* ParseTree::createEmitterDefinition(ParseTreeNode* node)
 {
-	switch (node->getType())
-	{
-	case PT_FunctionCall:
-		// Always recalculate every single time the affector is applied.  Only use this
-		// option if you absolutely must!
-		affector->recalculateAlways(true);
-		return;
-
-	case PT_Identifier:
-		// Variable, either global or member
-		{
-			String varName = node->getStringData();
-			if (mScriptMachine->getGlobalVariableIndex(varName) >= 0)
-			{
-				// Recalculate when global variable changes value
-				GlobalVariable* gv = mScriptMachine->getGlobalVariable(varName);
-				gv->registerListener(affector);
-			}
-		}
-		break;
-	}
-
-	for (int i = 0; i < ParseTreeNode::MAX_CHILDREN; ++ i)
-	{
-		if (node->getChild(i))
-			setAffectorRecalculationType(def, affector, node->getChild(i));
-	}
-}
-// --------------------------------------------------------------------------------
-void ParseTree::createMemberVariableBytecode(ObjectDefinition* def, ParseTreeNode* node, bool first)
-{
-	static int s_index = 0;
-	if (first)
-		s_index = NUM_SPECIAL_MEMBERS + def->getNumUserMembers();
-
-	if (node->getType() == PT_AssignStatement)
-	{
-		// Create 'constructor' code for this emitter.  We only need to do this if member 
-		// variables are not constants.  If they are, then we can just set the constants here.
-		ObjectDefinition::MemberVariable& memVar = def->getMemberVariable(s_index);
-		
-		int exprType = node->getChild(1)->getType();
-		if (exprType == PT_ConstantExpression)
-		{
-			memVar.value = 0;
-
-			// Add to 'construction code'
-			BytecodeBlock constructCode;
-			generateBytecode(def, node->getChild(1), &constructCode, CBT_None);
-			
-			int index = def->getMemberVariableIndex(memVar.name);
-			constructCode.push_back(BC_SETM);
-			constructCode.push_back((uint32) index);
-
-			def->appendConstructionCode(constructCode);
-		}
-		else
-		{
-			// Constant - just set the variable now
-			memVar.value = node->getChild(1)->getValueData(); 
-		}
-
-		++s_index;
-	}
-
-	for (int i = 0; i < ParseTreeNode::MAX_CHILDREN; ++ i)
-	{
-		if (node->getChild(i))
-			createMemberVariableBytecode(def, node->getChild(i), false);
-	}
-}
-// --------------------------------------------------------------------------------
-void ParseTree::generateEmitTail(EmitterDefinition* def, ParseTreeNode* node, 
-								 BytecodeBlock* bytecode, EmitType* ft, CodeBlockType codeType)
-{
-	int nodeType = node->getType();
-	if (nodeType == PT_FunctionCall)
-	{
-		ParseTreeNode* argNode = node->getChild(1);
-		if (argNode)
-			generateBytecode(def, argNode, bytecode, codeType);
-	}
-	else if (nodeType == PT_AffectorCall)
-	{
-		// See if affector instance has been created in EmitType, and if it has, use 
-		// its index, otherwise add it and use its index.
-		String affector = node->getStringData();
-		int affIndex = -1;
-		for (size_t i = 0; i < mAffectors.size(); ++i)
-		{
-			if (mAffectors[i].name == affector)
-			{
-				affIndex = (int) i;
-				break;
-			}
-		}
-
-		// See EmitType::getControllers
-		String instanceName = def->getName() + "-" + affector;
-
-		int instanceIndex = ft->getAffectorInstanceIndex(instanceName);
-		if (instanceIndex == BS_NotFound)
-		{
-			// Generate CodeRecord and give to EmitType
-			BytecodeBlock argCode;
-			ParseTreeNode* argsNode = mAffectors[affIndex].node->getChild(1)->getChild(1);
-			generateBytecode(def, argsNode, &argCode, codeType);
-
-			String affFunction = mAffectors[affIndex].function;
-			instanceIndex = ft->addAffectorInstance(instanceName, 
-													ft->getAffectorFunction(affFunction), 
-													mAffectors[affIndex].numArgs,
-													argCode);
-
-			// Check if the affector arguments use functions, global or member variables.
-			Affector* affector = ft->getAffectorInstance(instanceIndex);
-			setAffectorRecalculationType(def, affector, argsNode);
-		}
-	}
-
-	for (int i = 0; i < ParseTreeNode::MAX_CHILDREN; ++ i)
-	{
-		if (node->getChild(i))
-			generateEmitTail(def, node->getChild(i), bytecode, ft, codeType);
-	}
-}
-// --------------------------------------------------------------------------------
-void ParseTree::generateConstantArgumentList(ParseTreeNode* node, BytecodeBlock* code)
-{
-	if (node->getType() == PT_Constant)
-	{
-		bstype value = node->getValueData();
-		code->push_back(BS_TYPE_TO_UINT32(value));
-	}
-
-	for (int i = 0; i < ParseTreeNode::MAX_CHILDREN; ++ i)
-	{
-		if (node->getChild(i))
-			generateConstantArgumentList(node->getChild(i), code);
-	}
-}
-// --------------------------------------------------------------------------------
-void ParseTree::generateBytecode(ObjectDefinition* def, ParseTreeNode* node,
-								 BytecodeBlock* bytecode, CodeBlockType codeType, bool reset)
-{
-	static ObjectDefinition::State* s_curState = 0;
-	static EmitterDefinition::Function* s_curFunction = 0;
-	static ControllerDefinition::Event* s_curEvent = 0;
-
-	if (reset) 
-	{
-		s_curState = 0;
-		s_curFunction = 0;
-		s_curEvent = 0;
-	}
-
-	// Top-down nodes
-	int nodeType = node->getType();
-	switch (nodeType)
-	{
-	case PT_State:
-		{
-			String stateName = node->getChild(0)->getStringData();
-			s_curState = &(def->getState(def->getStateIndex(stateName))); // dodgy, but ok
-
-			// Generate code
-			if (node->getChild(1))
-			{
-				BytecodeBlock stateByteCode;
-				generateBytecode(def, node->getChild(1), &stateByteCode, codeType);
-				
-				// Give to ScriptMachine
-				CodeRecord* rec = getCodeRecord(def->getType(), def->getName(), "State", stateName);
-				rec->byteCodeSize = stateByteCode.size();
-				rec->byteCode = new uint32[rec->byteCodeSize];
-				for (uint32 i = 0; i < rec->byteCodeSize; ++i)
-					rec->byteCode[i] = stateByteCode[i];
-			}
-		}
-		return;
-
-	case PT_Event:
-		{
-			// This will only be used by controllers.
-			ControllerDefinition* cDef = static_cast<ControllerDefinition*>(def);
-			String evtName = node->getChild(0)->getStringData();
-			s_curEvent = &(cDef->getEvent(cDef->getEventIndex(evtName))); // dodgy, but ok
-
-			// Generate code
-			if (node->getChild(2))
-			{
-				BytecodeBlock evtByteCode;
-				generateBytecode(def, node->getChild(2), &evtByteCode, codeType);
-				
-				// Give to ScriptMachine
-				CodeRecord* rec = getCodeRecord(def->getType(), def->getName(), "Event", evtName);
-				rec->byteCodeSize = evtByteCode.size();
-				rec->byteCode = new uint32[rec->byteCodeSize];
-				for (uint32 i = 0; i < rec->byteCodeSize; ++i)
-					rec->byteCode[i] = evtByteCode[i];
-
-				// Events need to store a pointer to the code to execute it
-				s_curEvent->code = rec;
-			}
-		}
-		return;
-
-	case PT_Function:
-		{
-			// This will only be used by emitters.
-			EmitterDefinition* eDef = static_cast<EmitterDefinition*>(def);
-			String funcName = node->getChild(0)->getStringData();
-			s_curFunction = &(eDef->getFunction(eDef->getFunctionIndex(funcName))); // dodgy, but ok
-
-			// Generate code
-			if (node->getChild(2))
-			{
-				BytecodeBlock funcByteCode;
-				generateBytecode(def, node->getChild(2), &funcByteCode, codeType);
-				
-				// Give to ScriptMachine
-				CodeRecord* rec = getCodeRecord(def->getType(), def->getName(), "Function", funcName);
-				rec->byteCodeSize = funcByteCode.size();
-				rec->byteCode = new uint32[rec->byteCodeSize];
-				for (uint32 i = 0; i < rec->byteCodeSize; ++i)
-					rec->byteCode[i] = funcByteCode[i];
-			}
-		}
-		return;
-
-	case PT_MemberList:
-		{
-			createMemberVariableBytecode(def, node, true);
-		}
-		return;
-
-	case PT_AssignStatement:
-		{
-			String varName = node->getChild(0)->getStringData ();
-
-			// Generate value
-			generateBytecode(def, node->getChild(1), bytecode, codeType);
-
-			CodeRecord* rec;
-			int index;
-
-			if (codeType == CBT_EmitterState || codeType == CBT_ControllerState)
-				rec = getCodeRecord(def->getType(), def->getName(), "State", s_curState->name);
-			else if (codeType == CBT_Function)
-				rec = getCodeRecord(def->getType(), def->getName(), "Function", s_curFunction->name);
-			else if (codeType == CBT_Event)
-				rec = getCodeRecord(def->getType(), def->getName(), "Event", s_curEvent->name);
-
-			index = rec->getVariableIndex(varName);
-			if (index >= 0)
-			{
-				bytecode->push_back(BC_SETL);
-			}
-			else if (def->getMemberVariableIndex(varName) >= 0)
-			{
-				index = def->getMemberVariableIndex(varName);
-				bytecode->push_back(BC_SETM);
-			}
-			else
-			{
-				index = mScriptMachine->getGlobalVariableIndex(varName);
-				bytecode->push_back(BC_SETG);
-			}
-
-			bytecode->push_back((uint32) index);
-		}
-		return;
-
-	case PT_MemberAssignStatement:
-		{
-			// This will only be used by controllers.
-			// Generate constant expression for value
-			generateBytecode(def, node->getChild(1), bytecode, codeType);
-
-			if (node->getChild(2))
-			{
-				// Generate constant expression for time
-				generateBytecode(def, node->getChild(2), bytecode, codeType);
-				bytecode->push_back(BC_SETEM2);
-			}
-			else
-			{
-				bytecode->push_back(BC_SETEM1);
-			}
-
-			String emitName = node->getChild(0)->getStringData();
-			String memName = node->getChild(0)->getChild(0)->getStringData();
-
-			ControllerDefinition* cDef = static_cast<ControllerDefinition*>(def);
-			uint32 emitIndex = cDef->getEmitterVariableIndex(emitName);
-
-			const ControllerDefinition::EmitterVariable& var = cDef->getEmitterVariable(emitIndex);
-			EmitterDefinition* eDef = mScriptMachine->getEmitterDefinition(var.emitter);
-			bytecode->push_back(emitIndex);
-			bytecode->push_back(eDef->getMemberVariableIndex(memName));
-		}
-		return;
-
-	case PT_EmitStatement:
-		{
-			// This will only be used by emitters.
-			EmitterDefinition* eDef = static_cast<EmitterDefinition*>(def);
-			String funcType = node->getStringData();
-			EmitType* ft = mScriptMachine->getEmitType(funcType);
-
-			// Generate EmitType function arguments and create affector instances,
-			// to be used by EmitType::generateBytecode
-			ParseTreeNode* tNode = node->getChild(3);
-			if (tNode)
-				generateEmitTail(eDef, tNode, bytecode, ft, codeType);
-
-			// Generate emit function arguments next
-			if (node->getChild(1))
-				generateBytecode(def, node->getChild(1), bytecode, codeType);
-
-			// Then generate actual BC_EMIT code
-			String funcName = node->getChild(0)->getStringData();
-			ft->generateBytecode(eDef, node, bytecode, funcName);
-		}
-		return;
-
-	case PT_DieStatement:
-		{
-			bytecode->push_back(BC_DIE);
-		}
-		break;
-
-	case PT_IfStatement:
-		{
-			// Generate test expression
-			generateBytecode(def, node->getChild(0), bytecode, codeType);
-
-			bytecode->push_back(BC_JZ);
-			size_t jumpPos = bytecode->size();
-			bytecode->push_back(0); // dummy jump address
-
-			// Generate 'if' code
-			if (node->getChild(1))
-				generateBytecode(def, node->getChild(1), bytecode, codeType);
-
-			// Generate 'else' code
-			if (node->getChild(2))
-			{
-				// Jump to end if we're coming from 'if'
-				bytecode->push_back(BC_JUMP);
-				size_t endJumpPos = bytecode->size();
-				bytecode->push_back(0); // dummy jump address
-
-				(*bytecode)[jumpPos] = (uint32) bytecode->size();
-				generateBytecode(def, node->getChild(2), bytecode, codeType);
-				(*bytecode)[endJumpPos] = (uint32) bytecode->size();
-			}
-			else
-			{
-				(*bytecode)[jumpPos] = (uint32) bytecode->size();
-			}
-		}
-		return;
-
-	case PT_RaiseStatement:
-		{
-			// This will only be used by controllers.
-			ParseTreeNode* funcNode = node->getChild(0);
-			String eventName;
-			if (funcNode->getType() == PT_Identifier)
-				eventName = funcNode->getStringData();
-			else
-				eventName = funcNode->getChild(0)->getStringData();
-
-			int numArgs = 0;
-			if (funcNode->getChild(1))
-			{
-				countFunctionCallArguments(funcNode->getChild(1), numArgs);
-				generateBytecode(def, funcNode->getChild(1), bytecode, codeType);
-			}
-
-			ControllerDefinition* cDef = static_cast<ControllerDefinition*>(def);
-			int eventIndex = cDef->getEventIndex(eventName);
-
-			bytecode->push_back(BC_RAISE);
-			bytecode->push_back(eventIndex);
-			bytecode->push_back(numArgs);
-		}
-		return;
-
-	case PT_EnableStatement:
-		{
-			String varName = node->getChild(0)->getStringData();
-			int index = static_cast<ControllerDefinition*>(def)->getEmitterVariableIndex(varName);
-
-			bytecode->push_back(BC_ENABLE);
-			bytecode->push_back(index);
-
-			String enable = node->getStringData();
-			if (enable == "enable")
-				bytecode->push_back(1);
-			else
-				bytecode->push_back(0);
-		}
-		return;
-
-	case PT_BreakStatement:
-		{
-			// Find the flow structure that we want to break out of, and find where it ends,
-			// then unconditional jump to there.
-			bytecode->push_back(BC_JUMP);
-			uint32 jumpPosition = (uint32) bytecode->size();
-			bytecode->push_back(0); // dummy
-			std::list<uint32>& breaks = mBreakLocations.back();
-			breaks.push_back(jumpPosition);
-		}
-		return;
-
-	case PT_ContinueStatement:
-		{
-			// Find the flow structure that we want to jump back to, and find where it starts,
-			// then unconditional jump to there.
-			bytecode->push_back(BC_JUMP);
-			uint32 jumpPosition = (uint32) bytecode->size();
-			bytecode->push_back(0); // dummy
-			std::list<uint32>& continues = mContinueLocations.back();
-			continues.push_back(jumpPosition);
-		}
-		return;
-
-	case PT_WhileStatement:
-		{
-			// Start new break/continue lists
-			mBreakLocations.push_back(std::list<uint32>());
-			mContinueLocations.push_back(std::list<uint32>());
-
-			// Generate test expression
-			uint32 startJumpPos = (uint32) bytecode->size();
-			generateBytecode(def, node->getChild(0), bytecode, codeType);
-
-			bytecode->push_back(BC_JZ);
-			size_t endJumpPos = bytecode->size();
-			bytecode->push_back(0); // dummy jump address
-
-			// Generate code
-			if (node->getChild(1))
-				generateBytecode(def, node->getChild(1), bytecode, codeType);
-
-			bytecode->push_back(BC_JUMP);
-			bytecode->push_back(startJumpPos);
-
-			uint32 endPosition = (uint32) bytecode->size();
-			(*bytecode)[endJumpPos] = endPosition;	
-
-			// Now fill in breaks and continues
-			std::list<uint32>& breaks = mBreakLocations.back();
-			while (!breaks.empty())
-			{
-				uint32 location = breaks.back();
-				breaks.pop_back();
-				(*bytecode)[location] = endPosition;
-			}
-			mBreakLocations.pop_back();
-
-			std::list<uint32>& continues = mContinueLocations.back();
-			while (!continues.empty())
-			{
-				uint32 location = continues.back();
-				continues.pop_back();
-				(*bytecode)[location] = startJumpPos;
-			}
-			mContinueLocations.pop_back();
-		}
-		return;
-
-	case PT_GotoStatement:
-		{
-			int gotoType = node->getChild(0)->getType();
-			if (gotoType == PT_Identifier)
-			{
-				String stateName = node->getChild(0)->getStringData();
-
-				int index = getCodeRecordIndex(def->getType(), def->getName(), "State", stateName);
-
-				if (codeType == CBT_Event)
-					bytecode->push_back(BC_GOTOE);
-				else
-					bytecode->push_back(BC_GOTO);
-
-				bytecode->push_back((uint32) index);
-			}
-			else if (gotoType == PT_EmitterMember)
-			{
-				// This will only be used by controllers.
-				String emitName = node->getChild(0)->getStringData();
-				String stateName = node->getChild(0)->getChild(0)->getStringData();
-
-				ControllerDefinition* cDef = static_cast<ControllerDefinition*>(def);
-				int emitIndex = cDef->getEmitterVariableIndex(emitName);
-
-				const ControllerDefinition::EmitterVariable& var = cDef->getEmitterVariable(emitIndex);
-				EmitterDefinition* eDef = mScriptMachine->getEmitterDefinition(var.emitter);
-
-				bytecode->push_back(BC_GOTOM);
-				bytecode->push_back((uint32) emitIndex);
-
-				int index = getCodeRecordIndex("Emitter", var.emitter, "State", stateName);
-				bytecode->push_back((uint32) index);
-			}
-		}
-		return;
-
-	case PT_WaitStatement:
-		{
-			generateBytecode(def, node->getChild(0), bytecode, codeType);
-			bytecode->push_back(BC_WAIT);
-		}
-		return;
-
-
-	case PT_SuspendStatement:
-	case PT_SignalStatement:
-		{
-			// Count number of blocks
-			int numBlocks = 0;
-
-			ParseTreeNode* blockNode = node->getChild(0);
-			if (blockNode)
-				countConstantArgumentList(blockNode, numBlocks);
-			
-			if (numBlocks == 0)
-			{
-				if (nodeType == PT_SuspendStatement)
-				{
-					bytecode->push_back(BC_PUSH);
-					bytecode->push_back(BS_SUSPEND_FOREVER_TIME);
-					bytecode->push_back(BC_WAIT);
-				}
-				else
-				{
-					bytecode->push_back(BC_SIGNAL);
-					bytecode->push_back(0);
-				}
-			}
-			else
-			{
-				if (nodeType == PT_SuspendStatement)
-					bytecode->push_back(BC_SUSPEND);
-				else
-					bytecode->push_back(BC_SIGNAL);
-
-				bytecode->push_back((uint32) numBlocks);
-				generateConstantArgumentList(blockNode, bytecode);
-			}
-		}
-		return;
-
-		case PT_SetStatement:
-		{
-			// This will only be used by emitters (functions).
-			// Generate constant expression for value
-			generateBytecode(def, node->getChild(1), bytecode, codeType);
-
-			if (node->getChild(2))
-			{
-				// Generate constant expression for time
-				generateBytecode(def, node->getChild(2), bytecode, codeType);
-				bytecode->push_back(BC_SETPROPERTY2);
-			}
-			else
-			{
-				bytecode->push_back(BC_SETPROPERTY1);
-			}
-
-			String propName = node->getChild(0)->getStringData();
-			int propIndex = mScriptMachine->getPropertyIndex(propName);
-			bytecode->push_back(propIndex);
-		}
-		return;
-
-	case PT_FunctionCall:
-		{
-			// Generate arguments first
-			if (node->getChild(1))
-				generateBytecode(def, node->getChild(1), bytecode, codeType);
-
-			String funcName = node->getChild(0)->getStringData();
-
-			// See if it's a native function
-			int index = mScriptMachine->getNativeFunctionIndex(funcName);
-			bytecode->push_back(BC_CALL);
-			bytecode->push_back((uint32) index);
-		}
-		return;
-
-	case PT_Constant:
-		{
-			// Push value
-			bstype val = node->getValueData();
-			bytecode->push_back(BC_PUSH);
-			bytecode->push_back(BS_TYPE_TO_UINT32(val));
-		}
-		break;
-
-	case PT_Property:
-		{
-			// This will only be used by emitters (functions).
-			// Get property
-			bytecode->push_back(BC_GETPROPERTY);
-			String propName = node->getStringData();
-			int propIndex = mScriptMachine->getPropertyIndex(propName);
-			bytecode->push_back(propIndex);
-		}
-		break;
-
-	case PT_EmitterMember:
-		{
-			// This will only be used by controllers.
-			String emitName = node->getStringData();
-			String memName = node->getChild(0)->getStringData();
-
-			bytecode->push_back(BC_GETEM);
-			
-			ControllerDefinition* cDef = static_cast<ControllerDefinition*>(def);
-			uint32 emitIndex = cDef->getEmitterVariableIndex(emitName);
-			const ControllerDefinition::EmitterVariable& var = cDef->getEmitterVariable(emitIndex);
-			EmitterDefinition* eDef = mScriptMachine->getEmitterDefinition(var.emitter);
-			bytecode->push_back(emitIndex);
-			bytecode->push_back(eDef->getMemberVariableIndex(memName));
-		}
-		return;
-
-	case PT_Identifier:
-		{
-			String varName = node->getStringData();
-
-			// Check for local, then member, then global
-			CodeRecord* rec = 0;
-			int index = -1;
-
-			if (codeType == CBT_EmitterState || codeType == CBT_ControllerState)
-				rec = getCodeRecord(def->getType(), def->getName(), "State", s_curState->name);
-			else if (codeType == CBT_Function)
-				rec = getCodeRecord(def->getType(), def->getName(), "Function", s_curFunction->name);
-			else if (codeType == CBT_Event)
-				rec = getCodeRecord(def->getType(), def->getName(), "Event", s_curEvent->name);
-
-			if (rec)
-				index = rec->getVariableIndex(varName);
-
-			if (index >= 0)
-			{
-				bytecode->push_back(BC_GETL);
-			}
-			else if (def->getMemberVariableIndex(varName) >= 0)
-			{
-				index = def->getMemberVariableIndex(varName);
-				bytecode->push_back(BC_GETM);
-			}
-			else
-			{
-				index = mScriptMachine->getGlobalVariableIndex(varName);
-				bytecode->push_back(BC_GETG);
-			}
-
-			bytecode->push_back((uint32) index);
-		}
-		break;
-
-	default:
-		break;
-
-	}
-
-	for (int i = 0; i < ParseTreeNode::MAX_CHILDREN; ++ i)
-	{
-		if (node->getChild(i))
-			generateBytecode(def, node->getChild(i), bytecode, codeType, reset);
-	}
-
-	// Bottom-up nodes
-	switch (node->getType())
-	{
-	case PT_UnaryPosStatement:
-		// Don't do anything for now
-		break;
-
-	case PT_UnaryNegStatement:
-		bytecode->push_back(BC_OP_NEG);
-		break;
-
-	case PT_AddStatement:
-		bytecode->push_back(BC_OP_ADD);
-		break;
-
-	case PT_SubtractStatement:
-		bytecode->push_back(BC_OP_SUBTRACT);
-		break;
-
-	case PT_MultiplyStatement:
-		bytecode->push_back(BC_OP_MULTIPLY);
-		break;
-
-	case PT_DivideStatement:
-		bytecode->push_back(BC_OP_DIVIDE);
-		break;
-
-	case PT_RemainderStatement:
-		bytecode->push_back(BC_OP_REMAINDER);
-		break;
-
-	case PT_LessThanStatement:
-		bytecode->push_back(BC_OP_LT);
-		break;
-
-	case PT_LessThanEqStatement:
-		bytecode->push_back(BC_OP_LTE);
-		break;
-
-	case PT_GreaterThanStatement:
-		bytecode->push_back(BC_OP_GT);
-		break;
-
-	case PT_GreaterThanEqStatement:
-		bytecode->push_back(BC_OP_GTE);
-		break;
-
-	case PT_EqualsStatement:
-		bytecode->push_back(BC_OP_EQ);
-		break;
-
-	case PT_NotEqualsStatement:
-		bytecode->push_back(BC_OP_NEQ);
-		break;
-
-	case PT_LogicalOr:
-		bytecode->push_back(BC_LOG_OR);
-		break;
-
-	case PT_LogicalAnd:
-		bytecode->push_back(BC_LOG_AND);
-		break;
-	}
-}
-// --------------------------------------------------------------------------------
-EmitterDefinition* ParseTree::createEmitterDefinition(ParseTreeNode* node, JitterHookFunction jitHook)
-{
-	String name = node->getStringData();
-	EmitterDefinition* def = new EmitterDefinition(name);
+	EmitterDefinition* def = new EmitterDefinition(node->getStringData());
 
 	// Create pre-declared member variables first
 	addMemberVariables(def);
 
 	// Create script-declared member variables
-	bool hasMembers = node->getChild(PT_EmitterMemberNode) ? true : false;
-	if (hasMembers)
-		createMemberVariables(def, node->getChild(PT_EmitterMemberNode));
-
-	if (mNumErrors > 0)
+	ParseTreeNode* membersNode =  node->getChild(PT_EmitterMemberNode);
+	if (membersNode)
 	{
-		delete def;
-		return 0;
+		createMemberVariables(def, membersNode);
+
+		if (mNumErrors > 0)
+		{
+			delete def;
+			return 0;
+		}
 	}
 
 	// Now check affectors
 	mAffectors.clear();
-	bool hasAffectors = node->getChild(PT_EmitterAffectorNode) ? true : false;
-	if (hasAffectors)
+	ParseTreeNode* affectorsNode = node->getChild(PT_EmitterAffectorNode);
+	if (affectorsNode)
 	{
-		createAffectors(def, node->getChild(PT_EmitterAffectorNode));
+		createAffectors(def, affectorsNode);
 
 		if (mNumErrors > 0)
 		{
@@ -2507,10 +1573,10 @@ EmitterDefinition* ParseTree::createEmitterDefinition(ParseTreeNode* node, Jitte
 
 	// Create functions
 	mFunctionIndices.clear();
-	bool hasFunctions = node->getChild(PT_EmitterFunctionNode) ? true : false;
-	if (hasFunctions)
+	ParseTreeNode* functionsNode = node->getChild(PT_EmitterFunctionNode);
+	if (functionsNode)
 	{
-		addFunctions(def, node->getChild(PT_EmitterFunctionNode));
+		addFunctions(def, functionsNode);
 
 		if (mNumErrors > 0)
 		{
@@ -2518,7 +1584,7 @@ EmitterDefinition* ParseTree::createEmitterDefinition(ParseTreeNode* node, Jitte
 			return 0;
 		}
 
-		buildFunctions(def, node->getChild(PT_EmitterFunctionNode));
+		buildFunctions(def, functionsNode);
 
 		if (mNumErrors > 0)
 		{
@@ -2528,9 +1594,10 @@ EmitterDefinition* ParseTree::createEmitterDefinition(ParseTreeNode* node, Jitte
 	}
 
 	// Create the states
+	mStateIndices.clear();
+	ParseTreeNode* statesNode = node->getChild(PT_EmitterStateNode);
 	{
-		mStateIndices.clear();
-		addStates(def, node->getChild(PT_EmitterStateNode));
+		addStates(def, statesNode);
 
 		if (mNumErrors > 0)
 		{
@@ -2538,7 +1605,7 @@ EmitterDefinition* ParseTree::createEmitterDefinition(ParseTreeNode* node, Jitte
 			return 0;
 		}
 
-		buildStates(def, node->getChild(PT_EmitterStateNode));
+		buildStates(def, statesNode);
 		
 		if (mNumErrors > 0)
 		{
@@ -2584,64 +1651,36 @@ EmitterDefinition* ParseTree::createEmitterDefinition(ParseTreeNode* node, Jitte
 	
 	def->setInitialState(*(mStateIndices.begin()));
 	def->setMaxLocalVariables(maxLocals);
-
-	// Initialise member vars
-	if (hasMembers)
-		generateBytecode(def, node->getChild(PT_EmitterMemberNode), 0, CBT_None, true);
-
-	// Finish constructor here
-	def->finaliseConstructor();
-
-	// Create function bytecode
-	if (hasFunctions)
-		generateBytecode(def, node->getChild(PT_EmitterFunctionNode), 0, CBT_Function, true);
-
-	// Create state bytecode
-	generateBytecode(def, node->getChild(PT_EmitterStateNode), 0, CBT_EmitterState, true);
-
-#ifdef BS_ENABLEJIT
-	if (jitHook)
-	{
-		// JIT states
-		for (int i = 0; i < def->getNumStates(); ++i)
-		{
-			CodeRecord* codeRec = getCodeRecord("Emitter", def->getName(), "State", def->getState(i).name);
-			codeRec->jitFunction = jitHook(codeRec->byteCode, codeRec->byteCodeSize, "State");
-		}
-	}
-#endif
-
 	return def;
 }
 // --------------------------------------------------------------------------------
 ControllerDefinition* ParseTree::createControllerDefinition(ParseTreeNode* node,
-															const MemberVariableDeclarationMap& memberDecls,
-															JitterHookFunction jitHook)
+															const MemberVariableDeclarationMap& memberDecls)
 {
-	String name = node->getStringData();
-
 	// Create definition
-	ControllerDefinition* def = new ControllerDefinition(name);
+	ControllerDefinition* def = new ControllerDefinition(node->getStringData());
 
 	// Create pre-declared member variables first
 	addMemberVariables(def, &memberDecls);
 
 	// Create script-declared member variables
-	bool hasMembers = node->getChild(PT_ControllerMemberNode) ? true : false;
-	if (hasMembers)
-		createMemberVariables(def, node->getChild(PT_ControllerMemberNode));
-
-	if (mNumErrors > 0)
+	ParseTreeNode* membersNode =  node->getChild(PT_ControllerMemberNode);
+	if (membersNode)
 	{
-		delete def;
-		return 0;
+		createMemberVariables(def, membersNode);
+
+		if (mNumErrors > 0)
+		{
+			delete def;
+			return 0;
+		}
 	}
 
 	// Now check emitter variables
-	bool hasEmitters = node->getChild(PT_ControllerEmitterNode) ? true : false;
-	if (hasEmitters)
+	ParseTreeNode* emittersNode =  node->getChild(PT_ControllerEmitterNode);
+	if (emittersNode)
 	{
-		createEmitterVariables(def, node->getChild(PT_ControllerEmitterNode));
+		createEmitterVariables(def, emittersNode);
 
 		if (mNumErrors > 0)
 		{
@@ -2652,20 +1691,23 @@ ControllerDefinition* ParseTree::createControllerDefinition(ParseTreeNode* node,
 
 	// Must add states before events, because we will need the info for goto
 	mStateIndices.clear();
-	addStates(def, node->getChild(PT_EmitterStateNode));
-
-	if (mNumErrors > 0)
+	ParseTreeNode* statesNode = node->getChild(PT_EmitterStateNode);
 	{
-		delete def;
-		return 0;
+		addStates(def, statesNode);
+
+		if (mNumErrors > 0)
+		{
+			delete def;
+			return 0;
+		}
 	}
 
 	// Create events
 	mEventIndices.clear();
-	bool hasEvents = node->getChild(PT_ControllerEventNode) ? true : false;
-	if (hasEvents)
+	ParseTreeNode* eventsNode = node->getChild(PT_ControllerEventNode);
+	if (eventsNode)
 	{
-		addEvents(def, node->getChild(PT_ControllerEventNode));
+		addEvents(def, eventsNode);
 
 		if (mNumErrors > 0)
 		{
@@ -2673,7 +1715,7 @@ ControllerDefinition* ParseTree::createControllerDefinition(ParseTreeNode* node,
 			return 0;
 		}
 
-		buildEvents(def, node->getChild(PT_ControllerEventNode));
+		buildEvents(def, eventsNode);
 
 		if (mNumErrors > 0)
 		{
@@ -2682,8 +1724,8 @@ ControllerDefinition* ParseTree::createControllerDefinition(ParseTreeNode* node,
 		}
 	}
 
-	// Create the states
-	buildStates(def, node->getChild(PT_EmitterStateNode));
+	// Now create the states
+	buildStates(def, statesNode);
 	
 	if (mNumErrors > 0)
 	{
@@ -2719,29 +1761,14 @@ ControllerDefinition* ParseTree::createControllerDefinition(ParseTreeNode* node,
 	}
 
 	def->setMaxEventLocalVariables(maxLocals);
-
-	// Initialise member vars
-	if (hasMembers)
-		generateBytecode(def, node->getChild(PT_ControllerMemberNode), 0, CBT_None, true);
-
-	// Finish constructor here
-	def->finaliseConstructor();
-
-	// Create function bytecode
-	if (hasEvents)
-		generateBytecode(def, node->getChild(PT_ControllerEventNode), 0, CBT_Event, true);
-
-	// Create state bytecode
-	generateBytecode(def, node->getChild(PT_ControllerStateNode), 0, CBT_ControllerState, true);
-
 	return def;
 }
 // --------------------------------------------------------------------------------
-void ParseTree::createEmitterDefinitions(ParseTreeNode* node, JitterHookFunction jitHook)
+void ParseTree::createEmitterDefinitions(ParseTreeNode* node)
 {
 	if (node->getType() == PT_EmitterDefinition)
 	{
-		EmitterDefinition* def = createEmitterDefinition(node, jitHook);
+		EmitterDefinition* def = createEmitterDefinition(node);
 		if (def)
 			mScriptMachine->addEmitterDefinition(def->getName(), def);
 	}
@@ -2750,18 +1777,17 @@ void ParseTree::createEmitterDefinitions(ParseTreeNode* node, JitterHookFunction
 		for (int i = 0; i < ParseTreeNode::MAX_CHILDREN; ++i)
 		{
 			if (node->getChild(i))
-				createEmitterDefinitions(node->getChild(i), jitHook);
+				createEmitterDefinitions(node->getChild(i));
 		}
 	}
 }
 // --------------------------------------------------------------------------------
 void ParseTree::createControllerDefinitions(ParseTreeNode* node,
-											const MemberVariableDeclarationMap& memberDecls,
-											JitterHookFunction jitHook)
+											const MemberVariableDeclarationMap& memberDecls)
 {
 	if (node->getType() == PT_ControllerDefinition)
 	{
-		ControllerDefinition* def = createControllerDefinition(node, memberDecls, jitHook);
+		ControllerDefinition* def = createControllerDefinition(node, memberDecls);
 		if (def)
 			mScriptMachine->addControllerDefinition(def->getName(), def);
 	}
@@ -2770,25 +1796,19 @@ void ParseTree::createControllerDefinitions(ParseTreeNode* node,
 		for (int i = 0; i < ParseTreeNode::MAX_CHILDREN; ++i)
 		{
 			if (node->getChild(i))
-				createControllerDefinitions(node->getChild(i), memberDecls, jitHook);
+				createControllerDefinitions(node->getChild(i), memberDecls);
 		}
 	}
 }
 // --------------------------------------------------------------------------------
-void ParseTree::createDefinitions(ParseTreeNode* node,
-								  const MemberVariableDeclarationMap& memberDecls,
-								  JitterHookFunction jitHook)
+const ParseTree::AffectorInfo& ParseTree::getAffectorInfo(int index) const
 {
-	// Lock tree for basic concurrency-safety.
-	mLocked = true;
-	
-	// Create emitter definitions first, then controller definitions, because 
-	// controllers rely on emitters
-	createEmitterDefinitions(node, jitHook);
-	createControllerDefinitions(node, memberDecls, jitHook);
-
-	// Unlock
-	mLocked = false;
+	return mAffectors[index];
+}
+// --------------------------------------------------------------------------------
+int ParseTree::getNumAffectors() const
+{
+	return (int) mAffectors.size();
 }
 // --------------------------------------------------------------------------------
 String ParseTree::getCodeRecordName(const String& type, const String& typeName,
@@ -2840,20 +1860,100 @@ void ParseTree::print(ParseTreeNode* node, int indent)
 	switch(node->getType())
 	{
 	case PT_EmitterDefinition:
-		std::cout << "Emitter Definition: " << node->getChild(0)->getStringData();
-		break;
+		std::cerr << "emitter"; break;
+
+	case PT_ControllerDefinition:
+		std::cerr << "controller"; break;
+
+	case PT_Function:
+		std::cerr << "function"; break;
+
+	case PT_Event:
+		std::cerr << "event"; break;
+
+	case PT_State:
+		std::cerr << "state"; break;
+
+	case PT_Statement:
+		std::cerr << "statement"; break;
+
+	case PT_StatementList:
+		std::cerr << "statement list"; break;
+
+	case PT_AssignStatement:
+		std::cerr << "assign"; break;
+
+	case PT_ConstantExpression:
+		std::cerr << "expr"; break;
+
+	case PT_LogicalOr:
+		std::cerr << "||"; break;
+
+	case PT_LogicalAnd:
+		std::cerr << "&&"; break;
+
+	case PT_EqualsStatement:
+		std::cerr << "=="; break;
+
+	case PT_NotEqualsStatement:
+		std::cerr << "!="; break;
+
+	case PT_LessThanStatement:
+		std::cerr << "<"; break;
+
+	case PT_GreaterThanStatement:
+		std::cerr << ">"; break;
+
+	case PT_LessThanEqStatement:
+		std::cerr << "<="; break;
+
+	case PT_GreaterThanEqStatement:
+		std::cerr << ">="; break;
+
+	case PT_AddStatement:
+		std::cerr << "+"; break;
+
+	case PT_SubtractStatement:
+		std::cerr << "-"; break;
+
+	case PT_MultiplyStatement:
+		std::cerr << "*"; break;
+
+	case PT_DivideStatement:
+		std::cerr << "/"; break;
+
+	case PT_RemainderStatement:
+		std::cerr << "%"; break;
+
+	case PT_UnaryPosStatement:
+		std::cerr << "u+"; break;
+
+	case PT_UnaryNegStatement:
+		std::cerr << "u-"; break;
+
+	case PT_EmitStatement:
+		std::cerr << "emit statement"; break;
+
+	case PT_WaitStatement:
+		std::cerr << "wait"; break;
 
 	case PT_FunctionCall:
-		std::cout << "Function Call: " << node->getChild(0)->getStringData();
-		break;
+		std::cerr << "function"; break;
 
 	case PT_FunctionCallArg:
-		std::cout << "Function Call Arg: ";
-		break;
+		std::cerr << "argument"; break;
 
 	case PT_FunctionCallArgList:
-		std::cout << "Function Call Arg List: ";
-		break;
+		std::cerr << "argument list"; break;
+
+	case PT_Identifier:
+	case PT_Property:
+	case PT_Anchor:
+	case PT_EmitterMember:
+		std::cerr << node->getStringData(); break;
+
+	case PT_Constant:
+		std::cerr << node->getValueData(); break;
 
 	default:
 		break;
