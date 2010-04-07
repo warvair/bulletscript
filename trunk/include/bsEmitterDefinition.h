@@ -44,6 +44,22 @@ namespace BS_NMSP
 		 */
 		explicit EmitterDefinition(const String& name);
 
+		/**	\brief Set index.
+		 *
+		 *	This is an internal method used by code generation.
+		 *
+		 *  \param EmitterDefinition index.
+		 */
+		void _setIndex(int index);
+
+		/**	\brief Get index.
+		 *
+		 *	This is an internal method used by code generation.
+		 *	
+		 *	\return EmitterDefinition index in virtual machine.
+		 */
+		int _getIndex() const;
+
 		/**	\brief Add a function definition.
 		 *	
 		 *	\param name name of the function.
@@ -75,6 +91,8 @@ namespace BS_NMSP
 		int getNumFunctions() const;
 
 	private:
+
+		int mIndex;
 
 		// Functions
 		std::vector<Function> mFunctions;

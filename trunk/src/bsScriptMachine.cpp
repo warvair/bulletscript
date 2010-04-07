@@ -5,9 +5,11 @@
 #include <assert.h>
 #include "bsScriptMachine.h"
 #include "bsParseTree.h"
+#include "bsCompiler.h"
 #include "bsBytecode.h"
 #include "bsTypeManager.h"
 #include "bsEmitter.h"
+#include "bsNatives.h"
 
 #if BS_PLATFORM == BS_PLATFORM_LINUX
 #	include <stdlib.h> // for rand()
@@ -25,25 +27,6 @@ void yy_delete_buffer(yy_buffer_state*);
 namespace BS_NMSP
 {
 
-int bm_rand(ScriptState& state)
-{
-	int rv = rand();
-	bstype scale = state.stack[state.stackHead - 1];
-	bstype r = scale * (rv / (float) RAND_MAX);
-
-	// Push random onto stack - don't need to pop stack
-	// because the return value takes the argument's place.
-	state.stack[state.stackHead - 1] = r;
-	return ScriptOK;
-}
-
-int bm_sqrt(ScriptState& state)
-{
-	bstype value = state.stack[state.stackHead - 1];
-	state.stack[state.stackHead - 1] = (bstype) sqrtf(value);
-	return ScriptOK;
-}
-
 // --------------------------------------------------------------------------------
 ScriptMachine::ScriptMachine(Log* _log) :
 	mTypeManager(0),
@@ -55,8 +38,17 @@ ScriptMachine::ScriptMachine(Log* _log) :
 	mJitHook(0)
 {
 	// Register functions
-	registerNativeFunction("rand", bm_rand);
-	registerNativeFunction("sqrt", bm_sqrt);
+#ifdef BS_ENABLEJIT
+	registerNativeFunction("rand", true, 1, bm_rand, bm_rand_JIT);
+	registerNativeFunction("sqrt", true, 1, bm_sqrt, bm_sqrt_JIT);
+	registerNativeFunction("print", false, 1, bm_print, bm_print_JIT);
+	registerNativeFunction("test", false, 2, bm_test, bm_test_JIT);
+#else
+	registerNativeFunction("rand", true, 1, bm_rand);
+	registerNativeFunction("sqrt", true, 1, bm_sqrt);
+	registerNativeFunction("print", false, 1, bm_print);
+	registerNativeFunction("test", false, 2, bm_test);
+#endif
 
 	// Register anchor properties
 	addProperty("x");
@@ -239,7 +231,7 @@ void ScriptMachine::createCodeRecord(const String& name)
 // --------------------------------------------------------------------------------
 CodeRecord* ScriptMachine::getCodeRecord(int index)
 {
-	assert(index >= 0 && index < mCodeRecords.size() && 
+	assert(index >= 0 && index < (int) mCodeRecords.size() && 
 		"ScriptMachine::getCodeRecord: out of bounds.");
 
 	return mCodeRecords[index];
@@ -252,7 +244,7 @@ int ScriptMachine::getNumCodeRecords() const
 // --------------------------------------------------------------------------------
 EmitTypeControl* ScriptMachine::getEmitTypeRecord(int index)
 {
-	assert(index >= 0 && index < mEmitterRecords.size() && 
+	assert(index >= 0 && index < (int) mEmitterRecords.size() && 
 		"ScriptMachine::getEmitTypeRecord: out of bounds.");
 
 	EmitTypeControl* rec = mEmitterRecords[index].typePool->acquire();
@@ -266,13 +258,19 @@ EmitTypeControl* ScriptMachine::getEmitTypeRecord(int index)
 // --------------------------------------------------------------------------------
 void ScriptMachine::releaseEmitTypeRecord(int index, EmitTypeControl* rec)
 {
-	assert(index >= 0 && index < mEmitterRecords.size() && 
+	assert(index >= 0 && index < (int) mEmitterRecords.size() && 
 		"ScriptMachine::releaseEmitTypeRecord: out of bounds.");
 
 	mEmitterRecords[index].typePool->release(rec);
 }
 // --------------------------------------------------------------------------------
-int ScriptMachine::registerNativeFunction(const String& name, NativeFunction func)
+#ifdef BS_ENABLEJIT
+int ScriptMachine::registerNativeFunction(const String& name, bool returnsValue,
+										  int numArguments, NativeFunction func, void* jitFunc)
+#else
+int ScriptMachine::registerNativeFunction(const String& name, bool returnsValue,
+										  int numArguments, NativeFunction func)
+#endif
 {
 	// Make sure it isn't already registered
 	for (size_t i = 0; i < mNativeFunctions.size(); ++i)
@@ -284,6 +282,12 @@ int ScriptMachine::registerNativeFunction(const String& name, NativeFunction fun
 	NativeFunctionRecord rec;
 	rec.name = name;
 	rec.function = func;
+	rec.returnsValue = returnsValue;
+	rec.numArguments = numArguments;
+
+#ifdef BS_ENABLEJIT
+	rec.jitFunction = jitFunc;
+#endif
 
 	mNativeFunctions.push_back(rec);
 	return BS_OK;
@@ -300,6 +304,14 @@ int ScriptMachine::getNativeFunctionIndex(const String &name) const
 	return BS_NotFound;
 }
 // --------------------------------------------------------------------------------
+const String& ScriptMachine::getNativeFunctionName(int index) const
+{
+	assert(index >= 0 && index < (int) mNativeFunctions.size() && 
+		"ScriptMachine::getNativeFunctionName: out of bounds");
+
+	return mNativeFunctions[index].name;
+}
+// --------------------------------------------------------------------------------
 NativeFunction ScriptMachine::getNativeFunction(int index) const
 {
 	assert(index >= 0 && index < (int) mNativeFunctions.size() && 
@@ -308,9 +320,34 @@ NativeFunction ScriptMachine::getNativeFunction(int index) const
 	return mNativeFunctions[index].function;
 }
 // --------------------------------------------------------------------------------
+#ifdef BS_ENABLEJIT
+void* ScriptMachine::getNativeJitFunction(int index) const
+{
+	assert(index >= 0 && index < (int) mNativeFunctions.size() && 
+		"ScriptMachine::getNativeJitFunction: out of bounds");
+
+	return mNativeFunctions[index].jitFunction;
+}
+#endif
+// --------------------------------------------------------------------------------
+bool ScriptMachine::nativeFunctionReturnsValue(int index) const
+{
+	return mNativeFunctions[index].returnsValue;
+}
+// --------------------------------------------------------------------------------
+int ScriptMachine::getNativeFunctionArgumentCount(int index) const
+{
+	return mNativeFunctions[index].numArguments;
+}
+// --------------------------------------------------------------------------------
 EmitType* ScriptMachine::getEmitType(const String& name) const
 {
 	return mTypeManager->getType(name);
+}
+// --------------------------------------------------------------------------------
+EmitType* ScriptMachine::getEmitType(int index) const
+{
+	return mTypeManager->getType(index);
 }
 // --------------------------------------------------------------------------------
 int ScriptMachine::addProperty(const String& prop)
@@ -427,6 +464,9 @@ int ScriptMachine::addEmitterDefinition(const String& name, EmitterDefinition* d
 	int maxLocals = def->getMaxLocalVariables();
 	rec.typePool = new DeepMemoryPool<EmitTypeControl, int>(256, maxLocals);
 
+	int index = (int) mEmitterRecords.size();
+	def->_setIndex(index);
+
 	mEmitterRecords.push_back(rec);
 
 	return BS_OK;
@@ -498,8 +538,6 @@ int ScriptMachine::compileScript(const uint8* buffer, size_t bufferSize)
 
 	ast->foldConstants();
 
-//	ast->print(ast->getRootNode(), 0);
-
 	// The first time we compile a script, we must map property definitions from
 	// the global list to specific EmitTypes.
 	if (!mPropertiesMapped)
@@ -508,11 +546,28 @@ int ScriptMachine::compileScript(const uint8* buffer, size_t bufferSize)
 		mPropertiesMapped = true;
 	}
 
-	ast->createDefinitions(ast->getRootNode(), mMemberVariableDeclarations, mJitHook);
+	Compiler compiler(this, ast);
+	compiler.createDefinitions(mMemberVariableDeclarations);
 
-	numParseErrors = ast->getNumErrors();
-	if (numParseErrors > 0)
-		return numParseErrors;
+	int numErrors = compiler.getNumErrors();
+	if (numErrors > 0)
+		return numErrors;
+
+	// If JIT is loaded, do that now.  Need to jit all "dirty" scripts - this is not the most
+	// graceful way of doing this, but there won't be too many scripts so it won't matter.
+#ifdef BS_ENABLEJIT
+	if (mJitEnabled)
+	{
+		for (size_t i = 0; i < mCodeRecords.size(); ++i)
+		{
+			if (mCodeRecords[i]->jitFunction == 0)
+			{
+				mCodeRecords[i]->jitFunction = mJitHook(mCodeRecords[i]->byteCode, 
+														mCodeRecords[i]->byteCodeSize, "State", this);
+			}
+		}
+	}
+#endif
 
 	return 0;
 }
@@ -587,11 +642,11 @@ bool ScriptMachine::checkInstructionPosition(ScriptState& st, size_t length, boo
 }
 // --------------------------------------------------------------------------------
 int ScriptMachine::interpretCode(const uint32* code, size_t length, ScriptState& st, 
-								  int* curState, void* object, bstype x, bstype y, 
+								 int* curState, void* object, bstype x, bstype y, 
 #ifdef BS_Z_DIMENSION
-								  bstype z, 
+								 bstype z, 
 #endif
-								  bstype angle, bstype* members, bool loop, void* userObject)
+								 bstype angle, bstype* members, bool loop, void* userObject)
 {
 	if (st.curInstruction >= length)
 		return ScriptOK;
@@ -610,6 +665,15 @@ int ScriptMachine::interpretCode(const uint32* code, size_t length, ScriptState&
 
 				assert(st.stackHead < BS_SCRIPT_STACK_SIZE && 
 					"Stack limit reached: increase BS_SCRIPT_STACK_SIZE");
+			}
+			break;
+
+		case BC_POP:
+			{
+				st.stackHead--;
+				st.curInstruction++;
+
+				assert(st.stackHead > 0 && "Stack hit base: popping error (try locking?)");
 			}
 			break;
 
@@ -821,16 +885,16 @@ int ScriptMachine::interpretCode(const uint32* code, size_t length, ScriptState&
 		case BC_EMIT:
 			{
 				int emitType = code[st.curInstruction + 1];
-				EmitType* ft = mTypeManager->getType(emitType);
+				EmitType* et = mTypeManager->getType(emitType);
 
 				// When emitted by a function and not an emitter, this cast will fail, but this is OK
 				// because we only use it for anchors, and anchors are only set in emitters.
 				Emitter* emitter = static_cast<Emitter*>(object);
 
 #ifdef BS_Z_DIMENSION
-				st.curInstruction += ft->_processCode(code, st, x, y, z, angle, members, userObject, emitter);
+				st.curInstruction += et->_processCode(code, st, x, y, z, angle, members, userObject, emitter);
 #else
-				st.curInstruction += ft->_processCode(code, st, x, y, angle, members, userObject, emitter);
+				st.curInstruction += et->_processCode(code, st, x, y, angle, members, userObject, emitter);
 #endif
 			}
 			break;
@@ -1123,16 +1187,17 @@ void ScriptMachine::processScriptRecord(ScriptRecord* gsr, void* object, void* u
 	// Assume that we're not suspended.
 
 	CodeRecord* rec = getCodeRecord(gsr->curState);
-	uint32 *bytecode = rec->byteCode;
-	size_t bytecodeLen = rec->byteCodeSize;
 
 #ifdef BS_ENABLEJIT
 	if (rec->jitFunction)
 	{
-		float ret = rec->jitFunction();
-		std::cerr << "jit return: " << ret << std::endl;
+		rec->jitFunction(gsr->members[Member_X], gsr->members[Member_Y], gsr->members[Member_Angle], userObject);
+		return;
 	}
 #endif
+
+	uint32 *bytecode = rec->byteCode;
+	size_t bytecodeLen = rec->byteCodeSize;
 
 #ifdef BS_Z_DIMENSION
 	interpretCode(bytecode, bytecodeLen, gsr->scriptState, &gsr->curState, object,

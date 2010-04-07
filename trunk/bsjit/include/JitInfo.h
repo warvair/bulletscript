@@ -1,6 +1,7 @@
 #ifndef __JITINFO_H__
 #define __JITINFO_H__
 
+#include <vector>
 #include <bsBytecode.h>
 
 enum GP_REGISTERS
@@ -18,9 +19,9 @@ enum GP_REGISTERS
 
 class JitCodeInfo
 {
-	bs::bstype* mConstants;
+	std::vector<bs::bstype> mConstants;
 
-	int mNumConstants;
+	std::vector<std::pair<bs::uint32, bs::uint32>> mJumpTargets;
 
 	int mNumLocals;
 
@@ -39,6 +40,14 @@ public:
 	int getConstantIndex(bs::bstype value) const;
 
 	int getNumConstants() const;
+
+	bs::uint32 getJumpTarget(bs::uint32 instr);
+
+	int getJumpTargetIndexBySource(bs::uint32 instr);
+
+	int getJumpTargetIndexByDest(bs::uint32 instr);
+
+	int getNumJumpTargets() const;
 
 	int getNumLocals() const;
 

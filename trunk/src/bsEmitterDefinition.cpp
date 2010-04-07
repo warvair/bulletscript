@@ -6,8 +6,19 @@ namespace BS_NMSP
 
 // --------------------------------------------------------------------------------
 EmitterDefinition::EmitterDefinition(const String& name) :
-	ObjectDefinition(name, "Emitter")
+	ObjectDefinition(name, "Emitter"),
+	mIndex(-1)
 {
+}
+// --------------------------------------------------------------------------------
+void EmitterDefinition::_setIndex(int index)
+{
+	mIndex = index;
+}
+// --------------------------------------------------------------------------------
+int EmitterDefinition::_getIndex() const
+{
+	return mIndex;
 }
 // --------------------------------------------------------------------------------
 EmitterDefinition::Function& EmitterDefinition::addFunction(const String& name, ParseTreeNode* node)

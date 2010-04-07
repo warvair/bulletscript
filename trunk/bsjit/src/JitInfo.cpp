@@ -8,8 +8,6 @@ using namespace bs;
 
 // ----------------------------------------------------------------------------
 JitCodeInfo::JitCodeInfo() :
-	mConstants(0),
-	mNumConstants(0),
 	mNumLocals(0)
 {
 	for (int i = 0; i < GPR_COUNT; ++i)
@@ -18,15 +16,13 @@ JitCodeInfo::JitCodeInfo() :
 // ----------------------------------------------------------------------------
 JitCodeInfo::~JitCodeInfo()
 {
-	delete[] mConstants;
 }
 // ----------------------------------------------------------------------------
 void JitCodeInfo::build(const uint32* byteCode, size_t byteCodeSize)
 {
-	std::vector<bstype> constantList;
 	std::vector<uint32> localList;
 
-	size_t instr = 0;
+	uint32 instr = 0;
 	while (instr < byteCodeSize)
 	{
 		switch(byteCode[instr])
@@ -42,6 +38,7 @@ void JitCodeInfo::build(const uint32* byteCode, size_t byteCodeSize)
 			instr+= 1;
 			break;
 
+		case BC_POP:
 		case BC_OP_EQ:
 		case BC_OP_NEQ:
 		case BC_OP_LT:
@@ -50,7 +47,7 @@ void JitCodeInfo::build(const uint32* byteCode, size_t byteCodeSize)
 		case BC_OP_GTE:
 		case BC_LOG_AND:
 		case BC_LOG_OR:
-			// Need eax for storing FPU status word, also as temporary for LOG_AND/LOG_OR
+			// Need eax for storing FPU status word, also as temporary for POP/LOG_AND/LOG_OR
 			mRegistersUsed[GPR_EAX] = 1;
 			instr += 1;
 			break;
@@ -60,9 +57,9 @@ void JitCodeInfo::build(const uint32* byteCode, size_t byteCodeSize)
 				// Add constant to list if it's not already in.  Do not add 0 or 1 because there are
 				// special instructions to push these.
 				bstype value = BS_UINT32_TO_TYPE(byteCode[instr + 1]);
-				if (std::find(constantList.begin(), constantList.end(), value) == constantList.end() &&
+				if (std::find(mConstants.begin(), mConstants.end(), value) == mConstants.end() &&
 					value != 0.0f && value != 1.0f)
-					constantList.push_back(value);
+					mConstants.push_back(value);
 			}
 			instr += 2;
 			break;
@@ -87,8 +84,12 @@ void JitCodeInfo::build(const uint32* byteCode, size_t byteCodeSize)
 		case BC_CALL:
 		case BC_GOTO:
 		case BC_GOTOE:
+			instr += 2;
+			break;
+
 		case BC_JUMP:
 		case BC_JZ:
+			mJumpTargets.push_back(std::pair<uint32, uint32>(instr, byteCode[instr + 1]));
 			instr += 2;
 			break;
 
@@ -117,24 +118,13 @@ void JitCodeInfo::build(const uint32* byteCode, size_t byteCodeSize)
 			break;
 
 		case BC_EMIT:
-
-			instr += 0; // ToDo!
+			{
+				int numAffectors = byteCode[instr + 5];
+				mRegistersUsed[GPR_EAX] = 1; // needed to hold address of user args
+				instr += (8 + numAffectors);
+			}
 			break;
 		}
-	}
-
-	// Create constant list
-	delete[] mConstants;
-	mNumConstants = (int) constantList.size();
-	if (mNumConstants > 0)
-	{
-		mConstants = new bstype[mNumConstants];
-		for (int i = 0; i < mNumConstants; ++i)
-			mConstants[i] = constantList[i];
-	}
-	else
-	{
-		mConstants = 0;
 	}
 
 	// Get number of locals
@@ -148,16 +138,48 @@ bstype JitCodeInfo::getConstant(int index) const
 // ----------------------------------------------------------------------------
 int JitCodeInfo::getConstantIndex(bstype value) const
 {
-	for (int i = 0; i < mNumConstants; ++i)
+	for (size_t i = 0; i < mConstants.size(); ++i)
 		if (mConstants[i] == value)
-			return i;
+			return (int) i;
 
 	return -1;
 }
 // ----------------------------------------------------------------------------
 int JitCodeInfo::getNumConstants() const
 {
-	return mNumConstants;
+	return (int) mConstants.size();
+}
+// ----------------------------------------------------------------------------
+bs::uint32 JitCodeInfo::getJumpTarget(bs::uint32 instr)
+{
+	for (size_t i = 0; i < mJumpTargets.size(); ++i)
+		if (mJumpTargets[i].first == instr)
+			return mJumpTargets[i].second;
+
+	return -1;
+}
+// ----------------------------------------------------------------------------
+int JitCodeInfo::getJumpTargetIndexBySource(bs::uint32 instr)
+{
+	for (size_t i = 0; i < mJumpTargets.size(); ++i)
+		if (mJumpTargets[i].first == instr)
+			return (int) i;
+
+	return -1;
+}
+// ----------------------------------------------------------------------------
+int JitCodeInfo::getJumpTargetIndexByDest(bs::uint32 instr)
+{
+	for (size_t i = 0; i < mJumpTargets.size(); ++i)
+		if (mJumpTargets[i].second == instr)
+			return (int) i;
+
+	return -1;
+}
+// ----------------------------------------------------------------------------
+int JitCodeInfo::getNumJumpTargets() const
+{
+	return (int) mJumpTargets.size();
 }
 // ----------------------------------------------------------------------------
 int JitCodeInfo::getNumLocals() const

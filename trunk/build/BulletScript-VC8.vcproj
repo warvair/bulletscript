@@ -219,7 +219,7 @@
 			/>
 			<Tool
 				Name="VCPostBuildEventTool"
-				CommandLine="copy $(SolutionDir)\..\bin\BulletScript.dll $(SolutionDir)\..\examples\testbed\bin&#x0D;&#x0A;copy $(SolutionDir)\..\bin\BulletScript.dll $(SolutionDir)\..\examples\minimal\bin&#x0D;&#x0A;copy $(SolutionDir)\..\bin\BulletScript.dll $(SolutionDir)\..\examples\testjit\bin&#x0D;&#x0A;&#x0D;&#x0A;"
+				CommandLine="copy $(SolutionDir)\..\bin\BulletScript.dll $(SolutionDir)\..\examples\testbed\bin&#x0D;&#x0A;copy $(SolutionDir)\..\bin\BulletScript.dll $(SolutionDir)\..\examples\minimal\bin&#x0D;&#x0A;copy $(SolutionDir)\..\bin\BulletScript.dll $(SolutionDir)\..\examples\testbed2\bin&#x0D;&#x0A;copy $(SolutionDir)\..\bin\BulletScript.dll $(SolutionDir)\..\examples\testjit\bin&#x0D;&#x0A;&#x0D;&#x0A;"
 			/>
 		</Configuration>
 		<Configuration
@@ -294,7 +294,7 @@
 			/>
 			<Tool
 				Name="VCPostBuildEventTool"
-				CommandLine="copy $(SolutionDir)\..\bin\BulletScriptd.dll $(SolutionDir)\..\examples\testbed\bin&#x0D;&#x0A;copy $(SolutionDir)\..\bin\BulletScriptd.dll $(SolutionDir)\..\examples\minimal\bin&#x0D;&#x0A;copy $(SolutionDir)\..\bin\BulletScriptd.dll $(SolutionDir)\..\examples\testjit\bin&#x0D;&#x0A;"
+				CommandLine="copy $(SolutionDir)\..\bin\BulletScriptd.dll $(SolutionDir)\..\examples\testbed\bin&#x0D;&#x0A;copy $(SolutionDir)\..\bin\BulletScriptd.dll $(SolutionDir)\..\examples\testbed2\bin&#x0D;&#x0A;copy $(SolutionDir)\..\bin\BulletScriptd.dll $(SolutionDir)\..\examples\minimal\bin&#x0D;&#x0A;copy $(SolutionDir)\..\bin\BulletScriptd.dll $(SolutionDir)\..\examples\testjit\bin&#x0D;&#x0A;"
 			/>
 		</Configuration>
 	</Configurations>
@@ -316,6 +316,10 @@
 			</File>
 			<File
 				RelativePath="..\src\bsBulletParser.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\src\bsCompiler.cpp"
 				>
 			</File>
 			<File
@@ -359,11 +363,19 @@
 				>
 			</File>
 			<File
+				RelativePath="..\src\bsNatives.cpp"
+				>
+			</File>
+			<File
 				RelativePath="..\src\bsObjectDefinition.cpp"
 				>
 			</File>
 			<File
 				RelativePath="..\src\bsParseTree.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\src\bsParseTreeNode.cpp"
 				>
 			</File>
 			<File
@@ -406,6 +418,10 @@
 			</File>
 			<File
 				RelativePath="..\include\bsBytecode.h"
+				>
+			</File>
+			<File
+				RelativePath="..\include\bsCompiler.h"
 				>
 			</File>
 			<File
@@ -457,11 +473,19 @@
 				>
 			</File>
 			<File
+				RelativePath="..\include\bsNatives.h"
+				>
+			</File>
+			<File
 				RelativePath="..\include\bsObjectDefinition.h"
 				>
 			</File>
 			<File
 				RelativePath="..\include\bsParseTree.h"
+				>
+			</File>
+			<File
+				RelativePath="..\include\bsParseTreeNode.h"
 				>
 			</File>
 			<File

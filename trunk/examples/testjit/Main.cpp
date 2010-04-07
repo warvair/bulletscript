@@ -14,8 +14,6 @@ struct Bullet : public bs::UserTypeBase
 {
 	float x, y;
 	float angle;
-	float speed;
-	
 	bool _active;
 };
 
@@ -56,12 +54,9 @@ public:
 
 				// Important: the argument array is in fact the top of a stack.  
 				// Thus, arguments have negative indices.  
-				// The first argument is at args[-num_args], and the last at args[-1].		
 
-				// Assume that the bullet speed is passed in the first argument.
-				mBullets[i].speed = args[-1];
-
-				std::cout << "bullet emitted." << std::endl;
+//				std::cout << "bullet emitted at " << args[-1] << " " << args[-2] << " " << args[-3] << std::endl;
+				std::cout << "bullet emitted" << std::endl;
 				return &mBullets[i];
 			}
 		}
@@ -82,11 +77,6 @@ public:
 		{
 			if (mBullets[i]._active)
 			{
-				// Assume angle is in radians
-				mBullets[i].x += (float) sin(mBullets[i].angle * DEG_TO_RAD) * mBullets[i].speed * frameTime;
-				mBullets[i].y += (float) cos(mBullets[i].angle * DEG_TO_RAD) * mBullets[i].speed * frameTime;
-
-				// Now, we tell bulletscript to update our objects.
 				gMachine->updateType(&mBullets[i], mBullets[i].x, mBullets[i].y, mBullets[i].angle, frameTime);
 			}
 		}
@@ -103,7 +93,11 @@ BulletManager* gBullets = 0;
 
 bs::UserTypeBase* emitBullet(float x, float y, float angle, const float* args, void* user)
 {
-	return gBullets->addBullet(x, y, angle, args);
+//	gBullets->addBullet(x, y, angle, 0);
+//	std::cerr << "ok! " << x << " " << y << " " << angle << " " << args[0] << " " <<
+//		args[1] << " " << args[2] << std::endl;
+	std::cerr << "ok " << x << " " << y << " " << args <<std::endl;
+	return 0;
 }
 
 void killBullet(bs::UserTypeBase *userType, void* user)
@@ -148,29 +142,6 @@ float getAngle(bs::UserTypeBase* userType)
 	return b->angle;
 }
 
-void setSpeed(bs::UserTypeBase* userType, float value)
-{
-	Bullet* b = static_cast<Bullet*>(userType);
-	b->speed = value;
-}
-
-float getSpeed(bs::UserTypeBase* userType)
-{
-	Bullet* b = static_cast<Bullet*>(userType);
-	return b->speed;
-}
-
-void accelerate(bs::UserTypeBase* userType, float frameTime, const float* args)
-{
-	Bullet* b = static_cast<Bullet*>(userType);
-
-	// Like emit functions, affector arguments are specified negatively.
-	// First argument here is the acceleration amount, and we multiply
-	// this by the supplied frame time, in seconds.
-	b->speed += args[-1] * frameTime;
-}	
-
-
 
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -200,15 +171,12 @@ int main()
 
 	// Bind type
 	gMachine->createType("bullet");
-	gMachine->registerEmitFunction("bullet", "emit", 1, emitBullet);
+	gMachine->registerEmitFunction("bullet", "emit", 3, emitBullet);
 	gMachine->setDieFunction("bullet", killBullet);
 	
 	gMachine->setAnchorX("bullet", setX, getX);
 	gMachine->setAnchorY("bullet", setY, getY);
 	gMachine->setAnchorAngle("bullet", setAngle, getAngle);
-	gMachine->registerProperty("bullet", "speed", setSpeed, getSpeed);
-
-	gMachine->registerAffector("bullet", "accelerate", accelerate);
 
 	// Compile script - open in binary mode because sometimes ftell messes up in text mode
 	FILE* fp = fopen("test.script", "rb");
@@ -239,8 +207,10 @@ int main()
 	}
 	delete[] buffer;
 
+	std::cerr << "Compiled." << std::endl;
+
 	// Create an emitter
-	bs::Emitter* emit = gMachine->createEmitter("Test", 0, 0, 0);
+	bs::Emitter* emit = gMachine->createEmitter("Test", 20, 30, 40);
 
 	// Start processing
 	unsigned int timer = timeGetTime();

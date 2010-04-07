@@ -93,9 +93,9 @@
 <tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_b_s___n_m_s_p_1_1_machine.html#01b62978f7635f8a70a7021b8ac73342">registerAffector</a> (const String &amp;type, const String &amp;name, AffectorFunction func)</td></tr>
 
 <tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Registers a user AffectorFunction with this type.  <a href="#01b62978f7635f8a70a7021b8ac73342"></a><br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_b_s___n_m_s_p_1_1_machine.html#b07d349193f7525338074a9440187b3f">registerNativeFunction</a> (const String &amp;name, NativeFunction func)</td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_b_s___n_m_s_p_1_1_machine.html#e746a9ab9f72fd068a888bc1c313498d">registerNativeFunction</a> (const String &amp;name, bool returnsValue, int numArguments, NativeFunction func)</td></tr>
 
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Registers native function.  <a href="#b07d349193f7525338074a9440187b3f"></a><br></td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Registers native function.  <a href="#e746a9ab9f72fd068a888bc1c313498d"></a><br></td></tr>
 <tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_b_s___n_m_s_p_1_1_machine.html#e73198d9d359a2d02ab85a1932094d3e">declareControllerMemberVariable</a> (const String &amp;ctrl, const String &amp;var, bstype value)</td></tr>
 
 <tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Declares a member variable for a <a class="el" href="class_b_s___n_m_s_p_1_1_controller.html" title="Class for manipulating Emitter objects at a high level.">Controller</a>, which can then be used in script.  <a href="#e73198d9d359a2d02ab85a1932094d3e"></a><br></td></tr>
@@ -709,7 +709,7 @@ Register a global variable, for use in script.
 
 </div>
 </div><p>
-<a class="anchor" name="b07d349193f7525338074a9440187b3f"></a><!-- doxytag: member="BS_NMSP::Machine::registerNativeFunction" ref="b07d349193f7525338074a9440187b3f" args="(const String &amp;name, NativeFunction func)" -->
+<a class="anchor" name="e746a9ab9f72fd068a888bc1c313498d"></a><!-- doxytag: member="BS_NMSP::Machine::registerNativeFunction" ref="e746a9ab9f72fd068a888bc1c313498d" args="(const String &amp;name, bool returnsValue, int numArguments, NativeFunction func)" -->
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
@@ -718,6 +718,18 @@ Register a global variable, for use in script.
           <td>(</td>
           <td class="paramtype">const String &amp;&nbsp;</td>
           <td class="paramname"> <em>name</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">bool&nbsp;</td>
+          <td class="paramname"> <em>returnsValue</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">int&nbsp;</td>
+          <td class="paramname"> <em>numArguments</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
@@ -740,6 +752,8 @@ Registers native function.
 <dl compact><dt><b>Parameters:</b></dt><dd>
   <table border="0" cellspacing="2" cellpadding="0">
     <tr><td valign="top"></td><td valign="top"><em>name</em>&nbsp;</td><td>name of the function in script. </td></tr>
+    <tr><td valign="top"></td><td valign="top"><em>returnsValue</em>&nbsp;</td><td>whether the function returns a value or nothing. </td></tr>
+    <tr><td valign="top"></td><td valign="top"><em>numArguments</em>&nbsp;</td><td>the number of arguments the function takes. </td></tr>
     <tr><td valign="top"></td><td valign="top"><em>func</em>&nbsp;</td><td>NativeFunction function pointer. </td></tr>
   </table>
 </dl>
@@ -1104,7 +1118,7 @@ The user should call this on each object that they want bulletscript to update. 
 <hr>The documentation for this class was generated from the following file:<ul>
 <li>C:/Code/bulletscript/include/<a class="el" href="bs_machine_8h_source.html">bsMachine.h</a></ul>
 </div>
-<hr size="1"><address style="text-align: right;"><small>Generated on Mon Mar 29 16:23:32 2010 for bulletscript by&nbsp;
+<hr size="1"><address style="text-align: right;"><small>Generated on Wed Mar 31 12:49:05 2010 for bulletscript by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img src="doxygen.png" alt="doxygen" align="middle" border="0"></a> 1.5.9 </small></address>
 </body>
