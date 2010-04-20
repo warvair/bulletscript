@@ -236,19 +236,6 @@ namespace BS_NMSP
 		 */
 		int registerAffector(const String& type, const String& name, AffectorFunction func);
 
-#ifdef BS_ENABLEJIT
-		/**	\brief Registers native function.
-		 *
-		 *	\param name name of the function in script.
-		 *	\param returnsValue whether the function returns a value or nothing.
-		 *	\param numArguments the number of arguments the function takes.
-		 *	\param func NativeFunction function pointer.
-		 *	\param jitFunc pointer to the JIT version of the function
-		 *	\return BS_OK currently, or BS_NativeFunctionExists if the name is already in use.
-		 */
-		int registerNativeFunction(const String& name, bool returnsValue, int numArguments, 
-			NativeFunction func, void* jitFunc);
-#else
 		/**	\brief Registers native function.
 		 *
 		 *	\param name name of the function in script.
@@ -259,7 +246,6 @@ namespace BS_NMSP
 		 */
 		int registerNativeFunction(const String& name, bool returnsValue, int numArguments, 
 			NativeFunction func);
-#endif
 
 		/**	\brief Declares a member variable for a Controller, which can then be used in script.
 		 *
@@ -358,20 +344,6 @@ namespace BS_NMSP
 		 *	\return true if it exists, false otherwise.
 		 */
 		bool controllerDefinitionExists(const String& name) const;
-
-#ifdef BS_ENABLEJIT
-		/**	\brief Load JIT compiler
-		 *
-		 *	Calling this function loads the JIT compiler, if it is available, and enables
-		 *	JIT compilation.  The virtual machine is then not used for interpreting code,
-		 *	as it is all done in native machine code.
-		 *
-		 *	\param object dll/so library to load.
-		 *
-		 *	\return true if load was successful, false otherwise.
-		 */
-		bool enableJIT(const char* object);
-#endif
 
 	};
 

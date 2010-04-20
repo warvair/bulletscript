@@ -450,24 +450,6 @@ void EmitType::generateBytecode(EmitterDefinition* def, ParseTreeNode* node,
 	code->push_back((uint32) def->_getIndex());
 }
 // --------------------------------------------------------------------------------
-/*
-	processJit
-	emit functions need their own JIT versions.
-
-	1) get function
-		void* emitFunc = et->getFunction(byteCode[instr + 2]).func;
-
-	2) call it, pushing arguments onto stack first, and popping the emit arguments on exit, but
-		not the control arguments yet.
-
-		emitFunc(x, y, angle, args, userObject);
-
-	3) get the returned object
-
-	4) if returned object is null, return.
-
-*/
-
 int EmitType::_processCode(const uint32* code, ScriptState& state, bstype x, bstype y, 
 #ifdef BS_Z_DIMENSION
 						  bstype z, 
@@ -550,12 +532,6 @@ int EmitType::_processCode(const uint32* code, ScriptState& state, bstype x, bst
 	// this must match the number of bytecodes emitted in generateBytecode
 	return 8 + numAffectors;
 }
-// --------------------------------------------------------------------------------
-#ifdef BS_ENABLEJIT
-void EmitType::_processCodeJit()
-{
-}
-#endif
 // --------------------------------------------------------------------------------
 
 }

@@ -145,17 +145,6 @@ namespace BS_NMSP
 	 */
 	typedef int (BS_CALLCONV *NativeFunction)(ScriptState&);
 
-	/**
-	 *	Just-in-time compiled function
-	 */
-	typedef void (BS_CALLCONV *JittedFunction)(bstype, bstype, bstype, void*);
-
-	class ScriptMachine;
-	/**
-	 *	Just-in-time compiler hook
-	 */
-	typedef JittedFunction (BS_CALLCONV *JitterHookFunction)(const unsigned int*, size_t, const char*, ScriptMachine* bsMachine);
-
 	/**	\brief Class to hold bytecode for states, functions and events.
 	 *
 	 *	Bytecode blocks are stored in the ScriptMachine and shared by instances that need it.
@@ -178,11 +167,6 @@ namespace BS_NMSP
          *	Size of bytecode array.  Public for convenience, however it is for internal use only.
 		 */
 		size_t byteCodeSize;
-
-		/** 
-         *	Jitted function, if available.
-		 */
-		JittedFunction jitFunction;
 
 	public:
 

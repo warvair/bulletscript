@@ -33,22 +33,13 @@ ScriptMachine::ScriptMachine(Log* _log) :
 	mLog(_log),
 	mPropertiesMapped(false),
 	mEmitters(0),
-	mControllers(0),
-	mJitEnabled(false),
-	mJitHook(0)
+	mControllers(0)
 {
 	// Register functions
-#ifdef BS_ENABLEJIT
-	registerNativeFunction("rand", true, 1, bm_rand, bm_rand_JIT);
-	registerNativeFunction("sqrt", true, 1, bm_sqrt, bm_sqrt_JIT);
-	registerNativeFunction("print", false, 1, bm_print, bm_print_JIT);
-	registerNativeFunction("test", false, 2, bm_test, bm_test_JIT);
-#else
 	registerNativeFunction("rand", true, 1, bm_rand);
 	registerNativeFunction("sqrt", true, 1, bm_sqrt);
 	registerNativeFunction("print", false, 1, bm_print);
 	registerNativeFunction("test", false, 2, bm_test);
-#endif
 
 	// Register anchor properties
 	addProperty("x");
@@ -264,13 +255,8 @@ void ScriptMachine::releaseEmitTypeRecord(int index, EmitTypeControl* rec)
 	mEmitterRecords[index].typePool->release(rec);
 }
 // --------------------------------------------------------------------------------
-#ifdef BS_ENABLEJIT
-int ScriptMachine::registerNativeFunction(const String& name, bool returnsValue,
-										  int numArguments, NativeFunction func, void* jitFunc)
-#else
 int ScriptMachine::registerNativeFunction(const String& name, bool returnsValue,
 										  int numArguments, NativeFunction func)
-#endif
 {
 	// Make sure it isn't already registered
 	for (size_t i = 0; i < mNativeFunctions.size(); ++i)
@@ -284,10 +270,6 @@ int ScriptMachine::registerNativeFunction(const String& name, bool returnsValue,
 	rec.function = func;
 	rec.returnsValue = returnsValue;
 	rec.numArguments = numArguments;
-
-#ifdef BS_ENABLEJIT
-	rec.jitFunction = jitFunc;
-#endif
 
 	mNativeFunctions.push_back(rec);
 	return BS_OK;
@@ -319,16 +301,6 @@ NativeFunction ScriptMachine::getNativeFunction(int index) const
 
 	return mNativeFunctions[index].function;
 }
-// --------------------------------------------------------------------------------
-#ifdef BS_ENABLEJIT
-void* ScriptMachine::getNativeJitFunction(int index) const
-{
-	assert(index >= 0 && index < (int) mNativeFunctions.size() && 
-		"ScriptMachine::getNativeJitFunction: out of bounds");
-
-	return mNativeFunctions[index].jitFunction;
-}
-#endif
 // --------------------------------------------------------------------------------
 bool ScriptMachine::nativeFunctionReturnsValue(int index) const
 {
@@ -553,22 +525,6 @@ int ScriptMachine::compileScript(const uint8* buffer, size_t bufferSize)
 	if (numErrors > 0)
 		return numErrors;
 
-	// If JIT is loaded, do that now.  Need to jit all "dirty" scripts - this is not the most
-	// graceful way of doing this, but there won't be too many scripts so it won't matter.
-#ifdef BS_ENABLEJIT
-	if (mJitEnabled)
-	{
-		for (size_t i = 0; i < mCodeRecords.size(); ++i)
-		{
-			if (mCodeRecords[i]->jitFunction == 0)
-			{
-				mCodeRecords[i]->jitFunction = mJitHook(mCodeRecords[i]->byteCode, 
-														mCodeRecords[i]->byteCodeSize, "State", this);
-			}
-		}
-	}
-#endif
-
 	return 0;
 }
 // --------------------------------------------------------------------------------
@@ -606,20 +562,6 @@ int ScriptMachine::declareControllerMemberVariable(const String& ctrl, const Str
 
 	return BS_OK;
 }
-// --------------------------------------------------------------------------------
-#ifdef BS_ENABLEJIT
-bool ScriptMachine::enableJIT(const char* object)
-{
-	if (!mJitDLL.load(object, mJitHook))
-	{
-		addErrorMsg(mJitDLL.getErrorMessage());
-		return false;
-	}
-
-	mJitEnabled = true;
-	return mJitEnabled;
-}
-#endif
 // --------------------------------------------------------------------------------
 void ScriptMachine::addErrorMsg(const String& msg)
 {
@@ -1197,14 +1139,6 @@ void ScriptMachine::processScriptRecord(ScriptRecord* gsr, void* object, void* u
 	// Assume that we're not suspended.
 
 	CodeRecord* rec = getCodeRecord(gsr->curState);
-
-#ifdef BS_ENABLEJIT
-	if (rec->jitFunction)
-	{
-		rec->jitFunction(gsr->members[Member_X], gsr->members[Member_Y], gsr->members[Member_Angle], userObject);
-		return;
-	}
-#endif
 
 	uint32 *bytecode = rec->byteCode;
 	size_t bytecodeLen = rec->byteCodeSize;
