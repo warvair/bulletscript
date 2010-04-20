@@ -728,7 +728,7 @@ function_statement
 		{
 			$$ = $1;
 		}
-	| function_conditional_statement
+	| function_selection_statement
 		{
 			$$ = $1;
 		}
@@ -748,7 +748,7 @@ function_statement
 		{
 			$$ = $1;
 		}
-	| flow_statement
+	| jump_statement
 		{
 			$$ = $1;
 		}
@@ -771,7 +771,7 @@ event_statement
 		{
 			$$ = $1;
 		}
-	| event_conditional_statement
+	| event_selection_statement
 		{
 			$$ = $1;
 		}
@@ -791,7 +791,7 @@ event_statement
 		{
 			$$ = $1;
 		}
-	| flow_statement
+	| jump_statement
 		{
 			$$ = $1;
 		}
@@ -826,7 +826,7 @@ emitter_state_statement
 		{
 			$$ = $1;
 		}
-	| emitter_state_conditional_statement
+	| emitter_state_selection_statement
 		{
 			$$ = $1;
 		}
@@ -842,7 +842,7 @@ emitter_state_statement
 		{
 			$$ = $1;
 		}
-	| flow_statement
+	| jump_statement
 		{
 			$$ = $1;
 		}
@@ -865,7 +865,7 @@ controller_state_statement
 		{
 			$$ = $1;
 		}
-	| controller_state_conditional_statement
+	| controller_state_selection_statement
 		{
 			$$ = $1;
 		}
@@ -885,7 +885,7 @@ controller_state_statement
 		{
 			$$ = $1;
 		}
-	| flow_statement
+	| jump_statement
 		{
 			$$ = $1;
 		}
@@ -926,7 +926,7 @@ expression_statement
 		}
 	;
 	
-function_conditional_statement
+function_selection_statement
 	: KEYWORD_IF '(' constant_expression ')' function_compound_statement
 		{
 			$$ = AST->createNode(PT_IfStatement, yylineno);
@@ -940,7 +940,7 @@ function_conditional_statement
 			$$->setChild(1, $5);
 			$$->setChild(2, $7);
 		}
-	| KEYWORD_IF '(' constant_expression ')' function_compound_statement KEYWORD_ELSE function_conditional_statement
+	| KEYWORD_IF '(' constant_expression ')' function_compound_statement KEYWORD_ELSE function_selection_statement
 		{
 			$$ = AST->createNode(PT_IfStatement, yylineno);
 			$$->setChild(0, $3);
@@ -949,7 +949,7 @@ function_conditional_statement
 		}
 	;	
 
-event_conditional_statement
+event_selection_statement
 	: KEYWORD_IF '(' constant_expression ')' event_compound_statement
 		{
 			$$ = AST->createNode(PT_IfStatement, yylineno);
@@ -963,7 +963,7 @@ event_conditional_statement
 			$$->setChild(1, $5);
 			$$->setChild(2, $7);
 		}
-	| KEYWORD_IF '(' constant_expression ')' event_compound_statement KEYWORD_ELSE event_conditional_statement
+	| KEYWORD_IF '(' constant_expression ')' event_compound_statement KEYWORD_ELSE event_selection_statement
 		{
 			$$ = AST->createNode(PT_IfStatement, yylineno);
 			$$->setChild(0, $3);
@@ -972,7 +972,7 @@ event_conditional_statement
 		}
 	;	
 
-emitter_state_conditional_statement
+emitter_state_selection_statement
 	: KEYWORD_IF '(' constant_expression ')' emitter_state_compound_statement
 		{
 			$$ = AST->createNode(PT_IfStatement, yylineno);
@@ -986,7 +986,7 @@ emitter_state_conditional_statement
 			$$->setChild(1, $5);
 			$$->setChild(2, $7);
 		}
-	| KEYWORD_IF '(' constant_expression ')' emitter_state_compound_statement KEYWORD_ELSE emitter_state_conditional_statement
+	| KEYWORD_IF '(' constant_expression ')' emitter_state_compound_statement KEYWORD_ELSE emitter_state_selection_statement
 		{
 			$$ = AST->createNode(PT_IfStatement, yylineno);
 			$$->setChild(0, $3);
@@ -995,7 +995,7 @@ emitter_state_conditional_statement
 		}
 	;	
 
-controller_state_conditional_statement
+controller_state_selection_statement
 	: KEYWORD_IF '(' constant_expression ')' controller_state_compound_statement
 		{
 			$$ = AST->createNode(PT_IfStatement, yylineno);
@@ -1009,7 +1009,7 @@ controller_state_conditional_statement
 			$$->setChild(1, $5);
 			$$->setChild(2, $7);
 		}
-	| KEYWORD_IF '(' constant_expression ')' controller_state_compound_statement KEYWORD_ELSE controller_state_conditional_statement
+	| KEYWORD_IF '(' constant_expression ')' controller_state_compound_statement KEYWORD_ELSE controller_state_selection_statement
 		{
 			$$ = AST->createNode(PT_IfStatement, yylineno);
 			$$->setChild(0, $3);
@@ -1236,7 +1236,7 @@ controller_state_iteration_statement
 		}
 	;
 
-flow_statement
+jump_statement
 	: KEYWORD_BREAK ';'
 		{
 			$$ = AST->createNode(PT_BreakStatement, yylineno);

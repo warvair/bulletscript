@@ -41,7 +41,7 @@ void Compiler::generateMemberVariableBytecode(ObjectDefinition* def, ParseTreeNo
 
 			// Add to 'construction code'
 			BytecodeBlock constructCode;
-			generateConstantExpression(def, node->getChild(1), &constructCode, CBT_None, 0, 0, 0);
+			generateConstantExpression(def, node->getChild(1), &constructCode, CBT_None, CodeBlockInfo());
 			
 			int index = def->getMemberVariableIndex(memVar.name);
 			constructCode.push_back(BC_SETM);
@@ -67,14 +67,18 @@ void Compiler::generateMemberVariableBytecode(ObjectDefinition* def, ParseTreeNo
 // --------------------------------------------------------------------------------
 void Compiler::generateFunctionArguments(ObjectDefinition* def, ParseTreeNode* node, 
 										 BytecodeBlock* bytecode, CodeBlockType codeType, 
-										 ObjectDefinition::State* stateInfo, 
-										 EmitterDefinition::Function* functionInfo, 
-										 ControllerDefinition::Event* eventInfo,
-										 bool rightToLeft)
+										 CodeBlockInfo codeInfo, bool rightToLeft)
 {
 	if (node->getType() == PT_FunctionCallArg)
-		generateConstantExpression(def, node->getChild(0), bytecode, codeType,
-								   stateInfo, functionInfo, eventInfo);
+	{
+		ParseTreeNode* argsNode = node->getChild(0);
+		generateConstantExpression(def, argsNode, bytecode, codeType, codeInfo);
+		
+		// If it's a function call, then we want to bail out here, because otherwise
+		// we'll re-generate its arguments again.
+		if (argsNode->getChild(0) && argsNode->getChild(0)->getType() == PT_FunctionCall)
+			return;
+	}
 
 	int cur, end, inc;
 	if (!rightToLeft)
@@ -93,25 +97,22 @@ void Compiler::generateFunctionArguments(ObjectDefinition* def, ParseTreeNode* n
 	while (cur != end)
 	{
 		if (node->getChild(cur))
-			generateFunctionArguments(def, node->getChild(cur), bytecode, codeType,
-									  stateInfo, functionInfo, eventInfo, rightToLeft);
+			generateFunctionArguments(def, node->getChild(cur), bytecode, codeType, codeInfo, rightToLeft);
 		
 		cur += inc;
 	}
 }
 // --------------------------------------------------------------------------------
 void Compiler::generateConstantExpression(ObjectDefinition* def, ParseTreeNode* node, 
-										  BytecodeBlock* bytecode, CodeBlockType codeType, 
-										  ObjectDefinition::State* stateInfo, 
-										  EmitterDefinition::Function* functionInfo, 
-										  ControllerDefinition::Event* eventInfo)
+										  BytecodeBlock* bytecode, CodeBlockType codeType,
+										  CodeBlockInfo codeInfo)
 {
 	// If this constant expression is a root expression (ie it is not nested within
 	// another control structure), and it returns a value, then this value is left on
 	// the stack, so we must pop it.
 	bool needsPop = false;
 	int parentType = node->getParent()->getType();
-	if ((parentType == PT_StatementList || parentType == PT_State ||	parentType == PT_Function ||
+	if ((parentType == PT_StatementList || parentType == PT_State || parentType == PT_Function ||
 		parentType == PT_Event) && mTree->constantExpressionHasType(node))
 	{
 		needsPop = true;
@@ -123,10 +124,7 @@ void Compiler::generateConstantExpression(ObjectDefinition* def, ParseTreeNode* 
 		{
 			// Generate arguments first
 			if (node->getChild(1))
-			{
-				generateFunctionArguments(def, node->getChild(1), bytecode, codeType,
-										  stateInfo, functionInfo, eventInfo, true);
-			}
+				generateFunctionArguments(def, node->getChild(1), bytecode, codeType, codeInfo, true);
 
 			String funcName = node->getChild(0)->getStringData();
 
@@ -183,11 +181,11 @@ void Compiler::generateConstantExpression(ObjectDefinition* def, ParseTreeNode* 
 			int index = -1;
 
 			if (codeType == CBT_EmitterState || codeType == CBT_ControllerState)
-				rec = mTree->getCodeRecord(def->getType(), def->getName(), "State", stateInfo->name);
+				rec = mTree->getCodeRecord(def->getType(), def->getName(), "State", codeInfo.stateInfo->name);
 			else if (codeType == CBT_Function)
-				rec = mTree->getCodeRecord(def->getType(), def->getName(), "Function", functionInfo->name);
+				rec = mTree->getCodeRecord(def->getType(), def->getName(), "Function", codeInfo.functionInfo->name);
 			else if (codeType == CBT_Event)
-				rec = mTree->getCodeRecord(def->getType(), def->getName(), "Event", eventInfo->name);
+				rec = mTree->getCodeRecord(def->getType(), def->getName(), "Event", codeInfo.eventInfo->name);
 
 			if (rec)
 				index = rec->getVariableIndex(varName);
@@ -218,8 +216,7 @@ void Compiler::generateConstantExpression(ObjectDefinition* def, ParseTreeNode* 
 	for (int i = 0; i < ParseTreeNode::MAX_CHILDREN; ++i)
 	{
 		if (node->getChild(i))
-			generateConstantExpression(def, node->getChild(i), bytecode, codeType,
-									   stateInfo, functionInfo, eventInfo);
+			generateConstantExpression(def, node->getChild(i), bytecode, codeType, codeInfo);
 	}
 
 	// Bottom-up nodes
@@ -293,15 +290,14 @@ void Compiler::generateConstantExpression(ObjectDefinition* def, ParseTreeNode* 
 // --------------------------------------------------------------------------------
 void Compiler::generateEmitTail(EmitterDefinition* def, ParseTreeNode* node, 
 								BytecodeBlock* bytecode, EmitType* ft, CodeBlockType codeType,
-								ObjectDefinition::State* stateInfo, EmitterDefinition::Function* functionInfo, 
-								ControllerDefinition::Event* eventInfo)
+								CodeBlockInfo codeInfo)
 {
 	int nodeType = node->getType();
 	if (nodeType == PT_FunctionCall)
 	{
 		ParseTreeNode* argNode = node->getChild(1);
 		if (argNode)
-			generateFunctionArguments(def, argNode, bytecode, codeType, stateInfo, functionInfo, eventInfo, false);
+			generateFunctionArguments(def, argNode, bytecode, codeType, codeInfo, false);
 
 		return;
 	}
@@ -331,7 +327,7 @@ void Compiler::generateEmitTail(EmitterDefinition* def, ParseTreeNode* node,
 			// Generate CodeRecord and give to EmitType
 			BytecodeBlock argCode;
 			ParseTreeNode* argsNode = affInfo.node->getChild(1)->getChild(1);
-			generateFunctionArguments(def, argsNode, &argCode, codeType, stateInfo, functionInfo, eventInfo, true);
+			generateFunctionArguments(def, argsNode, &argCode, codeType, codeInfo, true);
 
 			instanceIndex = ft->addAffectorInstance(instanceName, 
 													ft->getAffectorFunction(affInfo.function), 
@@ -347,16 +343,13 @@ void Compiler::generateEmitTail(EmitterDefinition* def, ParseTreeNode* node,
 	for (int i = 0; i < ParseTreeNode::MAX_CHILDREN; ++ i)
 	{
 		if (node->getChild(i))
-			generateEmitTail(def, node->getChild(i), bytecode, ft, codeType,
-							 stateInfo, functionInfo, eventInfo);
+			generateEmitTail(def, node->getChild(i), bytecode, ft, codeType, codeInfo);
 	}
 }
 // --------------------------------------------------------------------------------
 void Compiler::generateBytecode(ObjectDefinition* def, ParseTreeNode* node,
 								BytecodeBlock* bytecode, CodeBlockType codeType,
-								ObjectDefinition::State* stateInfo, 
-								EmitterDefinition::Function* functionInfo, 
-								ControllerDefinition::Event* eventInfo)
+								CodeBlockInfo codeInfo)
 {
 	// Top-down nodes
 	int nodeType = node->getType();
@@ -365,14 +358,13 @@ void Compiler::generateBytecode(ObjectDefinition* def, ParseTreeNode* node,
 	case PT_State:
 		{
 			String stateName = node->getChild(0)->getStringData();
-			stateInfo = &(def->getState(def->getStateIndex(stateName))); // dodgy, but ok
+			codeInfo.stateInfo = &(def->getState(def->getStateIndex(stateName))); // dodgy, but ok
 
 			// Generate code
 			if (node->getChild(1))
 			{
 				BytecodeBlock stateByteCode;
-				generateBytecode(def, node->getChild(1), &stateByteCode, codeType, 
-								 stateInfo, functionInfo, eventInfo);
+				generateBytecode(def, node->getChild(1), &stateByteCode, codeType, codeInfo);
 
 				// Give to ScriptMachine
 				CodeRecord* rec = mTree->getCodeRecord(def->getType(), def->getName(), "State", stateName);
@@ -389,14 +381,13 @@ void Compiler::generateBytecode(ObjectDefinition* def, ParseTreeNode* node,
 			// This will only be used by controllers.
 			ControllerDefinition* cDef = static_cast<ControllerDefinition*>(def);
 			String evtName = node->getChild(0)->getStringData();
-			eventInfo = &(cDef->getEvent(cDef->getEventIndex(evtName))); // dodgy, but ok
+			codeInfo.eventInfo = &(cDef->getEvent(cDef->getEventIndex(evtName))); // dodgy, but ok
 
 			// Generate code
 			if (node->getChild(2))
 			{
 				BytecodeBlock evtByteCode;
-				generateBytecode(def, node->getChild(2), &evtByteCode, codeType,
-								 stateInfo, functionInfo, eventInfo);
+				generateBytecode(def, node->getChild(2), &evtByteCode, codeType, codeInfo);
 				
 				// Give to ScriptMachine
 				CodeRecord* rec = mTree->getCodeRecord(def->getType(), def->getName(), "Event", evtName);
@@ -406,7 +397,7 @@ void Compiler::generateBytecode(ObjectDefinition* def, ParseTreeNode* node,
 					rec->byteCode[i] = evtByteCode[i];
 
 				// Events need to store a pointer to the code to execute it
-				eventInfo->code = rec;
+				codeInfo.eventInfo->code = rec;
 			}
 		}
 		return;
@@ -416,14 +407,13 @@ void Compiler::generateBytecode(ObjectDefinition* def, ParseTreeNode* node,
 			// This will only be used by emitters.
 			EmitterDefinition* eDef = static_cast<EmitterDefinition*>(def);
 			String funcName = node->getChild(0)->getStringData();
-			functionInfo = &(eDef->getFunction(eDef->getFunctionIndex(funcName))); // dodgy, but ok
+			codeInfo.functionInfo = &(eDef->getFunction(eDef->getFunctionIndex(funcName))); // dodgy, but ok
 
 			// Generate code
 			if (node->getChild(2))
 			{
 				BytecodeBlock funcByteCode;
-				generateBytecode(def, node->getChild(2), &funcByteCode, codeType,
-								 stateInfo, functionInfo, eventInfo);
+				generateBytecode(def, node->getChild(2), &funcByteCode, codeType, codeInfo);
 				
 				// Give to ScriptMachine
 				CodeRecord* rec = mTree->getCodeRecord(def->getType(), def->getName(), "Function", funcName);
@@ -447,18 +437,17 @@ void Compiler::generateBytecode(ObjectDefinition* def, ParseTreeNode* node,
 			String varName = node->getChild(0)->getStringData ();
 
 			// Generate value
-			generateConstantExpression(def, node->getChild(1), bytecode, codeType,
-									   stateInfo, functionInfo, eventInfo);
+			generateConstantExpression(def, node->getChild(1), bytecode, codeType, codeInfo);
 
 			CodeRecord* rec;
 			int index;
 
 			if (codeType == CBT_EmitterState || codeType == CBT_ControllerState)
-				rec = mTree->getCodeRecord(def->getType(), def->getName(), "State", stateInfo->name);
+				rec = mTree->getCodeRecord(def->getType(), def->getName(), "State", codeInfo.stateInfo->name);
 			else if (codeType == CBT_Function)
-				rec = mTree->getCodeRecord(def->getType(), def->getName(), "Function", functionInfo->name);
+				rec = mTree->getCodeRecord(def->getType(), def->getName(), "Function", codeInfo.functionInfo->name);
 			else if (codeType == CBT_Event)
-				rec = mTree->getCodeRecord(def->getType(), def->getName(), "Event", eventInfo->name);
+				rec = mTree->getCodeRecord(def->getType(), def->getName(), "Event", codeInfo.eventInfo->name);
 
 			index = rec->getVariableIndex(varName);
 			if (index >= 0)
@@ -483,14 +472,12 @@ void Compiler::generateBytecode(ObjectDefinition* def, ParseTreeNode* node,
 	case PT_MemberAssignStatement:
 		{
 			// This will only be used by controllers.
-			generateConstantExpression(def, node->getChild(1), bytecode, codeType,
-									   stateInfo, functionInfo, eventInfo);
+			generateConstantExpression(def, node->getChild(1), bytecode, codeType, codeInfo);
 
 			if (node->getChild(2))
 			{
 				// Generate constant expression for time
-				generateConstantExpression(def, node->getChild(2), bytecode, codeType,
-										   stateInfo, functionInfo, eventInfo);
+				generateConstantExpression(def, node->getChild(2), bytecode, codeType, codeInfo);
 				bytecode->push_back(BC_SETEM2);
 			}
 			else
@@ -522,13 +509,11 @@ void Compiler::generateBytecode(ObjectDefinition* def, ParseTreeNode* node,
 			// to be used by EmitType::generateBytecode
 			ParseTreeNode* tNode = node->getChild(3);
 			if (tNode)
-				generateEmitTail(eDef, tNode, bytecode, ft, codeType,
-								 stateInfo, functionInfo, eventInfo);
+				generateEmitTail(eDef, tNode, bytecode, ft, codeType, codeInfo);
 
 			// Generate emit function arguments next
 			if (node->getChild(1))
-				generateFunctionArguments(def, node->getChild(1), bytecode, codeType,
-										  stateInfo, functionInfo, eventInfo, true);
+				generateFunctionArguments(def, node->getChild(1), bytecode, codeType, codeInfo, true);
 
 			// Then generate actual BC_EMIT code
 			String funcName = node->getChild(0)->getStringData();
@@ -545,8 +530,7 @@ void Compiler::generateBytecode(ObjectDefinition* def, ParseTreeNode* node,
 	case PT_IfStatement:
 		{
 			// Generate test expression
-			generateConstantExpression(def, node->getChild(0), bytecode, codeType,
-									   stateInfo, functionInfo, eventInfo);
+			generateConstantExpression(def, node->getChild(0), bytecode, codeType, codeInfo);
 
 			bytecode->push_back(BC_JZ);
 			size_t jumpPos = bytecode->size();
@@ -554,8 +538,7 @@ void Compiler::generateBytecode(ObjectDefinition* def, ParseTreeNode* node,
 
 			// Generate 'if' code
 			if (node->getChild(1))
-				generateBytecode(def, node->getChild(1), bytecode, codeType,
-								 stateInfo, functionInfo, eventInfo);
+				generateBytecode(def, node->getChild(1), bytecode, codeType, codeInfo);
 
 			// Generate 'else' code
 			if (node->getChild(2))
@@ -566,8 +549,7 @@ void Compiler::generateBytecode(ObjectDefinition* def, ParseTreeNode* node,
 				bytecode->push_back(0); // dummy jump address
 
 				(*bytecode)[jumpPos] = (uint32) bytecode->size();
-				generateBytecode(def, node->getChild(2), bytecode, codeType,
-								 stateInfo, functionInfo, eventInfo);
+				generateBytecode(def, node->getChild(2), bytecode, codeType, codeInfo);
 				(*bytecode)[endJumpPos] = (uint32) bytecode->size();
 			}
 			else
@@ -591,8 +573,7 @@ void Compiler::generateBytecode(ObjectDefinition* def, ParseTreeNode* node,
 			if (funcNode->getChild(1))
 			{
 				// Don't generate these arguments R->L
-				generateFunctionArguments(def, funcNode->getChild(1), bytecode, codeType,
-										  stateInfo, functionInfo, eventInfo, false);
+				generateFunctionArguments(def, funcNode->getChild(1), bytecode, codeType, codeInfo, false);
 			}
 
 			ControllerDefinition* cDef = static_cast<ControllerDefinition*>(def);
@@ -652,8 +633,7 @@ void Compiler::generateBytecode(ObjectDefinition* def, ParseTreeNode* node,
 
 			// Generate test expression
 			uint32 startJumpPos = (uint32) bytecode->size();
-			generateConstantExpression(def, node->getChild(0), bytecode, codeType,
-									   stateInfo, functionInfo, eventInfo);
+			generateConstantExpression(def, node->getChild(0), bytecode, codeType, codeInfo);
 
 			bytecode->push_back(BC_JZ);
 			size_t endJumpPos = bytecode->size();
@@ -661,8 +641,7 @@ void Compiler::generateBytecode(ObjectDefinition* def, ParseTreeNode* node,
 
 			// Generate code
 			if (node->getChild(1))
-				generateBytecode(def, node->getChild(1), bytecode, codeType,
-								 stateInfo, functionInfo, eventInfo);
+				generateBytecode(def, node->getChild(1), bytecode, codeType, codeInfo);
 
 			bytecode->push_back(BC_JUMP);
 			bytecode->push_back(startJumpPos);
@@ -730,8 +709,7 @@ void Compiler::generateBytecode(ObjectDefinition* def, ParseTreeNode* node,
 
 	case PT_WaitStatement:
 		{
-			generateConstantExpression(def, node->getChild(0), bytecode, codeType,
-									   stateInfo, functionInfo, eventInfo);
+			generateConstantExpression(def, node->getChild(0), bytecode, codeType, codeInfo);
 			bytecode->push_back(BC_WAIT);
 		}
 		return;
@@ -777,14 +755,12 @@ void Compiler::generateBytecode(ObjectDefinition* def, ParseTreeNode* node,
 			{
 				// This will only be used by emitters (functions).
 				// Generate constant expression for value
-				generateConstantExpression(def, node->getChild(1), bytecode, codeType,
-										   stateInfo, functionInfo, eventInfo);
+				generateConstantExpression(def, node->getChild(1), bytecode, codeType, codeInfo);
 
 				if (node->getChild(2))
 				{
 					// Generate constant expression for time
-					generateConstantExpression(def, node->getChild(2), bytecode, codeType,
-											   stateInfo, functionInfo, eventInfo);
+					generateConstantExpression(def, node->getChild(2), bytecode, codeType, codeInfo);
 					bytecode->push_back(BC_SETPROPERTY2);
 				}
 				else
@@ -802,7 +778,7 @@ void Compiler::generateBytecode(ObjectDefinition* def, ParseTreeNode* node,
 			{
 				// Only generate this if it has a function call in it.  Otherwise this is useless code.
 				if (ParseUtilities::expressionHasFunctionCall(node))
-					generateConstantExpression(def, node, bytecode, codeType, stateInfo, functionInfo, eventInfo);
+					generateConstantExpression(def, node, bytecode, codeType, codeInfo);
 			}
 			return;
 
@@ -813,8 +789,7 @@ void Compiler::generateBytecode(ObjectDefinition* def, ParseTreeNode* node,
 	for (int i = 0; i < ParseTreeNode::MAX_CHILDREN; ++ i)
 	{
 		if (node->getChild(i))
-			generateBytecode(def, node->getChild(i), bytecode, codeType,
-							 stateInfo, functionInfo, eventInfo);
+			generateBytecode(def, node->getChild(i), bytecode, codeType, codeInfo);
 	}
 }
 // --------------------------------------------------------------------------------
@@ -825,22 +800,24 @@ void Compiler::generateEmitterBytecode(ParseTreeNode* node)
 		String emitterName = node->getStringData();
 		EmitterDefinition* def = mScriptMachine->getEmitterDefinition(emitterName);
 
+		CodeBlockInfo codeInfo;
+		codeInfo.stateInfo = 0;
+
 		// Members variables
 		if (node->getChild(PT_EmitterMemberNode))
-			generateBytecode(def, node->getChild(PT_EmitterMemberNode), 0, CBT_None);
+			generateBytecode(def, node->getChild(PT_EmitterMemberNode), 0, CBT_None, codeInfo);
 
 		// Finish constructor here
 		def->finaliseConstructor();
 
 		// Create function bytecode
 		if (node->getChild(PT_EmitterFunctionNode))
-			generateBytecode(def, node->getChild(PT_EmitterFunctionNode), 0, CBT_Function);
+			generateBytecode(def, node->getChild(PT_EmitterFunctionNode), 0, CBT_Function, codeInfo);
 
 		// Create state bytecode
-		generateBytecode(def, node->getChild(PT_EmitterStateNode), 0, CBT_EmitterState);
+		generateBytecode(def, node->getChild(PT_EmitterStateNode), 0, CBT_EmitterState, codeInfo);
 
 		// print bytecode here
-
 		for (int i = 0; i < def->getNumStates(); ++i)
 		{
 			CodeRecord* rec = mTree->getCodeRecord(def->getType(), def->getName(), 
@@ -866,19 +843,22 @@ void Compiler::generateControllerBytecode(ParseTreeNode* node)
 		String controllerName = node->getStringData();
 		ControllerDefinition* def = mScriptMachine->getControllerDefinition(controllerName);
 
+		CodeBlockInfo codeInfo;
+		codeInfo.stateInfo = 0;
+
 		// Initialise member variabless
 		if (node->getChild(PT_ControllerMemberNode))
-			generateBytecode(def, node->getChild(PT_ControllerMemberNode), 0, CBT_None);
+			generateBytecode(def, node->getChild(PT_ControllerMemberNode), 0, CBT_None, codeInfo);
 
 		// Finish constructor here
 		def->finaliseConstructor();
 
 		// Create function bytecode
 		if (node->getChild(PT_ControllerEventNode))
-			generateBytecode(def, node->getChild(PT_ControllerEventNode), 0, CBT_Event);
+			generateBytecode(def, node->getChild(PT_ControllerEventNode), 0, CBT_Event, codeInfo);
 
 		// Create state bytecode
-		generateBytecode(def, node->getChild(PT_ControllerStateNode), 0, CBT_ControllerState);
+		generateBytecode(def, node->getChild(PT_ControllerStateNode), 0, CBT_ControllerState, codeInfo);
 	}
 	else
 	{

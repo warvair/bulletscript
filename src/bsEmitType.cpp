@@ -551,9 +551,11 @@ int EmitType::_processCode(const uint32* code, ScriptState& state, bstype x, bst
 	return 8 + numAffectors;
 }
 // --------------------------------------------------------------------------------
+#ifdef BS_ENABLEJIT
 void EmitType::_processCodeJit()
 {
 }
+#endif
 // --------------------------------------------------------------------------------
 
 }

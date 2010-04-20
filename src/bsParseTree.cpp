@@ -1770,7 +1770,10 @@ void ParseTree::createEmitterDefinitions(ParseTreeNode* node)
 	{
 		EmitterDefinition* def = createEmitterDefinition(node);
 		if (def)
+		{
+//			print(node, 0);
 			mScriptMachine->addEmitterDefinition(def->getName(), def);
+		}
 	}
 	else
 	{
@@ -1855,7 +1858,7 @@ int ParseTree::getCodeRecordIndex(const String& type, const String& typeName,
 void ParseTree::print(ParseTreeNode* node, int indent)
 {
 	for (int i = 0; i < indent; ++i)
-		std::cout << " ";
+		std::cerr << " ";
 
 	switch(node->getType())
 	{
@@ -1959,7 +1962,7 @@ void ParseTree::print(ParseTreeNode* node, int indent)
 		break;
 	}
 
-	std::cout << std::endl;
+	std::cerr << std::endl;
 
 	for (int i = 0; i < ParseTreeNode::MAX_CHILDREN; ++ i)
 	{
