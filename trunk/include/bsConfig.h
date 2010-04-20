@@ -19,7 +19,7 @@ namespace BS_NMSP
 }
 
 // Comment this out to disable JIT functionality
-#define BS_ENABLEJIT
+// #define BS_ENABLEJIT
 
 // Don't change this unless you know what you're doing.  Will probably screw up the jitter if you do.
 #define BS_CALLCONV						__cdecl

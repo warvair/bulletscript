@@ -169,12 +169,6 @@ emitter Hell
 		{
 			fireA bullet(BALL, 100 + i, 320) : Swirl1(i / c1, 0.5 + 0.5 * (i / c1), i * 2);
 			fireA bullet(BALL, 260 - i, 300) : Swirl2(i / c1, 0.5 + 0.5 * (i / c1), i * 2);
-//			fireA bullet(BALL, 130 + i, 320) : Swirl1(i / c1, 0.5 + 0.5 * (i / c1), i * 2);
-//			fireA bullet(BALL, 230 - i, 300) : Swirl2(i / c1, 0.5 + 0.5 * (i / c1), i * 2);
-//			fireA bullet(BALL, 80 + i, 320) : Swirl1(i / c1, 0.5 + 0.5 * (i / c1), i * 2);
-//			fireA bullet(BALL, 280 - i, 300) : Swirl2(i / c1, 0.5 + 0.5 * (i / c1), i * 2);
-//			fireA bullet(BALL, 150 + i, 320) : Swirl1(i / c1, 0.5 + 0.5 * (i / c1), i * 2);
-//			fireA bullet(BALL, 210 - i, 300) : Swirl2(i / c1, 0.5 + 0.5 * (i / c1), i * 2);
 			i++;
 		}
 		wait(0.1);

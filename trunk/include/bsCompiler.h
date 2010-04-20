@@ -20,9 +20,14 @@ namespace BS_NMSP
 
 		ParseTree* mTree;
 
-		std::list<std::list<uint32>> mBreakLocations;
+		std::list<std::list<uint32>> mBreakLocations, mContinueLocations;
 
-		std::list<std::list<uint32>> mContinueLocations;
+		union CodeBlockInfo
+		{
+			 ObjectDefinition::State* stateInfo;
+			 EmitterDefinition::Function* functionInfo;
+			 ControllerDefinition::Event* eventInfo;
+		};
 
 	private:
 
@@ -35,20 +40,16 @@ namespace BS_NMSP
 		void generateMemberVariableBytecode(ObjectDefinition* def, ParseTreeNode* node, int& index);
 
 		void generateFunctionArguments(ObjectDefinition* def, ParseTreeNode* node, BytecodeBlock* bytecode,
-			CodeBlockType codeType, ObjectDefinition::State* stateInfo, 
-			EmitterDefinition::Function* functionInfo, ControllerDefinition::Event* eventInfo, bool rightToLeft);
+			CodeBlockType codeType, CodeBlockInfo codeInfo, bool rightToLeft);
 
 		void generateConstantExpression(ObjectDefinition* def, ParseTreeNode* node, BytecodeBlock* bytecode,
-			CodeBlockType codeType, ObjectDefinition::State* stateInfo, 
-			EmitterDefinition::Function* functionInfo, ControllerDefinition::Event* eventInfo);
+			CodeBlockType codeType, CodeBlockInfo codeInfo);
 
 		void generateEmitTail(EmitterDefinition* def, ParseTreeNode* node, BytecodeBlock* bytecode, 
-			EmitType* ft, CodeBlockType codeType, ObjectDefinition::State* stateInfo, 
-			EmitterDefinition::Function* functionInfo, ControllerDefinition::Event* eventInfo);
+			EmitType* ft, CodeBlockType codeType, CodeBlockInfo codeInfo);
 
 		void generateBytecode(ObjectDefinition* def, ParseTreeNode* node, BytecodeBlock* bytecode,
-			CodeBlockType codeType, ObjectDefinition::State* stateInfo = 0, 
-			EmitterDefinition::Function* functionInfo = 0, ControllerDefinition::Event* eventInfo = 0);
+			CodeBlockType codeType, CodeBlockInfo codeInfo);
 
 		// Helpers
 		void setAffectorRecalculationType(EmitterDefinition* def, Affector* affector, ParseTreeNode* node);

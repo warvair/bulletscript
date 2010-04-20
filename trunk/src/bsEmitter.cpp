@@ -27,7 +27,9 @@ Emitter::Emitter(ScriptMachine* machine) :
 void Emitter::onRelease()
 {
 	BS_DELETE(mRecord);
+	mRecord = 0;
 	mAnchorIndex = 0;
+	mUserObject = 0;
 }
 // --------------------------------------------------------------------------------
 int Emitter::_getAnchorIndex() const

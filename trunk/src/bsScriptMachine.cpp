@@ -651,20 +651,23 @@ int ScriptMachine::interpretCode(const uint32* code, size_t length, ScriptState&
 	if (st.curInstruction >= length)
 		return ScriptOK;
 
+//	std::cerr << "------------------------" << std::endl;
 	while (true)
 	{
 		uint32 instr32 = code[st.curInstruction];
+//		std::cerr << instr32 << std::endl;
 
 		switch (instr32)
 		{
 		case BC_PUSH:
 			{
 				st.stack[st.stackHead] = BS_UINT32_TO_TYPE(code[st.curInstruction + 1]);
+//				std::cerr << "value: " << st.stack[st.stackHead] << std::endl;
 				st.stackHead++;
 				st.curInstruction += 2;
 
 				assert(st.stackHead < BS_SCRIPT_STACK_SIZE && 
-					"Stack limit reached: increase BS_SCRIPT_STACK_SIZE");
+					"Stack limit reached on BC_PUSH: increase BS_SCRIPT_STACK_SIZE");
 			}
 			break;
 
@@ -695,7 +698,7 @@ int ScriptMachine::interpretCode(const uint32* code, size_t length, ScriptState&
 				st.curInstruction += 2;
 
 				assert(st.stackHead < BS_SCRIPT_STACK_SIZE && 
-					"Stack limit reached: increase BS_SCRIPT_STACK_SIZE");
+					"Stack limit reached on BC_GETL: increase BS_SCRIPT_STACK_SIZE");
 			}
 			break;
 
@@ -718,7 +721,7 @@ int ScriptMachine::interpretCode(const uint32* code, size_t length, ScriptState&
 				st.curInstruction += 2;
 
 				assert(st.stackHead < BS_SCRIPT_STACK_SIZE && 
-					"Stack limit reached: increase BS_SCRIPT_STACK_SIZE");
+					"Stack limit reached on BC_GETM: increase BS_SCRIPT_STACK_SIZE");
 			}
 			break;
 
@@ -739,8 +742,10 @@ int ScriptMachine::interpretCode(const uint32* code, size_t length, ScriptState&
 				st.stackHead++;
 				st.curInstruction += 2;
 
+//				std::cerr << "index: " << index << std::endl;
+
 				assert(st.stackHead < BS_SCRIPT_STACK_SIZE && 
-					"Stack limit reached: increase BS_SCRIPT_STACK_SIZE");
+					"Stack limit reached on BC_GETG: increase BS_SCRIPT_STACK_SIZE");
 			}
 			break;
 
@@ -832,7 +837,7 @@ int ScriptMachine::interpretCode(const uint32* code, size_t length, ScriptState&
 				st.curInstruction += 2;
 
 				assert(st.stackHead < BS_SCRIPT_STACK_SIZE && 
-					"Stack limit reached: increase BS_SCRIPT_STACK_SIZE");
+					"Stack limit reached on BC_GETPROPERTY: increase BS_SCRIPT_STACK_SIZE");
 			}
 			break;
 
@@ -1056,6 +1061,11 @@ int ScriptMachine::interpretCode(const uint32* code, size_t length, ScriptState&
 			break;
 
 		}
+
+//		std::cerr << "stack: ";
+//		for (int i = 0; i < st.stackHead; ++i)
+//			std::cerr << st.stack[i] << " ";
+//		std::cerr << std::endl << std::endl;
 
 		if (!checkInstructionPosition(st, length, loop))
 			return ScriptOK;
