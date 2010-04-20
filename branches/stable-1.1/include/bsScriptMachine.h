@@ -19,7 +19,6 @@
 #include "bsControllerDefinition.h"
 #include "bsDeepMemoryPool.h"
 #include "bsLog.h"
-#include "bsDLL.h"
 
 namespace BS_NMSP
 {
@@ -46,9 +45,6 @@ namespace BS_NMSP
 			NativeFunction function;
 			bool returnsValue;
 			int numArguments;
-#ifdef BS_ENABLEJIT
-			void* jitFunction;
-#endif
 		};
 
 		std::vector<NativeFunctionRecord> mNativeFunctions;
@@ -84,13 +80,6 @@ namespace BS_NMSP
 		// CodeRecords
 		typedef std::vector<CodeRecord*> CodeList;
 		CodeList mCodeRecords;
-
-		// JIT compilation
-		bool mJitEnabled;
-
-		DynLib mJitDLL;
-
-		JitterHookFunction mJitHook;
 
 	private:
 
@@ -161,13 +150,8 @@ namespace BS_NMSP
 		void releaseEmitTypeRecord(int index, EmitTypeControl* rec);
 
 		// Native functions
-#ifdef BS_ENABLEJIT
-		int registerNativeFunction(const String& name, bool returnsValue,
-			int numArguments, NativeFunction func, void* jitFunc);
-#else
 		int registerNativeFunction(const String& name, bool returnsValue,
 			int numArguments, NativeFunction func);
-#endif
 
 		int getNativeFunctionIndex(const String &name) const;
 
@@ -192,17 +176,6 @@ namespace BS_NMSP
 		_BSAPI int getNativeFunctionArgumentCount(int index) const;
 
 		NativeFunction getNativeFunction(int index) const;
-
-#ifdef BS_ENABLEJIT
-		/**	\brief Get the JIT version of a NativeFunction.
-		 *
-		 *	This is used by the JIT compiler.
-		 *
-		 *	\param index index of NativeFunction.
-		 *	\return void pointer to the function.
-		 */
-		_BSAPI void* getNativeJitFunction(int index) const;
-#endif
 
 		// Emit types
 
@@ -263,10 +236,6 @@ namespace BS_NMSP
 		int compileScript(const uint8* buffer, size_t bufferSize);
 
 		int declareControllerMemberVariable(const String& ctrl, const String& var, bstype value);
-
-#ifdef BS_ENABLEJIT
-		bool enableJIT(const char* object);
-#endif
 
 		// Errors
 		void addErrorMsg (const String& msg);

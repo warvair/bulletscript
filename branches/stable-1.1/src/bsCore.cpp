@@ -9,8 +9,7 @@ namespace BS_NMSP
 CodeRecord::CodeRecord(const String& name) :
 	mName(name),
 	byteCode(0),
-	byteCodeSize(0),
-	jitFunction(0)
+	byteCodeSize(0)
 {
 }
 // --------------------------------------------------------------------------------

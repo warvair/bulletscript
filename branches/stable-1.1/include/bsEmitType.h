@@ -451,19 +451,6 @@ namespace BS_NMSP
 		void generateBytecode(EmitterDefinition* def, ParseTreeNode* node,
 			BytecodeBlock* code, const String& funcName);
 
-#ifdef BS_ENABLEJIT
-#	ifdef BS_Z_DIMENSION
-		// ...
-#	else
-		/**	\brief Process a jitted EMIT statement.
-		 *
-		 *	This is used by the jitter.
-		 *
-		 */
-		void _processCodeJit();
-#	endif
-#endif
-
 #ifdef BS_Z_DIMENSION
 		/**	\brief Process a BC_EMIT opcode.
 		 *

@@ -18,10 +18,7 @@ namespace BS_NMSP
 	const bstype bsvalue0 = 0.0f;
 }
 
-// Comment this out to disable JIT functionality
-// #define BS_ENABLEJIT
-
-// Don't change this unless you know what you're doing.  Will probably screw up the jitter if you do.
+// Don't change this unless you know what you're doing.
 #define BS_CALLCONV						__cdecl
 
 #define BS_TYPE_TO_UINT32(x)			(*((BS_NMSP::uint32*) ((void*) (&x))))

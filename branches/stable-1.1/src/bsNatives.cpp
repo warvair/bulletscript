@@ -17,21 +17,11 @@ int bm_rand(ScriptState& state)
 	return ScriptOK;
 }
 // --------------------------------------------------------------------------------
-bstype bm_rand_JIT(bstype range)
-{
-	return range * (rand() / (float) RAND_MAX);
-}
-// --------------------------------------------------------------------------------
 int bm_sqrt(ScriptState& state)
 {
 	bstype value = state.stack[state.stackHead - 1];
 	state.stack[state.stackHead - 1] = (bstype) sqrtf(value);
 	return ScriptOK;
-}
-// --------------------------------------------------------------------------------
-bstype bm_sqrt_JIT(bstype value)
-{
-	return (bstype) sqrtf(value);
 }
 // --------------------------------------------------------------------------------
 int bm_print(ScriptState& state)
@@ -42,11 +32,6 @@ int bm_print(ScriptState& state)
 	return ScriptOK;
 }
 // --------------------------------------------------------------------------------
-void bm_print_JIT(bstype value)
-{
-	std::cerr << value << std::endl;
-}
-// --------------------------------------------------------------------------------
 int bm_test(ScriptState& state)
 {
 	bstype value1 = state.stack[--state.stackHead];
@@ -54,11 +39,6 @@ int bm_test(ScriptState& state)
 
 	std::cerr << value1 << " " << value2 << std::endl;
 	return ScriptOK;
-}
-// --------------------------------------------------------------------------------
-void bm_test_JIT(bstype x, bstype y)
-{
-	std::cerr << x << " " << y << std::endl;
 }
 // --------------------------------------------------------------------------------
 

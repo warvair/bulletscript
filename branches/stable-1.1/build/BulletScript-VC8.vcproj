@@ -335,10 +335,6 @@
 				>
 			</File>
 			<File
-				RelativePath="..\src\bsDLL.cpp"
-				>
-			</File>
-			<File
 				RelativePath="..\src\bsEmitter.cpp"
 				>
 			</File>
@@ -442,10 +438,6 @@
 			</File>
 			<File
 				RelativePath="..\include\bsDeepMemoryPool.h"
-				>
-			</File>
-			<File
-				RelativePath="..\include\bsDLL.h"
 				>
 			</File>
 			<File
