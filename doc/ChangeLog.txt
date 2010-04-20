@@ -1,6 +1,9 @@
 bulletscript changelog
 ----------------------
 
+20/04/10
+o Fixed bug with Emitter::onRelease not clearing itself properly.
+
 11/03/10
 o Fixed bug with Controller emitter members introduced in previous release
 o Tidied up ScriptMachine::interpretCode
