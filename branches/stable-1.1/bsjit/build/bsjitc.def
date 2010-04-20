@@ -1,0 +1,5 @@
+LIBRARY	bsjit
+EXPORTS	
+	dllStartPlugin
+	dllStopPlugin
+
