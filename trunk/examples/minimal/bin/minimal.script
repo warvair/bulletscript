@@ -1,0 +1,9 @@
+emitter Minimal
+{
+
+	Emit = state
+	{
+		emit bullet(100);
+		wait(2);
+	}
+}
