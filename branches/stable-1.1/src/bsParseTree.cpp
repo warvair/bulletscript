@@ -77,7 +77,7 @@ void ParseTree::create()
 // --------------------------------------------------------------------------------
 void ParseTree::destroy()
 {
-	mAffectors.clear();
+	mEmitters.clear();
 	mStateIndices.clear();
 	mFunctionIndices.clear();
 	mEventIndices.clear();
@@ -440,9 +440,17 @@ bool ParseTree::checkAffectorArguments(EmitterDefinition* def, ParseTreeNode* no
 // --------------------------------------------------------------------------------
 void ParseTree::createAffectors(EmitterDefinition* def, ParseTreeNode* node)
 {
+	String emitterName = def->getName();
+
 	if (node->getType() == PT_AffectorDecl)
 	{
-		if (mAffectors.size() >= BS_MAX_EMITTER_AFFECTORS)
+		std::map<String, EmitterInfo>::iterator it = mEmitters.find(emitterName);
+		if (it == mEmitters.end())
+			mEmitters[emitterName] = EmitterInfo();
+
+		EmitterInfo& emitterInfo = mEmitters.find(emitterName)->second;
+
+		if (emitterInfo.affectors.size() >= BS_MAX_EMITTER_AFFECTORS)
 		{
 			addError(node->getLine(), "Too many emitter affectors declared.");
 			return;
@@ -452,9 +460,9 @@ void ParseTree::createAffectors(EmitterDefinition* def, ParseTreeNode* node)
 		// create any instances yet because we don't know which EmitTypes are
 		// going to use them.
 		String affName = node->getChild(0)->getStringData();
-		for (size_t i = 0; i < mAffectors.size(); ++i)
+		for (size_t i = 0; i < emitterInfo.affectors.size(); ++i)
 		{
-			if (mAffectors[i].name == affName)
+			if (emitterInfo.affectors[i].name == affName)
 			{
 				addError(node->getLine(), "Affector '" + affName + "' already declared.");
 				return;
@@ -469,7 +477,12 @@ void ParseTree::createAffectors(EmitterDefinition* def, ParseTreeNode* node)
 			info.numArgs = ParseUtilities::countFunctionCallArguments(node->getChild(1));
 			info.node = node;
 
-			mAffectors.push_back(info);
+			emitterInfo.affectors.push_back(info);
+		}
+		else
+		{
+			// Todo: error msg
+			// ...
 		}
 	}
 
@@ -598,10 +611,14 @@ void ParseTree::checkEmitControllers(EmitterDefinition* def, ParseTreeNode* node
 		// Named affectors
 		String affector = node->getStringData();
 
+		String emitterName = def->getName();
+		std::map<String, EmitterInfo>::iterator it = mEmitters.find(emitterName);
+		const EmitterInfo& emitterInfo = it->second;
+
 		int index = BS_NotFound;
-		for (size_t i = 0; i < mAffectors.size(); ++i)
+		for (size_t i = 0; i < emitterInfo.affectors.size(); ++i)
 		{
-			if (mAffectors[i].name == affector)
+			if (emitterInfo.affectors[i].name == affector)
 			{
 				index = (int) i;
 				break;
@@ -614,9 +631,9 @@ void ParseTree::checkEmitControllers(EmitterDefinition* def, ParseTreeNode* node
 			return;
 		}
 
-		if (!ft->affectorFunctionExists(mAffectors[index].function))
+		if (!ft->affectorFunctionExists(emitterInfo.affectors[index].function))
 		{
-			addError(node->getLine(), "Affector function '" + mAffectors[index].function + "' is not"
+			addError(node->getLine(), "Affector function '" + emitterInfo.affectors[index].function + "' is not"
 				" registered with type '" + ft->getName() + "'.");
 		}
 
@@ -1558,7 +1575,6 @@ EmitterDefinition* ParseTree::createEmitterDefinition(ParseTreeNode* node)
 	}
 
 	// Now check affectors
-	mAffectors.clear();
 	ParseTreeNode* affectorsNode = node->getChild(PT_EmitterAffectorNode);
 	if (affectorsNode)
 	{
@@ -1804,14 +1820,16 @@ void ParseTree::createControllerDefinitions(ParseTreeNode* node,
 	}
 }
 // --------------------------------------------------------------------------------
-const ParseTree::AffectorInfo& ParseTree::getAffectorInfo(int index) const
+const ParseTree::AffectorInfo& ParseTree::getAffectorInfo(const String& emitter, int index) const
 {
-	return mAffectors[index];
+	std::map<String, EmitterInfo>::const_iterator it = mEmitters.find(emitter);
+	return it->second.affectors[index];
 }
 // --------------------------------------------------------------------------------
-int ParseTree::getNumAffectors() const
+int ParseTree::getNumAffectors(const String& emitter) const
 {
-	return (int) mAffectors.size();
+	std::map<String, EmitterInfo>::const_iterator it = mEmitters.find(emitter);
+	return (int) it->second.affectors.size();
 }
 // --------------------------------------------------------------------------------
 String ParseTree::getCodeRecordName(const String& type, const String& typeName,

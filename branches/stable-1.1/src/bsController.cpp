@@ -66,8 +66,8 @@ void Controller::setDefinition(ControllerDefinition* def, bstype x, bstype y, bs
 	mNumEmitters = def->getNumEmitterVariables();
 	mEmitters = BS_NEWA(EmitterInstance, mNumEmitters);
 
-	mDirX = sin(angle * DEG_TO_RAD);
-	mDirY = cos(angle * DEG_TO_RAD);
+	mDirX = (float) sin(angle * DEG_TO_RAD);
+	mDirY = (float) cos(angle * DEG_TO_RAD);
 
 	for (int i = 0; i < mNumEmitters; ++i)
 	{
@@ -232,8 +232,8 @@ void Controller::setAngle(bstype facing, bstype orbit)
 	mRecord->members[Member_Angle] = facing;
 
 	// Recaculate orientation vector
-	mDirX = sin(-orbit * DEG_TO_RAD);
-	mDirY = cos(-orbit * DEG_TO_RAD);
+	mDirX = (float) sin(-orbit * DEG_TO_RAD);
+	mDirY = (float) cos(-orbit * DEG_TO_RAD);
 
 	for (int i = 0; i < mNumEmitters; ++i)
 	{

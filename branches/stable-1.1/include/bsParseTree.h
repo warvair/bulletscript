@@ -65,6 +65,11 @@ namespace BS_NMSP
 			ParseTreeNode* node;
 		};
 
+		struct EmitterInfo
+		{
+			std::vector<AffectorInfo> affectors;
+		};
+
 	private:
 
 		ScriptMachine* mScriptMachine;
@@ -177,9 +182,9 @@ namespace BS_NMSP
 
 		void createControllerDefinitions(ParseTreeNode* node, const MemberVariableDeclarationMap& memberDecls);
 
-		const AffectorInfo& getAffectorInfo(int index) const;
+		const AffectorInfo& getAffectorInfo(const String& emitter, int index) const;
 
-		int getNumAffectors() const;
+		int getNumAffectors(const String& emitter) const;
 
 		bool constantExpressionHasType(ParseTreeNode* node);
 		
@@ -199,7 +204,7 @@ namespace BS_NMSP
 		// Helpers for building
 		std::vector<String> mCodeblockNames;
 
-		std::vector<AffectorInfo> mAffectors;
+		std::map<String, EmitterInfo> mEmitters;
 
 		std::list<int> mStateIndices;
 

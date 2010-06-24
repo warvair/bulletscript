@@ -73,11 +73,7 @@ void Compiler::generateFunctionArguments(ObjectDefinition* def, ParseTreeNode* n
 	{
 		ParseTreeNode* argsNode = node->getChild(0);
 		generateConstantExpression(def, argsNode, bytecode, codeType, codeInfo);
-		
-		// If it's a function call, then we want to bail out here, because otherwise
-		// we'll re-generate its arguments again.
-		if (argsNode->getChild(0) && argsNode->getChild(0)->getType() == PT_FunctionCall)
-			return;
+		return;
 	}
 
 	int cur, end, inc;
@@ -305,18 +301,20 @@ void Compiler::generateEmitTail(EmitterDefinition* def, ParseTreeNode* node,
 	{
 		// See if affector instance has been created in EmitType, and if it has, use 
 		// its index, otherwise add it and use its index.
+		String emitterName = def->getName();
+
 		String affector = node->getStringData();
 		int affIndex = -1;
-		for (int i = 0; i < mTree->getNumAffectors(); ++i)
+		for (int i = 0; i < mTree->getNumAffectors(emitterName); ++i)
 		{
-			if (mTree->getAffectorInfo(i).name == affector)
+			if (mTree->getAffectorInfo(emitterName, i).name == affector)
 			{
-				affIndex = (int) i;
+				affIndex = i;
 				break;
 			}
 		}
 
-		const ParseTree::AffectorInfo& affInfo = mTree->getAffectorInfo(affIndex);
+		const ParseTree::AffectorInfo& affInfo = mTree->getAffectorInfo(emitterName, affIndex);
 
 		// See EmitType::getControllers
 		String instanceName = def->getName() + "-" + affector;
@@ -511,9 +509,11 @@ void Compiler::generateBytecode(ObjectDefinition* def, ParseTreeNode* node,
 			if (tNode)
 				generateEmitTail(eDef, tNode, bytecode, ft, codeType, codeInfo);
 
+
 			// Generate emit function arguments next
 			if (node->getChild(1))
 				generateFunctionArguments(def, node->getChild(1), bytecode, codeType, codeInfo, true);
+
 
 			// Then generate actual BC_EMIT code
 			String funcName = node->getChild(0)->getStringData();
@@ -803,19 +803,24 @@ void Compiler::generateEmitterBytecode(ParseTreeNode* node)
 		CodeBlockInfo codeInfo;
 		codeInfo.stateInfo = 0;
 
+
 		// Members variables
 		if (node->getChild(PT_EmitterMemberNode))
 			generateBytecode(def, node->getChild(PT_EmitterMemberNode), 0, CBT_None, codeInfo);
 
+
 		// Finish constructor here
 		def->finaliseConstructor();
+
 
 		// Create function bytecode
 		if (node->getChild(PT_EmitterFunctionNode))
 			generateBytecode(def, node->getChild(PT_EmitterFunctionNode), 0, CBT_Function, codeInfo);
 
+
 		// Create state bytecode
 		generateBytecode(def, node->getChild(PT_EmitterStateNode), 0, CBT_EmitterState, codeInfo);
+
 
 		// print bytecode here
 		for (int i = 0; i < def->getNumStates(); ++i)
@@ -938,7 +943,7 @@ void Compiler::printBytecode(ObjectDefinition* def, CodeRecord* record)
 			break;
 
 		case BC_GETM: 
-			std::cerr << "SETM " << def->getMemberVariable(record->byteCode[instr + 1]).name << std::endl;
+			std::cerr << "GETM " << def->getMemberVariable(record->byteCode[instr + 1]).name << std::endl;
 			instr += 2;
 			break;
 
@@ -1111,9 +1116,13 @@ void Compiler::printBytecode(ObjectDefinition* def, CodeRecord* record)
 
 		case BC_EMIT:
 			{
-				int numAffectors = record->byteCode[instr + 5];
 				std::cerr << "EMIT ";
 				std::cerr << mScriptMachine->getEmitType(record->byteCode[instr + 1])->getName();
+				
+				int numAffectors = record->byteCode[instr + 5];
+				for (int i = 2; i < 8 + numAffectors; ++i)
+					std::cerr << " " << record->byteCode[instr + i];
+
 				std::cerr << std::endl;
 				instr += (8 + numAffectors);
 			}
@@ -1149,6 +1158,7 @@ void Compiler::createDefinitions(const MemberVariableDeclarationMap& memberDecls
 //	mTree->print(root, 0);
 
 	mTree->createEmitterDefinitions(root);
+
 	mTree->createControllerDefinitions(root, memberDecls);
 
 	// If no errors, generate bytecode

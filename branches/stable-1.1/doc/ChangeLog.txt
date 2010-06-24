@@ -1,6 +1,10 @@
 bulletscript changelog
 ----------------------
 
+24/06/10
+o Fixed bug with native function calls generated incorrect bytecode.
+o Fixed bug whereby scripts with more than one emitter definition cleared affector information when they shouldn't.
+
 20/04/10
 o Fixed bug with Emitter::onRelease not clearing itself properly.
 

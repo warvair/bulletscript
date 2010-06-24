@@ -167,8 +167,8 @@ void accelerate(bs::UserTypeBase* userType, float frameTime, const float* args)
 	// First argument here is the acceleration amount, and we multiply
 	// this by the supplied frame time, in seconds.
 	b->speed += args[-1] * frameTime;
-}	
-
+	std::cerr << "accelerate to " << b->speed << std::endl;
+}
 
 
 
@@ -190,7 +190,7 @@ int main()
 	gMachine->setAnchorAngle("bullet", setAngle, getAngle);
 	gMachine->registerProperty("bullet", "speed", setSpeed, getSpeed);
 
-	gMachine->registerAffector("bullet", "accelerate", accelerate);
+	gMachine->registerAffector("bullet", "Accelerate", accelerate);
 
 	// Compile script - open in binary mode because sometimes ftell messes up in text mode
 	FILE* fp = fopen("minimal.script", "rb");
