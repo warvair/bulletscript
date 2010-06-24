@@ -46,6 +46,7 @@ BINARY    	[0-1]
 "enable"						{ return (KEYWORD_ENABLE); }
 "disable"						{ return (KEYWORD_DISABLE); }
 "while"							{ return (KEYWORD_WHILE); }
+"for"							{ return (KEYWORD_FOR); }
 "break"							{ return (KEYWORD_BREAK); }
 "continue"						{ return (KEYWORD_CONTINUE); }
 "if"							{ return (KEYWORD_IF); }

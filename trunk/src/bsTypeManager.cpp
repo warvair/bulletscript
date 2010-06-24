@@ -202,10 +202,10 @@ void TypeManager::updateType(UserTypeBase* object, bstype x, bstype y, bstype an
 		{
 #ifndef BS_Z_DIMENSION
 			mScriptMachine->interpretCode(rec->code->byteCode, rec->code->byteCodeSize, 
-				rec->state, 0, rec, x, y, angle, 0, false, rec->_userObject_);
+				rec->state, 0, rec, x, y, angle, 0, rec->_userObject_);
 #else
 			mScriptMachine->interpretCode(rec->code->byteCode, rec->code->byteCodeSize, 
-				rec->state, 0, rec, x, y, z, angle, 0, false, rec->_userObject_);
+				rec->state, 0, rec, x, y, z, angle, 0, rec->_userObject_);
 #endif
 		}
 		else

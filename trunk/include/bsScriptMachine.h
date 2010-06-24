@@ -94,8 +94,6 @@ namespace BS_NMSP
 
 	private:
 
-		bool checkInstructionPosition(ScriptState& st, size_t length, bool loop);
-
 		void setTypeManager(TypeManager* typeMan);
 
 	protected:
@@ -248,11 +246,10 @@ namespace BS_NMSP
 		// Script state processing
 #ifdef BS_Z_DIMENSION
 		int interpretCode(const uint32* code, size_t length, ScriptState& st, int* curState, 
-			void* object, bstype x, bstype y, bstype z, bstype angle, bstype* members, bool loop, 
-			void* userObject);
+			void* object, bstype x, bstype y, bstype z, bstype angle, bstype* members, void* userObject);
 #else
 		int interpretCode(const uint32* code, size_t length, ScriptState& st, int* curState, 
-			void* object, bstype x, bstype y, bstype angle, bstype* members, bool loop, void* userObject);
+			void* object, bstype x, bstype y, bstype angle, bstype* members, void* userObject);
 #endif
 
 		int interpretCode(const uint32* code, size_t length, ScriptState& st, bstype* members = 0);

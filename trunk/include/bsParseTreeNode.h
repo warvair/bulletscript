@@ -40,6 +40,7 @@ namespace BS_NMSP
 		PT_AssignStatement,
 		PT_MemberAssignStatement,
 		PT_WhileStatement,
+		PT_ForStatement,
 		PT_BreakStatement,
 		PT_ContinueStatement,
 		PT_GotoStatement,

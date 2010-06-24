@@ -626,27 +626,12 @@ void ScriptMachine::addErrorMsg(const String& msg)
 	mLog->addEntry(msg);
 }
 // --------------------------------------------------------------------------------
-bool ScriptMachine::checkInstructionPosition(ScriptState& st, size_t length, bool loop)
-{
-	if (st.curInstruction >= (int) length)
-	{
-		if (loop)
-			st.curInstruction = 0;
-		
-		return loop;
-	}
-	else
-	{
-		return true;
-	}
-}
-// --------------------------------------------------------------------------------
 int ScriptMachine::interpretCode(const uint32* code, size_t length, ScriptState& st, 
 								 int* curState, void* object, bstype x, bstype y, 
 #ifdef BS_Z_DIMENSION
 								 bstype z, 
 #endif
-								 bstype angle, bstype* members, bool loop, void* userObject)
+								 bstype angle, bstype* members, void* userObject)
 {
 	if (st.curInstruction >= length)
 		return ScriptOK;
@@ -909,7 +894,7 @@ int ScriptMachine::interpretCode(const uint32* code, size_t length, ScriptState&
 				st.suspendTime = st.stack[--st.stackHead];
 				st.curInstruction++;
 
-				if (st.curInstruction >= (int) length && loop)
+				if (st.curInstruction >= (int) length)
 					st.curInstruction = 0;
 			}
 			return ScriptSuspended;
@@ -926,7 +911,7 @@ int ScriptMachine::interpretCode(const uint32* code, size_t length, ScriptState&
 
 				st.curInstruction += (2 + numBlocks);
 
-				if (st.curInstruction >= (int) length && loop)
+				if (st.curInstruction >= (int) length)
 					st.curInstruction = 0;
 			}
 			return ScriptSuspended;
@@ -997,8 +982,9 @@ int ScriptMachine::interpretCode(const uint32* code, size_t length, ScriptState&
 				// If the user has suspended the script, return now.
 				if (scriptStatus == ScriptSuspended)
 				{
-					if (st.curInstruction >= (int) length && loop)
+					if (st.curInstruction >= (int) length)
 						st.curInstruction = 0;
+
 					return ScriptSuspended;
 				}
 			}
@@ -1062,12 +1048,14 @@ int ScriptMachine::interpretCode(const uint32* code, size_t length, ScriptState&
 
 		}
 
-//		std::cerr << "stack: ";
-//		for (int i = 0; i < st.stackHead; ++i)
-//			std::cerr << st.stack[i] << " ";
-//		std::cerr << std::endl << std::endl;
+/*
+		std::cerr << "stack: ";
+		for (int i = 0; i < st.stackHead; ++i)
+			std::cerr << st.stack[i] << " ";
+		std::cerr << std::endl << std::endl;
+*/
 
-		if (!checkInstructionPosition(st, length, loop))
+		if (st.curInstruction >= (int) length)
 			return ScriptOK;
 	}
 }
@@ -1195,7 +1183,6 @@ int ScriptMachine::interpretCode(const uint32* code, size_t length, ScriptState&
 void ScriptMachine::processScriptRecord(ScriptRecord* gsr, void* object, void* userObject)
 {
 	// Assume that we're not suspended.
-
 	CodeRecord* rec = getCodeRecord(gsr->curState);
 
 #ifdef BS_ENABLEJIT
@@ -1212,11 +1199,11 @@ void ScriptMachine::processScriptRecord(ScriptRecord* gsr, void* object, void* u
 #ifdef BS_Z_DIMENSION
 	interpretCode(bytecode, bytecodeLen, gsr->scriptState, &gsr->curState, object,
 		gsr->members[Member_X], gsr->members[Member_Y], gsr->members[Member_Z],
-		gsr->members[Member_Angle],	gsr->members, true, userObject);
+		gsr->members[Member_Angle],	gsr->members, userObject);
 #else
 	interpretCode(bytecode, bytecodeLen, gsr->scriptState, &gsr->curState, object,
 		gsr->members[Member_X], gsr->members[Member_Y], gsr->members[Member_Angle], 
-		gsr->members, true, userObject);
+		gsr->members, userObject);
 #endif
 }
 // --------------------------------------------------------------------------------

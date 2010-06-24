@@ -161,7 +161,7 @@ ScriptRecord* ObjectDefinition::createScriptRecord(ScriptMachine* machine)
 	if (mConstructSize > 0)
 	{
 		machine->interpretCode(mConstructCode, mConstructSize, record->scriptState, 0, 0, 0, 0, 0,
-			record->members, false, 0);
+			record->members, 0);
 
 		record->scriptState.stackHead = 0;
 		record->scriptState.curInstruction = 0;
