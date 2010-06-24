@@ -1,8 +1,0 @@
-emitter Test
-{
-	Emit = state
-	{
-		wait(2);
-		emit bullet(101, 102, 103);
-	}
-}

@@ -224,13 +224,18 @@ int main (int argc, char **argv)
 
 		// Update bulletscript
 		unsigned int bsTime1 = getTicks();
+
+		std::cerr << "u1" << std::endl;
 		machine.preUpdate(frameTime);
+		std::cerr << "u2" << std::endl;
 
 		numBullets = g_bossBullets->update(frameTime);
 		numBullets += g_playerBullets->update(frameTime);
 		g_areas->update(frameTime);
 
+		std::cerr << "u3" << std::endl;
 		machine.postUpdate(frameTime);
+		std::cerr << "u4" << std::endl;
 
 		updateTime += (getTicks() - bsTime1);
 		numFrames++;

@@ -27,6 +27,7 @@ static const String gs_tokens[] = {
 	"KEYWORD_ENABLE",					"enable",
 	"KEYWORD_DISABLE",					"disable",
 	"KEYWORD_WHILE",					"while",
+	"KEYWORD_FOR",						"for",
 	"KEYWORD_BREAK",					"break",
 	"KEYWORD_CONTINUE",					"continue",
 	"KEYWORD_IF",						"if",
@@ -55,7 +56,7 @@ static const String gs_tokens[] = {
 
 void replaceVerboseTokens(String& a_string)
 {
-	for (int i = 0; i < 68; i += 2)
+	for (int i = 0; i < 70; i += 2)
 	{
 		int startPos = (int) a_string.find(gs_tokens[i]);
 		if (startPos < 0)
@@ -190,6 +191,7 @@ void generate_inc_expr(int value, int nodeType, YYSTYPE parentNode, YYSTYPE idNo
 %token KEYWORD_ENABLE
 %token KEYWORD_DISABLE
 %token KEYWORD_WHILE
+%token KEYWORD_FOR
 %token KEYWORD_BREAK
 %token KEYWORD_CONTINUE
 %token KEYWORD_IF
@@ -736,7 +738,7 @@ function_statement
 		{
 			$$ = $1;
 		}
-	| extended_assignment_statement
+	| extended_assignment_statement ';'
 		{
 			$$ = $1;
 		}
@@ -779,7 +781,7 @@ event_statement
 		{
 			$$ = $1;
 		}
-	| extended_assignment_statement
+	| extended_assignment_statement ';'
 		{
 			$$ = $1;
 		}
@@ -834,7 +836,7 @@ emitter_state_statement
 		{
 			$$ = $1;
 		}
-	| extended_assignment_statement
+	| extended_assignment_statement ';'
 		{
 			$$ = $1;
 		}
@@ -873,7 +875,7 @@ controller_state_statement
 		{
 			$$ = $1;
 		}
-	| extended_assignment_statement
+	| extended_assignment_statement ';'
 		{
 			$$ = $1;
 		}
@@ -1028,32 +1030,32 @@ simple_assignment_statement
 	;
 		
 extended_assignment_statement		
-	: identifier SYMBOL_INC ';'
+	: identifier SYMBOL_INC
 		{
 			$$ = AST->createNode(PT_AssignStatement, yylineno);
 			generate_inc_expr(1, PT_Identifier, $$, $1);
 		}
-	| identifier SYMBOL_DEC ';'
+	| identifier SYMBOL_DEC
 		{
 			$$ = AST->createNode(PT_AssignStatement, yylineno);
 			generate_inc_expr(-1, PT_Identifier, $$, $1);
 		}
-	| identifier SYMBOL_ADD_A constant_expression ';'
+	| identifier SYMBOL_ADD_A constant_expression
 		{
 			$$ = AST->createNode(PT_AssignStatement, yylineno);
 			generate_assignment_expr(PT_AddStatement, PT_Identifier, $$, $1, $3);
 		}
-	| identifier SYMBOL_SUB_A constant_expression ';'
+	| identifier SYMBOL_SUB_A constant_expression
 		{
 			$$ = AST->createNode(PT_AssignStatement, yylineno);
 			generate_assignment_expr(PT_SubtractStatement, PT_Identifier, $$, $1, $3);
 		}
-	| identifier SYMBOL_MUL_A constant_expression ';'
+	| identifier SYMBOL_MUL_A constant_expression
 		{
 			$$ = AST->createNode(PT_AssignStatement, yylineno);
 			generate_assignment_expr(PT_MultiplyStatement, PT_Identifier, $$, $1, $3);
 		}
-	| identifier SYMBOL_DIV_A constant_expression ';'
+	| identifier SYMBOL_DIV_A constant_expression
 		{
 			$$ = AST->createNode(PT_AssignStatement, yylineno);
 			generate_assignment_expr(PT_DivideStatement, PT_Identifier, $$, $1, $3);
@@ -1199,6 +1201,23 @@ property_statement
 			$$->setChild(2, $6);
 		}
 	;
+	
+for_update_statement
+	: constant_expression
+		{
+			$$ = $1;
+		}
+	| identifier '=' constant_expression
+		{
+			$$ = AST->createNode(PT_AssignStatement, yylineno);
+			$$->setChild(0, $1);
+			$$->setChild(1, $3);
+		}
+	| extended_assignment_statement
+		{
+			$$ = $1;
+		}
+	;
 		
 function_iteration_statement
 	: KEYWORD_WHILE '(' constant_expression ')' function_compound_statement
@@ -1206,6 +1225,27 @@ function_iteration_statement
 			$$ = AST->createNode(PT_WhileStatement, yylineno);
 			$$->setChild(0, $3);
 			$$->setChild(1, $5);
+		}
+	| KEYWORD_FOR '(' ';' constant_expression ';' for_update_statement ')' function_compound_statement
+		{
+			$$ = AST->createNode(PT_ForStatement, yylineno);
+			
+			$$->setChild(1, $4);
+			$$->setChild(2, $6);
+			$$->setChild(3, $8);			
+		}
+	| KEYWORD_FOR '(' identifier '=' constant_expression ';' constant_expression ';' for_update_statement ')' function_compound_statement
+		{
+			$$ = AST->createNode(PT_ForStatement, yylineno);
+			
+			YYSTYPE initExpr = AST->createNode(PT_AssignStatement, yylineno);
+			initExpr->setChild(0, $3);
+			initExpr->setChild(1, $5);
+			
+			$$->setChild(0, initExpr);
+			$$->setChild(1, $7);
+			$$->setChild(2, $9);
+			$$->setChild(3, $11);			
 		}
 	;
 
@@ -1216,6 +1256,27 @@ event_iteration_statement
 			$$->setChild(0, $3);
 			$$->setChild(1, $5);
 		}
+	| KEYWORD_FOR '(' ';' constant_expression ';' for_update_statement ')' event_compound_statement
+		{
+			$$ = AST->createNode(PT_ForStatement, yylineno);
+			
+			$$->setChild(1, $4);
+			$$->setChild(2, $6);
+			$$->setChild(3, $8);			
+		}
+	| KEYWORD_FOR '(' identifier '=' constant_expression ';' constant_expression ';' for_update_statement ')' event_compound_statement
+		{
+			$$ = AST->createNode(PT_ForStatement, yylineno);
+			
+			YYSTYPE initExpr = AST->createNode(PT_AssignStatement, yylineno);
+			initExpr->setChild(0, $3);
+			initExpr->setChild(1, $5);
+			
+			$$->setChild(0, initExpr);
+			$$->setChild(1, $7);
+			$$->setChild(2, $9);
+			$$->setChild(3, $11);			
+		}
 	;
 
 emitter_state_iteration_statement
@@ -1225,6 +1286,27 @@ emitter_state_iteration_statement
 			$$->setChild(0, $3);
 			$$->setChild(1, $5);
 		}
+	| KEYWORD_FOR '(' ';' constant_expression ';' for_update_statement ')' emitter_state_compound_statement
+		{
+			$$ = AST->createNode(PT_ForStatement, yylineno);
+			
+			$$->setChild(1, $4);
+			$$->setChild(2, $6);
+			$$->setChild(3, $8);			
+		}
+	| KEYWORD_FOR '(' identifier '=' constant_expression ';' constant_expression ';' for_update_statement ')' emitter_state_compound_statement
+		{
+			$$ = AST->createNode(PT_ForStatement, yylineno);
+			
+			YYSTYPE initExpr = AST->createNode(PT_AssignStatement, yylineno);
+			initExpr->setChild(0, $3);
+			initExpr->setChild(1, $5);
+			
+			$$->setChild(0, initExpr);
+			$$->setChild(1, $7);
+			$$->setChild(2, $9);
+			$$->setChild(3, $11);			
+		}
 	;
 
 controller_state_iteration_statement
@@ -1233,6 +1315,27 @@ controller_state_iteration_statement
 			$$ = AST->createNode(PT_WhileStatement, yylineno);
 			$$->setChild(0, $3);
 			$$->setChild(1, $5);
+		}
+	| KEYWORD_FOR '(' ';' constant_expression ';' for_update_statement ')' controller_state_compound_statement
+		{
+			$$ = AST->createNode(PT_ForStatement, yylineno);
+			
+			$$->setChild(1, $4);
+			$$->setChild(2, $6);
+			$$->setChild(3, $8);			
+		}
+	| KEYWORD_FOR '(' identifier '=' constant_expression ';' constant_expression ';' for_update_statement ')' controller_state_compound_statement
+		{
+			$$ = AST->createNode(PT_ForStatement, yylineno);
+			
+			YYSTYPE initExpr = AST->createNode(PT_AssignStatement, yylineno);
+			initExpr->setChild(0, $3);
+			initExpr->setChild(1, $5);
+			
+			$$->setChild(0, initExpr);
+			$$->setChild(1, $7);
+			$$->setChild(2, $9);
+			$$->setChild(3, $11);			
 		}
 	;
 

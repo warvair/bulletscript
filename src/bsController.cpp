@@ -340,7 +340,7 @@ bool Controller::_raiseEvent(int index, const bstype* args)
 #ifdef BS_Z_DIMENSION
 		mRecord->members[Member_Z],
 #endif
-		mRecord->members[Member_Angle],	mRecord->members, false, 0);
+		mRecord->members[Member_Angle],	mRecord->members, 0);
 
 	// We need to know if the event changed the state because if it has then we should suspend the
 	// script.  Otherwise the Controller's script state will be undefined.
