@@ -252,7 +252,8 @@ namespace BS_NMSP
 			void* object, bstype x, bstype y, bstype angle, bstype* members, void* userObject);
 #endif
 
-		int interpretCode(const uint32* code, size_t length, ScriptState& st, bstype* members = 0);
+		int interpretCode(const uint32* code, size_t length, ScriptState& st, void* userObject, 
+			bstype* members = 0);
 
 		void processScriptRecord(ScriptRecord* gsr, void* object, void* userObject);
 

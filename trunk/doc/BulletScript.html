@@ -413,6 +413,20 @@ The list statements is executed as long as the expression evalulates to non-zero
 		i++;
 	}
 </pre>
+There is also a <span class="code">for</span> statement, which is a more specialised form of <span class="code">while</span>:
+<pre>
+	for(i = 0; i < 10; i++)
+	{
+		// do something
+	}
+
+	i = 0;
+	for(; i < 10; i++)
+	{
+		// do something
+	}
+</pre>
+
 
 There are two special keywords for iteration statements which control its flow: <span class="code">break</span> and <span class="code">continue</span>.
 <span class="code">break</span> immediately jumps out of the loop and carries on straight after the closing brace.  <span class="code">continue</span>

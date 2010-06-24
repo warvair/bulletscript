@@ -143,7 +143,7 @@ namespace BS_NMSP
 	/**
 	 *	User function prototype for a native script function.
 	 */
-	typedef int (BS_CALLCONV *NativeFunction)(ScriptState&);
+	typedef int (BS_CALLCONV *NativeFunction)(ScriptState&, void*);
 
 	/**
 	 *	Just-in-time compiled function
