@@ -48,7 +48,7 @@ namespace BS_NMSP
 		 *
 		 *	This is an internal method used by code generation.
 		 *
-		 *  \param EmitterDefinition index.
+		 *  \param index EmitterDefinition index.
 		 */
 		void _setIndex(int index);
 

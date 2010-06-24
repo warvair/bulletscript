@@ -552,14 +552,15 @@ namespace BS_NMSP
 		/**	\brief Apply an affector instance to a user object.
 		 *
 		 *	\param object the user object.
+		 *	\param user the user object passed into the encapsulating Emitter.
 		 *	\param index the index of the Affector instance.
 		 *	\param frameTime the time interval since last update, in seconds.
 		 *
 		 *	\return the Affector instance, or 0 if it is not found.
 		 */
-		inline void applyAffector(UserTypeBase* object, int index, float frameTime)
+		inline void applyAffector(UserTypeBase* object, void* user, int index, float frameTime)
 		{
-			mAffectorInstances[index]->execute(object, frameTime);
+			mAffectorInstances[index]->execute(object, user, frameTime);
 		}
 
 	};

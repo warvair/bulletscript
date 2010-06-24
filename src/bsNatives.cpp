@@ -5,7 +5,7 @@ namespace BS_NMSP
 {
 
 // --------------------------------------------------------------------------------
-int bm_rand(ScriptState& state)
+int bm_rand(ScriptState& state, void*)
 {
 	int rv = rand();
 	bstype scale = state.stack[state.stackHead - 1];
@@ -22,7 +22,7 @@ bstype bm_rand_JIT(bstype range)
 	return range * (rand() / (float) RAND_MAX);
 }
 // --------------------------------------------------------------------------------
-int bm_sqrt(ScriptState& state)
+int bm_sqrt(ScriptState& state, void*)
 {
 	bstype value = state.stack[state.stackHead - 1];
 	state.stack[state.stackHead - 1] = (bstype) sqrtf(value);
@@ -34,7 +34,7 @@ bstype bm_sqrt_JIT(bstype value)
 	return (bstype) sqrtf(value);
 }
 // --------------------------------------------------------------------------------
-int bm_print(ScriptState& state)
+int bm_print(ScriptState& state, void*)
 {
 	bstype value = state.stack[state.stackHead - 1];
 	state.stackHead--;
@@ -47,7 +47,7 @@ void bm_print_JIT(bstype value)
 	std::cerr << value << std::endl;
 }
 // --------------------------------------------------------------------------------
-int bm_test(ScriptState& state)
+int bm_test(ScriptState& state, void*)
 {
 	bstype value1 = state.stack[--state.stackHead];
 	bstype value2 = state.stack[--state.stackHead];

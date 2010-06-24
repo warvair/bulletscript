@@ -37,12 +37,12 @@ const String& Affector::getName() const
 	return mName;
 }
 // --------------------------------------------------------------------------------
-void Affector::recalculateArguments()
+void Affector::recalculateArguments(void *user)
 {
 	mState.curInstruction = 0;
 	mState.stackHead = 0;
 
-	mScriptMachine->interpretCode(mBytecode, mBytecodeSize, mState);
+	mScriptMachine->interpretCode(mBytecode, mBytecodeSize, mState, user);
 
 	if (!mbRecalculateAlways)
 		mbRecalculate = false;
@@ -53,12 +53,12 @@ void Affector::recalculateAlways(bool always)
 	mbRecalculateAlways = always;
 }
 // --------------------------------------------------------------------------------
-void Affector::execute(UserTypeBase* object, float frameTime)
+void Affector::execute(UserTypeBase* object, void* user, float frameTime)
 {
 	// We need to recalculate arguments, if the argument contains either a global
 	// variable (which has changed) or a function call (which is unpredictable).
 	if (mbRecalculate)
-		recalculateArguments();
+		recalculateArguments(user);
 
 	mFunction(object, frameTime, mState.stack + mState.stackHead);
 }

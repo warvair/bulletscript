@@ -975,7 +975,7 @@ int ScriptMachine::interpretCode(const uint32* code, size_t length, ScriptState&
 			{
 				int function = code[st.curInstruction + 1];
 				NativeFunction func = getNativeFunction(function);
-				int scriptStatus = func(st);
+				int scriptStatus = func(st, userObject);
 
 				st.curInstruction += 2;
 
@@ -1060,7 +1060,8 @@ int ScriptMachine::interpretCode(const uint32* code, size_t length, ScriptState&
 	}
 }
 // --------------------------------------------------------------------------------
-int ScriptMachine::interpretCode(const uint32* code, size_t length, ScriptState& st, bstype* members)
+int ScriptMachine::interpretCode(const uint32* code, size_t length, ScriptState& st, 
+								 void* userObject, bstype* members)
 {
 	while (st.curInstruction < length)
 	{
@@ -1164,7 +1165,7 @@ int ScriptMachine::interpretCode(const uint32* code, size_t length, ScriptState&
 			{
 				int function = code[st.curInstruction + 1];
 				NativeFunction func = getNativeFunction(function);
-				func(st);
+				func(st, userObject);
 
 				st.curInstruction += 2;
 			}

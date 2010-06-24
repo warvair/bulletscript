@@ -160,8 +160,8 @@ ScriptRecord* ObjectDefinition::createScriptRecord(ScriptMachine* machine)
 	// Run construction code, if there is any
 	if (mConstructSize > 0)
 	{
-		machine->interpretCode(mConstructCode, mConstructSize, record->scriptState, 0, 0, 0, 0, 0,
-			record->members, 0);
+		machine->interpretCode(mConstructCode, mConstructSize, record->scriptState, 
+			0, 0, 0, 0, 0, record->members, 0);
 
 		record->scriptState.stackHead = 0;
 		record->scriptState.curInstruction = 0;

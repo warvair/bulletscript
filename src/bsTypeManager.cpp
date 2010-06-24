@@ -160,7 +160,7 @@ void TypeManager::updateType(UserTypeBase* object, bstype x, bstype y, bstype an
 
 	// Apply affectors
 	for (int i = 0; i < rec->numAffectors; ++i)
-		emitType->applyAffector(object, rec->affectors[i], frameTime);
+		emitType->applyAffector(object, rec->_userObject_, rec->affectors[i], frameTime);
 
 	// Update properties
 	int i, numProperties = emitType->numProperties_;

@@ -1,6 +1,6 @@
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
 <html><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8">
-<title>bulletscript: C:/Code/bulletscript/include/bsCore.h Source File</title>
+<title>bulletscript: C:/Code/bulletscript-dev/include/bsCore.h Source File</title>
 <link href="tabs.css" rel="stylesheet" type="text/css">
 <link href="doxygen.css" rel="stylesheet" type="text/css">
 </head><body>
@@ -18,7 +18,7 @@
       <li><a href="files.html"><span>File&nbsp;List</span></a></li>
     </ul>
   </div>
-<h1>C:/Code/bulletscript/include/bsCore.h</h1><div class="fragment"><pre class="fragment"><a name="l00001"></a>00001 <span class="comment">/*</span>
+<h1>C:/Code/bulletscript-dev/include/bsCore.h</h1><div class="fragment"><pre class="fragment"><a name="l00001"></a>00001 <span class="comment">/*</span>
 <a name="l00002"></a>00002 <span class="comment">        BulletScript: a script for firing bullets.</span>
 <a name="l00003"></a>00003 <span class="comment">        See /doc/license.txt for license details.</span>
 <a name="l00004"></a>00004 <span class="comment">*/</span>
@@ -105,9 +105,9 @@
 <a name="l00137"></a>00137 
 <a name="l00141"></a>00141         <span class="keyword">typedef</span> void (BS_CALLCONV *AffectorFunction) (<a class="code" href="struct_b_s___n_m_s_p_1_1_user_type_base.html" title="Base class for users to derive their object types from.">UserTypeBase</a>*, float, <span class="keyword">const</span> bstype*);
 <a name="l00142"></a>00142 
-<a name="l00146"></a>00146         <span class="keyword">typedef</span> int (BS_CALLCONV *NativeFunction)(<a class="code" href="struct_b_s___n_m_s_p_1_1_script_state.html" title="Script state.">ScriptState</a>&amp;);
+<a name="l00146"></a>00146         <span class="keyword">typedef</span> int (BS_CALLCONV *NativeFunction)(<a class="code" href="struct_b_s___n_m_s_p_1_1_script_state.html" title="Script state.">ScriptState</a>&amp;, <span class="keywordtype">void</span>*);
 <a name="l00147"></a>00147 
-<a name="l00151"></a>00151         <span class="keyword">typedef</span> float (BS_CALLCONV *JittedFunction)();
+<a name="l00151"></a>00151         <span class="keyword">typedef</span> void (BS_CALLCONV *JittedFunction)(bstype, bstype, bstype, <span class="keywordtype">void</span>*);
 <a name="l00152"></a>00152 
 <a name="l00153"></a>00153         <span class="keyword">class </span>ScriptMachine;
 <a name="l00157"></a>00157         <span class="keyword">typedef</span> JittedFunction (BS_CALLCONV *JitterHookFunction)(<span class="keyword">const</span> <span class="keywordtype">unsigned</span> <span class="keywordtype">int</span>*, size_t, <span class="keyword">const</span> <span class="keywordtype">char</span>*, ScriptMachine* bsMachine);
@@ -171,7 +171,7 @@
 <a name="l00263"></a>00263 
 <a name="l00264"></a>00264 <span class="preprocessor">#endif</span>
 </pre></div></div>
-<hr size="1"><address style="text-align: right;"><small>Generated on Wed Mar 31 12:49:05 2010 for bulletscript by&nbsp;
+<hr size="1"><address style="text-align: right;"><small>Generated on Thu Jun 24 23:23:57 2010 for bulletscript by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img src="doxygen.png" alt="doxygen" align="middle" border="0"></a> 1.5.9 </small></address>
 </body>

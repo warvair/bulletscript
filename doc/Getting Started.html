@@ -160,9 +160,9 @@ An 'accelerate' affector could be written as:
 </pre>
 Native functions are C++ functions which are usable in script.  Some common examples would be random number generation, and square root.  A native function is declared as follows:
 <pre>
-	int (*<i>native_function</i>)(bs::ScriptState& state);
+	int (*<i>native_function</i>)(bs::ScriptState& state, void* user);
 </pre>
-Here, <span class="code">state</span> is a reference to bulletscript's internal script management structure, of which there is one for each emitter (and controller).  This contains information such as the instruction pointer, the stack and local variables.  Thus, native functions have a fair amount of control over the emitter, and can pause/unpause it by setting its suspend time, or push values onto the stack as a way of returning values.  
+Here, <span class="code">state</span> is a reference to bulletscript's internal script management structure, of which there is one for each emitter (and controller).  This contains information such as the instruction pointer, the stack and local variables.  Thus, native functions have a fair amount of control over the emitter, and can pause/unpause it by setting its suspend time, or push values onto the stack as a way of returning values.  The user object is the same that is passed into emit functions, and can be used to let BulletScript control external objects.
 <p>
 The stack pointer (<span class="code">ScriptState::stack</span>) points to the stack base.  <span class="code">ScriptState::stackHead</span> is the 'top' pointer, used to access the top of the stack.  It is actually the offset of the next available space on the stack, and thus accessing the stack means using it with a negative offset.
 <p>

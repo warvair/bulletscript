@@ -56,7 +56,7 @@ namespace BS_NMSP
 
 	private:
 
-		void recalculateArguments();
+		void recalculateArguments(void* user);
 
 	public:
 
@@ -93,9 +93,10 @@ namespace BS_NMSP
 		/**	\brief Runs the AffectorFunction.
 		 *
 		 *	\param object the object to run the AffectorFunction on.
+		 *	\param user the user object passed into the encapsulating Emitter.
 		 *	\param frameTime the time interval since last update, in seconds.
 		 */
-		void execute(UserTypeBase* object, float frameTime);
+		void execute(UserTypeBase* object, void* user, float frameTime);
 
 		/**	\brief Callback for global functions.
 		 *	
