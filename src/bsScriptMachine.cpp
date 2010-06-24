@@ -1003,12 +1003,12 @@ int ScriptMachine::interpretCode(const uint32* code, size_t length, ScriptState&
 			break;
 
 		}
-
-//		std::cerr << "stack: ";
-//		for (int i = 0; i < st.stackHead; ++i)
-//			std::cerr << st.stack[i] << " ";
-//		std::cerr << std::endl << std::endl;
-
+/*
+		std::cerr << "stack: ";
+		for (int i = 0; i < st.stackHead; ++i)
+			std::cerr << st.stack[i] << " ";
+		std::cerr << std::endl << std::endl;
+*/
 		if (!checkInstructionPosition(st, length, loop))
 			return ScriptOK;
 	}

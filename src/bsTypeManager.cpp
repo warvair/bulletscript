@@ -151,8 +151,8 @@ void TypeManager::updateType(UserTypeBase* object, bstype x, bstype y, bstype an
 			bstype bx = emitType->getAnchorValue(rec, Property_X);
 			bstype by = emitType->getAnchorValue(rec, Property_Y);
 
-			float sinAngle = sin(delta * DEG_TO_RAD);
-			float cosAngle = cos(delta * DEG_TO_RAD);
+			float sinAngle = (float) sin(delta * DEG_TO_RAD);
+			float cosAngle = (float) cos(delta * DEG_TO_RAD);
 			emitType->setAnchorValue1(rec, Property_X, bx * cosAngle - by * sinAngle);
 			emitType->setAnchorValue1(rec, Property_Y, by * cosAngle + bx * sinAngle);
 		}

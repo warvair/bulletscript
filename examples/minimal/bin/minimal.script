@@ -1,17 +1,8 @@
 emitter Minimal
 {
-	KillMe = function(time)
-	{
-		wait(time);
-		die;
-	}
-
 	Emit = state
 	{
-		x = 5;
-		y = 6 * x + 8;
-
-		emit bullet(100) : KillMe(5);
+		emit bullet(100);
 		wait(1);
 	}
 }
