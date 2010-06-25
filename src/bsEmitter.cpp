@@ -201,6 +201,7 @@ void Emitter::setState(int state)
 	mRecord->curState = state;
 	mRecord->scriptState.curInstruction = 0;
 	mRecord->scriptState.stackHead = 0;
+	mRecord->scriptState.suspendTime = 0;
 }
 // --------------------------------------------------------------------------------
 void Emitter::setUserObject(void* userObject)
