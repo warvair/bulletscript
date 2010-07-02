@@ -893,9 +893,6 @@ int ScriptMachine::interpretCode(const uint32* code, size_t length, ScriptState&
 			{
 				st.suspendTime = st.stack[--st.stackHead];
 				st.curInstruction++;
-
-				if (st.curInstruction >= (int) length)
-					st.curInstruction = 0;
 			}
 			return ScriptSuspended;
 
@@ -931,6 +928,47 @@ int ScriptMachine::interpretCode(const uint32* code, size_t length, ScriptState&
 				}
 
 				st.curInstruction += (2 + numBlocks);
+			}
+			break;
+
+		case BC_SUSPENDM:
+			{
+/*
+				int emitIndex = code[st.curInstruction + 1];
+
+				int numBlocks = code[st.curInstruction + 1];
+				for (int i = 0; i < numBlocks; ++i)
+				{
+					// add to current object's block list.
+					bstype block = BS_UINT32_TO_TYPE(code[st.curInstruction + 2 + i]);
+					static_cast<Controller*>(object)->addEmitterBlock(emitIndex, block);
+				}
+
+				st.curInstruction += (2 + numBlocks);
+
+				if (st.curInstruction >= (int) length)
+					st.curInstruction = 0;
+*/
+			}
+			break;
+
+		case BC_SIGNALM:
+			{
+/*
+				// If the script is currently waiting, then set it going again, else try and remove
+				// any specified blocks.
+				static_cast<Controller*>(object)->resume();
+
+				int numBlocks = code[st.curInstruction + 1];
+				for (int i = 0; i < numBlocks; ++i)
+				{
+					// signal block.
+					bstype block = BS_UINT32_TO_TYPE(code[st.curInstruction + 2 + i]);
+					static_cast<Controller*>(object)->signal(block);
+				}
+
+				st.curInstruction += (2 + numBlocks);
+*/
 			}
 			break;
 
@@ -1007,6 +1045,8 @@ int ScriptMachine::interpretCode(const uint32* code, size_t length, ScriptState&
 				int newState = code[st.curInstruction + 1];
 				static_cast<Controller*>(object)->setState(newState);
 				st.curInstruction += 2;
+				// Process new controller state?
+				// ...
 			}
 			break;
 
@@ -1016,6 +1056,8 @@ int ScriptMachine::interpretCode(const uint32* code, size_t length, ScriptState&
 				int state = code[st.curInstruction + 2];
 				static_cast<Controller*>(object)->setEmitterMemberState(emitter, state);
 				st.curInstruction += 3;
+				// Process new emitter state?
+//				static_cast<Controller*>(object)->runEmitterMember(emitter, 0);
 			}
 			break;
 

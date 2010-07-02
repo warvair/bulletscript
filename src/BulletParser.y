@@ -605,6 +605,13 @@ emitter_state
 			$$->setChild(0, $1);
 			$$->setChild(1, $4);
 		}
+	| identifier '=' KEYWORD_STATE '/' constant_integer emitter_state_compound_statement
+		{
+			$$ = AST->createNode(PT_State, yylineno);
+			$$->setChild(0, $1);
+			$$->setChild(1, $6);
+			$$->setChild(2, $5);
+		}
 	;
 
 controller_state_list
@@ -626,6 +633,13 @@ controller_state
 			$$ = AST->createNode(PT_State, yylineno);
 			$$->setChild(0, $1);
 			$$->setChild(1, $4);
+		}
+	| identifier '=' KEYWORD_STATE '/' constant_integer controller_state_compound_statement
+		{
+			$$ = AST->createNode(PT_State, yylineno);
+			$$->setChild(0, $1);
+			$$->setChild(1, $6);
+			$$->setChild(2, $5);
 		}
 	;
 	
@@ -813,7 +827,15 @@ event_statement
 		{
 			$$ = $1;
 		}
+	| member_suspend_statement
+		{
+			$$ = $1;
+		}
 	| signal_statement
+		{
+			$$ = $1;
+		}
+	| member_signal_statement
 		{
 			$$ = $1;
 		}
@@ -904,6 +926,14 @@ controller_state_statement
 			$$ = $1;
 		}
 	| suspend_statement
+		{
+			$$ = $1;
+		}
+	| member_suspend_statement
+		{
+			$$ = $1;
+		}
+	| member_signal_statement
 		{
 			$$ = $1;
 		}
@@ -1384,7 +1414,22 @@ suspend_statement
 			$$ = AST->createNode(PT_SuspendStatement, yylineno);
 			$$->setChild(0, $3);
 		}
-		
+	;
+
+member_suspend_statement
+	: KEYWORD_SUSPEND '$' identifier ';'
+		{
+			$$ = AST->createNode(PT_SuspendStatement, yylineno);
+			$$->setChild(1, $3);
+		}
+	| KEYWORD_SUSPEND '$' identifier '(' constant_arg_list ')' ';'
+		{
+			$$ = AST->createNode(PT_SuspendStatement, yylineno);
+			$$->setChild(0, $5);
+			$$->setChild(1, $3);
+		}
+	;
+			
 signal_statement
 	: KEYWORD_SIGNAL ';'
 		{
@@ -1394,6 +1439,20 @@ signal_statement
 		{
 			$$ = AST->createNode(PT_SignalStatement, yylineno);
 			$$->setChild(0, $3);
+		}
+	;
+
+member_signal_statement
+	: KEYWORD_SIGNAL '$' identifier ';'
+		{
+			$$ = AST->createNode(PT_SignalStatement, yylineno);
+			$$->setChild(1, $3);
+		}
+	| KEYWORD_SIGNAL '$' identifier '(' constant_arg_list ')' ';'
+		{
+			$$ = AST->createNode(PT_SignalStatement, yylineno);
+			$$->setChild(0, $5);
+			$$->setChild(1, $3);
 		}
 	;
 	

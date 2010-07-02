@@ -309,6 +309,11 @@ void Controller::setEmitterMemberState(int emitter, int state)
 	mEmitters[emitter].emitter->setState(state);
 }
 // --------------------------------------------------------------------------------
+void Controller::runEmitterMember(int emitter, float frameTime)
+{
+	mEmitters[emitter].emitter->_runScript(frameTime);
+}
+// --------------------------------------------------------------------------------
 int Controller::raiseEvent(const String& evt, const bstype* args)
 {
 	// Note: this isn't great, but Controllers likely won't have too many events.

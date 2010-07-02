@@ -1030,6 +1030,45 @@ void ParseTree::buildEvents(ControllerDefinition* def, ParseTreeNode* node,
 		}
 		return;
 
+	case PT_SuspendStatement:
+		{
+			// If it's a member suspend, check that member exists
+			// Issue is that on a simple suspend, need to set the emitter to wait,
+			// or come up with new method for indefinite suspension.
+			// We can't use an indefinite wait, because the emitter will probably be waiting anyway,
+			// and this would overwrite the wait time.  This is a bug in the current implementation for
+			// Controllers.
+
+			// Use enable/disable, rename members to mSuspended, and set when suspended.
+			if (node->getChild(1))
+			{
+				addError(node->getLine(), "Emitter suspend currently not supported.");
+				return;
+
+				String emitName = node->getChild(1)->getStringData();
+				int emitIndex = def->getEmitterVariableIndex(emitName);
+				if (emitIndex == BS_NotFound)
+					addError(node->getLine(), "Emitter '" + emitName + "' is not declared.");
+			}
+		}
+		return;
+
+	case PT_SignalStatement:
+		{
+			// If it's a member signal, check that member exists
+			if (node->getChild(1))
+			{
+				addError(node->getLine(), "Emitter signal currently not supported.");
+				return;
+
+				String emitName = node->getChild(1)->getStringData();
+				int emitIndex = def->getEmitterVariableIndex(emitName);
+				if (emitIndex == BS_NotFound)
+					addError(node->getLine(), "Emitter '" + emitName + "' is not declared.");
+			}
+		}
+		return;
+
 	case PT_GotoStatement:
 		{
 			int gotoType = node->getChild(0)->getType();
@@ -1059,21 +1098,6 @@ void ParseTree::buildEvents(ControllerDefinition* def, ParseTreeNode* node,
 					addError(node->getLine(), "Emitter type '" + var.emitter + 
 						"' has no state named '" + stateName + "'.");
 			}
-		}
-		return;
-
-	case PT_SuspendStatement:
-		{
-			// Count blocks
-			int numBlocks = 0;
-			ParseTreeNode* blockNode = node->getChild(0);
-			if (blockNode)
-				numBlocks = ParseUtilities::countConstantArgumentList(blockNode);
-
-			int curNumBlocks = def->getMaxBlocks();
-
-			if (numBlocks > curNumBlocks)
-				def->setMaxBlocks(numBlocks);
 		}
 		return;
 
@@ -1148,6 +1172,9 @@ void ParseTree::buildEvents(ControllerDefinition* def, ParseTreeNode* node,
 
 	case PT_ConstantExpression:
 		checkConstantExpression(def, CBT_Event, eventInfo->name, node);
+		return;
+
+	default:
 		return;
 	}
 
@@ -1377,22 +1404,6 @@ void ParseTree::buildStates(ObjectDefinition* def, ParseTreeNode* node,
 		}
 		return;
 
-	case PT_SuspendStatement:
-		{
-			// Count blocks
-			int numBlocks = 0;
-			ParseTreeNode* blockNode = node->getChild(0);
-			if (blockNode)
-				numBlocks = ParseUtilities::countConstantArgumentList(blockNode);
-
-			ControllerDefinition* cDef = static_cast<ControllerDefinition*>(def);
-			int curNumBlocks = cDef->getMaxBlocks();
-
-			if (numBlocks > curNumBlocks)
-				cDef->setMaxBlocks(numBlocks);
-		}
-		return;
-
 	case PT_RaiseStatement:
 		{
 			// This will only be used by controllers.
@@ -1471,6 +1482,9 @@ void ParseTree::buildStates(ObjectDefinition* def, ParseTreeNode* node,
 			checkConstantExpression(def, CBT_ControllerState, stateInfo->name, node);
 		else
 			checkConstantExpression(def, CBT_EmitterState, stateInfo->name, node);
+		return;
+
+	default:
 		return;
 	}
 

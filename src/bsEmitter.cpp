@@ -26,7 +26,8 @@ Emitter::Emitter(ScriptMachine* machine) :
 // --------------------------------------------------------------------------------
 void Emitter::onRelease()
 {
-	BS_DELETE(mRecord);
+	mBlocks.clear();
+BS_DELETE(mRecord);
 	mRecord = 0;
 	mAnchorIndex = 0;
 	mUserObject = 0;
@@ -214,13 +215,47 @@ void* Emitter::getUserObject() const
 	return mUserObject;
 }
 // --------------------------------------------------------------------------------
-void Emitter::runScript(float frameTime)
+void Emitter::_runScript(float frameTime)
 {
 	// Either run the script or update the suspend time.
 	if (mRecord->scriptState.suspendTime <= 0)
 		mScriptMachine->processScriptRecord(mRecord, this, mUserObject);
 	else
 		mRecord->scriptState.suspendTime -= frameTime;
+}
+// --------------------------------------------------------------------------------
+void Emitter::reset()
+{
+	setState(0);
+}
+// --------------------------------------------------------------------------------
+void Emitter::addBlock(bstype block)
+{
+	mBlocks.push_back(block);
+}
+// --------------------------------------------------------------------------------
+void Emitter::signal(bstype block)
+{
+	// See if this Controller has any blocks of this value, and if it does, remove them.
+	std::list<bstype>::iterator it = mBlocks.begin();
+	while (it != mBlocks.end())
+	{
+		if (*it == block)
+		{
+			std::list<bstype>::iterator next = it; ++next;
+			mBlocks.erase(it);
+			it = next;
+		}
+		else
+		{
+			++it;
+		}
+	}
+}
+// --------------------------------------------------------------------------------
+void Emitter::resume()
+{
+	mRecord->scriptState.suspendTime = -1;
 }
 // --------------------------------------------------------------------------------
 void Emitter::update(float frameTime)
@@ -243,7 +278,7 @@ void Emitter::update(float frameTime)
 	}
 
 	// Once that's done, do some work on the Emitter itself.
-	runScript(frameTime);
+	_runScript(frameTime);
 }
 // --------------------------------------------------------------------------------
 

@@ -367,9 +367,13 @@ void Compiler::generateBytecode(ObjectDefinition* def, ParseTreeNode* node,
 				BytecodeBlock stateByteCode;
 				generateBytecode(def, node->getChild(1), &stateByteCode, codeType, codeInfo);
 
-				// Add a jump back to the start to loop
-				stateByteCode.push_back(BC_JUMP);
-				stateByteCode.push_back(0);
+				// Add a jump back to the start to loop if necessary.  For now, the integer has no use
+				// other than to signify that the state should not loop.
+				if (!node->getChild(2))
+				{
+					stateByteCode.push_back(BC_JUMP);
+					stateByteCode.push_back(0);
+				}
 
 				// Give to ScriptMachine
 				CodeRecord* rec = mTree->getCodeRecord(def->getType(), def->getName(), "State", stateName);
@@ -775,24 +779,48 @@ void Compiler::generateBytecode(ObjectDefinition* def, ParseTreeNode* node,
 			
 			if (numBlocks == 0)
 			{
-				if (nodeType == PT_SuspendStatement)
+				// Is it an emitter member?
+				if (node->getChild(1))
 				{
-					bytecode->push_back(BC_PUSH);
-					bytecode->push_back(BS_SUSPEND_FOREVER_TIME);
-					bytecode->push_back(BC_WAIT);
+					// Currently not supported
+					// ...
 				}
 				else
 				{
-					bytecode->push_back(BC_SIGNAL);
-					bytecode->push_back(0);
+					if (nodeType == PT_SuspendStatement)
+					{
+						bytecode->push_back(BC_PUSH);
+						bytecode->push_back(BS_SUSPEND_FOREVER_TIME);
+						bytecode->push_back(BC_WAIT);
+					}
+					else
+					{
+						bytecode->push_back(BC_SIGNAL);
+						bytecode->push_back(0);
+					}
 				}
 			}
 			else
 			{
-				if (nodeType == PT_SuspendStatement)
-					bytecode->push_back(BC_SUSPEND);
+				// Is it an emitter member?
+				if (node->getChild(1))
+				{
+					if (nodeType == PT_SuspendStatement)
+						bytecode->push_back(BC_SUSPENDM);
+					else
+						bytecode->push_back(BC_SIGNALM);
+
+					String varName = node->getChild(1)->getStringData();
+					int index = static_cast<ControllerDefinition*>(def)->getEmitterVariableIndex(varName);
+					bytecode->push_back(index);
+				}
 				else
-					bytecode->push_back(BC_SIGNAL);
+				{
+					if (nodeType == PT_SuspendStatement)
+						bytecode->push_back(BC_SUSPEND);
+					else
+						bytecode->push_back(BC_SIGNAL);
+				}
 
 				bytecode->push_back((uint32) numBlocks);
 				generateConstantArgumentList(blockNode, bytecode);
