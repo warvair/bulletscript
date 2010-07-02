@@ -7,8 +7,7 @@ namespace BS_NMSP
 // --------------------------------------------------------------------------------
 ControllerDefinition::ControllerDefinition(const String& name) :
 	ObjectDefinition(name, "Controller"),
-	mMaxEventLocals(0),
-	mMaxBlocks(0)
+	mMaxEventLocals(0)
 {
 }
 // --------------------------------------------------------------------------------
@@ -94,16 +93,6 @@ void ControllerDefinition::setMaxEventLocalVariables(int count)
 int ControllerDefinition::getMaxEventLocalVariables() const
 {
 	return mMaxEventLocals;
-}
-// --------------------------------------------------------------------------------
-void ControllerDefinition::setMaxBlocks(int count)
-{
-	mMaxBlocks = count;
-}
-// --------------------------------------------------------------------------------
-int ControllerDefinition::getMaxBlocks() const
-{
-	return mMaxBlocks;
 }
 // --------------------------------------------------------------------------------
 

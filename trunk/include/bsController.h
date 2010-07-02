@@ -265,6 +265,16 @@ namespace BS_NMSP
 		 */
 		void setEmitterMemberState(int emitter, int state);
 
+		/**	\brief Run an Emitter member's script.
+		 *	
+		 *	This is used for changing emitter members' states, after which their code must 
+		 *	be run immediately.
+		 *
+		 *	\param emitter index of the emitter instance.
+		 *	\param frameTime the time interval since last update, in seconds.
+		 */
+		void runEmitterMember(int emitter, float frameTime);
+
 		/**	\brief Triggers an event in the Controller.
 		 *	
 		 *	This function is for use by the user, hence the event is retrieved by name for convenience.
@@ -312,7 +322,7 @@ namespace BS_NMSP
 		 */
 		void resume();
 
-		/**	\brief Enables or disables the Emitter.
+		/**	\brief Enables or disables an Emitter.
 		 *	
 		 *	When disabled, an Emitter does no processing: its script state and member variables do not change.
 		 *	This function is for internal use.

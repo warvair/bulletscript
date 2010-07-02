@@ -143,20 +143,6 @@ namespace BS_NMSP
 		 */
 		int getMaxEventLocalVariables() const;
 		
-		/**	\brief Sets the maximum number of blocks that an event or state in this ControllerDefinition
-		 *	can specify.
-		 *	
-		 *	\param count maximum number of blocks.
-		 */
-		void setMaxBlocks(int count);
-
-		/**	\brief Gets the maximum number of blocks that an event or state in this ControllerDefinition
-		 *	can specify.
-		 *	
-		 *	\return maximum number of blocks.
-		 */
-		int getMaxBlocks() const;
-
 	private:
 
 		// Emitters & events
@@ -165,8 +151,6 @@ namespace BS_NMSP
 		std::vector<Event> mEvents;
 
 		int mMaxEventLocals;
-
-		int mMaxBlocks;
 		
 	};
 

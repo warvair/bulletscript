@@ -59,14 +59,14 @@ namespace BS_NMSP
 
 		ScriptMachine* mScriptMachine;
 
+		// Blocks
+		std::list<bstype> mBlocks;
+
+		// Script structures
 		ScriptRecord* mRecord;
 
 		// Weak pointer to user-supplied object.
 		void* mUserObject;
-
-	private:
-
-		void runScript(float frameTime);
 
 	public:
 
@@ -301,6 +301,44 @@ namespace BS_NMSP
 		 *	\param state index of the state.
 		 */
 		void setState(int state);
+
+		/**	\brief Reset the emitter to its initial state.
+		 *	
+		 *	This is the same as calling setState(0).
+		 */
+		void reset();
+
+		/**	\brief Internal method to run the Emitter's script
+		 *	
+		 *	\param frameTime the time interval since last update, in seconds.
+		 */
+		void _runScript(float frameTime);
+
+		/**	\brief Adds a block to the Emitter.
+		 *	
+		 *	Blocks are used to suspend an Emitter state, and only resume when the blocks have been signalled
+		 *	to it, via an event, or code.  This way states can wait upon multiple events before resuming.
+		 *	In the case that the block already exists, it is not added.
+		 *
+		 *	\param block the value to act as a block.
+		 */
+		void addBlock(bstype block);
+
+		/**	\brief Removes a block from the Emitter.
+		 *	
+		 *	if the specified block exists in the Emitter, it will be removed.  This function helps implement
+		 *	signal functionality in scripts, for pausing scripts upon events.
+		 *
+		 *	\param block the value to act as a block.
+		 */
+		void signal(bstype block);
+
+		/**	\brief Resumes the Emitter from a waiting state.
+		 *	
+		 *	This is used to implement signal functionality.  While signals are generally used to resume from
+		 *	a suspend, they will also resume a state if it is currently waiting.
+		 */
+		void resume();
 
 		/**	\brief Update the Emitter.
 		 *	
