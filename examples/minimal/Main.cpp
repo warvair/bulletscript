@@ -60,7 +60,7 @@ public:
 				// Assume that the bullet speed is passed in the first argument.
 				mBullets[i].speed = args[-1];
 
-				std::cout << "bullet emitted." << std::endl;
+				std::cout << "bullet emitted with " << args[-1] << "." << std::endl;
 				return &mBullets[i];
 			}
 		}
@@ -221,12 +221,13 @@ int main()
 	}
 	delete[] buffer;
 
-	// Create an emitter
-	bs::Emitter* emit = gMachine->createEmitter("Minimal", 0, 0, 0);
+	// Create a Controller
+	gMachine->createEmitter("Minimal", 0, 0, 0);
 
 	// Start processing
 	unsigned int timer = timeGetTime();
 	unsigned int lastTime = timer;
+
 	while (true)
 	{
 		timer = timeGetTime();

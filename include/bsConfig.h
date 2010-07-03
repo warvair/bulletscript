@@ -33,11 +33,6 @@ namespace BS_NMSP
 #define BS_DELETE(obj)					delete obj
 #define BS_DELETEA(obj)					delete[] obj
 
-// Wait time for suspend().  This is not the most elegant way of implementing suspend, but
-// it is the most efficient.  It is unlikely that the user will leave the program running for
-// more than 31.688 years.
-#define BS_SUSPEND_FOREVER_TIME			999999999
-
 // User-configurable defines.  Bulletscript uses hardcoded values for various features, in order to
 // remain as efficient as possible at runtime.  Such restraints are obviously not ideal, from the point 
 // of view of a language, but given the typical usage of the language, are unlikely to be an issue.

@@ -16,6 +16,7 @@ namespace BS_NMSP
 		BS_TreeLocked = -2,
 		BS_NotFound = -1,
 		BS_OK = 0,
+		BS_NoStates,
 		BS_BadEvent,
 		BS_PropertyExists,
 		BS_TooManyProperties,

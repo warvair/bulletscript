@@ -11,31 +11,32 @@
 
 namespace BS_NMSP
 {
-	// Node types
+	// Node types: insert any new types at the end!
+	// These values are carefully chosen to make parsing more efficient.
 	enum PT_NodeType
 	{
 		PT_Null,
 		PT_DefinitionList,
 		PT_ControllerDefinition,
+		PT_ControllerObjectList,
 		PT_EmitterDefinition,
-		PT_MemberList,
+		PT_EmitterObjectList,
+		// Emitter objects
 		PT_AffectorDeclList,
 		PT_AffectorDecl,
-		PT_AffectorCall,
-		PT_EmitterList,
-		PT_Emitter,
-		PT_EmitterArgList,
-		PT_FunctionList,
-		PT_Function,
-		PT_FunctionArg,
-		PT_FunctionArgList,
-		PT_ControllerList,
-		PT_EventList,
-		PT_Event,
-		PT_StateList,
-		PT_State,
+		PT_FunctionDeclList,
+		PT_FunctionDecl,
+		PT_StateDeclList,
+		PT_StateDecl,
+		PT_MemberDeclList,
+		PT_MemberDecl,
+		// Controller objects - including the previous state & member declaration
+		PT_EmitterMemberDeclList,
+		PT_EmitterMemberDecl,
+		PT_EventDeclList,
+		PT_EventDecl,
+		// Statements
 		PT_StatementList,
-		PT_Statement,
 		PT_IfStatement,
 		PT_AssignStatement,
 		PT_MemberAssignStatement,
@@ -51,7 +52,7 @@ namespace BS_NMSP
 		PT_EmitStatement,
 		PT_DieStatement,
 		PT_RaiseStatement,
-		PT_EnableStatement,
+		// Constant expression nodes
 		PT_ConstantExpression,
 		PT_LogicalOr,
 		PT_LogicalAnd,
@@ -69,13 +70,20 @@ namespace BS_NMSP
 		PT_UnaryPosStatement,
 		PT_UnaryNegStatement,
 		PT_FunctionCall,
-		PT_FunctionCallArg,
-		PT_FunctionCallArgList,
+		// Values/text
 		PT_Identifier,
 		PT_Property,
 		PT_Anchor,
 		PT_EmitterMember,
-		PT_Constant
+		PT_Constant,
+		// Misc
+		PT_FunctionCallArg,
+		PT_FunctionCallArgList,
+		PT_AffectorCall,
+		PT_ConstantList,
+		PT_FunctionArg,
+		PT_FunctionArgList,
+		PT_ControllerList
 	};
 
 	class ParseTree;

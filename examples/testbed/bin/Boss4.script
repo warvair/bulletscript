@@ -2,10 +2,10 @@ controller Boss4
 {
 	tracker = emitter Track(0, -66);
 	hell = emitter Hell(0, -66);
-	bomb1 = emitter SmartBomb(33, 14, 135);
-	bomb2 = emitter SmartBomb(-33, 14, 225);
-	arc1 = emitter AttackArc(51, 41);
-	arc2 = emitter AttackArc(-51, 41);
+//	bomb1 = emitter SmartBomb(33, 14, 135);
+//	bomb2 = emitter SmartBomb(-33, 14, 225);
+//	arc1 = emitter AttackArc(51, 41);
+//	arc2 = emitter AttackArc(-51, 41);
 
 	On50 = event()
 	{
@@ -14,15 +14,13 @@ controller Boss4
 
 	On25 = event()
 	{
-		disable $tracker;
-		enable $hell;
+		suspend $tracker;
+		signal $hell;
 	}
 
 	Setup = state
 	{
-		$arc1.m_dir = 1;
-		$arc2.m_dir = -1;
-		disable $hell;
+		suspend $hell;
 		goto Go;
 	}
 

@@ -14,6 +14,8 @@ String getErrorMessage(int code)
 		return "object not found";
 	case BS_OK:
 		return "no error";
+	case BS_NoStates:
+		return "no states found";
 	case BS_BadEvent:
 		return "event not found";
 	case BS_PropertyExists:

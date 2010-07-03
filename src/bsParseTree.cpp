@@ -170,8 +170,8 @@ bool ParseTree::checkConstantExpression(ObjectDefinition* def, CodeBlockType typ
 			// Make sure this returns something, unless it is at the root of the constant
 			// expression.
 			int grandParentType = node->getParent()->getParent()->getType();
-			if (grandParentType != PT_StatementList && grandParentType != PT_State &&
-				grandParentType != PT_Function && grandParentType != PT_Event &&
+			if (grandParentType != PT_StatementList && grandParentType != PT_StateDecl &&
+				grandParentType != PT_FunctionDecl && grandParentType != PT_EventDecl &&
 				!mScriptMachine->nativeFunctionReturnsValue(index))
 			{
 				// If we're not in a root node, then the function must return.
@@ -342,7 +342,7 @@ bool ParseTree::constantExpressionHasType(ParseTreeNode* node)
 // --------------------------------------------------------------------------------
 void ParseTree::createMemberVariables(ObjectDefinition* def, ParseTreeNode* node)
 {
-	if (node->getType() == PT_AssignStatement)
+	if (node->getType() == PT_MemberDecl)
 	{
 		String varName = node->getChild(0)->getStringData();
 
@@ -366,8 +366,9 @@ void ParseTree::createMemberVariables(ObjectDefinition* def, ParseTreeNode* node
 		{
 			String errMsg = getErrorMessage(errCode);
 			addError(node->getLine(), errMsg + ": " + def->getName() + "'.");
-			return;
 		}
+
+		return;
 	}
 
 	for (int i = 0; i < ParseTreeNode::MAX_CHILDREN; ++ i)
@@ -479,11 +480,8 @@ void ParseTree::createAffectors(EmitterDefinition* def, ParseTreeNode* node)
 
 			emitterInfo.affectors.push_back(info);
 		}
-		else
-		{
-			// Todo:
-			// ...
-		}
+
+		return;
 	}
 
 	for (int i = 0; i < ParseTreeNode::MAX_CHILDREN; ++ i)
@@ -495,7 +493,7 @@ void ParseTree::createAffectors(EmitterDefinition* def, ParseTreeNode* node)
 // --------------------------------------------------------------------------------
 void ParseTree::createEmitterVariables(ControllerDefinition* def, ParseTreeNode* node)
 {
-	if (node->getType() == PT_Emitter)
+	if (node->getType() == PT_EmitterMemberDecl)
 	{
 		String varName = node->getChild(0)->getStringData();
 
@@ -696,7 +694,7 @@ void ParseTree::addFunctionArguments(EmitterDefinition* def, ParseTreeNode* node
 // --------------------------------------------------------------------------------
 void ParseTree::addFunctions(EmitterDefinition* def, ParseTreeNode* node)
 {
-	if (node->getType() == PT_Function)
+	if (node->getType() == PT_FunctionDecl)
 	{
 		String funcName = node->getChild(0)->getStringData();
 		
@@ -715,6 +713,8 @@ void ParseTree::addFunctions(EmitterDefinition* def, ParseTreeNode* node)
 		// Get arguments
 		if (node->getChild(1))
 			addFunctionArguments(def, node->getChild(1), func);
+
+		return;
 	}
 
 	for (int i = 0; i < ParseTreeNode::MAX_CHILDREN; ++ i)
@@ -729,7 +729,7 @@ void ParseTree::buildFunctions(EmitterDefinition* def, ParseTreeNode* node,
 {
 	switch (node->getType())
 	{
-	case PT_Function:
+	case PT_FunctionDecl:
 		{
 			String funcName = node->getChild(0)->getStringData();
 			funcInfo = &(def->getFunction(def->getFunctionIndex(funcName))); // dodgy but will be ok here
@@ -852,7 +852,7 @@ void ParseTree::buildFunctions(EmitterDefinition* def, ParseTreeNode* node,
 					flowFound = true;
 					break;
 				}
-				else if (nodeType == PT_Function)
+				else if (nodeType == PT_FunctionDecl)
 				{
 					break;
 				}
@@ -910,7 +910,7 @@ void ParseTree::addEventArguments(ControllerDefinition* def, ParseTreeNode* node
 // --------------------------------------------------------------------------------
 void ParseTree::addEvents(ControllerDefinition* def, ParseTreeNode* node)
 {
-	if (node->getType() == PT_Event)
+	if (node->getType() == PT_EventDecl)
 	{
 		String evtName = node->getChild(0)->getStringData();
 		
@@ -943,7 +943,7 @@ void ParseTree::buildEvents(ControllerDefinition* def, ParseTreeNode* node,
 {
 	switch (node->getType())
 	{
-	case PT_Event:
+	case PT_EventDecl:
 		{
 			String evtName = node->getChild(0)->getStringData();
 			eventInfo = &(def->getEvent(def->getEventIndex(evtName))); // dodgy but will be ok here
@@ -1032,19 +1032,8 @@ void ParseTree::buildEvents(ControllerDefinition* def, ParseTreeNode* node,
 
 	case PT_SuspendStatement:
 		{
-			// If it's a member suspend, check that member exists
-			// Issue is that on a simple suspend, need to set the emitter to wait,
-			// or come up with new method for indefinite suspension.
-			// We can't use an indefinite wait, because the emitter will probably be waiting anyway,
-			// and this would overwrite the wait time.  This is a bug in the current implementation for
-			// Controllers.
-
-			// Use enable/disable, rename members to mSuspended, and set when suspended.
 			if (node->getChild(1))
 			{
-				addError(node->getLine(), "Emitter suspend currently not supported.");
-				return;
-
 				String emitName = node->getChild(1)->getStringData();
 				int emitIndex = def->getEmitterVariableIndex(emitName);
 				if (emitIndex == BS_NotFound)
@@ -1058,9 +1047,6 @@ void ParseTree::buildEvents(ControllerDefinition* def, ParseTreeNode* node,
 			// If it's a member signal, check that member exists
 			if (node->getChild(1))
 			{
-				addError(node->getLine(), "Emitter signal currently not supported.");
-				return;
-
 				String emitName = node->getChild(1)->getStringData();
 				int emitIndex = def->getEmitterVariableIndex(emitName);
 				if (emitIndex == BS_NotFound)
@@ -1133,14 +1119,6 @@ void ParseTree::buildEvents(ControllerDefinition* def, ParseTreeNode* node,
 		}
 		return;
 
-	case PT_EnableStatement:
-		{
-			String varName = node->getChild(0)->getStringData();
-			if (def->getEmitterVariableIndex(varName) == BS_NotFound)
-				addError(node->getLine(), "Emitter variable '" + varName + "' is not declared.");
-		}
-		return;
-
 	case PT_BreakStatement:
 	case PT_ContinueStatement:
 		{
@@ -1155,7 +1133,7 @@ void ParseTree::buildEvents(ControllerDefinition* def, ParseTreeNode* node,
 					flowFound = true;
 					break;
 				}
-				else if (nodeType == PT_State)
+				else if (nodeType == PT_StateDecl)
 				{
 					break;
 				}
@@ -1175,7 +1153,7 @@ void ParseTree::buildEvents(ControllerDefinition* def, ParseTreeNode* node,
 		return;
 
 	default:
-		return;
+		break;
 	}
 
 	for (int i = 0; i < ParseTreeNode::MAX_CHILDREN; ++ i)
@@ -1187,7 +1165,7 @@ void ParseTree::buildEvents(ControllerDefinition* def, ParseTreeNode* node,
 // --------------------------------------------------------------------------------
 void ParseTree::addStates(ObjectDefinition* def, ParseTreeNode* node)
 {
-	if (node->getType() == PT_State)
+	if (node->getType() == PT_StateDecl)
 	{
 		String stateName = node->getChild(0)->getStringData();
 		
@@ -1214,10 +1192,9 @@ void ParseTree::addStates(ObjectDefinition* def, ParseTreeNode* node)
 void ParseTree::buildStates(ObjectDefinition* def, ParseTreeNode* node,
 							ObjectDefinition::State* stateInfo)
 {
-
 	switch (node->getType())
 	{
-	case PT_State:
+	case PT_StateDecl:
 		{
 			String stateName = node->getChild(0)->getStringData();
 			stateInfo = &(def->getState(def->getStateIndex(stateName)));
@@ -1439,15 +1416,6 @@ void ParseTree::buildStates(ObjectDefinition* def, ParseTreeNode* node,
 		}
 		return;
 
-	case PT_EnableStatement:
-		{
-			String varName = node->getChild(0)->getStringData();
-			ControllerDefinition* cDef = static_cast<ControllerDefinition*>(def);
-			if (cDef->getEmitterVariableIndex(varName) == BS_NotFound)
-				addError(node->getLine(), "Emitter variable '" + varName + "' is not declared.");
-		}
-		return;
-
 	case PT_BreakStatement:
 	case PT_ContinueStatement:
 		{
@@ -1462,7 +1430,7 @@ void ParseTree::buildStates(ObjectDefinition* def, ParseTreeNode* node,
 					flowFound = true;
 					break;
 				}
-				else if (nodeType == PT_State)
+				else if (nodeType == PT_StateDecl)
 				{
 					break;
 				}
@@ -1485,7 +1453,7 @@ void ParseTree::buildStates(ObjectDefinition* def, ParseTreeNode* node,
 		return;
 
 	default:
-		return;
+		break;
 	}
 
 	for (int i = 0; i < ParseTreeNode::MAX_CHILDREN; ++ i)
@@ -1629,6 +1597,13 @@ EmitterDefinition* ParseTree::createEmitterDefinition(ParseTreeNode* node)
 	{
 		addStates(def, statesNode);
 
+		// Make sure we have at least one state
+		if (def->getNumStates() == 0)
+		{
+			String errMsg = getErrorMessage(BS_NoStates);
+			addError(node->getLine(), errMsg + ": emitter '" + def->getName() + "'.");
+		}
+
 		if (mNumErrors > 0)
 		{
 			delete def;
@@ -1707,7 +1682,7 @@ ControllerDefinition* ParseTree::createControllerDefinition(ParseTreeNode* node,
 	}
 
 	// Now check emitter variables
-	ParseTreeNode* emittersNode =  node->getChild(PT_ControllerEmitterNode);
+	ParseTreeNode* emittersNode = node->getChild(PT_ControllerEmitterNode);
 	if (emittersNode)
 	{
 		createEmitterVariables(def, emittersNode);
@@ -1724,6 +1699,13 @@ ControllerDefinition* ParseTree::createControllerDefinition(ParseTreeNode* node,
 	ParseTreeNode* statesNode = node->getChild(PT_EmitterStateNode);
 	{
 		addStates(def, statesNode);
+
+		// Make sure we have at least one state
+		if (def->getNumStates() == 0)
+		{
+			String errMsg = getErrorMessage(BS_NoStates);
+			addError(node->getLine(), errMsg + ": controller '" + def->getName() + "'.");
+		}
 
 		if (mNumErrors > 0)
 		{
@@ -1895,22 +1877,25 @@ void ParseTree::print(ParseTreeNode* node, int indent)
 	switch(node->getType())
 	{
 	case PT_EmitterDefinition:
-		std::cerr << "emitter"; break;
+		std::cerr << "emitter: " << node->getStringData(); break;
 
 	case PT_ControllerDefinition:
 		std::cerr << "controller"; break;
 
-	case PT_Function:
+	case PT_MemberDeclList:
+		std::cerr << "member list"; break;
+
+	case PT_MemberDecl:
+		std::cerr << "member declaration"; break;
+
+	case PT_FunctionDecl:
 		std::cerr << "function"; break;
 
-	case PT_Event:
+	case PT_EventDecl:
 		std::cerr << "event"; break;
 
-	case PT_State:
+	case PT_StateDecl:
 		std::cerr << "state"; break;
-
-	case PT_Statement:
-		std::cerr << "statement"; break;
 
 	case PT_StatementList:
 		std::cerr << "statement list"; break;
@@ -1966,11 +1951,32 @@ void ParseTree::print(ParseTreeNode* node, int indent)
 	case PT_UnaryNegStatement:
 		std::cerr << "u-"; break;
 
+	case PT_WhileStatement:
+		std::cerr << "while"; break;
+
+	case PT_ForStatement:
+		std::cerr << "for"; break;
+
+	case PT_IfStatement:
+		std::cerr << "if"; break;
+
+	case PT_BreakStatement:
+		std::cerr << "break"; break;
+
+	case PT_ContinueStatement:
+		std::cerr << "continue"; break;
+
+	case PT_GotoStatement:
+		std::cerr << "goto"; break;
+
 	case PT_EmitStatement:
 		std::cerr << "emit statement"; break;
 
 	case PT_WaitStatement:
 		std::cerr << "wait"; break;
+
+	case PT_SetStatement:
+		std::cerr << "set property"; break;
 
 	case PT_FunctionCall:
 		std::cerr << "function"; break;
@@ -1980,6 +1986,12 @@ void ParseTree::print(ParseTreeNode* node, int indent)
 
 	case PT_FunctionCallArgList:
 		std::cerr << "argument list"; break;
+
+	case PT_FunctionArg:
+		std::cerr << "argument prototype"; break;
+
+	case PT_FunctionArgList:
+		std::cerr << "argument prototype list"; break;
 
 	case PT_Identifier:
 	case PT_Property:

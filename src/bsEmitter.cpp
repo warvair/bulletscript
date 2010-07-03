@@ -7,7 +7,7 @@ namespace BS_NMSP
 
 // --------------------------------------------------------------------------------
 Emitter::Emitter(ScriptMachine* machine) :
-	mEnabled(true),
+	mSuspended(false),
 	mAnchorIndex(0),
 	mLastAnchorIndex(0),
 	mActiveControllers(0),
@@ -66,16 +66,6 @@ void Emitter::setDefinition(EmitterDefinition* def, bstype x, bstype y, bstype z
 	mAnchorIndex = mLastAnchorIndex;
 
 	mNumUserMembers = def->getNumMemberVariables() - NUM_SPECIAL_MEMBERS;
-}
-// --------------------------------------------------------------------------------
-void Emitter::enable(bool enable)
-{
-	mEnabled = enable;
-}
-// --------------------------------------------------------------------------------
-bool Emitter::isEnabled() const
-{
-	return mEnabled;
 }
 // --------------------------------------------------------------------------------
 void Emitter::setX(bstype x)
@@ -215,26 +205,28 @@ void* Emitter::getUserObject() const
 	return mUserObject;
 }
 // --------------------------------------------------------------------------------
-void Emitter::_runScript(float frameTime)
-{
-	// Either run the script or update the suspend time.
-	if (mRecord->scriptState.suspendTime <= 0)
-		mScriptMachine->processScriptRecord(mRecord, this, mUserObject);
-	else
-		mRecord->scriptState.suspendTime -= frameTime;
-}
-// --------------------------------------------------------------------------------
 void Emitter::reset()
 {
 	setState(0);
 }
 // --------------------------------------------------------------------------------
+void Emitter::suspend(bool suspend)
+{
+	mSuspended = suspend;
+}
+// --------------------------------------------------------------------------------
+bool Emitter::isSuspended() const
+{
+	return mSuspended;
+}
+// --------------------------------------------------------------------------------
 void Emitter::addBlock(bstype block)
 {
 	mBlocks.push_back(block);
+	mSuspended = true;
 }
 // --------------------------------------------------------------------------------
-void Emitter::signal(bstype block)
+void Emitter::removeBlock(bstype block)
 {
 	// See if this Controller has any blocks of this value, and if it does, remove them.
 	std::list<bstype>::iterator it = mBlocks.begin();
@@ -251,16 +243,22 @@ void Emitter::signal(bstype block)
 			++it;
 		}
 	}
+
+	mSuspended = !mBlocks.empty();
 }
 // --------------------------------------------------------------------------------
-void Emitter::resume()
+void Emitter::_runScript(float frameTime)
 {
-	mRecord->scriptState.suspendTime = -1;
+	// Either run the script or update the suspend time.
+	if (mRecord->scriptState.suspendTime <= 0)
+		mScriptMachine->processScriptRecord(mRecord, this, mUserObject);
+	else
+		mRecord->scriptState.suspendTime -= frameTime;
 }
 // --------------------------------------------------------------------------------
 void Emitter::update(float frameTime)
 {
-	if (!mEnabled)
+	if (mSuspended)
 		return;
 
 	// Update user MemberControllers.

@@ -1,9 +1,33 @@
+/*
+controller Ctrl
+{
+	e = emitter Minimal(0, 0, 0);
+
+	Go = state
+	{
+		wait(4);
+		suspend $e;
+
+		wait(4);
+		signal $e;
+	}
+}
+*/
+
 emitter Minimal
 {
+	A = 1;
+	B = 2;
+	C = 3;
 
-	Emit = state
+	S1 = state
 	{
-		emit bullet(100);
-		wait(2);
+		emit bullet(1);
+		wait(1);
+	}
+
+	S2 = state
+	{
+		wait(0.5);
 	}
 }
