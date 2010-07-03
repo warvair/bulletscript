@@ -1,34 +1,17 @@
 controller Boss1
 {
 	// emitters - all these values are offsets from controller values
-//	central = emitter Boss1Gun0(0, -20);
-
 	innerl = emitter Boss1Gun1(-26, -43, 177);
 	innerr = emitter Boss1Gun1( 26, -43, 183);
-
-//	outerl = emitter Boss1Gun1(-75, -40, 177);
-//	outerr = emitter Boss1Gun1( 75, -40, 183);
-
-//	sidel = emitter Boss1Gun2(-109, -29, 210);
-//	sider = emitter Boss1Gun2( 109, -29, 150);
 
 	// states
 	Setup = state
 	{
 		// mirror emitters
-
 		$innerl.m_curl = 10;
 		$innerl.m_dir = 1;
 		$innerr.m_curl = 10;
 		$innerr.m_dir = -1;
-/*
-		$outerl.m_curl = 20;
-		$outerl.m_dir = 1;
-		$outerr.m_curl = 20;
-		$outerr.m_dir = -1;
-
-		$sider.m_dir = -1;
-*/
 		goto Stage1;
 	}
 

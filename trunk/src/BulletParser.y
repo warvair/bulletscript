@@ -14,7 +14,7 @@ int yylex (void);
 extern char *yytext;
 extern int yylineno;
 
-static ParseTree* AST = ParseTree::instancePtr ();
+static ParseTree* AST = ParseTree::instancePtr();
 
 static const String gs_tokens[] = {
 	"KEYWORD_CONTROLLER",				"controller",
@@ -24,8 +24,6 @@ static const String gs_tokens[] = {
 	"KEYWORD_STATE",					"state",
 	"KEYWORD_EVENT",					"event",
 	"KEYWORD_RAISE",					"raise",
-	"KEYWORD_ENABLE",					"enable",
-	"KEYWORD_DISABLE",					"disable",
 	"KEYWORD_WHILE",					"while",
 	"KEYWORD_FOR",						"for",
 	"KEYWORD_BREAK",					"break",
@@ -56,7 +54,7 @@ static const String gs_tokens[] = {
 
 void replaceVerboseTokens(String& a_string)
 {
-	for (int i = 0; i < 70; i += 2)
+	for (int i = 0; i < 66; i += 2)
 	{
 		int startPos = (int) a_string.find(gs_tokens[i]);
 		if (startPos < 0)
@@ -68,7 +66,7 @@ void replaceVerboseTokens(String& a_string)
 	}
 }
 
-void yyerror (char *a_msg)
+void yyerror(char* a_msg)
 {
 	String msgString = a_msg;
 	replaceVerboseTokens(msgString);
@@ -76,49 +74,92 @@ void yyerror (char *a_msg)
 	AST->addError(yylineno, msgString);
 }
 
-void generate_affector_list(YYSTYPE parentNode, YYSTYPE affNode)
+void rearrange_emitter_objects(YYSTYPE rootNode, YYSTYPE objNode)
 {
-	if (affNode->getType() == PT_AffectorDecl)
+	if (!objNode)
+		return;
+		
+	// Go through objNode, and add any members, affectors, functions and states
+	// to the list on the correct child node of rootNode
+	int nodeType = objNode->getType();
+	
+	int rootChildren[] = {PT_EmitterAffectorNode, PT_EmitterFunctionNode, 
+		PT_EmitterStateNode, PT_EmitterMemberNode};
+		
+	if (nodeType == PT_MemberDecl || nodeType == PT_AffectorDecl ||
+		nodeType == PT_FunctionDecl || nodeType == PT_StateDecl)
 	{
-		// Create a PT_AffectorDeclList and make affNode the child of it.
-		YYSTYPE newChild = AST->createNode(PT_AffectorDeclList, affNode->getLine());
-		newChild->setChild(0, affNode);
-		parentNode->setChild(PT_EmitterAffectorNode, newChild);
+		int rootNodeType = rootChildren[(nodeType - PT_AffectorDecl) / 2];
+		int declNodeType = nodeType - 1;
+		
+		YYSTYPE subNode = rootNode->getChild(rootNodeType);
+		
+		if (!subNode)
+		{
+			rootNode->setChild(rootNodeType, objNode);
+		}
+		else
+		{
+			YYSTYPE curNode = subNode;
+			subNode = AST->createNode(declNodeType, objNode->getLine());
+			subNode->setChild(0, curNode);
+			
+			YYSTYPE newNode = AST->createNode(declNodeType, objNode->getLine());
+			subNode->setChild(1, newNode);
+			newNode->setChild(0, objNode);
+			
+			rootNode->setChild(rootNodeType, subNode);
+		}
+		
+		return;
 	}
-	else
-	{
-		parentNode->setChild(PT_EmitterAffectorNode, affNode);
-	}
+	
+	for (int i = 0; i < ParseTreeNode::MAX_CHILDREN; ++i)
+		rearrange_emitter_objects(rootNode, objNode->getChild(i));
 }
 
-void generate_member_list(YYSTYPE parentNode, YYSTYPE memNode, int nodeId)
+void rearrange_controller_objects(YYSTYPE rootNode, YYSTYPE objNode)
 {
-	if (memNode->getType() == PT_AssignStatement)
-	{
-		// Create a PT_MemberList and make memNode the child of it.
-		YYSTYPE newChild = AST->createNode(PT_MemberList, memNode->getLine());
-		newChild->setChild(0, memNode);
-		parentNode->setChild(nodeId, newChild);
-	}
-	else
-	{
-		parentNode->setChild(nodeId, memNode);
-	}
-}
+	if (!objNode)
+		return;
 
-void generate_emitter_list(YYSTYPE parentNode, YYSTYPE emitNode)
-{
-	if (emitNode->getType() == PT_Emitter)
+	// Go through objNode, and add any members, emitter members, events and states
+	// to the list on the correct child node of rootNode
+	int nodeType = objNode->getType();
+	
+	int rootChildren[] = {PT_ControllerStateNode, PT_ControllerMemberNode, 
+		PT_ControllerEmitterNode, PT_ControllerEventNode};
+		
+	if (nodeType == PT_MemberDecl || nodeType == PT_StateDecl ||
+		nodeType == PT_EventDecl || nodeType == PT_EmitterMemberDecl)
 	{
-		// Create a PT_EmitterList and make emitNode the child of it.
-		YYSTYPE newChild = AST->createNode(PT_EmitterList, emitNode->getLine());
-		newChild->setChild(0, emitNode);
-		parentNode->setChild(PT_ControllerEmitterNode, newChild);
+		int rootNodeType = rootChildren[(nodeType - PT_StateDecl) / 2];
+		int declNodeType = nodeType - 1;
+		
+		YYSTYPE subNode = rootNode->getChild(rootNodeType);
+		
+		if (!subNode)
+		{
+			rootNode->setChild(rootNodeType, objNode);
+		}
+		else
+		{
+			YYSTYPE curNode = subNode;
+			subNode = AST->createNode(declNodeType, objNode->getLine());
+			subNode->setChild(0, curNode);
+			
+			YYSTYPE newNode = AST->createNode(declNodeType, objNode->getLine());
+			subNode->setChild(1, newNode);
+			newNode->setChild(0, objNode);
+			
+			rootNode->setChild(rootNodeType, subNode);
+		}
+		
+		return;
 	}
-	else
-	{
-		parentNode->setChild(PT_EmitterAffectorNode, emitNode);
-	}
+	
+	for (int i = 0; i < ParseTreeNode::MAX_CHILDREN; ++i)
+		rearrange_controller_objects(rootNode, objNode->getChild(i));
 }
 
 void generate_assignment_expr(int nodeType, int idType, YYSTYPE parentNode, YYSTYPE idNode, YYSTYPE exprNode)
@@ -188,8 +229,6 @@ void generate_inc_expr(int value, int nodeType, YYSTYPE parentNode, YYSTYPE idNo
 %token KEYWORD_STATE
 %token KEYWORD_EVENT
 %token KEYWORD_RAISE
-%token KEYWORD_ENABLE
-%token KEYWORD_DISABLE
 %token KEYWORD_WHILE
 %token KEYWORD_FOR
 %token KEYWORD_BREAK
@@ -252,213 +291,101 @@ definition
 	;
 
 emitter_definition
-	: KEYWORD_EMITTER identifier '{' emitter_state_list '}'
-		{
-			$$ = AST->createNode(PT_EmitterDefinition, yylineno);
-			$$->setString($2->getStringData().c_str());
-			delete $2;
-
-			$$->setChild(PT_EmitterMemberNode, 0);
-			$$->setChild(PT_EmitterAffectorNode, 0);
-			$$->setChild(PT_EmitterFunctionNode, 0);
-			$$->setChild(PT_EmitterStateNode, $4);
-		}		
-	| KEYWORD_EMITTER identifier '{' function_list emitter_state_list '}'
-		{
-			$$ = AST->createNode(PT_EmitterDefinition, yylineno);
-			$$->setString($2->getStringData().c_str());			
-			delete $2;
-			
-			$$->setChild(PT_EmitterMemberNode, 0);
-			$$->setChild(PT_EmitterAffectorNode, 0);
-			$$->setChild(PT_EmitterFunctionNode, $4);
-			$$->setChild(PT_EmitterStateNode, $5);
-		}		
-	| KEYWORD_EMITTER identifier '{' affector_list emitter_state_list '}'
-		{
-			$$ = AST->createNode(PT_EmitterDefinition, yylineno);
-			$$->setString($2->getStringData().c_str());			
-			delete $2;
-			
-			generate_affector_list($$, $4);
-			$$->setChild(PT_EmitterMemberNode, 0);
-			$$->setChild(PT_EmitterFunctionNode, 0);
-			$$->setChild(PT_EmitterStateNode, $5);
-		}		
-	| KEYWORD_EMITTER identifier '{' affector_list function_list emitter_state_list '}'
-		{
-			$$ = AST->createNode(PT_EmitterDefinition, yylineno);
-			$$->setString($2->getStringData().c_str());			
-			delete $2;
-			
-			generate_affector_list($$, $4);
-			$$->setChild(PT_EmitterMemberNode, 0);
-			$$->setChild(PT_EmitterFunctionNode, $5);
-			$$->setChild(PT_EmitterStateNode, $6);
-		}		
-	| KEYWORD_EMITTER identifier '{' member_list emitter_state_list '}'
-		{
-			$$ = AST->createNode(PT_EmitterDefinition, yylineno);
-			$$->setString($2->getStringData().c_str());			
-			delete $2;
-			
-			generate_member_list($$, $4, PT_EmitterMemberNode);
-			$$->setChild(PT_EmitterAffectorNode, 0);
-			$$->setChild(PT_EmitterFunctionNode, 0);
-			$$->setChild(PT_EmitterStateNode, $5);
-		}		
-	| KEYWORD_EMITTER identifier '{' member_list function_list emitter_state_list '}'
+	: KEYWORD_EMITTER identifier '{' emitter_object_declaration_list '}'
 		{
 			$$ = AST->createNode(PT_EmitterDefinition, yylineno);
 			$$->setString($2->getStringData().c_str());			
 			delete $2;
 
-			generate_member_list($$, $4, PT_EmitterMemberNode);
-			$$->setChild(PT_EmitterAffectorNode, 0);
-			$$->setChild(PT_EmitterFunctionNode, $5);
-			$$->setChild(PT_EmitterStateNode, $6);
-		}		
-	| KEYWORD_EMITTER identifier '{' member_list affector_list emitter_state_list '}'
-		{
-			$$ = AST->createNode(PT_EmitterDefinition, yylineno);
-			$$->setString($2->getStringData().c_str());			
-			delete $2;
-			
-			generate_member_list($$, $4, PT_EmitterMemberNode);
-			generate_affector_list($$, $5);
-			$$->setChild(PT_EmitterFunctionNode, 0);
-			$$->setChild(PT_EmitterStateNode, $6);
-		}		
-	| KEYWORD_EMITTER identifier '{' member_list affector_list function_list emitter_state_list '}'
-		{
-			$$ = AST->createNode(PT_EmitterDefinition, yylineno);
-			$$->setString($2->getStringData().c_str());			
-			delete $2;
-
-			generate_member_list($$, $4, PT_EmitterMemberNode);
-			generate_affector_list($$, $5);
-			$$->setChild(PT_EmitterFunctionNode, $6);
-			$$->setChild(PT_EmitterStateNode, $7);
-		}		
+			// Now rearrange members, affectors, functions and states into correct nodes.
+			rearrange_emitter_objects($$, $4);
+		}
 	;
+	
+emitter_object_declaration 
+	: member_declaration
+		{
+			$$ = $1;
+		}
+	| affector_declaration
+		{
+			$$ = $1;
+		}
+	| function
+		{
+			$$ = $1;
+		}
+	| emitter_state
+		{
+			$$ = $1;
+		}
+	;
+	
+emitter_object_declaration_list
+	: emitter_object_declaration
+		{
+			$$ = $1;
+		}
+	| emitter_object_declaration_list emitter_object_declaration
+		{
+			$$ = AST->createNode(PT_EmitterObjectList, yylineno);
+			$$->setChild(0, $1);
+			$$->setChild(1, $2);
+		}
+	;	
 	
 controller_definition
-	: KEYWORD_CONTROLLER identifier '{' controller_state_list '}'
+	: KEYWORD_CONTROLLER identifier '{' controller_object_declaration_list '}'
 		{
 			$$ = AST->createNode(PT_ControllerDefinition, yylineno);
 			$$->setString($2->getStringData().c_str());
 			delete $2;
 
-			$$->setChild(PT_ControllerMemberNode, 0);
-			$$->setChild(PT_ControllerEmitterNode, 0);
-			$$->setChild(PT_ControllerEventNode, 0);
-			$$->setChild(PT_ControllerStateNode, $4);
+			// Now rearrange members, affectors, functions and states into correct nodes.
+			rearrange_controller_objects($$, $4);
 		}		
-	| KEYWORD_CONTROLLER identifier '{' event_list controller_state_list '}'
-		{
-			$$ = AST->createNode(PT_ControllerDefinition, yylineno);
-			$$->setString($2->getStringData().c_str());			
-			delete $2;
-			
-			$$->setChild(PT_ControllerMemberNode, 0);
-			$$->setChild(PT_ControllerEmitterNode, 0);
-			$$->setChild(PT_ControllerEventNode, $4);
-			$$->setChild(PT_ControllerStateNode, $5);
-		}		
-	| KEYWORD_CONTROLLER identifier '{' emitter_list controller_state_list '}'
-		{
-			$$ = AST->createNode(PT_ControllerDefinition, yylineno);
-			$$->setString($2->getStringData().c_str());			
-			delete $2;
-			
-			generate_emitter_list($$, $4);
-			$$->setChild(PT_ControllerMemberNode, 0);
-			$$->setChild(PT_ControllerEventNode, 0);
-			$$->setChild(PT_ControllerStateNode, $5);
-		}		
-	| KEYWORD_CONTROLLER identifier '{' emitter_list event_list controller_state_list '}'
-		{
-			$$ = AST->createNode(PT_ControllerDefinition, yylineno);
-			$$->setString($2->getStringData().c_str());			
-			delete $2;
-			
-			generate_emitter_list($$, $4);
-			$$->setChild(PT_ControllerMemberNode, 0);
-			$$->setChild(PT_ControllerEventNode, $5);
-			$$->setChild(PT_ControllerStateNode, $6);
-		}		
-	| KEYWORD_CONTROLLER identifier '{' member_list controller_state_list '}'
-		{
-			$$ = AST->createNode(PT_ControllerDefinition, yylineno);
-			$$->setString($2->getStringData().c_str());
-			delete $2;
-
-			generate_member_list($$, $4, PT_ControllerMemberNode);
-			$$->setChild(PT_ControllerEmitterNode, 0);
-			$$->setChild(PT_ControllerEventNode, 0);
-			$$->setChild(PT_ControllerStateNode, $5);
-		}		
-	| KEYWORD_CONTROLLER identifier '{' member_list event_list controller_state_list '}'
-		{
-			$$ = AST->createNode(PT_ControllerDefinition, yylineno);
-			$$->setString($2->getStringData().c_str());			
-			delete $2;
-			
-			generate_member_list($$, $4, PT_ControllerMemberNode);
-			$$->setChild(PT_ControllerEmitterNode, 0);
-			$$->setChild(PT_ControllerEventNode, $5);
-			$$->setChild(PT_ControllerStateNode, $6);
-		}		
-	| KEYWORD_CONTROLLER identifier '{' member_list emitter_list controller_state_list '}'
-		{
-			$$ = AST->createNode(PT_ControllerDefinition, yylineno);
-			$$->setString($2->getStringData().c_str());			
-			delete $2;
-			
-			generate_member_list($$, $4, PT_ControllerMemberNode);
-			generate_emitter_list($$, $5);
-			$$->setChild(PT_ControllerEventNode, 0);
-			$$->setChild(PT_ControllerStateNode, $6);
-		}		
-	| KEYWORD_CONTROLLER identifier '{' member_list emitter_list event_list controller_state_list '}'
-		{
-			$$ = AST->createNode(PT_ControllerDefinition, yylineno);
-			$$->setString($2->getStringData().c_str());			
-			delete $2;
-			
-			generate_member_list($$, $4, PT_ControllerMemberNode);
-			generate_emitter_list($$, $5);
-			$$->setChild(PT_ControllerEventNode, $6);
-			$$->setChild(PT_ControllerStateNode, $7);
-		}			
 	;
 	
-member_list
+controller_object_declaration 
+	: member_declaration
+		{
+			$$ = $1;
+		}
+	| emitter_member_declaration
+		{
+			$$ = $1;
+		}
+	| event
+		{
+			$$ = $1;
+		}
+	| controller_state
+		{
+			$$ = $1;
+		}
+	;
+	
+controller_object_declaration_list
+	: controller_object_declaration
+		{
+			$$ = $1;
+		}
+	| controller_object_declaration_list controller_object_declaration
+		{
+			$$ = AST->createNode(PT_ControllerObjectList, yylineno);
+			$$->setChild(0, $1);
+			$$->setChild(1, $2);
+		}
+	;	
+		
+member_declaration
 	: simple_assignment_statement
 		{
 			$$ = $1;
-		}
-	| member_list simple_assignment_statement
-		{
-			$$ = AST->createNode(PT_MemberList, yylineno);
-			$$->setChild(0, $1);
-			$$->setChild(1, $2);
+			$$->_setType(PT_MemberDecl);
 		}
 	;
-	
-affector_list
-	: affector_declaration
-		{
-			$$ = $1;
-		}
-	| affector_list affector_declaration
-		{
-			$$ = AST->createNode(PT_AffectorDeclList, yylineno);
-			$$->setChild(0, $1);
-			$$->setChild(1, $2);
-		}
-	;
-	
+
 affector_declaration
 	: identifier '=' KEYWORD_AFFECTOR function_call ';'
 		{
@@ -467,66 +394,53 @@ affector_declaration
 			$$->setChild(1, $4);
 		}
 	;
-	
-emitter_list
-	: emitter
-		{
-			$$ = $1;
-		}
-	| emitter_list emitter
-		{
-			$$ = AST->createNode(PT_EmitterList, yylineno);
-			$$->setChild(0, $1);
-			$$->setChild(1, $2);
-		}
-	;
 			
-emitter
+emitter_member_declaration
 	: identifier '=' KEYWORD_EMITTER identifier ';'
 		{
-			$$ = AST->createNode(PT_Emitter, yylineno);
+			$$ = AST->createNode(PT_EmitterMemberDecl, yylineno);
 			$$->setChild(0, $1);
 			$$->setChild(1, $4);
 		}
-	| identifier '=' KEYWORD_EMITTER identifier '(' constant_arg_list ')' ';'
+	| identifier '=' KEYWORD_EMITTER identifier '(' signed_constant_arg_list ')' ';'
 		{
-			$$ = AST->createNode(PT_Emitter, yylineno);
+			$$ = AST->createNode(PT_EmitterMemberDecl, yylineno);
 			$$->setChild(0, $1);
 			$$->setChild(1, $4);
 			$$->setChild(2, $6);
 		}
 	;
 	
-constant_arg_list
+signed_constant_arg_list
 	: signed_constant
 		{
 			$$ = $1;
 		}
-	| constant_arg_list ',' signed_constant
+	| signed_constant_arg_list ',' signed_constant
 		{
-			$$ = AST->createNode(PT_EmitterArgList, yylineno);
+			$$ = AST->createNode(PT_ConstantList, yylineno);
 			$$->setChild(0, $1);
 			$$->setChild(1, $3);
 		}
 	;
 	
-function_list
-	: function
+unsigned_constant_arg_list
+	: unsigned_constant
 		{
 			$$ = $1;
 		}
-	| function_list function
+	| unsigned_constant_arg_list ',' unsigned_constant
 		{
-			$$ = AST->createNode(PT_FunctionList, yylineno);
+			$$ = AST->createNode(PT_ConstantList, yylineno);
 			$$->setChild(0, $1);
-			$$->setChild(1, $2);
+			$$->setChild(1, $3);
 		}
 	;
 	
 function
 	: identifier '=' KEYWORD_FUNCTION function_arguments function_compound_statement
 		{
-			$$ = AST->createNode(PT_Function, yylineno);
+			$$ = AST->createNode(PT_FunctionDecl, yylineno);
 			$$->setChild(0, $1);
 			$$->setChild(1, $4);
 			$$->setChild(2, $5);
@@ -561,82 +475,42 @@ argument_list
 		}
 	;
 	
-event_list
-	: event
-		{
-			$$ = $1;
-		}
-	| event_list event
-		{
-			$$ = AST->createNode(PT_EventList, yylineno);
-			$$->setChild(0, $1);
-			$$->setChild(1, $2);
-		}			
-	;
-	
 event
 	: identifier '=' KEYWORD_EVENT function_arguments event_compound_statement
 		{
-			$$ = AST->createNode(PT_Event, yylineno);
+			$$ = AST->createNode(PT_EventDecl, yylineno);
 			$$->setChild(0, $1);
 			$$->setChild(1, $4);
 			$$->setChild(2, $5);
 		}
 	;
-		
-			
-emitter_state_list
-	: emitter_state
-		{
-			$$ = $1;
-		}
-	| emitter_state_list emitter_state
-		{
-			$$ = AST->createNode(PT_StateList, yylineno);
-			$$->setChild(0, $1);
-			$$->setChild(1, $2);
-		}			
-	;
 	
 emitter_state
 	: identifier '=' KEYWORD_STATE emitter_state_compound_statement
 		{
-			$$ = AST->createNode(PT_State, yylineno);
+			$$ = AST->createNode(PT_StateDecl, yylineno);
 			$$->setChild(0, $1);
 			$$->setChild(1, $4);
 		}
 	| identifier '=' KEYWORD_STATE '/' constant_integer emitter_state_compound_statement
 		{
-			$$ = AST->createNode(PT_State, yylineno);
+			$$ = AST->createNode(PT_StateDecl, yylineno);
 			$$->setChild(0, $1);
 			$$->setChild(1, $6);
 			$$->setChild(2, $5);
 		}
 	;
 
-controller_state_list
-	: controller_state
-		{
-			$$ = $1;
-		}
-	| controller_state_list controller_state
-		{
-			$$ = AST->createNode(PT_StateList, yylineno);
-			$$->setChild(0, $1);
-			$$->setChild(1, $2);
-		}			
-	;
-	
 controller_state
 	: identifier '=' KEYWORD_STATE controller_state_compound_statement
 		{
-			$$ = AST->createNode(PT_State, yylineno);
+			$$ = AST->createNode(PT_StateDecl, yylineno);
 			$$->setChild(0, $1);
 			$$->setChild(1, $4);
 		}
 	| identifier '=' KEYWORD_STATE '/' constant_integer controller_state_compound_statement
 		{
-			$$ = AST->createNode(PT_State, yylineno);
+			$$ = AST->createNode(PT_StateDecl, yylineno);
 			$$->setChild(0, $1);
 			$$->setChild(1, $6);
 			$$->setChild(2, $5);
@@ -839,10 +713,6 @@ event_statement
 		{
 			$$ = $1;
 		}
-	| enable_statement
-		{
-			$$ = $1;
-		}
 	;
 
 emitter_state_statement
@@ -938,10 +808,6 @@ controller_state_statement
 			$$ = $1;
 		}
 	| raise_statement
-		{
-			$$ = $1;
-		}
-	| enable_statement
 		{
 			$$ = $1;
 		}
@@ -1409,7 +1275,7 @@ suspend_statement
 		{
 			$$ = AST->createNode(PT_SuspendStatement, yylineno);
 		}
-	| KEYWORD_SUSPEND '(' constant_arg_list ')' ';'
+	| KEYWORD_SUSPEND '(' unsigned_constant_arg_list ')' ';'
 		{
 			$$ = AST->createNode(PT_SuspendStatement, yylineno);
 			$$->setChild(0, $3);
@@ -1422,7 +1288,7 @@ member_suspend_statement
 			$$ = AST->createNode(PT_SuspendStatement, yylineno);
 			$$->setChild(1, $3);
 		}
-	| KEYWORD_SUSPEND '$' identifier '(' constant_arg_list ')' ';'
+	| KEYWORD_SUSPEND '$' identifier '(' unsigned_constant_arg_list ')' ';'
 		{
 			$$ = AST->createNode(PT_SuspendStatement, yylineno);
 			$$->setChild(0, $5);
@@ -1435,7 +1301,7 @@ signal_statement
 		{
 			$$ = AST->createNode(PT_SignalStatement, yylineno);
 		}
-	| KEYWORD_SIGNAL '(' constant_arg_list ')' ';'
+	| KEYWORD_SIGNAL '(' unsigned_constant_arg_list ')' ';'
 		{
 			$$ = AST->createNode(PT_SignalStatement, yylineno);
 			$$->setChild(0, $3);
@@ -1448,7 +1314,7 @@ member_signal_statement
 			$$ = AST->createNode(PT_SignalStatement, yylineno);
 			$$->setChild(1, $3);
 		}
-	| KEYWORD_SIGNAL '$' identifier '(' constant_arg_list ')' ';'
+	| KEYWORD_SIGNAL '$' identifier '(' unsigned_constant_arg_list ')' ';'
 		{
 			$$ = AST->createNode(PT_SignalStatement, yylineno);
 			$$->setChild(0, $5);
@@ -1535,21 +1401,6 @@ raise_statement
 			$$->setChild(0, $2);
 		}
 	;
-		
-enable_statement
-	: KEYWORD_ENABLE '$' identifier ';'
-		{
-			$$ = AST->createNode(PT_EnableStatement, yylineno);
-			$$->setString("enable");
-			$$->setChild(0, $3);
-		}
-	| KEYWORD_DISABLE '$' identifier ';'
-		{
-			$$ = AST->createNode(PT_EnableStatement, yylineno);
-			$$->setString("disable");
-			$$->setChild(0, $3);
-		}
-	;		
 		
 constant_expression
 	: logical_or_expression

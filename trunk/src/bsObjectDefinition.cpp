@@ -154,7 +154,9 @@ ScriptRecord* ObjectDefinition::createScriptRecord(ScriptMachine* machine)
 	{
 		record->members = BS_NEWA(bstype, record->numMembers);
 		for (int i = 0; i < record->numMembers; ++i)
+		{
 			record->members[i] = mMemberVariables[i].value;
+		}
 	}
 
 	// Run construction code, if there is any

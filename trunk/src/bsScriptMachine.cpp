@@ -636,18 +636,15 @@ int ScriptMachine::interpretCode(const uint32* code, size_t length, ScriptState&
 	if (st.curInstruction >= length)
 		return ScriptOK;
 
-//	std::cerr << "------------------------" << std::endl;
 	while (true)
 	{
 		uint32 instr32 = code[st.curInstruction];
-//		std::cerr << instr32 << std::endl;
 
 		switch (instr32)
 		{
 		case BC_PUSH:
 			{
 				st.stack[st.stackHead] = BS_UINT32_TO_TYPE(code[st.curInstruction + 1]);
-//				std::cerr << "value: " << st.stack[st.stackHead] << std::endl;
 				st.stackHead++;
 				st.curInstruction += 2;
 
@@ -726,8 +723,6 @@ int ScriptMachine::interpretCode(const uint32* code, size_t length, ScriptState&
 				st.stack[st.stackHead] = getGlobalVariableValue(index);
 				st.stackHead++;
 				st.curInstruction += 2;
-
-//				std::cerr << "index: " << index << std::endl;
 
 				assert(st.stackHead < BS_SCRIPT_STACK_SIZE && 
 					"Stack limit reached on BC_GETG: increase BS_SCRIPT_STACK_SIZE");
@@ -898,33 +893,36 @@ int ScriptMachine::interpretCode(const uint32* code, size_t length, ScriptState&
 
 		case BC_SUSPEND:
 			{
+				Controller* ctrl = static_cast<Controller*>(object);
+
+				// Suspend the Controller if there are no blocks: use a special block value
+				ctrl->addBlock(-1);
+				
 				int numBlocks = code[st.curInstruction + 1];
 				for (int i = 0; i < numBlocks; ++i)
 				{
 					// add to current object's block list.
 					bstype block = BS_UINT32_TO_TYPE(code[st.curInstruction + 2 + i]);
-					static_cast<Controller*>(object)->addBlock(block);
+					ctrl->addBlock(block);
 				}
 
 				st.curInstruction += (2 + numBlocks);
-
-				if (st.curInstruction >= (int) length)
-					st.curInstruction = 0;
 			}
 			return ScriptSuspended;
 
 		case BC_SIGNAL:
 			{
-				// If the script is currently waiting, then set it going again, else try and remove
-				// any specified blocks.
-				static_cast<Controller*>(object)->resume();
+				Controller* ctrl = static_cast<Controller*>(object);
+
+				// Remove special block
+				ctrl->removeBlock(-1);
 
 				int numBlocks = code[st.curInstruction + 1];
 				for (int i = 0; i < numBlocks; ++i)
 				{
-					// signal block.
+					// remove block
 					bstype block = BS_UINT32_TO_TYPE(code[st.curInstruction + 2 + i]);
-					static_cast<Controller*>(object)->signal(block);
+					ctrl->removeBlock(block);
 				}
 
 				st.curInstruction += (2 + numBlocks);
@@ -933,42 +931,42 @@ int ScriptMachine::interpretCode(const uint32* code, size_t length, ScriptState&
 
 		case BC_SUSPENDM:
 			{
-/*
+				Controller* ctrl = static_cast<Controller*>(object);
 				int emitIndex = code[st.curInstruction + 1];
 
-				int numBlocks = code[st.curInstruction + 1];
+				// Add special block
+				ctrl->addEmitterBlock(emitIndex, -1);
+
+				int numBlocks = code[st.curInstruction + 2];
 				for (int i = 0; i < numBlocks; ++i)
 				{
 					// add to current object's block list.
-					bstype block = BS_UINT32_TO_TYPE(code[st.curInstruction + 2 + i]);
-					static_cast<Controller*>(object)->addEmitterBlock(emitIndex, block);
+					bstype block = BS_UINT32_TO_TYPE(code[st.curInstruction + 3 + i]);
+					ctrl->addEmitterBlock(emitIndex, block);
 				}
 
-				st.curInstruction += (2 + numBlocks);
-
-				if (st.curInstruction >= (int) length)
-					st.curInstruction = 0;
-*/
+				st.curInstruction += (3 + numBlocks);
 			}
 			break;
 
 		case BC_SIGNALM:
 			{
-/*
-				// If the script is currently waiting, then set it going again, else try and remove
-				// any specified blocks.
-				static_cast<Controller*>(object)->resume();
+				Controller* ctrl = static_cast<Controller*>(object);
+				int emitIndex = code[st.curInstruction + 1];
 
-				int numBlocks = code[st.curInstruction + 1];
+				// Remove special block
+				ctrl->removeEmitterBlock(emitIndex, -1);
+
+				int numBlocks = code[st.curInstruction + 2];
 				for (int i = 0; i < numBlocks; ++i)
 				{
-					// signal block.
-					bstype block = BS_UINT32_TO_TYPE(code[st.curInstruction + 2 + i]);
-					static_cast<Controller*>(object)->signal(block);
+					// remove block.
+					bstype block = BS_UINT32_TO_TYPE(code[st.curInstruction + 3 + i]);
+					ctrl->removeEmitterBlock(emitIndex, block);
 				}
 
-				st.curInstruction += (2 + numBlocks);
-*/
+				st.curInstruction += (3 + numBlocks);
+
 			}
 			break;
 
@@ -995,16 +993,6 @@ int ScriptMachine::interpretCode(const uint32* code, size_t length, ScriptState&
 				if (ctrl->_raiseEvent(evtIndex, &st.stack[st.stackHead - numArgs]))
 					return ScriptOK;
 
-				st.curInstruction += 3;
-			}
-			break;
-
-		case BC_ENABLE:
-			{
-				int emitIndex = code[st.curInstruction + 1];
-				int enable = code[st.curInstruction + 2];
-
-				static_cast<Controller*>(object)->enableEmitter(emitIndex, enable == 1);
 				st.curInstruction += 3;
 			}
 			break;
@@ -1089,13 +1077,6 @@ int ScriptMachine::interpretCode(const uint32* code, size_t length, ScriptState&
 			break;
 
 		}
-
-/*
-		std::cerr << "stack: ";
-		for (int i = 0; i < st.stackHead; ++i)
-			std::cerr << st.stack[i] << " ";
-		std::cerr << std::endl << std::endl;
-*/
 
 		if (st.curInstruction >= (int) length)
 			return ScriptOK;

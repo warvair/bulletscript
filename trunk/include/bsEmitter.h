@@ -32,8 +32,8 @@ namespace BS_NMSP
 			bstype speed;
 		};
 
-		// Emitters can be enabled or disabled by Controllers.
-		bool mEnabled;
+		// Emitters can be suspended by Controllers.
+		bool mSuspended;
 
 		// Due to the way Emitters are recycled, we need to know if an Emitter has been deleted since
 		// the last time an EmitTypeControl used it (eg for anchors).  Thus, when an Emitter is created,
@@ -118,18 +118,6 @@ namespace BS_NMSP
 		void setDefinition(EmitterDefinition* def, bstype x, bstype y, bstype z, bstype angle);
 #endif
 
-		/**	\brief Enables or disables the Emitter.
-		 *	
-		 *	\param enable enables if true, disables if false.
-		 */
-		void enable(bool enable);
-
-		/**	\brief Tests whether the Emitter is currently enabled or disabled.
-		 *	
-		 *	\return true is enabled, false otherwise.
-		 */
-		bool isEnabled() const;
-		
 		/**	\brief Set the X position of this Emitter.
 		 *	
 		 *	\param x new x position.
@@ -314,6 +302,18 @@ namespace BS_NMSP
 		 */
 		void _runScript(float frameTime);
 
+		/**	\brief Suspends or signals the Emitter.
+		 *	
+		 *	\param suspend suspends if true, signals (resumes) if false.
+		 */
+		void suspend(bool suspend);
+
+		/**	\brief Tests whether the Emitter is currently suspended.
+		 *	
+		 *	\return true is suspended, false otherwise.
+		 */
+		bool isSuspended() const;
+
 		/**	\brief Adds a block to the Emitter.
 		 *	
 		 *	Blocks are used to suspend an Emitter state, and only resume when the blocks have been signalled
@@ -331,14 +331,7 @@ namespace BS_NMSP
 		 *
 		 *	\param block the value to act as a block.
 		 */
-		void signal(bstype block);
-
-		/**	\brief Resumes the Emitter from a waiting state.
-		 *	
-		 *	This is used to implement signal functionality.  While signals are generally used to resume from
-		 *	a suspend, they will also resume a state if it is currently waiting.
-		 */
-		void resume();
+		void removeBlock(bstype block);
 
 		/**	\brief Update the Emitter.
 		 *	

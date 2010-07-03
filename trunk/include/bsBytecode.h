@@ -56,7 +56,6 @@ namespace BS_NMSP
 		BC_SIGNALM,
 		BC_EMIT,
 		BC_RAISE,
-		BC_ENABLE,
 		BC_DIE
 	};
 

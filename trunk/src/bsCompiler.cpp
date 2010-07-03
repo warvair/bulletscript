@@ -13,6 +13,9 @@ Compiler::Compiler(ScriptMachine* machine, ParseTree* tree) :
 // --------------------------------------------------------------------------------
 void Compiler::generateConstantArgumentList(ParseTreeNode* node, BytecodeBlock* code)
 {
+	if (!node)
+		return;
+
 	if (node->getType() == PT_Constant)
 	{
 		bstype value = node->getValueData();
@@ -20,10 +23,7 @@ void Compiler::generateConstantArgumentList(ParseTreeNode* node, BytecodeBlock* 
 	}
 
 	for (int i = 0; i < ParseTreeNode::MAX_CHILDREN; ++ i)
-	{
-		if (node->getChild(i))
-			generateConstantArgumentList(node->getChild(i), code);
-	}
+		generateConstantArgumentList(node->getChild(i), code);
 }
 // --------------------------------------------------------------------------------
 void Compiler::generateMemberVariableBytecode(ObjectDefinition* def, ParseTreeNode* node, int& index)
@@ -31,7 +31,7 @@ void Compiler::generateMemberVariableBytecode(ObjectDefinition* def, ParseTreeNo
 	if (!node)
 		return;
 
-	if (node->getType() == PT_AssignStatement)
+	if (node->getType() == PT_MemberDecl)
 	{
 		// Create 'constructor' code for this emitter.  We only need to do this if member 
 		// variables are not constants.  If they are, then we can just set the constants here.
@@ -59,13 +59,11 @@ void Compiler::generateMemberVariableBytecode(ObjectDefinition* def, ParseTreeNo
 		}
 
 		index++;
+		return;
 	}
 
 	for (int i = 0; i < ParseTreeNode::MAX_CHILDREN; ++ i)
-	{
-		if (node->getChild(i))
-			generateMemberVariableBytecode(def, node->getChild(i), index);
-	}
+		generateMemberVariableBytecode(def, node->getChild(i), index);
 }
 // --------------------------------------------------------------------------------
 void Compiler::generateFunctionArguments(ObjectDefinition* def, ParseTreeNode* node, 
@@ -115,8 +113,8 @@ void Compiler::generateConstantExpression(ObjectDefinition* def, ParseTreeNode* 
 	// the stack, so we must pop it.
 	bool needsPop = false;
 	int parentType = node->getParent()->getType();
-	if ((parentType == PT_StatementList || parentType == PT_State || parentType == PT_Function ||
-		parentType == PT_Event) && mTree->constantExpressionHasType(node))
+	if ((parentType == PT_StatementList || parentType == PT_StateDecl || parentType == PT_FunctionDecl ||
+		parentType == PT_EventDecl) && mTree->constantExpressionHasType(node))
 	{
 		needsPop = true;
 	}
@@ -356,7 +354,7 @@ void Compiler::generateBytecode(ObjectDefinition* def, ParseTreeNode* node,
 	int nodeType = node->getType();
 	switch (nodeType)
 	{
-	case PT_State:
+	case PT_StateDecl:
 		{
 			String stateName = node->getChild(0)->getStringData();
 			codeInfo.stateInfo = &(def->getState(def->getStateIndex(stateName))); // dodgy, but ok
@@ -378,19 +376,33 @@ void Compiler::generateBytecode(ObjectDefinition* def, ParseTreeNode* node,
 				// Give to ScriptMachine
 				CodeRecord* rec = mTree->getCodeRecord(def->getType(), def->getName(), "State", stateName);
 				rec->byteCodeSize = stateByteCode.size();
-				rec->byteCode = new uint32[rec->byteCodeSize];
-				for (uint32 i = 0; i < rec->byteCodeSize; ++i)
-					rec->byteCode[i] = stateByteCode[i];
+
+				if (rec->byteCodeSize > 0)
+				{
+					rec->byteCode = new uint32[rec->byteCodeSize];
+					for (uint32 i = 0; i < rec->byteCodeSize; ++i)
+						rec->byteCode[i] = stateByteCode[i];
+				}
+			}
+			else
+			{
+				// Empty state
+				CodeRecord* rec = mTree->getCodeRecord(def->getType(), def->getName(), "State", stateName);
+				rec->byteCodeSize = 0;
+				rec->byteCode = 0;
 			}
 		}
 		return;
 
-	case PT_Event:
+	case PT_EventDecl:
 		{
 			// This will only be used by controllers.
 			ControllerDefinition* cDef = static_cast<ControllerDefinition*>(def);
 			String evtName = node->getChild(0)->getStringData();
 			codeInfo.eventInfo = &(cDef->getEvent(cDef->getEventIndex(evtName))); // dodgy, but ok
+
+			// Events need to store a pointer to the code to execute it
+			CodeRecord* rec = mTree->getCodeRecord(def->getType(), def->getName(), "Event", evtName);
 
 			// Generate code
 			if (node->getChild(2))
@@ -399,19 +411,23 @@ void Compiler::generateBytecode(ObjectDefinition* def, ParseTreeNode* node,
 				generateBytecode(def, node->getChild(2), &evtByteCode, codeType, codeInfo);
 				
 				// Give to ScriptMachine
-				CodeRecord* rec = mTree->getCodeRecord(def->getType(), def->getName(), "Event", evtName);
 				rec->byteCodeSize = evtByteCode.size();
 				rec->byteCode = new uint32[rec->byteCodeSize];
 				for (uint32 i = 0; i < rec->byteCodeSize; ++i)
 					rec->byteCode[i] = evtByteCode[i];
-
-				// Events need to store a pointer to the code to execute it
-				codeInfo.eventInfo->code = rec;
 			}
+			else
+			{
+				// Empty event
+				rec->byteCodeSize = 0;
+				rec->byteCode = 0;
+			}
+
+			codeInfo.eventInfo->code = rec;
 		}
 		return;
 
-	case PT_Function:
+	case PT_FunctionDecl:
 		{
 			// This will only be used by emitters.
 			EmitterDefinition* eDef = static_cast<EmitterDefinition*>(def);
@@ -427,14 +443,26 @@ void Compiler::generateBytecode(ObjectDefinition* def, ParseTreeNode* node,
 				// Give to ScriptMachine
 				CodeRecord* rec = mTree->getCodeRecord(def->getType(), def->getName(), "Function", funcName);
 				rec->byteCodeSize = funcByteCode.size();
-				rec->byteCode = new uint32[rec->byteCodeSize];
-				for (uint32 i = 0; i < rec->byteCodeSize; ++i)
-					rec->byteCode[i] = funcByteCode[i];
+
+				if (rec->byteCodeSize > 0)
+				{
+					rec->byteCode = new uint32[rec->byteCodeSize];
+					for (uint32 i = 0; i < rec->byteCodeSize; ++i)
+						rec->byteCode[i] = funcByteCode[i];
+				}
+			}
+			else
+			{
+				// Empty function
+				CodeRecord* rec = mTree->getCodeRecord(def->getType(), def->getName(), "Function", funcName);
+				rec->byteCodeSize = 0;
+				rec->byteCode = 0;
 			}
 		}
 		return;
 
-	case PT_MemberList:
+	case PT_MemberDeclList:
+	case PT_MemberDecl:
 		{
 			int initialIndex = NUM_SPECIAL_MEMBERS + def->getNumUserMembers();
 			generateMemberVariableBytecode(def, node, initialIndex);
@@ -586,22 +614,6 @@ void Compiler::generateBytecode(ObjectDefinition* def, ParseTreeNode* node,
 			bytecode->push_back(BC_RAISE);
 			bytecode->push_back(eventIndex);
 			bytecode->push_back(numArgs);
-		}
-		return;
-
-	case PT_EnableStatement:
-		{
-			String varName = node->getChild(0)->getStringData();
-			int index = static_cast<ControllerDefinition*>(def)->getEmitterVariableIndex(varName);
-
-			bytecode->push_back(BC_ENABLE);
-			bytecode->push_back(index);
-
-			String enable = node->getStringData();
-			if (enable == "enable")
-				bytecode->push_back(1);
-			else
-				bytecode->push_back(0);
 		}
 		return;
 
@@ -777,54 +789,30 @@ void Compiler::generateBytecode(ObjectDefinition* def, ParseTreeNode* node,
 			if (blockNode)
 				numBlocks = ParseUtilities::countConstantArgumentList(blockNode);
 			
-			if (numBlocks == 0)
+			// Is it an emitter member?
+			if (node->getChild(1))
 			{
-				// Is it an emitter member?
-				if (node->getChild(1))
-				{
-					// Currently not supported
-					// ...
-				}
+				if (nodeType == PT_SuspendStatement)
+					bytecode->push_back(BC_SUSPENDM);
 				else
-				{
-					if (nodeType == PT_SuspendStatement)
-					{
-						bytecode->push_back(BC_PUSH);
-						bytecode->push_back(BS_SUSPEND_FOREVER_TIME);
-						bytecode->push_back(BC_WAIT);
-					}
-					else
-					{
-						bytecode->push_back(BC_SIGNAL);
-						bytecode->push_back(0);
-					}
-				}
+					bytecode->push_back(BC_SIGNALM);
+
+				String varName = node->getChild(1)->getStringData();
+				int index = static_cast<ControllerDefinition*>(def)->getEmitterVariableIndex(varName);
+				bytecode->push_back(index);
 			}
 			else
 			{
-				// Is it an emitter member?
-				if (node->getChild(1))
-				{
-					if (nodeType == PT_SuspendStatement)
-						bytecode->push_back(BC_SUSPENDM);
-					else
-						bytecode->push_back(BC_SIGNALM);
-
-					String varName = node->getChild(1)->getStringData();
-					int index = static_cast<ControllerDefinition*>(def)->getEmitterVariableIndex(varName);
-					bytecode->push_back(index);
-				}
+				if (nodeType == PT_SuspendStatement)
+					bytecode->push_back(BC_SUSPEND);
 				else
-				{
-					if (nodeType == PT_SuspendStatement)
-						bytecode->push_back(BC_SUSPEND);
-					else
-						bytecode->push_back(BC_SIGNAL);
-				}
-
-				bytecode->push_back((uint32) numBlocks);
-				generateConstantArgumentList(blockNode, bytecode);
+					bytecode->push_back(BC_SIGNAL);
 			}
+
+			// Push block values
+			bytecode->push_back((uint32) numBlocks);
+			if (blockNode)
+				generateConstantArgumentList(blockNode, bytecode);
 		}
 		return;
 
@@ -927,16 +915,34 @@ void Compiler::generateControllerBytecode(ParseTreeNode* node)
 		// Finish constructor here
 		def->finaliseConstructor();
 
-		// Create function bytecode
+		// Create event bytecode
 		generateBytecode(def, node->getChild(PT_ControllerEventNode), 0, CBT_Event, codeInfo);
 
 		// Create state bytecode
 		generateBytecode(def, node->getChild(PT_ControllerStateNode), 0, CBT_ControllerState, codeInfo);
+
+		// print bytecode here
+		for (int i = 0; i < def->getNumStates(); ++i)
+		{
+			CodeRecord* rec = mTree->getCodeRecord(def->getType(), def->getName(), 
+				"State", def->getState(i).name);
+
+//			printBytecode(def, rec);
+		}
+
+		for (int i = 0; i < def->getNumEvents(); ++i)
+		{
+			CodeRecord* rec = mTree->getCodeRecord(def->getType(), def->getName(), 
+				"Event", def->getEvent(i).name);
+
+//			printBytecode(def, rec);
+		}
+
 	}
 	else
 	{
 		for (int i = 0; i < ParseTreeNode::MAX_CHILDREN; ++i)
-				generateControllerBytecode(node->getChild(i));
+			generateControllerBytecode(node->getChild(i));
 	}
 }
 // --------------------------------------------------------------------------------
@@ -1138,7 +1144,7 @@ void Compiler::printBytecode(ObjectDefinition* def, CodeRecord* record)
 			break;
 
 		case BC_GOTOM: 
-			std::cerr << "GOTOM state " << record->byteCode[instr + 1] << record->byteCode[instr + 2] << std::endl;
+			std::cerr << "GOTOM state " << record->byteCode[instr + 1] << " " << record->byteCode[instr + 2] << std::endl;
 			instr += 3;
 			break;
 
@@ -1179,6 +1185,30 @@ void Compiler::printBytecode(ObjectDefinition* def, CodeRecord* record)
 			}
 			break;
 
+		case BC_SUSPENDM: 
+			{
+				int emitter = record->byteCode[instr + 1];
+				int numBlocks = record->byteCode[instr + 2];
+				std::cerr << "SUSPEND EMITTER " << emitter;
+				for (int i = 0; i < numBlocks; ++i)
+					std::cerr << " " << BS_UINT32_TO_TYPE(record->byteCode[instr + 3 + i]);
+				std::cerr << std::endl;
+				instr += (3 + numBlocks);
+			}
+			break;
+
+		case BC_SIGNALM:
+			{
+				int emitter = record->byteCode[instr + 1];
+				int numBlocks = record->byteCode[instr + 2];
+				std::cerr << "SIGNAL EMITTER " << emitter;
+				for (int i = 0; i < numBlocks; ++i)
+					std::cerr << " " << BS_UINT32_TO_TYPE(record->byteCode[instr + 3 + i]);
+				std::cerr << std::endl;
+				instr += (3 + numBlocks);
+			}
+			break;
+
 		case BC_EMIT:
 			{
 				int numAffectors = record->byteCode[instr + 5];
@@ -1191,14 +1221,6 @@ void Compiler::printBytecode(ObjectDefinition* def, CodeRecord* record)
 
 		case BC_RAISE: 
 			std::cerr << "RAISE " << static_cast<ControllerDefinition*>(def)->getEvent(record->byteCode[instr + 1]).name << std::endl;
-			instr += 3;
-			break;
-
-		case BC_ENABLE:
-			if (record->byteCode[instr + 2] == 1)
-				std::cerr << "ENABLE " << record->byteCode[instr + 1] << std::endl;
-			else
-				std::cerr << "DISABLE " << record->byteCode[instr + 1] << std::endl;
 			instr += 3;
 			break;
 
@@ -1215,8 +1237,6 @@ void Compiler::createDefinitions(const MemberVariableDeclarationMap& memberDecls
 	mTree->lock();
 
 	ParseTreeNode* root = mTree->getRootNode();
-
-//	mTree->print(root, 0);
 
 	mTree->createEmitterDefinitions(root);
 	mTree->createControllerDefinitions(root, memberDecls);

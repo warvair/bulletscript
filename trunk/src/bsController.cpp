@@ -17,6 +17,7 @@ Controller::Controller(ScriptMachine* machine) :
 	mNumEmitters(0),
 	mEvents(0),
 	mNumEvents(0),
+	mSuspended(false),
 	mRecord(0),
 	mUserObject(0)
 {
@@ -42,7 +43,7 @@ void Controller::enable(bool enable)
 	mEnabled = enable;
 
 	for (int i = 0; i < mNumEmitters; ++i)
-		mEmitters[i].emitter->enable(enable);
+		mEmitters[i].emitter->suspend(!enable);
 }
 // --------------------------------------------------------------------------------
 bool Controller::isEnabled() const
@@ -355,9 +356,10 @@ bool Controller::_raiseEvent(int index, const bstype* args)
 void Controller::addBlock(bstype block)
 {
 	mBlocks.push_back(block);
+	mSuspended = true;
 }
 // --------------------------------------------------------------------------------
-void Controller::signal(bstype block)
+void Controller::removeBlock(bstype block)
 {
 	// See if this Controller has any blocks of this value, and if it does, remove them.
 	std::list<bstype>::iterator it = mBlocks.begin();
@@ -374,30 +376,32 @@ void Controller::signal(bstype block)
 			++it;
 		}
 	}
+
+	mSuspended = !mBlocks.empty();
 }
 // --------------------------------------------------------------------------------
-void Controller::resume()
+void Controller::suspendEmitter(int index, bool suspend)
 {
-	mRecord->scriptState.suspendTime = -1;
+	mEmitters[index].emitter->suspend(suspend);
 }
 // --------------------------------------------------------------------------------
-void Controller::enableEmitter(int index, bool enable)
+void Controller::addEmitterBlock(int index, bstype block)
 {
-	mEmitters[index].emitter->enable(enable);
+	mEmitters[index].emitter->addBlock(block);
+}
+// --------------------------------------------------------------------------------
+void Controller::removeEmitterBlock(int index, bstype block)
+{
+	mEmitters[index].emitter->removeBlock(block);
 }
 // --------------------------------------------------------------------------------
 void Controller::runScript(float frameTime)
 {
 	// Either run the script or update the suspend time.
 	if (mRecord->scriptState.suspendTime <= 0)
-	{
-		if (mBlocks.empty())
-			mScriptMachine->processScriptRecord(mRecord, this, 0);
-	}
+		mScriptMachine->processScriptRecord(mRecord, this, 0);
 	else
-	{
 		mRecord->scriptState.suspendTime -= frameTime;
-	}
 }
 // --------------------------------------------------------------------------------
 void Controller::update(float frameTime)
@@ -410,7 +414,7 @@ void Controller::update(float frameTime)
 	// they are stored as offsets.
 	for (int i = 0; i < mNumEmitters; ++i)
 	{
-		if (mEmitters[i].emitter->isEnabled())
+		if (!mEmitters[i].emitter->isSuspended())
 		{
 			for (int j = 0; j < NUM_SPECIAL_MEMBERS; ++j)
 			{
@@ -440,8 +444,10 @@ void Controller::update(float frameTime)
 		}
 	}
 
-	// Once that's done, do some work on the Controller itself.
-	runScript(frameTime);
+	// Once that's done, do some work on the Controller itself.  If the Controller is suspended,
+	// then it will have to wait for an event to resume it. 
+	if (!mSuspended)
+		runScript(frameTime);
 }
 // --------------------------------------------------------------------------------
 

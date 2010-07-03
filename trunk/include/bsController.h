@@ -67,7 +67,9 @@ namespace BS_NMSP
 
 		int mNumEvents;
 
-		// Blocks
+		// Suspend / blocks
+		bool mSuspended;
+
 		std::list<bstype> mBlocks;
 
 		// Script structures.
@@ -313,24 +315,31 @@ namespace BS_NMSP
 		 *
 		 *	\param block the value to act as a block.
 		 */
-		void signal(bstype block);
+		void removeBlock(bstype block);
 
-		/**	\brief Resumes the Controller from a waiting state.
+		/**	\brief Suspends/resumes an Emitter.
 		 *	
-		 *	This is used to implement signal functionality.  While signals are generally used to resume from
-		 *	a suspend, they will also resume a state if it is currently waiting.
-		 */
-		void resume();
-
-		/**	\brief Enables or disables an Emitter.
-		 *	
-		 *	When disabled, an Emitter does no processing: its script state and member variables do not change.
+		 *	When suspended, an Emitter does no processing: its script state and member variables do not change.
 		 *	This function is for internal use.
 		 *
 		 *	\param index index of the Emitter.
-		 *	\param enable true to enable, false to disable.
+		 *	\param suspend true to suspend, false to resume.
 		 */
-		void enableEmitter(int index, bool enable);
+		void suspendEmitter(int index, bool suspend);
+
+		/**	\brief Adds a block to the specified Emitter member.
+		 *	
+		 *	\param index index of the Emitter.
+		 *	\param block the value to act as a block.
+		 */
+		void addEmitterBlock(int index, bstype block);
+
+		/**	\brief Removes a block from the specified Emitter member.
+		 *	
+		 *	\param index index of the Emitter.
+		 *	\param block the value to act as a block.
+		 */
+		void removeEmitterBlock(int index, bstype block);
 
 		/**	\brief Update the Controller.
 		 *	
